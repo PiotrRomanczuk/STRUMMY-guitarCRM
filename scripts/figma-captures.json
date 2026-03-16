@@ -1,0 +1,7 @@
+[
+  { "page": "/dashboard", "name": "Student Dashboard (v2)", "captureId": "38d38b39-6a20-4fbf-a0ce-52726add23ac" },
+  { "page": "/dashboard/songs", "name": "Student Songs", "captureId": "f06f122e-e49f-45f9-ba2e-45a7d0169e11" },
+  { "page": "/dashboard/lessons", "name": "Student Lessons", "captureId": "537d3fa7-ca48-4c3e-8d83-4e2cf6c22a9e" },
+  { "page": "/dashboard/assignments", "name": "Student Assignments", "captureId": "f2cae3bf-74ed-42e0-b214-6469392722c8" },
+  { "page": "/dashboard/repertoire", "name": "Student Repertoire", "captureId": "d1cec9e3-b1fa-47d3-820f-cd4cda3ff1fa" }
+]

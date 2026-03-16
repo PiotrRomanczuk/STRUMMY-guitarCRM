@@ -8,9 +8,11 @@ import { Database } from '@/database.types';
 
 import { LessonSongsList, LessonDetailsCard, LessonAssignmentsList, PostLessonPrompt } from '@/components/lessons';
 import { StudentLessonDetailPageClient } from '@/components/lessons/student/StudentLessonDetailPageClient';
+import { LessonDetailV2 } from '@/components/v2/lessons';
 import { HistoryTimeline } from '@/components/shared/HistoryTimeline';
 import { Skeleton } from '@/components/ui/skeleton';
 import { logger } from '@/lib/logger';
+import { getUIVersion } from '@/lib/ui-version.server';
 
 interface LessonDetailPageProps {
   params: Promise<{ id: string }>;
@@ -119,6 +121,19 @@ export default async function LessonDetailPage({ params }: LessonDetailPageProps
 
   const canEdit = isAdmin || (isTeacher && lesson.teacher_id === user.id);
   const canDelete = isAdmin || (isTeacher && lesson.teacher_id === user.id);
+
+  const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v2') {
+    return (
+      <LessonDetailV2
+        lesson={lesson}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        onDelete={handleDeleteLesson.bind(null, id)}
+      />
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

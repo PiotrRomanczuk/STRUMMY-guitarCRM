@@ -3,10 +3,28 @@ import { DashboardPageContent } from '@/components/dashboard/Dashboard';
 import { AdminDashboardClient } from '@/components/dashboard/admin/AdminDashboardClient';
 import { StudentDashboardClient } from '@/components/dashboard/student/StudentDashboardClient';
 import { TeacherDashboardClient } from '@/components/dashboard/teacher/TeacherDashboardClient';
+import { TeacherDashboardV2, StudentDashboardV2 } from '@/components/v2/dashboard';
+import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { getStudentDashboardData } from '@/app/actions/student/dashboard';
 import { getTeacherDashboardData } from '@/app/actions/teacher/dashboard';
 import { getCurrentSongOfTheWeek } from '@/app/actions/song-of-the-week';
+import { getUIVersion } from '@/lib/ui-version.server';
+
+function resolveActiveView(
+  view: string | string[] | undefined,
+  isAdmin: boolean, isTeacher: boolean, isStudent: boolean,
+): 'admin' | 'teacher' | 'student' {
+  const v = typeof view === 'string' ? view : undefined;
+  if (v === 'admin' && isAdmin) return 'admin';
+  if (v === 'student' && isStudent) return 'student';
+  if (v === 'teacher' && isTeacher) return 'teacher';
+  // Default priority: teacher > student > admin
+  if (isTeacher) return 'teacher';
+  if (isStudent) return 'student';
+  if (isAdmin) return 'admin';
+  return 'teacher';
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -20,6 +38,9 @@ export default async function DashboardPage({
     return <div>Please log in to access the dashboard.</div>;
   }
 
+  const activeView = resolveActiveView(view, isAdmin, isTeacher, isStudent);
+  const hasMultipleRoles = [isAdmin, isTeacher, isStudent].filter(Boolean).length > 1;
+
   // Fetch user profile and Song of the Week in parallel
   const supabase = await createClient();
   const [{ data: profile }, sotw] = await Promise.all([
@@ -27,19 +48,17 @@ export default async function DashboardPage({
     getCurrentSongOfTheWeek(),
   ]);
 
-  // For students, check if the SOTW song is already in their repertoire
-  let sotwInRepertoire = false;
-  if (isStudent && sotw) {
-    const { count } = await supabase
-      .from('student_repertoire')
-      .select('id', { count: 'exact', head: true })
-      .eq('student_id', user.id)
-      .eq('song_id', sotw.song_id);
-    sotwInRepertoire = (count ?? 0) > 0;
-  }
+  const roleSwitcher = hasMultipleRoles ? (
+    <RoleSwitcher
+      isAdmin={isAdmin}
+      isTeacher={isTeacher}
+      isStudent={isStudent}
+      activeView={activeView}
+    />
+  ) : null;
 
-  // Admin View (Explicitly requested)
-  if (isAdmin && view === 'admin') {
+  // Admin View
+  if (activeView === 'admin') {
     const [
       { count: totalUsers },
       { count: totalTeachers },
@@ -70,41 +89,96 @@ export default async function DashboardPage({
     };
 
     return (
-      <AdminDashboardClient
-        stats={adminStats}
-        user={user}
-        profile={profile}
-        viewMode="admin"
-        sotw={sotw}
-      />
+      <>
+        {roleSwitcher}
+        <AdminDashboardClient
+          stats={adminStats}
+          user={user}
+          profile={profile}
+          viewMode="admin"
+          sotw={sotw}
+        />
+      </>
     );
   }
 
-  // Teacher View (Default for teachers AND admins)
-  if (isTeacher || isAdmin) {
-    const teacherData = await getTeacherDashboardData();
+  // Student View
+  if (activeView === 'student') {
+    const [studentData, uiVersion] = await Promise.all([
+      getStudentDashboardData(),
+      getUIVersion(),
+    ]);
+
+    let sotwInRepertoire = false;
+    if (sotw) {
+      const { count } = await supabase
+        .from('student_repertoire')
+        .select('id', { count: 'exact', head: true })
+        .eq('student_id', user.id)
+        .eq('song_id', sotw.song_id);
+      sotwInRepertoire = (count ?? 0) > 0;
+    }
+
+    if (uiVersion === 'v2') {
+      return (
+        <>
+          {roleSwitcher}
+          <StudentDashboardV2
+            data={studentData}
+            email={user.email}
+            sotw={sotw}
+            sotwInRepertoire={sotwInRepertoire}
+          />
+        </>
+      );
+    }
 
     return (
-      <TeacherDashboardClient
-        data={teacherData}
-        email={user.email}
-        fullName={profile?.full_name}
-        isAdmin={isAdmin}
-        sotw={sotw}
-      />
+      <>
+        {roleSwitcher}
+        <StudentDashboardClient
+          data={studentData}
+          email={user.email}
+          sotw={sotw}
+          sotwInRepertoire={sotwInRepertoire}
+        />
+      </>
     );
   }
 
-  // Student Dashboard
-  if (isStudent) {
-    const studentData = await getStudentDashboardData();
+  // Teacher View (default)
+  if (activeView === 'teacher') {
+    const [teacherData, uiVersion] = await Promise.all([
+      getTeacherDashboardData(),
+      getUIVersion(),
+    ]);
+
+    if (uiVersion === 'v2') {
+      return (
+        <>
+          {roleSwitcher}
+          <TeacherDashboardV2
+            data={teacherData}
+            email={user.email}
+            fullName={profile?.full_name}
+            isAdmin={isAdmin}
+            sotw={sotw}
+          />
+        </>
+      );
+    }
+
     return (
-      <StudentDashboardClient
-        data={studentData}
-        email={user.email}
-        sotw={sotw}
-        sotwInRepertoire={sotwInRepertoire}
-      />
+      <>
+        {roleSwitcher}
+        <TeacherDashboardClient
+          data={teacherData}
+          email={user.email}
+          fullName={profile?.full_name}
+          isAdmin={isAdmin}
+          sotw={sotw}
+        />
+      </>
     );
   }
 

@@ -55,6 +55,14 @@ export type TeacherDashboardData = {
     lessonsThisWeek: number;
     pendingAssignments: number;
   };
+  needsAttention: {
+    id: string;
+    studentId: string;
+    studentName: string;
+    reason: 'no_recent_lesson' | 'overdue_assignment' | 'inactive';
+    daysAgo: number;
+    actionUrl: string;
+  }[];
 };
 
 type AssignmentStatus = 'pending' | 'submitted' | 'overdue' | 'completed';
@@ -275,6 +283,69 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     .select('*', { count: 'exact', head: true })
     .in('status', ['OPEN', 'IN_PROGRESS']);
 
+  // Needs-attention: students with no recent lesson (14+ days) or overdue assignments
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+  const needsAttention: TeacherDashboardData['needsAttention'] = [];
+
+  for (const student of students) {
+    // Check for overdue assignments
+    const overdueForStudent = assignments.filter(
+      (a) => a.studentName === student.name && a.status === 'overdue'
+    );
+    if (overdueForStudent.length > 0) {
+      const oldestOverdue = overdueForStudent[0];
+      const daysOverdue = Math.floor(
+        (Date.now() - new Date(oldestOverdue.dueDate).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      needsAttention.push({
+        id: `attn-asgn-${student.id}`,
+        studentId: student.id,
+        studentName: student.name,
+        reason: 'overdue_assignment',
+        daysAgo: Math.max(daysOverdue, 1),
+        actionUrl: `/dashboard/users/${student.id}`,
+      });
+      continue;
+    }
+
+    // Check for no recent lesson
+    const { data: lastLesson } = await supabase
+      .from('lessons')
+      .select('scheduled_at')
+      .eq('student_id', student.id)
+      .lt('scheduled_at', new Date().toISOString())
+      .order('scheduled_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (lastLesson) {
+      const daysSince = Math.floor(
+        (Date.now() - new Date(lastLesson.scheduled_at).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (daysSince >= 14) {
+        needsAttention.push({
+          id: `attn-lesson-${student.id}`,
+          studentId: student.id,
+          studentName: student.name,
+          reason: daysSince >= 30 ? 'inactive' : 'no_recent_lesson',
+          daysAgo: daysSince,
+          actionUrl: `/dashboard/users/${student.id}`,
+        });
+      }
+    } else if (student.lessonsCompleted > 0) {
+      // Had lessons before but none recently
+      needsAttention.push({
+        id: `attn-inactive-${student.id}`,
+        studentId: student.id,
+        studentName: student.name,
+        reason: 'inactive',
+        daysAgo: 30,
+        actionUrl: `/dashboard/users/${student.id}`,
+      });
+    }
+  }
+
   return {
     students,
     activities,
@@ -288,5 +359,6 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
       lessonsThisWeek: lessonsThisWeekCount || 0,
       pendingAssignments: pendingAssignmentsCount || 0,
     },
+    needsAttention,
   };
 }

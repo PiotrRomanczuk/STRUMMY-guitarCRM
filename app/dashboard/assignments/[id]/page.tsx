@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { Assignment } from '@/components/assignments/hooks/useAssignment';
 import { HistoryTimeline } from '@/components/shared/HistoryTimeline';
 import { AssignmentStatusSelect } from '@/components/assignments/AssignmentStatusSelect';
+import { AssignmentDetail as AssignmentDetailV2 } from '@/components/v2/assignments';
+import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
 
@@ -220,7 +223,7 @@ export default async function AssignmentDetailPage({ params, searchParams }: Pag
   // searchParams are available for future use (e.g. tabs, history)
   await searchParams;
 
-  const supabase = await createClient();
+  const [supabase, uiVersion] = await Promise.all([createClient(), getUIVersion()]);
 
   const {
     data: { user },
@@ -297,6 +300,14 @@ export default async function AssignmentDetailPage({ params, searchParams }: Pag
     (profile?.is_student && assignment.student_id === user.id)
   );
   const canManage = !!(profile?.is_admin || profile?.is_teacher);
+
+  if (uiVersion === 'v2') {
+    return (
+      <MobilePageShell title={assignment.title || 'Assignment'}>
+        <AssignmentDetailV2 assignmentId={id} canEdit={canManage} />
+      </MobilePageShell>
+    );
+  }
 
   async function deleteAssignment() {
     'use server';

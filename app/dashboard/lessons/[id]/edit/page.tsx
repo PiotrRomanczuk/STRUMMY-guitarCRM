@@ -2,7 +2,9 @@ import { redirect } from 'next/navigation';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { createClient } from '@/lib/supabase/server';
 import { LessonForm } from '@/components/lessons';
+import { LessonFormV2 } from '@/components/v2/lessons';
 import { transformLessonData } from '@/app/api/lessons/utils';
+import { getUIVersion } from '@/lib/ui-version.server';
 
 interface LessonEditPageProps {
   params: Promise<{ id: string }>;
@@ -109,6 +111,12 @@ export default async function LessonEditPage({ params }: LessonEditPageProps) {
     status: lesson.status,
     song_ids: lesson.lesson_songs?.map((ls) => ls.song_id) || [],
   };
+
+  const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v2') {
+    return <LessonFormV2 initialData={initialData} lessonId={id} />;
+  }
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">

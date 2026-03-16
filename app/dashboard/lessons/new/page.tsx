@@ -1,4 +1,6 @@
 import { LessonForm } from '@/components/lessons';
+import { LessonFormV2 } from '@/components/v2/lessons';
+import { getUIVersion } from '@/lib/ui-version.server';
 
 interface NewLessonPageProps {
   searchParams: Promise<{ student_id?: string; song?: string }>;
@@ -10,6 +12,16 @@ export default async function NewLessonPage({ searchParams }: NewLessonPageProps
   const initialData: { student_id?: string; song_ids?: string[] } = {};
   if (student_id) initialData.student_id = student_id;
   if (song) initialData.song_ids = song.split(',');
+
+  const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v2') {
+    return (
+      <LessonFormV2
+        initialData={Object.keys(initialData).length > 0 ? initialData : undefined}
+      />
+    );
+  }
 
   return (
     <main className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-4xl">

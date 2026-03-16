@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { StudentStatsPageClient } from '@/components/dashboard/student/StudentStatsPageClient';
+import { StudentStats } from '@/components/v2/stats';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { redirect } from 'next/navigation';
 
 export default async function StudentStatsPage() {
@@ -17,6 +19,7 @@ export default async function StudentStatsPage() {
 
   const supabase = await createClient();
   const now = new Date().toISOString();
+  const uiVersion = await getUIVersion();
 
   // Fetch comprehensive student statistics
   const [
@@ -28,45 +31,32 @@ export default async function StudentStatsPage() {
     { data: recentLessons },
     { data: songProgress },
   ] = await Promise.all([
-    // Total songs assigned to student
     supabase
       .from('songs')
       .select('lesson_songs!inner(lessons!inner(student_id))', { count: 'exact', head: true })
       .eq('lesson_songs.lessons.student_id', user.id),
-
-    // Completed lessons
     supabase
       .from('lessons')
       .select('*', { count: 'exact', head: true })
       .eq('student_id', user.id)
       .lt('scheduled_at', now)
       .eq('status', 'COMPLETED'),
-
-    // Total lessons
     supabase.from('lessons').select('*', { count: 'exact', head: true }).eq('student_id', user.id),
-
-    // Completed assignments
     supabase
       .from('assignments')
       .select('*', { count: 'exact', head: true })
       .eq('student_id', user.id)
       .eq('status', 'completed'),
-
-    // Total assignments
     supabase
       .from('assignments')
       .select('*', { count: 'exact', head: true })
       .eq('student_id', user.id),
-
-    // Recent lesson history
     supabase
       .from('lessons')
       .select('id, scheduled_at, status, notes, lesson_teacher_number')
       .eq('student_id', user.id)
       .order('scheduled_at', { ascending: false })
       .limit(10),
-
-    // Song progress by status
     supabase
       .from('student_songs')
       .select(
@@ -94,6 +84,10 @@ export default async function StudentStatsPage() {
       songs: Array.isArray(item.songs) ? item.songs[0] || null : item.songs,
     })),
   };
+
+  if (uiVersion === 'v2') {
+    return <StudentStats stats={stats} />;
+  }
 
   return <StudentStatsPageClient stats={stats} />;
 }

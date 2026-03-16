@@ -14,6 +14,7 @@ import {
 } from '@/components/settings/SettingsSections';
 import { IntegrationsSection } from '@/components/settings/IntegrationsSection';
 import { ApiKeysSection } from '@/components/settings/ApiKeysSection';
+import { UIVersionToggle } from '@/components/v2/settings/UIVersionToggle';
 
 function SettingsAlert({ type, message }: { type: 'error' | 'success'; message: string }) {
   if (type === 'error') {
@@ -128,6 +129,8 @@ export default function SettingsPageClient({
         {success && <SettingsAlert type="success" message="Settings saved successfully" />}
 
         <div className="bg-card rounded-lg shadow-sm border border-border p-6 space-y-8">
+          <UIVersionToggle className="mb-2" />
+
           <IntegrationsSection isGoogleConnected={isGoogleConnected} />
 
           <div className="border-t border-border pt-8">

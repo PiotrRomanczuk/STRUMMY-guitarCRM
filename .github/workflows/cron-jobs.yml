@@ -14,10 +14,11 @@ name: Scheduled Cron Jobs
 
 on:
   schedule:
-    # Every 15 minutes — notification queue + auth cleanup
-    - cron: "*/15 * * * *"
-    # Every hour at :00 — admin monitoring
-    - cron: "0 * * * *"
+    # Every 6 hours — notification queue + auth cleanup
+    # (was every 15min — caused ~2,880 runs/month, $100+ in Actions minutes)
+    - cron: "0 */6 * * *"
+    # Once daily at 08:00 UTC — admin monitoring
+    - cron: "0 8 * * *"
 
   # Allow manual trigger for debugging
   workflow_dispatch:
@@ -74,12 +75,12 @@ jobs:
     name: Admin Monitoring
     runs-on: ubuntu-latest
     needs: check-secrets
-    # Run every hour (only on the :00 schedule or manual trigger)
+    # Run once daily at 08:00 UTC or manual trigger
     if: >-
       needs.check-secrets.outputs.has-secrets == 'true' && (
         github.event_name == 'workflow_dispatch' &&
         (github.event.inputs.job == 'all' || github.event.inputs.job == 'admin-monitoring')
-        || github.event.schedule == '0 * * * *'
+        || github.event.schedule == '0 8 * * *'
       )
     steps:
       - name: Call admin monitoring endpoint

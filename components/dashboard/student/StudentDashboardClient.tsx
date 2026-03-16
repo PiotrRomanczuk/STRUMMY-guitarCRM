@@ -14,7 +14,7 @@ import { PracticeToday } from '@/components/dashboard/student/PracticeToday';
 import type { PracticeTodaySong } from '@/components/dashboard/student/PracticeToday';
 import { SongOfTheWeekCard } from '@/components/song-of-the-week';
 import type { SongOfTheWeekWithSong } from '@/types/SongOfTheWeek';
-import { staggerContainer, listItem } from '@/lib/animations';
+import { listItem } from '@/lib/animations';
 
 interface StudentDashboardClientProps {
   data: StudentDashboardData;
@@ -110,14 +110,14 @@ export function StudentDashboardClient({ data, sotw, sotwInRepertoire = false }:
   }));
 
   return (
-    <motion.div
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-      className="space-y-6 sm:space-y-8"
-    >
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
-      <motion.div variants={listItem} className="flex flex-col gap-2">
+      <motion.div
+        variants={listItem}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col gap-2"
+      >
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           Welcome back, {data.studentName || 'Student'}!
         </h1>
@@ -132,7 +132,7 @@ export function StudentDashboardClient({ data, sotw, sotwInRepertoire = false }:
 
       {/* Song of the Week - featured spotlight */}
       {sotw && (
-        <motion.div variants={listItem}>
+        <motion.div variants={listItem} initial="hidden" animate="visible">
           <SongOfTheWeekCard
             sotw={sotw}
             sotwInRepertoire={sotwInRepertoire}
@@ -142,30 +142,19 @@ export function StudentDashboardClient({ data, sotw, sotwInRepertoire = false }:
       )}
 
       {/* Practice focus - first thing students see after greeting */}
-      <motion.div variants={listItem}>
-        <PracticeToday songs={practiceSongs} />
-      </motion.div>
+      <PracticeToday songs={practiceSongs} />
 
       {/* API-driven stats */}
-      <motion.div variants={listItem}>
-        <DashboardStatsGrid />
-      </motion.div>
+      <DashboardStatsGrid />
 
-      <motion.div variants={listItem}>
-        <NextLessonCard lesson={data.nextLesson} />
-      </motion.div>
+      <NextLessonCard lesson={data.nextLesson} />
 
       {data.lastLesson && (
-        <motion.div variants={listItem}>
-          <LastLessonCard lesson={data.lastLesson} />
-        </motion.div>
+        <LastLessonCard lesson={data.lastLesson} />
       )}
 
       {/* Main content grid */}
-      <motion.div
-        variants={listItem}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8"
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-2 space-y-6 sm:space-y-8">
           <ProgressChart data={chartData} />
           <SongLibrary songs={songs} />
@@ -175,8 +164,7 @@ export function StudentDashboardClient({ data, sotw, sotwInRepertoire = false }:
           <RecentActivity activities={activities} />
           <AssignmentList assignments={assignments} />
         </div>
-      </motion.div>
-
-    </motion.div>
+      </div>
+    </div>
   );
 }

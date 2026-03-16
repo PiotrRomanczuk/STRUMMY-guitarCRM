@@ -14,6 +14,8 @@ import { useLayoutMode } from '@/hooks/use-is-widescreen';
 import { useKeyboardViewport } from '@/hooks/use-keyboard-viewport';
 import { NotificationBell } from '@/components/notifications';
 import { logger } from '@/lib/logger';
+import type { UIVersion } from '@/lib/ui-version';
+import { AppShellV2 } from '@/components/v2/navigation';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -21,9 +23,17 @@ interface AppShellProps {
   isAdmin: boolean;
   isTeacher: boolean;
   isStudent: boolean;
+  uiVersion?: UIVersion;
 }
 
-export function AppShell({ children, user, isAdmin, isTeacher, isStudent }: AppShellProps) {
+export function AppShell({
+  children,
+  user,
+  isAdmin,
+  isTeacher,
+  isStudent,
+  uiVersion = 'v1',
+}: AppShellProps) {
   const pathname = usePathname();
   const layoutMode = useLayoutMode();
   useKeyboardViewport();
@@ -57,6 +67,20 @@ export function AppShell({ children, user, isAdmin, isTeacher, isStudent }: AppS
         <main className="min-h-screen bg-background">{children}</main>
         <Toaster />
       </>
+    );
+  }
+
+  // v2 shell: dedicated navigation with responsive mobile/desktop layout
+  if (uiVersion === 'v2') {
+    return (
+      <AppShellV2
+        user={user}
+        isAdmin={isAdmin}
+        isTeacher={isTeacher}
+        isStudent={isStudent}
+      >
+        {children}
+      </AppShellV2>
     );
   }
 

@@ -13,7 +13,7 @@ const SONG_LIST_COLUMNS = `
   duration_ms, release_year, category, chords,
   ultimate_guitar_link, youtube_url, spotify_link_url,
   cover_image_url, gallery_images, audio_files,
-  deleted_at, created_at, updated_at, tiktok_short_url,
+  is_draft, deleted_at, created_at, updated_at, tiktok_short_url,
   lesson_songs (
     id,
     status,

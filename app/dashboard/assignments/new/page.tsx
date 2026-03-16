@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { AssignmentForm } from '@/components/assignments';
+import { AssignmentForm as AssignmentFormV2 } from '@/components/v2/assignments';
+import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { redirect } from 'next/navigation';
 import { logger } from '@/lib/logger';
 
@@ -12,7 +15,7 @@ interface NewAssignmentPageProps {
 
 export default async function NewAssignmentPage({ searchParams }: NewAssignmentPageProps) {
   const { templateId, studentId } = await searchParams;
-  const supabase = await createClient();
+  const [supabase, uiVersion] = await Promise.all([createClient(), getUIVersion()]);
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -63,6 +66,19 @@ export default async function NewAssignmentPage({ searchParams }: NewAssignmentP
       student_id: studentId,
       id: '',
     };
+  }
+
+  if (uiVersion === 'v2') {
+    return (
+      <MobilePageShell title="New Assignment">
+        <AssignmentFormV2
+          mode="create"
+          students={students || []}
+          initialData={initialData ? { ...initialData, id: initialData.id ?? '' } : undefined}
+          teacherId={user.id}
+        />
+      </MobilePageShell>
+    );
   }
 
   return (

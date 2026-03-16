@@ -1,6 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { AssignmentForm } from '@/components/assignments';
+import { AssignmentForm as AssignmentFormV2 } from '@/components/v2/assignments';
+import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
+import { getUIVersion } from '@/lib/ui-version.server';
 
 interface EditAssignmentPageProps {
   params: Promise<{ id: string }>;
@@ -8,7 +11,7 @@ interface EditAssignmentPageProps {
 
 export default async function EditAssignmentPage({ params }: EditAssignmentPageProps) {
   const { id } = await params;
-  const supabase = await createClient();
+  const [supabase, uiVersion] = await Promise.all([createClient(), getUIVersion()]);
 
   const {
     data: { user },
@@ -39,6 +42,19 @@ export default async function EditAssignmentPage({ params }: EditAssignmentPageP
     .from('profiles')
     .select('id, full_name, email')
     .eq('is_student', true);
+
+  if (uiVersion === 'v2') {
+    return (
+      <MobilePageShell title="Edit Assignment">
+        <AssignmentFormV2
+          mode="edit"
+          students={students || []}
+          initialData={assignment}
+          teacherId={user.id}
+        />
+      </MobilePageShell>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

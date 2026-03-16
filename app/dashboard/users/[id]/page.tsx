@@ -1,8 +1,10 @@
 import { UserDetail } from '@/components/users';
+import { UserDetailV2 } from '@/components/v2/users';
 import { Breadcrumbs } from '@/components/shared';
 import { createClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { notFound } from 'next/navigation';
 import { createLogger } from '@/lib/logger';
 import { UserDetailTabs } from '@/components/users/details/UserDetailTabs';
@@ -163,10 +165,26 @@ export default async function UserDetailPage({ params, searchParams }: UserDetai
           .eq('is_student', true)
       : Promise.resolve({ data: [] });
 
-  const [{ data: parentProfile }, { data: linkedStudents }, { lessons, assignments, repertoire }] =
-    await Promise.all([parentFetch, linkedStudentsFetch, fetchUserData(supabase, userId)]);
+  const [{ data: parentProfile }, { data: linkedStudents }, { lessons, assignments, repertoire }, uiVersion] =
+    await Promise.all([parentFetch, linkedStudentsFetch, fetchUserData(supabase, userId), getUIVersion()]);
 
   const userName = user.full_name || user.email || 'User';
+
+  if (uiVersion === 'v2') {
+    return (
+      <UserDetailV2
+        user={user as UserProfile}
+        tabsData={{
+          userId,
+          lessons: lessons as unknown as Lesson[],
+          assignments: assignments || [],
+          repertoire,
+        }}
+        parentProfile={parentProfile as ParentProfile | null}
+        linkedStudents={(linkedStudents ?? []) as ParentProfile[]}
+      />
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">

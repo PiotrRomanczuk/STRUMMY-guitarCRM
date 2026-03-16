@@ -2,8 +2,10 @@ import { redirect } from 'next/navigation';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { createClient } from '@/lib/supabase/server';
 import { LiveLessonView } from '@/components/lessons/live';
+import { LiveLessonV2 } from '@/components/v2/lessons';
 import { Database } from '@/database.types';
 import { logger } from '@/lib/logger';
+import { getUIVersion } from '@/lib/ui-version.server';
 
 interface LiveLessonPageProps {
   params: Promise<{ id: string }>;
@@ -82,17 +84,21 @@ export default async function LiveLessonPage({ params }: LiveLessonPageProps) {
   const studentName =
     lesson.profile?.full_name ?? lesson.profile?.email ?? 'Unknown Student';
 
-  return (
-    <LiveLessonView
-      lesson={{
-        id: lesson.id,
-        title: lesson.title,
-        notes: lesson.notes,
-        status: lesson.status,
-        scheduledAt: lesson.scheduled_at,
-        studentName,
-        lessonSongs: lesson.lesson_songs,
-      }}
-    />
-  );
+  const lessonData = {
+    id: lesson.id,
+    title: lesson.title,
+    notes: lesson.notes,
+    status: lesson.status,
+    scheduledAt: lesson.scheduled_at,
+    studentName,
+    lessonSongs: lesson.lesson_songs,
+  };
+
+  const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v2') {
+    return <LiveLessonV2 lesson={lessonData} />;
+  }
+
+  return <LiveLessonView lesson={lessonData} />;
 }

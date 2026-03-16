@@ -3,6 +3,9 @@ import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Song } from '@/schemas/SongSchema';
+import { SongFormV2 } from '@/components/v2/songs/SongForm';
+import { getUIVersion } from '@/lib/ui-version.server';
+import type { Song as SongType } from '@/schemas/SongSchema';
 
 interface EditSongPageProps {
   params: Promise<{
@@ -11,7 +14,10 @@ interface EditSongPageProps {
 }
 
 export default async function EditSongPage({ params }: EditSongPageProps) {
-  const { user, isAdmin, isTeacher } = await getUserWithRolesSSR();
+  const [{ user, isAdmin, isTeacher }, uiVersion] = await Promise.all([
+    getUserWithRolesSSR(),
+    getUIVersion(),
+  ]);
   if (!user) redirect('/sign-in');
   if (!isAdmin && !isTeacher) {
     return (
@@ -32,6 +38,10 @@ export default async function EditSongPage({ params }: EditSongPageProps) {
 
   if (error || !song) {
     notFound();
+  }
+
+  if (uiVersion === 'v2') {
+    return <SongFormV2 mode="edit" song={song as unknown as SongType} />;
   }
 
   return (

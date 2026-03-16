@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { UserForm } from '@/components/users';
+import { UserFormV2 } from '@/components/v2/users';
+import { getUIVersion } from '@/lib/ui-version.server';
 
 export const metadata = {
   title: 'Edit User',
@@ -57,6 +59,17 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
     .map((p) => ({ id: p.id, label: p.full_name || p.email || p.id }));
 
   const transformedUser = transformUser(user);
+  const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v2') {
+    return (
+      <UserFormV2
+        initialData={transformedUser}
+        isEdit={true}
+        availableParents={availableParents}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

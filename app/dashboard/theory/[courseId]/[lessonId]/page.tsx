@@ -2,8 +2,10 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { getTheoryCourse, getTheoryLesson } from '../../actions';
 import { TheoryChapterReader } from '@/components/theory';
+import { ChapterReaderV2 } from '@/components/v2/theory';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -17,9 +19,10 @@ export default async function TheoryLessonPage({ params }: Props) {
 
   const isStaff = isAdmin || isTeacher;
 
-  const [course, lesson] = await Promise.all([
+  const [course, lesson, uiVersion] = await Promise.all([
     getTheoryCourse(courseId),
     getTheoryLesson(lessonId),
+    getUIVersion(),
   ]);
 
   if (!course || !lesson) {
@@ -47,6 +50,25 @@ export default async function TheoryLessonPage({ params }: Props) {
     ? { id: allLessons[currentIdx + 1].id, title: allLessons[currentIdx + 1].title }
     : null;
 
+  const lessonData = {
+    id: lesson.id,
+    title: lesson.title,
+    content: lesson.content,
+    updated_at: lesson.updated_at,
+  };
+
+  if (uiVersion === 'v2') {
+    return (
+      <ChapterReaderV2
+        courseId={courseId}
+        courseTitle={course.title}
+        lesson={lessonData}
+        prevChapter={prevChapter}
+        nextChapter={nextChapter}
+      />
+    );
+  }
+
   return (
     <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
       {isStaff && (
@@ -63,12 +85,7 @@ export default async function TheoryLessonPage({ params }: Props) {
       <TheoryChapterReader
         courseId={courseId}
         courseTitle={course.title}
-        lesson={{
-          id: lesson.id,
-          title: lesson.title,
-          content: lesson.content,
-          updated_at: lesson.updated_at,
-        }}
+        lesson={lessonData}
         prevChapter={prevChapter}
         nextChapter={nextChapter}
       />

@@ -3,15 +3,30 @@ import { redirect } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { getTheoryCourses } from './actions';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { TheoryCourseCard } from '@/components/theory';
+import { CourseListV2 } from '@/components/v2/theory';
 import { Button } from '@/components/ui/button';
+import type { TheoryCourse } from '@/components/v2/theory';
 
 export default async function TheoryCoursesPage() {
   const { user, isAdmin, isTeacher } = await getUserWithRolesSSR();
   if (!user) redirect('/sign-in');
 
   const isStaff = isAdmin || isTeacher;
-  const courses = await getTheoryCourses();
+  const [courses, uiVersion] = await Promise.all([
+    getTheoryCourses(),
+    getUIVersion(),
+  ]);
+
+  if (uiVersion === 'v2') {
+    return (
+      <CourseListV2
+        courses={courses as TheoryCourse[]}
+        isStaff={isStaff}
+      />
+    );
+  }
 
   return (
     <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">

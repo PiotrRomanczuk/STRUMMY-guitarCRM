@@ -1,11 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import TemplateList from '@/components/assignments/templates/TemplateList';
+import { TemplateList as TemplateListV2 } from '@/components/v2/assignments';
+import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
+import { getUIVersion } from '@/lib/ui-version.server';
 import Link from 'next/link';
 import { logger } from '@/lib/logger';
 
 export default async function TemplatesPage() {
-  const supabase = await createClient();
+  const [supabase, uiVersion] = await Promise.all([createClient(), getUIVersion()]);
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -40,6 +43,14 @@ export default async function TemplatesPage() {
 
   if (error) {
     logger.error('Error fetching templates:', error);
+  }
+
+  if (uiVersion === 'v2') {
+    return (
+      <MobilePageShell title="Assignment Templates">
+        <TemplateListV2 templates={(templates || []) as import('@/schemas/AssignmentTemplateSchema').AssignmentTemplate[]} />
+      </MobilePageShell>
+    );
   }
 
   return (

@@ -21,10 +21,8 @@ export default function LessonTableRow({ lesson, showTeacherColumn, showActions,
   const hasContent = songs.length > 0 || assignments.length > 0;
 
   // Use date if available, otherwise fall back to scheduled_at
-  // @ts-expect-error - scheduled_at might not be in the schema yet but is in DB
-  const displayDate = lesson.date || lesson.scheduled_at;
-  // @ts-expect-error - scheduled_at might not be in the schema yet but is in DB
-  const displayTime = lesson.start_time || lesson.scheduled_at;
+  const displayDate = lesson.date ?? lesson.scheduled_at ?? null;
+  const displayTime = lesson.start_time ?? lesson.scheduled_at ?? null;
 
   return (
     <TableRow

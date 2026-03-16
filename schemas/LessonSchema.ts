@@ -15,6 +15,7 @@ export const LessonSchema = z.object({
   notes: z.string().nullable().optional(),
   date: z.string().nullable().optional(), // ISO date string from database
   start_time: z.string().nullable().optional(), // time (ISO or HH:mm)
+  scheduled_at: z.string().nullable().optional(), // ISO datetime from database
   status: LessonStatusEnum.default('SCHEDULED'),
   created_at: z.string().nullable().optional(), // ISO date string from database
   updated_at: z.string().nullable().optional(), // ISO date string from database

@@ -1,9 +1,14 @@
 import { SongFormGuard } from '@/components/songs';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { redirect } from 'next/navigation';
+import { SongFormV2 } from '@/components/v2/songs/SongForm';
+import { getUIVersion } from '@/lib/ui-version.server';
 
 export default async function NewSongPage() {
-  const { user, isAdmin, isTeacher } = await getUserWithRolesSSR();
+  const [{ user, isAdmin, isTeacher }, uiVersion] = await Promise.all([
+    getUserWithRolesSSR(),
+    getUIVersion(),
+  ]);
   if (!user) redirect('/sign-in');
   if (!isAdmin && !isTeacher) {
     return (
@@ -17,6 +22,11 @@ export default async function NewSongPage() {
       </div>
     );
   }
+
+  if (uiVersion === 'v2') {
+    return <SongFormV2 mode="create" />;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <SongFormGuard mode="create" />

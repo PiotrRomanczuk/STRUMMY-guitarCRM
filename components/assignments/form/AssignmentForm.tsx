@@ -98,7 +98,7 @@ export default function AssignmentForm({
           {isMobile ? (
             <MobileAssignmentForm
               formData={formData}
-              errors={fieldErrors}
+              errors={fieldErrors as Record<string, string | undefined>}
               students={students}
               onChange={handleFieldChange}
               onBlur={handleBlur}

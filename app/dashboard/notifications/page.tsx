@@ -9,8 +9,10 @@
  */
 
 import { Metadata } from 'next';
-import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { NotificationCenter as V1NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { NotificationCenter as V2NotificationCenter } from '@/components/v2/notifications';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
@@ -19,10 +21,17 @@ export const metadata: Metadata = {
 };
 
 export default async function NotificationsPage() {
-  const { user } = await getUserWithRolesSSR();
+  const [{ user }, uiVersion] = await Promise.all([
+    getUserWithRolesSSR(),
+    getUIVersion(),
+  ]);
 
   if (!user) {
     redirect('/login');
+  }
+
+  if (uiVersion === 'v2') {
+    return <V2NotificationCenter userId={user.id} />;
   }
 
   return (
@@ -34,7 +43,7 @@ export default async function NotificationsPage() {
         </p>
       </div>
 
-      <NotificationCenter userId={user.id} />
+      <V1NotificationCenter userId={user.id} />
     </div>
   );
 }

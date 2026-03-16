@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { SpotifyMatchesClient } from '@/components/dashboard/admin/SpotifyMatchesClient';
+import { SpotifyQueueV2 } from '@/components/v2/admin';
 
 export const metadata = {
   title: 'Spotify Matches Review | Admin Dashboard',
@@ -28,6 +30,12 @@ export default async function SpotifyMatchesPage() {
 
   if (!profile?.is_admin && !profile?.is_teacher) {
     redirect('/dashboard');
+  }
+
+  const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v2') {
+    return <SpotifyQueueV2 />;
   }
 
   return (

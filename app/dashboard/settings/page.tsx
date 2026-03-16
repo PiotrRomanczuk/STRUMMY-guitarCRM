@@ -1,7 +1,9 @@
 import SettingsPageClient from '@/components/settings/SettingsPageClient';
+import { SettingsV2 } from '@/components/v2/settings';
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { getUserSettings } from '@/app/actions/settings';
+import { getUIVersion } from '@/lib/ui-version.server';
 import type { UserSettings } from '@/schemas/SettingsSchema';
 
 // Server Component wrapper for Settings page.
@@ -30,6 +32,17 @@ export default async function SettingsPage() {
     if (settingsResult.success && settingsResult.settings) {
       initialSettings = settingsResult.settings;
     }
+  }
+
+  const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v2') {
+    return (
+      <SettingsV2
+        isGoogleConnected={isGoogleConnected}
+        initialSettings={initialSettings}
+      />
+    );
   }
 
   return (

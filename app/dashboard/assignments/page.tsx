@@ -2,13 +2,18 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AssignmentList } from '@/components/assignments';
 import { StudentAssignmentsPageClient } from '@/components/assignments/student/StudentAssignmentsPageClient';
+import { AssignmentList as AssignmentListV2 } from '@/components/v2/assignments';
+import { getUIVersion } from '@/lib/ui-version.server';
 
 /**
  * Assignments dashboard page
  * Shows list of assignments based on user role
  */
 export default async function AssignmentsPage() {
-  const supabase = await createClient();
+  const [supabase, uiVersion] = await Promise.all([
+    createClient(),
+    getUIVersion(),
+  ]);
 
   const {
     data: { user },
@@ -26,6 +31,15 @@ export default async function AssignmentsPage() {
     .single();
 
   const canCreate = profile?.is_admin || profile?.is_teacher;
+
+  if (uiVersion === 'v2') {
+    return (
+      <AssignmentListV2
+        canCreate={!!canCreate}
+        studentId={profile?.is_student && !canCreate ? user.id : undefined}
+      />
+    );
+  }
 
   if (profile?.is_student && !canCreate) {
     return <StudentAssignmentsPageClient />;

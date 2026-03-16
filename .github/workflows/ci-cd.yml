@@ -2,9 +2,14 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, production, develop, 'feature/**', 'fix/**', 'refactor/**', 'chore/**', 'test/**', 'copilot/**', 'ci/**', 'claude/**']
+    branches: [main, production]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
+
+# Cancel in-progress runs for the same branch/PR — saves minutes on rapid pushes
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: '20'
@@ -243,11 +248,13 @@ jobs:
           chmod +x scripts/database/maintenance/check-db-quality.sh
           ./scripts/database/maintenance/check-db-quality.sh
 
+  # E2E tests are EXPENSIVE (Playwright + chromium). Only run on production pushes.
+  # For PRs, rely on unit/integration tests + manual E2E before merge.
   e2e-tests:
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
     needs: [build]
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/production')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/production'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6

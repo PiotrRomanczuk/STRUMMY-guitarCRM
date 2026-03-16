@@ -7,6 +7,8 @@ import { getSongStudents } from './actions';
 import { StudentSongDetailPageClient } from '@/components/songs/student/StudentSongDetailPageClient';
 import { SongStatusHistory } from '@/components/shared/SongStatusHistory';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SongDetailPageV2 } from '@/components/v2/songs/SongDetailPage';
+import { getUIVersion } from '@/lib/ui-version.server';
 
 interface SearchParams {
   [key: string]: string | string[] | undefined;
@@ -20,7 +22,10 @@ interface SongPageProps {
 }
 
 export default async function SongPage({ params, searchParams }: SongPageProps) {
-  const { user, isAdmin, isTeacher, isStudent } = await getUserWithRolesSSR();
+  const [{ user, isAdmin, isTeacher, isStudent }, uiVersion] = await Promise.all([
+    getUserWithRolesSSR(),
+    getUIVersion(),
+  ]);
   if (!user) {
     redirect('/sign-in');
   }
@@ -33,6 +38,11 @@ export default async function SongPage({ params, searchParams }: SongPageProps) 
   const { id } = await params;
   // Ensure searchParams are awaited to satisfy the interface, even if unused
   await searchParams;
+
+  // v2 UI: client-side detail with tabs
+  if (uiVersion === 'v2') {
+    return <SongDetailPageV2 />;
+  }
 
   // Fetch students if user is teacher or admin
   const canViewStudents = isAdmin || isTeacher;

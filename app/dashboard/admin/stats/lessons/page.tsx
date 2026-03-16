@@ -1,5 +1,7 @@
 import { LessonStatsPageEnhanced as LessonStatsPageClient } from '@/components/lessons/stats';
+import { StatsOverview } from '@/components/v2/stats';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { redirect } from 'next/navigation';
 
 export default async function LessonStatsPage() {
@@ -11,6 +13,12 @@ export default async function LessonStatsPage() {
 
   if (!isAdmin && !isTeacher) {
     redirect('/dashboard');
+  }
+
+  const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v2') {
+    return <StatsOverview />;
   }
 
   return (

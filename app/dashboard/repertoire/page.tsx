@@ -1,10 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import UserRepertoireTab from '@/components/users/details/UserRepertoireTab';
+import { RepertoirePageClient } from '@/components/v2/repertoire/RepertoirePageClient';
+import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
+import { getUIVersion } from '@/lib/ui-version.server';
 import type { StudentRepertoireWithSong } from '@/types/StudentRepertoire';
 
 export default async function RepertoirePage() {
-  const supabase = await createClient();
+  const [supabase, uiVersion] = await Promise.all([createClient(), getUIVersion()]);
 
   const {
     data: { user },
@@ -13,13 +16,16 @@ export default async function RepertoirePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('is_student')
+    .select('is_student, is_teacher, is_admin')
     .eq('id', user.id)
     .single();
 
-  if (!profile?.is_student) {
+  if (!profile?.is_student && !profile?.is_teacher && !profile?.is_admin) {
     redirect('/dashboard');
   }
+
+  const isTeacherView = !!profile?.is_teacher || !!profile?.is_admin;
+  const viewMode = isTeacherView ? 'teacher' : 'student';
 
   const { data: repertoire } = await supabase
     .from('student_repertoire')
@@ -42,6 +48,21 @@ export default async function RepertoirePage() {
     )
     .eq('student_id', user.id)
     .order('priority', { ascending: true });
+
+  if (uiVersion === 'v2') {
+    return (
+      <MobilePageShell
+        title={isTeacherView ? 'Student Repertoire' : 'My Repertoire'}
+        subtitle="Rate each song to track your confidence level."
+      >
+        <RepertoirePageClient
+          repertoire={(repertoire as unknown as StudentRepertoireWithSong[]) || []}
+          userId={user.id}
+          viewMode={viewMode}
+        />
+      </MobilePageShell>
+    );
+  }
 
   return (
     <main className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">

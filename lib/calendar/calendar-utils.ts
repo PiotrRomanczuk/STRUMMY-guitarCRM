@@ -6,7 +6,7 @@ export interface GoogleEvent {
   start: { dateTime?: string; date?: string };
   end: { dateTime?: string; date?: string };
   htmlLink: string;
-  attendees?: { email: string; responseStatus?: string }[];
+  attendees?: { email?: string; responseStatus?: string }[];
 }
 
 export function isGuitarLesson(event: { description?: string | null }): boolean {

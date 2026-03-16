@@ -30,7 +30,9 @@ export function EventCard({ event, showAttendees, isPending, onCreateShadowUser 
 
       {showAttendees && event.attendees && event.attendees.length > 0 && (
         <div className="mt-2 pt-2 border-t flex flex-wrap gap-2">
-          {event.attendees.map((attendee) => (
+          {event.attendees
+            .filter((a): a is { email: string; responseStatus?: string } => !!a.email)
+            .map((attendee) => (
             <div
               key={attendee.email}
               className="flex items-center gap-2 text-xs bg-secondary/50 p-1.5 rounded-md"

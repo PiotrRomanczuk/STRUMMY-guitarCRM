@@ -1,7 +1,9 @@
 import { Suspense } from 'react';
 import { UsersList } from '@/components/users';
+import { UserListV2 } from '@/components/v2/users';
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { ListPageSkeleton } from '@/components/ui/skeleton-screens';
 
 export const metadata = {
@@ -90,7 +92,18 @@ async function fetchInitialUsers() {
 }
 
 export default async function UsersPage() {
-  const initialUsers = await fetchInitialUsers();
+  const [initialUsers, uiVersion] = await Promise.all([
+    fetchInitialUsers(),
+    getUIVersion(),
+  ]);
+
+  if (uiVersion === 'v2') {
+    return (
+      <Suspense fallback={<ListPageSkeleton />}>
+        <UserListV2 initialUsers={initialUsers} />
+      </Suspense>
+    );
+  }
 
   return (
     <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">

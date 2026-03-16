@@ -17,6 +17,7 @@ interface StepWizardFormProps {
   formData: Record<string, unknown>;
   errors: Record<string, string | undefined>;
   submitLabel?: string;
+  submitDisabled?: boolean;
   className?: string;
   onStepChange?: (step: number) => void;
 }
@@ -65,6 +66,7 @@ export default function StepWizardForm({
   formData,
   errors,
   submitLabel = 'Save',
+  submitDisabled = false,
   className,
   onStepChange,
 }: StepWizardFormProps) {
@@ -135,7 +137,7 @@ export default function StepWizardForm({
             <ChevronRight className="ml-2 h-4 w-4" />
           </Button>
         ) : (
-          <Button type="submit" className="flex-1">
+          <Button type="submit" className="flex-1" disabled={submitDisabled}>
             {submitLabel}
           </Button>
         )}

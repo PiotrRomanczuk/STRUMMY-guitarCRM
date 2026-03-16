@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 import { SettingsSection, ToggleSetting, SelectSetting } from './SettingsComponents';
+import { UIVersionToggle } from '@/components/settings/UIVersionToggle';
 import type { UserSettings } from '@/schemas/SettingsSchema';
 
 interface NotificationsSectionProps {
@@ -84,6 +85,7 @@ export function AppearanceSection({ settings, updateSetting }: AppearanceSection
         ]}
         onChange={(value) => updateSetting('language', value as 'en' | 'pl' | 'es' | 'de' | 'fr')}
       />
+      <UIVersionToggle />
     </SettingsSection>
   );
 }

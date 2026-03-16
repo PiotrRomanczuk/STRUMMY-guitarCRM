@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-
 import { Suspense } from 'react';
 
 import { AppShell } from '@/components/layout/AppShell';
@@ -10,6 +9,7 @@ import { PostHogIdentify } from '@/components/providers/PostHogIdentify';
 
 import './globals.css';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getUIVersion } from '@/lib/ui-version.server';
 import { createLogger } from '@/lib/logger';
 import { getFontVariableClasses, getAllFontClasses } from '@/lib/fonts';
 import { FontProvider } from '@/lib/fonts/FontProvider';
@@ -44,7 +44,8 @@ export default async function RootLayout({
 }>) {
   log.debug('RootLayout rendering');
   const { user, isAdmin, isTeacher, isStudent } = await getUserWithRolesSSR();
-  log.debug('User roles', { userId: user?.id, isAdmin, isTeacher, isStudent });
+  const uiVersion = await getUIVersion();
+  log.debug('User roles', { userId: user?.id, isAdmin, isTeacher, isStudent, uiVersion });
 
   // When dynamic switching is enabled, load all fonts
   // Otherwise, load only the active font scheme
@@ -65,7 +66,7 @@ export default async function RootLayout({
         isStudent={isStudent}
       />
       <Providers>
-        <AppShell user={user} isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent}>
+        <AppShell user={user} isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent} uiVersion={uiVersion}>
           {children}
         </AppShell>
       </Providers>
