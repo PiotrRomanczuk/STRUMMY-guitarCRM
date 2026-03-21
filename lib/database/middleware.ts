@@ -76,37 +76,39 @@ export function detectDatabasePreference(request: NextRequest): RequestDatabaseI
   const localConfig = getLocalConfig();
   const remoteConfig = getRemoteConfig();
 
-  // 1. Check for header override first
-  const headerPref = request.headers.get('X-Database-Preference');
-  if (headerPref === 'remote' || headerPref === 'local') {
-    const isLocal = headerPref === 'local';
-    const config = isLocal ? localConfig : remoteConfig;
+  // 1. Check for header/cookie override (development only)
+  if (process.env.NODE_ENV === 'development') {
+    const headerPref = request.headers.get('X-Database-Preference');
+    if (headerPref === 'remote' || headerPref === 'local') {
+      const isLocal = headerPref === 'local';
+      const config = isLocal ? localConfig : remoteConfig;
 
-    if (config.isAvailable) {
-      return {
-        preferredType: headerPref,
-        actualType: headerPref,
-        source: 'header',
-        url: config.url,
-      };
+      if (config.isAvailable) {
+        return {
+          preferredType: headerPref,
+          actualType: headerPref,
+          source: 'header',
+          url: config.url,
+        };
+      }
     }
-  }
 
-  // 2. Check cookie preference
-  const cookiePref = request.cookies.get('sb-provider-preference')?.value;
-  if (cookiePref === 'remote' || cookiePref === 'local') {
-    const isLocal = cookiePref === 'local';
-    const config = isLocal ? localConfig : remoteConfig;
+    // 2. Check cookie preference
+    const cookiePref = request.cookies.get('sb-provider-preference')?.value;
+    if (cookiePref === 'remote' || cookiePref === 'local') {
+      const isLocal = cookiePref === 'local';
+      const config = isLocal ? localConfig : remoteConfig;
 
-    if (config.isAvailable) {
-      return {
-        preferredType: cookiePref,
-        actualType: cookiePref,
-        source: 'cookie',
-        url: config.url,
-      };
+      if (config.isAvailable) {
+        return {
+          preferredType: cookiePref,
+          actualType: cookiePref,
+          source: 'cookie',
+          url: config.url,
+        };
+      }
+      // If preferred config not available, fall through to default
     }
-    // If preferred config not available, fall through to default
   }
 
   // 3. Default: prefer local if available
@@ -289,8 +291,8 @@ export function addDatabaseHeaders(
   dbInfo: RequestDatabaseInfo
 ): NextResponse {
   response.headers.set('X-Database-Type', dbInfo.actualType);
-  response.headers.set('X-Database-URL', dbInfo.url);
   response.headers.set('X-Database-Source', dbInfo.source);
+  // X-Database-URL intentionally omitted — exposes internal infrastructure details
   return response;
 }
 

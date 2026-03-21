@@ -134,7 +134,7 @@ describe('notification-preferences actions', () => {
       const result = await getUserNotificationPreferences('user-123');
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('notification_preferences');
-      expect(mockSelect).toHaveBeenCalledWith('*');
+      expect(mockSelect).toHaveBeenCalledWith('id, user_id, notification_type, enabled, delivery_channel, created_at, updated_at');
       expect(mockEq).toHaveBeenCalledWith('user_id', 'user-123');
       expect(mockOrder).toHaveBeenCalledWith('notification_type', { ascending: true });
       expect(result).toEqual({ success: true, data: mockPreferences });

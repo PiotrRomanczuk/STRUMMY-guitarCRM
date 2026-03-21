@@ -114,8 +114,11 @@ export function mapSupabaseError(error: { code?: string; message?: string }): st
     return 'Network error. Please check your connection';
   }
 
-  // Return original message if no mapping found (but sanitize it)
-  return error.message || 'An unexpected error occurred';
+  // Don't leak raw DB messages to clients — log them server-side instead
+  if (error.message) {
+    logger.warn('[API] Unmapped Supabase error', { code: error.code, message: error.message });
+  }
+  return 'An unexpected error occurred';
 }
 
 /**

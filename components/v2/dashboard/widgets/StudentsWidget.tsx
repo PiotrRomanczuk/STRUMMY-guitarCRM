@@ -25,11 +25,12 @@ export function StudentsWidget({ students }: StudentsWidgetProps) {
   const displayStudents = students.slice(0, 6);
 
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden">
-      <div className="flex items-center justify-between p-4 border-b border-border">
+    <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
+      <div className="flex items-center justify-between p-4 border-b border-border/30">
         <h3 className="text-sm font-medium flex items-center gap-2">
-          <Users className="h-3.5 w-3.5" />
-          Students ({students.length})
+          <Users className="h-3.5 w-3.5 text-primary" />
+          <span className="text-primary">Students</span>
+          <span className="text-muted-foreground">({students.length})</span>
         </h3>
         <Link
           href="/dashboard/users"
@@ -50,7 +51,7 @@ export function StudentsWidget({ students }: StudentsWidgetProps) {
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border/30">
           {displayStudents.map((student) => (
             <Link
               key={student.id}

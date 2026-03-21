@@ -1,7 +1,7 @@
 export type UIVersion = 'v1' | 'v2';
 
 export const COOKIE_NAME = 'strummy-ui-version';
-export const DEFAULT_VERSION: UIVersion = 'v1';
+export const DEFAULT_VERSION: UIVersion = 'v2';
 
 /**
  * Client-side: read UI version cookie from document.cookie.
@@ -9,7 +9,9 @@ export const DEFAULT_VERSION: UIVersion = 'v1';
 export function getUIVersionFromCookie(): UIVersion {
   if (typeof document === 'undefined') return DEFAULT_VERSION;
   const match = document.cookie.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]*)`));
-  return match?.[1] === 'v2' ? 'v2' : DEFAULT_VERSION;
+  const value = match?.[1];
+  if (value === 'v1' || value === 'v2') return value;
+  return DEFAULT_VERSION;
 }
 
 /**

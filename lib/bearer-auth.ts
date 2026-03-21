@@ -50,7 +50,7 @@ export async function authenticateWithBearerToken(bearerToken: string) {
     // Get the user's profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, email, full_name, is_admin, is_teacher, is_student, is_active')
       .eq('id', apiKey.user_id)
       .single();
 
@@ -86,7 +86,7 @@ export async function authenticateWithSession() {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, email, full_name, is_admin, is_teacher, is_student, is_active')
       .eq('id', user.id)
       .single();
 

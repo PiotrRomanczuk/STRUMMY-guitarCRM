@@ -6,7 +6,7 @@
  * webhooks don't expire and cause sync interruptions.
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { watchCalendar } from '@/lib/google';
 import { logger } from '@/lib/logger';
 
@@ -54,12 +54,12 @@ function getWebhookUrl(): string {
  * Find webhook subscriptions that will expire within the next day
  */
 export async function findExpiringWebhooks(): Promise<WebhookSubscription[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const expirationThreshold = Date.now() + ONE_DAY_MS;
 
   const { data, error } = await supabase
     .from('webhook_subscriptions')
-    .select('*')
+    .select('id, user_id, provider, channel_id, resource_id, expiration, created_at, updated_at')
     .eq('provider', 'google_calendar')
     .lt('expiration', expirationThreshold);
 
@@ -75,7 +75,7 @@ export async function findExpiringWebhooks(): Promise<WebhookSubscription[]> {
  * Renew a single webhook subscription
  */
 async function renewWebhook(subscription: WebhookSubscription): Promise<RenewalResult> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   try {
     const webhookUrl = getWebhookUrl();
@@ -170,7 +170,7 @@ export async function renewExpiringWebhooks(): Promise<RenewalSummary> {
  * (They're already inactive on Google's side)
  */
 export async function cleanupExpiredWebhooks(): Promise<number> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const now = Date.now();
 
   const { data, error } = await supabase

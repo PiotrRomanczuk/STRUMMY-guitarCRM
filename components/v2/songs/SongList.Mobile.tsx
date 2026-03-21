@@ -113,7 +113,7 @@ function SongCard({ song, isTeacher }: SongCardProps) {
         href={`/dashboard/songs/${song.id}`}
         className={cn(
           'flex items-center gap-3 p-4',
-          'bg-card rounded-xl border border-border',
+          'bg-card rounded-xl border border-border/50',
           'active:bg-muted/50 transition-colors'
         )}
       >

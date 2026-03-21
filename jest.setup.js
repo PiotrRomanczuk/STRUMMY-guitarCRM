@@ -6,8 +6,8 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
-// Do not override global fetch. Supabase client relies on a real fetch implementation.
-// If needed, individual tests should mock fetch per-suite.
+// Global fetch is mocked at the bottom of this file.
+// Individual tests can override it per-suite if needed.
 
 // Minimal Request shim to keep Next.js server imports from crashing in skipped suites
 if (typeof globalThis.Request === 'undefined') {
@@ -62,25 +62,6 @@ if (typeof global.oo_tx === 'undefined') {
 // global.console.warn = (...args) => {};
 // global.console.info = (...args) => {};
 // global.console.debug = (...args) => {};
-
-// Provide a minimal default fetch for relative API routes used by component tests.
-// Delegates to existing fetch if present; otherwise returns a harmless default for '/api/*'.
-const __originalFetch = globalThis.fetch;
-globalThis.fetch = async (input, init) => {
-  const url = typeof input === 'string' ? input : input?.url;
-  if (typeof url === 'string' && url.startsWith('/api/')) {
-    return {
-      ok: true,
-      status: 200,
-      json: async () => [],
-      text: async () => '[]',
-    };
-  }
-  if (typeof __originalFetch === 'function') {
-    return __originalFetch(input, init);
-  }
-  throw new Error('fetch is not defined');
-};
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({

@@ -47,13 +47,13 @@ export function AgendaWidget({ items }: AgendaWidgetProps) {
   const completedCount = items.filter((i) => i.status === 'completed').length;
 
   return (
-    <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+    <div className="bg-card rounded-xl border border-border/50 p-4 space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-medium flex items-center gap-2">
-            <Calendar className="h-3.5 w-3.5" />
-            Today&apos;s Agenda
+            <Calendar className="h-3.5 w-3.5 text-primary" />
+            <span className="text-primary">Today&apos;s Agenda</span>
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {format(new Date(), 'EEEE, MMM d')}
@@ -96,7 +96,7 @@ export function AgendaWidget({ items }: AgendaWidgetProps) {
                   key={item.id}
                   variants={listItem}
                   layout
-                  className="flex items-start gap-3 p-3 rounded-lg border border-border
+                  className="flex items-start gap-3 p-3 rounded-lg bg-muted/30
                              active:bg-muted/50 transition-colors min-h-[44px]"
                 >
                   <div

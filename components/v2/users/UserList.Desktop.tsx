@@ -3,54 +3,32 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Plus, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { fadeIn } from '@/lib/animations/variants';
 import { useUsersList } from '@/components/users/hooks/useUsersList';
 import { deleteUser } from '@/app/dashboard/actions';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import EmptyState from '@/components/shared/EmptyState';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ListPageHeader } from '@/components/v2/primitives/ListPageHeader';
 import { DesktopUsersTable } from './UserList.DesktopTable';
+import { UserDeleteDialog } from './UserList.DeleteDialog';
 import type { UserProfile } from './types';
 
 interface UserListDesktopProps {
   initialUsers?: UserProfile[];
 }
 
-export default function UserListDesktop({
-  initialUsers,
-}: UserListDesktopProps) {
+export default function UserListDesktop({ initialUsers }: UserListDesktopProps) {
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<
-    '' | 'admin' | 'teacher' | 'student'
-  >('');
+  const [roleFilter, setRoleFilter] = useState<'' | 'admin' | 'teacher' | 'student'>('');
   const [activeFilter] = useState<'' | 'true' | 'false'>('');
-  const [studentStatusFilter, setStudentStatusFilter] = useState<
-    '' | 'active' | 'archived'
-  >('active');
-  const [userToDelete, setUserToDelete] = useState<{
-    id: string;
-    email: string;
-  } | null>(null);
+  const [studentStatusFilter, setStudentStatusFilter] = useState<'' | 'active' | 'archived'>('active');
+  const [userToDelete, setUserToDelete] = useState<{ id: string; email: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { users, loading, error, refetch } = useUsersList(
-    search,
-    roleFilter,
-    activeFilter,
-    studentStatusFilter,
-    initialUsers
+    search, roleFilter, activeFilter, studentStatusFilter, initialUsers
   );
 
   const handleConfirmDelete = async () => {
@@ -61,9 +39,7 @@ export default function UserListDesktop({
       toast.success('User deleted');
       refetch();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to delete user'
-      );
+      toast.error(err instanceof Error ? err.message : 'Failed to delete user');
     } finally {
       setIsDeleting(false);
       setUserToDelete(null);
@@ -77,22 +53,11 @@ export default function UserListDesktop({
       animate="visible"
       className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-6 space-y-6"
     >
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
-            Users
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage system users and their roles
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/users/new">
-            <Plus className="mr-2 h-4 w-4" />
-            New User
-          </Link>
-        </Button>
-      </div>
+      <ListPageHeader
+        title="Students"
+        subtitle="Manage your students and their roles"
+        action={{ label: 'New User', href: '/dashboard/users/new' }}
+      />
 
       <div className="flex items-center gap-3">
         <Input
@@ -104,9 +69,7 @@ export default function UserListDesktop({
         />
         <select
           value={roleFilter}
-          onChange={(e) =>
-            setRoleFilter(e.target.value as '' | 'admin' | 'teacher' | 'student')
-          }
+          onChange={(e) => setRoleFilter(e.target.value as '' | 'admin' | 'teacher' | 'student')}
           className="h-10 rounded-md border border-border bg-background px-3 text-sm"
         >
           <option value="">All Roles</option>
@@ -116,9 +79,7 @@ export default function UserListDesktop({
         </select>
         <select
           value={studentStatusFilter}
-          onChange={(e) =>
-            setStudentStatusFilter(e.target.value as '' | 'active' | 'archived')
-          }
+          onChange={(e) => setStudentStatusFilter(e.target.value as '' | 'active' | 'archived')}
           className="h-10 rounded-md border border-border bg-background px-3 text-sm"
         >
           <option value="active">Active</option>
@@ -127,9 +88,7 @@ export default function UserListDesktop({
       </div>
 
       {error && (
-        <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-lg">
-          {error}
-        </div>
+        <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-lg">{error}</div>
       )}
 
       {!loading && !error && (
@@ -140,11 +99,11 @@ export default function UserListDesktop({
 
       {users.length === 0 && !loading ? (
         <EmptyState
-          variant="card"
           icon={Users}
           title="No users found"
-          description="Create a user to get started"
-          action={{ label: 'Add User', href: '/dashboard/users/new' }}
+          message="Create a user to get started"
+          actionLabel="Add User"
+          actionHref="/dashboard/users/new"
         />
       ) : (
         <DesktopUsersTable
@@ -153,36 +112,12 @@ export default function UserListDesktop({
         />
       )}
 
-      <AlertDialog
-        open={!!userToDelete}
-        onOpenChange={(open) => !open && setUserToDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete
-              {userToDelete && (
-                <span className="font-medium text-foreground">
-                  {' '}
-                  {userToDelete.email}{' '}
-                </span>
-              )}
-              and remove their data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <UserDeleteDialog
+        user={userToDelete}
+        isDeleting={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setUserToDelete(null)}
+      />
     </motion.div>
   );
 }

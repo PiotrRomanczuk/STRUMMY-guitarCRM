@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { logger } from '@/lib/logger';
 import { SongListClient } from './Client';
 import { parseListParams } from './parseListParams';
 import { transformRawSongs } from './transformSongs';
@@ -89,7 +90,7 @@ export default async function SongList({ searchParams }: SongListProps) {
   const { data: rawSongs, count, error } = await songQuery;
 
   if (error) {
-    console.error('Error fetching songs:', error);
+    logger.error('Error fetching songs:', error);
     return (
       <div data-testid="song-list-error">
         Something went wrong while loading songs. Please try again.

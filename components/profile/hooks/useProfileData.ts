@@ -23,7 +23,7 @@ function parseZodErrors(err: unknown): Record<string, string> {
 
 async function loadProfileFromDb(userId: string): Promise<ProfileEdit> {
   const supabase = createClient();
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+  const { data, error } = await supabase.from('profiles').select('id, email, full_name, first_name, last_name, username, bio').eq('id', userId).single();
 
   // If no profile exists yet, return empty form
   if (error && error.code === 'PGRST116') {

@@ -42,17 +42,17 @@ export function LandingFeatures() {
       <div className="container mx-auto px-4">
         <AnimatedSection className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.01em] text-foreground mb-4">
-            Everything you need to run your studio
+            The Teacher&apos;s Toolkit
           </h2>
           <p className="text-lg leading-[1.7] text-muted-foreground max-w-2xl mx-auto">
-            From scheduling to AI-powered insights, Strummy has it all.
+            Everything you need to inspire and manage without overhead.
           </p>
         </AnimatedSection>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (
             <AnimatedSection key={f.title} delay={i * 0.08}>
-              <div className="group rounded-2xl border border-border bg-card p-6 landing-shadow-card hover:landing-shadow-card-hover transition-all duration-300 h-full">
+              <div className="group rounded-2xl glass p-6 landing-shadow-card hover:landing-shadow-card-hover transition-all duration-300 h-full">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <f.icon size={20} className="text-primary" />
                 </div>

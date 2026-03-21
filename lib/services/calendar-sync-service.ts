@@ -10,6 +10,7 @@ import { google } from 'googleapis';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getGoogleOAuth2Client } from '@/lib/google';
 import { isGuitarLesson } from '@/lib/calendar/calendar-utils';
+import { extractStudentFromAttendees } from '@/lib/services/calendar-bulk-import';
 import { findOrCreateAuthUser, upsertStudentProfile } from '@/app/dashboard/actions';
 import { logger } from '@/lib/logger';
 
@@ -96,11 +97,23 @@ async function syncTeacherCalendar(
     (e) => isGuitarLesson(e) && e.id && e.start?.dateTime
   );
 
+  // Look up teacher email to exclude from attendees
+  const { data: teacherProfile } = await admin
+    .from('profiles')
+    .select('email')
+    .eq('user_id', integration.user_id)
+    .single();
+  const teacherEmail = teacherProfile?.email || '';
+
   let imported = 0;
   let skipped = 0;
 
   for (const event of events) {
-    const attendeeEmail = event.attendees?.[0]?.email;
+    const student = extractStudentFromAttendees(
+      event.attendees as Array<{ email: string; displayName?: string }> | undefined,
+      teacherEmail
+    );
+    const attendeeEmail = student?.email;
     if (!attendeeEmail) {
       skipped++;
       continue;

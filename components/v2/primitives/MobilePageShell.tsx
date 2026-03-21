@@ -10,7 +10,7 @@ interface MobilePageShellProps {
   /** Page title displayed in the sticky header */
   title: string;
   /** Optional subtitle below the title */
-  subtitle?: string;
+  subtitle?: ReactNode;
   /** Show back button (defaults to true) */
   showBack?: boolean;
   /** Custom back handler (defaults to router.back) */
@@ -60,8 +60,8 @@ export function MobilePageShell({
       {/* Sticky header */}
       <header
         className={cn(
-          'sticky top-0 z-30 bg-background/95 backdrop-blur-sm',
-          'border-b border-border',
+          'sticky top-0 z-30 bg-background/80 backdrop-blur-xl',
+          'border-b border-border/40',
           'px-4 py-3'
         )}
       >

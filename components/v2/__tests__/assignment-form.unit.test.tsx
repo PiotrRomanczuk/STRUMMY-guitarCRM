@@ -2,43 +2,19 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-// Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({
-      children,
-      className,
-      ..._rest
-    }: {
-      children?: React.ReactNode;
-      className?: string;
-      [key: string]: unknown;
-    }) => (
-      <div className={className} data-testid="motion-div">
-        {children}
-      </div>
-    ),
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
-}));
-
-// Mock animation variants
-jest.mock('@/lib/animations/variants', () => ({
-  fadeIn: { hidden: { opacity: 0 }, visible: { opacity: 1 } },
-}));
-
 // Mock sonner toast
 jest.mock('sonner', () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
-// Mock lucide-react
+
+// Mock lucide-react (includes icons used by StepWizardForm)
 jest.mock('lucide-react', () => ({
   ArrowLeft: () => <span data-testid="icon-arrow-left" />,
   ArrowRight: () => <span data-testid="icon-arrow-right" />,
   Check: () => <span data-testid="icon-check" />,
   Loader2: () => <span data-testid="icon-loader" />,
+  ChevronLeft: () => <span data-testid="icon-chevron-left" />,
+  ChevronRight: () => <span data-testid="icon-chevron-right" />,
 }));
 
 // Mock useAssignmentMutations
@@ -137,9 +113,6 @@ const defaultProps = {
   teacherId: 'teacher-1',
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// AssignmentForm
-// ──────────────────────────────────────────────────────────────────────────────
 describe('AssignmentForm', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -154,10 +127,8 @@ describe('AssignmentForm', () => {
 
     it('blocks advancing from step 0 without selecting a student', () => {
       render(<AssignmentForm {...defaultProps} />);
-      // Next button should be disabled without a student selected
       const nextButton = screen.getByRole('button', { name: /next/i });
       expect(nextButton).toBeDisabled();
-      // Should still be on step 0
       expect(screen.getByTestId('step-student')).toBeInTheDocument();
     });
 
@@ -169,61 +140,50 @@ describe('AssignmentForm', () => {
 
     it('allows advancing to step 1 after selecting a student', () => {
       render(<AssignmentForm {...defaultProps} />);
-      // Select a student
       fireEvent.change(screen.getByTestId('student-select'), {
         target: { value: 'student-1' },
       });
-      // Click Next
       const nextButton = screen.getByRole('button', { name: /next/i });
       expect(nextButton).not.toBeDisabled();
       fireEvent.click(nextButton);
-      // Should be on step 1
       expect(screen.getByTestId('step-content')).toBeInTheDocument();
     });
 
     it('blocks advancing from step 1 without entering a title', () => {
       render(<AssignmentForm {...defaultProps} />);
-      // Go to step 1
       fireEvent.change(screen.getByTestId('student-select'), {
         target: { value: 'student-1' },
       });
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
-      // Now on step 1, title is empty
       const nextButton = screen.getByRole('button', { name: /next/i });
       expect(nextButton).toBeDisabled();
     });
 
     it('allows advancing from step 1 to step 2 after entering title', () => {
       render(<AssignmentForm {...defaultProps} />);
-      // Step 0: select student
       fireEvent.change(screen.getByTestId('student-select'), {
         target: { value: 'student-1' },
       });
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
-      // Step 1: enter title
       fireEvent.change(screen.getByTestId('title-input'), {
         target: { value: 'Practice scales' },
       });
       const nextButton = screen.getByRole('button', { name: /next/i });
       expect(nextButton).not.toBeDisabled();
       fireEvent.click(nextButton);
-      // Should be on step 2
       expect(screen.getByTestId('step-schedule')).toBeInTheDocument();
     });
 
     it('validates ALL required fields at the final step (step 2)', () => {
       render(<AssignmentForm {...defaultProps} />);
-      // Step 0: select student
       fireEvent.change(screen.getByTestId('student-select'), {
         target: { value: 'student-1' },
       });
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
-      // Step 1: enter title
       fireEvent.change(screen.getByTestId('title-input'), {
         target: { value: 'Practice chords' },
       });
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
-      // Step 2: should see the create button enabled since required fields are filled
       const createButton = screen.getByRole('button', { name: /create/i });
       expect(createButton).not.toBeDisabled();
     });
@@ -233,7 +193,6 @@ describe('AssignmentForm', () => {
     it('calls createAssignment on submit in create mode', async () => {
       mockCreateAssignment.mockResolvedValueOnce({ id: 'new-1' });
       render(<AssignmentForm {...defaultProps} />);
-      // Navigate to final step
       fireEvent.change(screen.getByTestId('student-select'), {
         target: { value: 'student-1' },
       });
@@ -242,7 +201,6 @@ describe('AssignmentForm', () => {
         target: { value: 'Scale practice' },
       });
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
-      // Submit
       fireEvent.click(screen.getByRole('button', { name: /create/i }));
       await waitFor(() => {
         expect(mockCreateAssignment).toHaveBeenCalledWith(
@@ -254,21 +212,8 @@ describe('AssignmentForm', () => {
       });
     });
 
-    it('disables navigation button when isLoading is true', () => {
+    it('disables submit button when isLoading is true on final step', () => {
       mockIsLoading = true;
-      render(<AssignmentForm {...defaultProps} />);
-      // Select a student so canAdvance would normally be true
-      fireEvent.change(screen.getByTestId('student-select'), {
-        target: { value: 'student-1' },
-      });
-      // Even with valid data, the button should be disabled due to isLoading
-      const nextButton = screen.getByRole('button', { name: /next/i });
-      expect(nextButton).toBeDisabled();
-    });
-
-    it('disables create button when isLoading is true on final step', () => {
-      // Start with isLoading false to navigate, then check final step
-      mockIsLoading = false;
       render(
         <AssignmentForm
           {...defaultProps}
@@ -283,13 +228,10 @@ describe('AssignmentForm', () => {
           }}
         />
       );
-      // Navigate through steps (initialData provides student and title)
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
-      // Now on final step - verify button is present
       const updateButton = screen.getByRole('button', { name: /update/i });
-      // With isLoading false, the button should be enabled
-      expect(updateButton).not.toBeDisabled();
+      expect(updateButton).toBeDisabled();
     });
   });
 
@@ -309,7 +251,6 @@ describe('AssignmentForm', () => {
           }}
         />
       );
-      // Student should already be selected, so Next button should be enabled
       const nextButton = screen.getByRole('button', { name: /next/i });
       expect(nextButton).not.toBeDisabled();
     });
@@ -329,7 +270,6 @@ describe('AssignmentForm', () => {
           }}
         />
       );
-      // Navigate to final step
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
       fireEvent.click(screen.getByRole('button', { name: /next/i }));
       expect(screen.getByRole('button', { name: /update/i })).toBeInTheDocument();
@@ -342,11 +282,9 @@ describe('AssignmentForm', () => {
       expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument();
     });
 
-    it('shows step labels for each step', () => {
+    it('shows current step label', () => {
       render(<AssignmentForm {...defaultProps} />);
-      expect(
-        screen.getByRole('button', { name: /step 1: student/i })
-      ).toBeInTheDocument();
+      expect(screen.getByText('Student')).toBeInTheDocument();
     });
   });
 });

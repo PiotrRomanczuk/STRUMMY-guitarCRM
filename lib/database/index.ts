@@ -39,3 +39,9 @@ export {
   type DatabaseContext,
   type RequestDatabaseInfo,
 } from './middleware';
+
+// Query helpers - shared utilities for Supabase query building
+export {
+  applySortAndPagination,
+  type SupabaseQueryBuilder,
+} from './query-helpers';

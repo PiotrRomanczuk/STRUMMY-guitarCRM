@@ -14,7 +14,7 @@ export function LandingCTA() {
               Ready to transform your teaching studio?
             </h2>
             <p className="text-lg leading-[1.7] text-white/80 max-w-xl mx-auto mb-8">
-              Join hundreds of guitar teachers who&apos;ve simplified their workflow.
+              Join the guitar teachers who&apos;ve simplified their daily workflow.
             </p>
             <Button
               asChild

@@ -3,12 +3,12 @@ import {
   renewExpiringWebhooks,
   cleanupExpiredWebhooks,
 } from '../webhook-renewal';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import * as googleLib from '@/lib/google';
 
 // Mock dependencies
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn(),
+jest.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: jest.fn(),
 }));
 
 jest.mock('@/lib/google', () => ({
@@ -51,7 +51,7 @@ describe('webhook-renewal', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSupabase = createMockSupabase();
-    (createClient as jest.Mock).mockResolvedValue(mockSupabase);
+    (createAdminClient as jest.Mock).mockReturnValue(mockSupabase);
 
     // Set up environment
     process.env = { ...OLD_ENV };

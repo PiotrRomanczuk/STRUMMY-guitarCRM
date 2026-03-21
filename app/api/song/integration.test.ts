@@ -131,9 +131,7 @@ describe('Song API Integration Tests', () => {
 			const url = new URL('http://localhost/api/song');
 			const id = url.searchParams.get('id');
 
-			if (!id) {
-				expect(true).toBe(true); // Error condition detected
-			}
+			expect(id).toBeNull();
 		});
 
 		it('should return 422 for validation errors', () => {

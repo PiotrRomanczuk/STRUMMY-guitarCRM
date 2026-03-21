@@ -71,7 +71,7 @@ export function useNotifications(userId?: string, options: UseNotificationsOptio
     try {
       let query = supabase
         .from('in_app_notifications')
-        .select('*')
+        .select('id, user_id, notification_type, title, body, icon, variant, is_read, read_at, action_url, action_label, entity_type, entity_id, priority, created_at, updated_at, expires_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(limit);

@@ -223,7 +223,7 @@ export const FONT_SCHEMES: Record<string, FontScheme> = {
  * Active Font Scheme
  * Change this to switch between different font combinations
  */
-export const ACTIVE_FONT_SCHEME: keyof typeof FONT_SCHEMES = 'plusJakarta';
+export const ACTIVE_FONT_SCHEME: keyof typeof FONT_SCHEMES = 'inter';
 
 // Available schemes:
 // - geist (current) - Modern and clean

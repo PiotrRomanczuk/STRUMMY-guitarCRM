@@ -14,8 +14,8 @@ describe('ui-version constants', () => {
     expect(COOKIE_NAME).toBe('strummy-ui-version');
   });
 
-  it('DEFAULT_VERSION is v1', () => {
-    expect(DEFAULT_VERSION).toBe('v1');
+  it('DEFAULT_VERSION is v2', () => {
+    expect(DEFAULT_VERSION).toBe('v2');
   });
 });
 
@@ -35,11 +35,11 @@ describe('getUIVersionFromCookie', () => {
     }
   });
 
-  it('returns v1 (default) when no cookie is set', () => {
+  it('returns v2 (default) when no cookie is set', () => {
     // Clear the cookie
     document.cookie = `${COOKIE_NAME}=;max-age=0`;
     const result = getUIVersionFromCookie();
-    expect(result).toBe('v1');
+    expect(result).toBe('v2');
   });
 
   it('returns v2 when cookie is set to v2', () => {
@@ -48,10 +48,10 @@ describe('getUIVersionFromCookie', () => {
     expect(result).toBe('v2');
   });
 
-  it('returns v1 when cookie has an invalid value', () => {
+  it('returns v2 when cookie has an invalid value', () => {
     document.cookie = `${COOKIE_NAME}=v3;path=/`;
     const result = getUIVersionFromCookie();
-    expect(result).toBe('v1');
+    expect(result).toBe('v2');
   });
 
   it('returns v1 when cookie is set to v1 explicitly', () => {
@@ -95,9 +95,9 @@ describe('useUIVersion hook', () => {
     document.cookie = `${COOKIE_NAME}=;max-age=0`;
   });
 
-  it('reads v1 by default from cookie', () => {
+  it('reads v2 by default from cookie', () => {
     const version = getUIVersionFromCookie();
-    expect(version).toBe('v1');
+    expect(version).toBe('v2');
   });
 
   it('reads v2 after cookie is set', () => {
@@ -106,17 +106,17 @@ describe('useUIVersion hook', () => {
     expect(version).toBe('v2');
   });
 
-  it('toggle logic: v1 -> v2', () => {
-    setUIVersionCookie('v1');
-    const current = getUIVersionFromCookie();
-    const toggled: UIVersion = current === 'v1' ? 'v2' : 'v1';
-    expect(toggled).toBe('v2');
-  });
-
   it('toggle logic: v2 -> v1', () => {
     setUIVersionCookie('v2');
     const current = getUIVersionFromCookie();
     const toggled: UIVersion = current === 'v1' ? 'v2' : 'v1';
     expect(toggled).toBe('v1');
+  });
+
+  it('toggle logic: v1 -> v2', () => {
+    setUIVersionCookie('v1');
+    const current = getUIVersionFromCookie();
+    const toggled: UIVersion = current === 'v1' ? 'v2' : 'v1';
+    expect(toggled).toBe('v2');
   });
 });

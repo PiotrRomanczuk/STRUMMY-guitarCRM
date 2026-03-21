@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import FormAlert from '@/components/shared/FormAlert';
-import { SimpleDatabaseStatus } from '@/components/debug/SimpleDatabaseStatus';
 import { Mail, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -115,8 +114,6 @@ export default function SignInPage() {
 
   return (
     <AuthLayout>
-      <SimpleDatabaseStatus />
-
       <AuthHeader
         title="Sign in to Strummy"
         subtitle="Manage your studio with AI-powered tools."
@@ -190,7 +187,7 @@ export default function SignInPage() {
           type="submit"
           disabled={loading}
           data-testid="signin-button"
-          className="w-full h-12 rounded-lg font-bold text-base mt-2"
+          className="w-full h-12 rounded-lg font-bold text-base mt-2 bg-gradient-to-br from-[hsl(38,92%,50%)] to-[hsl(30,90%,42%)] text-[#271900] hover:opacity-90 transition-opacity"
         >
           {loading ? 'Signing in...' : 'Continue'}
           {!loading && <ArrowRight className="ml-2 h-5 w-5" />}

@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Plus, BookOpen, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, BookOpen, RefreshCw, CalendarSync } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fastStaggerContainer, listItem } from '@/lib/animations/variants';
 
@@ -18,10 +18,15 @@ import type { LessonListV2Props } from './lesson.types';
 export function LessonListMobile({
   initialLessons,
   role,
+  currentYear,
   onRefresh,
   isRefreshing,
+  onSyncCalendar,
+  isSyncing,
+  onYearChange,
 }: LessonListV2Props) {
   const router = useRouter();
+  const thisYear = new Date().getFullYear();
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   const filteredLessons = statusFilter
@@ -43,22 +48,64 @@ export function LessonListMobile({
   return (
     <MobilePageShell
       title="Lessons"
-      subtitle={`${filteredLessons.length} lesson${filteredLessons.length !== 1 ? 's' : ''}`}
+      subtitle={
+        <span className="flex items-center gap-2">
+          {filteredLessons.length} lesson
+          {filteredLessons.length !== 1 ? 's' : ''}
+          {onYearChange && (
+            <span className="inline-flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => onYearChange(currentYear - 1)}
+                className="p-0.5 rounded text-muted-foreground hover:text-foreground"
+                aria-label="Previous year"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+              <span className="tabular-nums font-medium">{currentYear}</span>
+              <button
+                type="button"
+                onClick={() => onYearChange(currentYear + 1)}
+                disabled={currentYear >= thisYear}
+                className="p-0.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30"
+                aria-label="Next year"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </span>
+          )}
+        </span>
+      }
       showBack={false}
       headerActions={
-        onRefresh ? (
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Refresh lessons"
-          >
-            <RefreshCw
-              className={cn('h-5 w-5', isRefreshing && 'animate-spin')}
-            />
-          </button>
-        ) : undefined
+        <div className="flex items-center gap-1">
+          {onSyncCalendar && (
+            <button
+              type="button"
+              onClick={onSyncCalendar}
+              disabled={isSyncing}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Sync from Google Calendar"
+            >
+              <CalendarSync
+                className={cn('h-5 w-5', isSyncing && 'animate-spin')}
+              />
+            </button>
+          )}
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Refresh lessons"
+            >
+              <RefreshCw
+                className={cn('h-5 w-5', isRefreshing && 'animate-spin')}
+              />
+            </button>
+          )}
+        </div>
       }
       fab={
         canCreate ? (

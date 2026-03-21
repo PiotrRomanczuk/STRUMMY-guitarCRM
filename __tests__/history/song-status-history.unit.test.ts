@@ -118,20 +118,8 @@ describeWithDb('Song Status History Tracking (Integration)', () => {
     }
   });
 
-  it('should skip tests when no authenticated user', async () => {
-    if (!hasAuthenticatedUser) {
-      console.log('Skipping integration test: no authenticated user');
-      expect(true).toBe(true);
-      return;
-    }
-    expect(hasAuthenticatedUser).toBe(true);
-  });
-
   it('should create history record when song status changes', async () => {
-    if (!hasAuthenticatedUser) {
-      console.log('Skipping: no authenticated user');
-      return;
-    }
+    if (!hasAuthenticatedUser) return;
     // Update status
     await supabase
       .from('lesson_songs')

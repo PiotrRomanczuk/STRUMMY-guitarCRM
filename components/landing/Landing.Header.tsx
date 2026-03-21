@@ -53,7 +53,7 @@ export function LandingHeader() {
           >
             Log in
           </Link>
-          <Button asChild className="rounded-full px-5 text-sm font-semibold">
+          <Button asChild className="rounded-full px-5 text-sm font-semibold bg-gradient-to-br from-[hsl(38,92%,50%)] to-[hsl(30,90%,42%)] text-[#271900] hover:opacity-90">
             <Link href="/sign-up">Start Free Trial</Link>
           </Button>
         </div>

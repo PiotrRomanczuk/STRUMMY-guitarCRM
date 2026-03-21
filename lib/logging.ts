@@ -147,7 +147,7 @@ export async function getUserActivityLogs(
   try {
     const { data, error } = await supabase
       .from('user_activity_logs')
-      .select('*')
+      .select('id, user_id, activity_type, event_name, event_description, page_url, element_id, element_class, element_text, additional_data, user_agent, ip_address, referer, session_id, timestamp, created_at')
       .eq('user_id', userId)
       .order('timestamp', { ascending: false })
       .range(offset, offset + limit - 1);

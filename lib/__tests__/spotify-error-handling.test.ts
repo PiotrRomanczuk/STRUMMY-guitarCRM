@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
@@ -14,7 +12,7 @@ import {
 const originalEnv = process.env;
 
 // Mock fetch globally
-global.fetch = jest.fn();
+global.fetch = jest.fn() as jest.Mock;
 
 describe('Spotify Error Handling', () => {
   beforeEach(() => {

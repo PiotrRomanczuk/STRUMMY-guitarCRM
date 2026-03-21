@@ -45,11 +45,11 @@ const activityIcons = {
 
 export function ActivityWidget({ activities }: ActivityWidgetProps) {
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden">
-      <div className="p-4 border-b border-border">
+    <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
+      <div className="p-4 border-b border-border/30">
         <h3 className="text-sm font-medium flex items-center gap-2">
-          <Activity className="h-3.5 w-3.5" />
-          Recent Activity
+          <Activity className="h-3.5 w-3.5 text-primary" />
+          <span className="text-primary">Recent Activity</span>
         </h3>
       </div>
 

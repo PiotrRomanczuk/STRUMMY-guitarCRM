@@ -31,7 +31,7 @@ export default async function SongSections({ songId }: Props) {
   const supabase = await createClient();
   const { data: sections, error } = await supabase
     .from('song_sections')
-    .select('*')
+    .select('id, song_id, section_type, section_number, order_position, chords, lyrics, tab_notation, notes, created_at')
     .eq('song_id', songId)
     .order('order_position', { ascending: true });
 

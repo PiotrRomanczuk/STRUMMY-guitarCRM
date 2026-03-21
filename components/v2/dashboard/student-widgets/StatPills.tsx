@@ -29,7 +29,7 @@ export function StatPills({ stats }: StatPillsProps) {
         <div
           key={pill.label}
           className="flex-1 flex items-center gap-1.5 rounded-xl
-                     bg-card border border-border px-3 py-2.5"
+                     bg-card border border-border/50 px-3 py-2.5"
         >
           <pill.icon className={`h-4 w-4 shrink-0 ${pill.color}`} />
           <span className="text-xs font-medium text-foreground truncate">

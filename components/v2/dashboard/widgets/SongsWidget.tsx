@@ -24,11 +24,12 @@ export function SongsWidget({ songs }: SongsWidgetProps) {
   const displaySongs = songs.slice(0, 5);
 
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden">
-      <div className="flex items-center justify-between p-4 border-b border-border">
+    <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
+      <div className="flex items-center justify-between p-4 border-b border-border/30">
         <h3 className="text-sm font-medium flex items-center gap-2">
-          <Music className="h-3.5 w-3.5" />
-          Song Library ({songs.length})
+          <Music className="h-3.5 w-3.5 text-primary" />
+          <span className="text-primary">Song Library</span>
+          <span className="text-muted-foreground">({songs.length})</span>
         </h3>
         <Link
           href="/dashboard/songs"
@@ -49,7 +50,7 @@ export function SongsWidget({ songs }: SongsWidgetProps) {
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border/30">
           {displaySongs.map((song) => (
             <Link
               key={song.id}

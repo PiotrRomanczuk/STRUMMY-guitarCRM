@@ -54,7 +54,7 @@ export async function getUserNotificationPreferences(
   // Fetch preferences with RLS enforcement
   const { data, error } = await supabase
     .from('notification_preferences')
-    .select('*')
+    .select('id, user_id, notification_type, enabled, delivery_channel, created_at, updated_at')
     .eq('user_id', userId)
     .order('notification_type', { ascending: true });
 

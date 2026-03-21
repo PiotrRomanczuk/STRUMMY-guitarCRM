@@ -92,7 +92,7 @@ function StudentCards({
           <a
             key={student.id}
             href={`/dashboard/users/${student.id}`}
-            className="block bg-card rounded-xl border border-border p-4
+            className="block bg-card rounded-xl border border-border/50 p-4
                        active:bg-muted/50 transition-colors"
           >
             <div className="flex items-center justify-between">

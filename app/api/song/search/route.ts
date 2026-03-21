@@ -70,7 +70,12 @@ export async function GET(req: NextRequest) {
     // Apply filters
     if (level) query = query.eq("level", level);
     if (key) query = query.eq("key", key);
-    if (author) query = query.ilike("author", `%${author}%`);
+    if (author) {
+      const safeAuthor = sanitizePostgrestFilter(author);
+      if (safeAuthor.length > 0) {
+        query = query.ilike("author", `%${safeAuthor}%`);
+      }
+    }
     if (hasAudio === "true") query = query.not("audio_files", "is", null);
     if (hasChords === "true") query = query.not("chords", "is", null);
 

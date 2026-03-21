@@ -17,8 +17,8 @@ export function LandingSocialProof() {
       <div className="container mx-auto px-4 text-center">
         <AnimatedSection>
           <p className="text-sm font-medium text-muted-foreground mb-8">
-            Trusted by <span className="text-foreground font-semibold">200+</span> guitar teachers
-            worldwide
+            Trusted by <span className="text-primary font-semibold">20+ virtuoso teachers</span>{' '}
+            daily
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {logos.map((name) => (

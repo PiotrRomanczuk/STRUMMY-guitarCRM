@@ -55,20 +55,8 @@ describeWithDb('User History Tracking (Integration)', () => {
     }
   });
 
-  it('should skip tests when no authenticated user', async () => {
-    if (!hasAuthenticatedUser) {
-      console.log('Skipping integration test: no authenticated user');
-      expect(true).toBe(true);
-      return;
-    }
-    expect(hasAuthenticatedUser).toBe(true);
-  });
-
   it('should create history record when user profile is updated', async () => {
-    if (!hasAuthenticatedUser) {
-      console.log('Skipping: no authenticated user');
-      return;
-    }
+    if (!hasAuthenticatedUser) return;
     const originalData = await supabase
       .from('profiles')
       .select('*')

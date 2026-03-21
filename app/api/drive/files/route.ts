@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     // Build query
     let dbQuery = supabase
       .from('drive_files')
-      .select('*')
+      .select('id, uploaded_by, entity_type, entity_id, google_drive_file_id, google_drive_folder_id, file_type, filename, title, description, mime_type, file_size_bytes, metadata, visibility, display_order, created_at, updated_at, deleted_at')
       .is('deleted_at', null)
       .order('display_order', { ascending: true })
       .order('created_at', { ascending: false });

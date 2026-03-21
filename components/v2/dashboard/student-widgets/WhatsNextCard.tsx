@@ -19,8 +19,8 @@ export function WhatsNextCard({ nextLesson, topAssignment }: WhatsNextCardProps)
   const hasContent = nextLesson || topAssignment;
 
   return (
-    <div className="rounded-xl bg-card border border-border p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+    <div className="rounded-xl bg-card border border-border/50 p-4 space-y-3">
+      <h2 className="text-sm font-semibold text-primary uppercase tracking-wide">
         What&apos;s Next
       </h2>
 

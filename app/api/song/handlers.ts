@@ -5,6 +5,11 @@ import { SongInputSchema, SongDraftSchema } from '@/schemas/SongSchema';
 import { ZodError } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
+import { validateMutationPermission } from '@/lib/auth/permissions';
+import { applySortAndPagination } from '@/lib/database/query-helpers';
+
+// Re-export so existing imports from this module continue to work
+export { validateMutationPermission } from '@/lib/auth/permissions';
 
 export interface SongQueryParams {
   level?: string;
@@ -36,15 +41,6 @@ export interface AuthResult {
 }
 
 /**
- * Validate that user has required role for mutation operations
- */
-export function validateMutationPermission(
-  profile: { isAdmin?: boolean; isTeacher?: boolean } | null
-): boolean {
-  return !!(profile?.isAdmin || profile?.isTeacher);
-}
-
-/**
  * Validate sort field to prevent injection
  */
 function validateSortField(sortBy?: string): string {
@@ -66,22 +62,6 @@ function applyFilters(
   if (params.author) result = result.eq('author', params.author);
   if (params.search) result = result.ilike('title', `%${params.search}%`);
   return result;
-}
-
-/**
- * Apply sorting and pagination to query
- */
-function applySortAndPagination(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  query: any,
-  sortBy: string,
-  sortOrder: string,
-  page: number,
-  limit: number
-) {
-  const ascending = sortOrder === 'asc';
-  const offset = (page - 1) * limit;
-  return query.order(sortBy, { ascending }).range(offset, offset + limit - 1);
 }
 
 export async function getSongsHandler(

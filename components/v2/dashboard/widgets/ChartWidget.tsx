@@ -27,11 +27,11 @@ export function ChartWidget({ data }: ChartWidgetProps) {
   const hasData = data.some((d) => d.lessons > 0 || d.assignments > 0);
 
   return (
-    <div className="bg-card rounded-xl border border-border p-4 lg:p-5">
+    <div className="bg-card rounded-xl border border-border/50 p-4 lg:p-5">
       <div className="mb-4">
         <h3 className="text-sm font-medium flex items-center gap-2">
-          <TrendingUp className="h-3.5 w-3.5" />
-          Weekly Progress
+          <TrendingUp className="h-3.5 w-3.5 text-primary" />
+          <span className="text-primary">Weekly Progress</span>
         </h3>
         <p className="text-xs text-muted-foreground mt-0.5">
           Lessons and assignments this week

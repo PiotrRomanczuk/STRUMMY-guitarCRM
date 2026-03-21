@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
- 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { createClient } from '@/lib/supabase/client';
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
@@ -8,7 +7,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 jest.mock('@/lib/supabase/client');
 
 describe('Assignment History Tracking', () => {
-  let mockSupabase: ReturnType<typeof createClient>;
+  let mockSupabase: any;
   const testUserId = 'test-user-id';
   const testAssignmentId = 'test-assignment-id';
 
@@ -74,7 +73,7 @@ describe('Assignment History Tracking', () => {
       },
     };
 
-    (createClient as jest.Mock).mockReturnValue(mockSupabase);
+    (createClient as jest.MockedFunction<typeof createClient>).mockReturnValue(mockSupabase);
   });
 
   it('should create history record when assignment is created', async () => {

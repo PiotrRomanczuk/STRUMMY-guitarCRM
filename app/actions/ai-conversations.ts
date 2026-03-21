@@ -103,7 +103,7 @@ export async function getConversation(
 
     const { data: conversation, error: convError } = await supabase
       .from('ai_conversations')
-      .select('*')
+      .select('id, user_id, title, model_id, context_type, context_id, is_archived, created_at, updated_at')
       .eq('id', id)
       .single();
 
@@ -111,7 +111,7 @@ export async function getConversation(
 
     const { data: messages, error: msgError } = await supabase
       .from('ai_messages')
-      .select('*')
+      .select('id, conversation_id, role, content, model_id, tokens_used, latency_ms, is_helpful, created_at')
       .eq('conversation_id', id)
       .order('created_at', { ascending: true });
 

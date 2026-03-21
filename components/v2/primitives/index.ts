@@ -6,3 +6,5 @@ export { FloatingActionButton } from './FloatingActionButton';
 export { FullScreenSearchPicker } from './FullScreenSearchPicker';
 export { StepWizardForm } from './StepWizardForm';
 export { V2ErrorBoundary } from './ErrorBoundary';
+export { ListPageHeader } from './ListPageHeader';
+export { StatusBadge } from './StatusBadge';

@@ -54,11 +54,13 @@ const eslintConfig = defineConfig([
     name: 'project/component-size-rules',
     files: ['app/**/*.{ts,tsx}', 'components/**/*.{ts,tsx}', 'lib/**/*.{ts,tsx}'],
     rules: {
-      // Encourage small, focused components/files
-      'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
-      'max-lines-per-function': ['warn', { max: 300, skipBlankLines: true, IIFEs: true }],
+      // Enforce small, focused files (warn — many files still exceed this)
+      'max-lines': ['warn', { max: 200, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['warn', { max: 80, skipBlankLines: true, IIFEs: true }],
       complexity: ['warn', { max: 50 }],
       'max-depth': ['warn', 10],
+      // Discourage explicit 'any' — prefer unknown or proper types
+      '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
   // Do not apply size rules to generated types, migrations, or tests

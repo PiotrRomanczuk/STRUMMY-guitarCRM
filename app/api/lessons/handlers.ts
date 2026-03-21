@@ -12,6 +12,11 @@ import {
   syncLessonUpdate,
   syncLessonDeletion,
 } from '../../../lib/services/calendar-lesson-sync';
+import { validateMutationPermission } from '@/lib/auth/permissions';
+import { applySortAndPagination as applySortAndPaginationBase } from '@/lib/database/query-helpers';
+
+// Re-export so existing imports from this module continue to work
+export { validateMutationPermission } from '@/lib/auth/permissions';
 
 export interface LessonQueryParams {
   userId?: string;
@@ -32,10 +37,6 @@ export interface UserProfile {
   isAdmin: boolean;
   isTeacher: boolean | null;
   isStudent: boolean | null;
-}
-
-export function validateMutationPermission(profile: UserProfile | null): boolean {
-  return !!(profile?.isAdmin || profile?.isTeacher);
 }
 
 export function canViewAll(profile: UserProfile | null): boolean {
@@ -132,7 +133,7 @@ function applyLessonFilters(
   return q;
 }
 
-function applySortAndPagination(
+function applySortAndPaginationWithGuards(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   query: any,
   sort: string,
@@ -150,9 +151,7 @@ function applySortAndPagination(
     throw new Error('Invalid query object passed to applySortAndPagination');
   }
 
-  const ascending = sortOrder === 'asc';
-  const offset = (page - 1) * limit;
-  return query.order(sort, { ascending }).range(offset, offset + limit - 1);
+  return applySortAndPaginationBase(query, sort, sortOrder, page, limit);
 }
 
 // Complexity is slightly over due to role-based filtering logic
@@ -213,7 +212,7 @@ export async function getLessonsHandler(
 
   const filteredQuery = filteringResult.query;
 
-  const finalQuery = applySortAndPagination(filteredQuery, sortField, sortOrder, page, limit);
+  const finalQuery = applySortAndPaginationWithGuards(filteredQuery, sortField, sortOrder, page, limit);
 
   // If finalQuery is already an executed result, handle it directly
   if (finalQuery && 'data' in finalQuery && 'error' in finalQuery) {

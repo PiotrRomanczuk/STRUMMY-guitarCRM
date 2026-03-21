@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   const generateReport = url.searchParams.get('report') === 'true';
 
   // 1. Fetch songs
-  let queryBuilder = supabase.from('songs').select('*').is('deleted_at', null); // Only active songs
+  let queryBuilder = supabase.from('songs').select('id, title, author, level, key, chords, audio_files, gallery_images, cover_image_url, youtube_url, ultimate_guitar_link, spotify_link_url, tiktok_short_url, lyrics_with_chords, short_title, notes, category, capo_fret, strumming_pattern, tempo, time_signature, duration_ms, release_year, search_vector, deleted_at, created_at, updated_at').is('deleted_at', null); // Only active songs
 
   if (!force) {
     // Prioritize songs missing Spotify data

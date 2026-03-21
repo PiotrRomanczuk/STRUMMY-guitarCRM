@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseChordsColumn } from '@/lib/music-theory/chord-parser';
+import { logger } from '@/lib/logger';
 
 export interface SongSummary {
   id: string;
@@ -40,7 +41,7 @@ export async function getSongDatabaseStatistics(): Promise<SongDatabaseStats> {
     .order('title');
 
   if (error) {
-    console.error('Error fetching songs for analytics:', error);
+    logger.error('Error fetching songs for analytics:', error);
     throw new Error(`Failed to fetch songs: ${error.message}`);
   }
 

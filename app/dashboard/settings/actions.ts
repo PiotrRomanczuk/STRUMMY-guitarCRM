@@ -30,9 +30,15 @@ export async function performDatabaseBackup() {
       return { success: false, error: 'Backup script not found' };
     }
 
-    const env = { ...process.env };
-    delete env.LD_PRELOAD;
-    delete env.NODE_OPTIONS;
+    // Only pass environment variables the backup script actually needs
+    const env = {
+      PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin',
+      HOME: process.env.HOME ?? '',
+      NODE_ENV: process.env.NODE_ENV ?? 'development',
+      POSTGRES_URL: process.env.POSTGRES_URL ?? '',
+      SUPABASE_DB_URL: process.env.SUPABASE_DB_URL ?? '',
+      BACKUP_DIR: process.env.BACKUP_DIR ?? '',
+    } satisfies NodeJS.ProcessEnv;
 
     const { stderr } = await execAsync(`bash "${scriptPath}"`, {
       env,

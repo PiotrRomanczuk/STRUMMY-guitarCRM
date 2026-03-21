@@ -1,7 +1,9 @@
 import { google } from 'googleapis';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import crypto from 'crypto';
 import { withRetry, AI_PROVIDER_RETRY_CONFIG } from '@/lib/ai/retry';
+import { logger } from '@/lib/logger';
 
 export const getGoogleOAuth2Client = (redirectUri?: string) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -70,6 +72,78 @@ export async function getCalendarEventsInRange(
   endDate: Date
 ): Promise<CalendarEvent[]> {
   const client = await getGoogleClient(userId);
+  const calendar = google.calendar({ version: 'v3', auth: client });
+
+  const response = await calendar.events.list({
+    calendarId: 'primary',
+    timeMin: startDate.toISOString(),
+    timeMax: endDate.toISOString(),
+    singleEvents: true,
+    orderBy: 'startTime',
+  });
+
+  return (response.data.items || []) as CalendarEvent[];
+}
+
+/**
+ * Admin-capable Google client for server-side/webhook contexts (no user session).
+ * Reads tokens via service-role client, handles token refresh with persistence.
+ */
+export async function getGoogleClientAdmin(userId: string) {
+  const admin = createAdminClient();
+  const { data: integration, error } = await admin
+    .from('user_integrations')
+    .select('access_token, refresh_token, expires_at')
+    .eq('user_id', userId)
+    .eq('provider', 'google')
+    .single();
+
+  if (error || !integration) {
+    throw new Error('Google integration not found');
+  }
+
+  const oauth2Client = getGoogleOAuth2Client();
+  oauth2Client.setCredentials({
+    access_token: integration.access_token,
+    refresh_token: integration.refresh_token,
+    expiry_date: integration.expires_at,
+  });
+
+  // Check token expiry and refresh if needed
+  const now = Date.now();
+  if (integration.expires_at && integration.expires_at < now) {
+    try {
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      await admin
+        .from('user_integrations')
+        .update({
+          access_token: credentials.access_token,
+          expires_at: credentials.expiry_date,
+          updated_at: new Date().toISOString(),
+          ...(credentials.refresh_token && { refresh_token: credentials.refresh_token }),
+        })
+        .eq('user_id', userId)
+        .eq('provider', 'google');
+      oauth2Client.setCredentials(credentials);
+      logger.info('[GoogleClient] Refreshed expired token for user', { userId });
+    } catch (refreshError) {
+      logger.error('[GoogleClient] Token refresh failed:', refreshError);
+      throw new Error('Failed to refresh Google access token');
+    }
+  }
+
+  return oauth2Client;
+}
+
+/**
+ * Fetch calendar events using admin client (for webhook/cron contexts).
+ */
+export async function getCalendarEventsInRangeAdmin(
+  userId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<CalendarEvent[]> {
+  const client = await getGoogleClientAdmin(userId);
   const calendar = google.calendar({ version: 'v3', auth: client });
 
   const response = await calendar.events.list({

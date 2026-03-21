@@ -72,7 +72,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ data: updatedSong }, { status: 200 });
+    return NextResponse.json({ song: updatedSong }, { status: 200 });
   } catch (error) {
     logger.error("Unexpected error in song update API:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

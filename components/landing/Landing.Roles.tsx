@@ -22,7 +22,7 @@ const studentFeatures = [
 function RoleCard({ title, items, delay }: { title: string; items: string[]; delay: number }) {
   return (
     <AnimatedSection delay={delay}>
-      <div className="rounded-2xl border border-border bg-card p-8 landing-shadow-card h-full">
+      <div className="rounded-2xl glass p-8 landing-shadow-card h-full">
         <h3 className="text-xl font-bold text-foreground mb-6">{title}</h3>
         <ul className="space-y-4">
           {items.map((item) => (

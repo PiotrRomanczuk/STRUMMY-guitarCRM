@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 import type { Song } from "@/components/songs/types";
 
 export async function GET() {
@@ -36,8 +37,9 @@ export async function GET() {
     .eq("user_id", userId)
     .eq("profiles.isAdmin", true);
   if (error) {
+    logger.error("Error fetching admin favorites:", error);
     return NextResponse.json(
-      { error: "Error fetching songs: " + error.message },
+      { error: "Failed to fetch favorite songs" },
       { status: 500 },
     );
   }

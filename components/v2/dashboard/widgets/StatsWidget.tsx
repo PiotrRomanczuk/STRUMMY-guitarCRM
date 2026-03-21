@@ -70,7 +70,7 @@ export function StatsWidget({
           <motion.div
             key={stat.label}
             variants={listItem}
-            className="bg-card rounded-xl border border-border p-4 flex items-center gap-3"
+            className="bg-card rounded-xl border border-border/50 p-4 flex items-center gap-3 dark:shadow-[0_0_20px_hsl(38_92%_50%/0.06)]"
           >
             <div
               className={`w-10 h-10 rounded-lg ${stat.bgColor} flex items-center justify-center shrink-0`}

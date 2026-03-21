@@ -23,7 +23,7 @@ export function LessonCard({ lesson, role, onTap }: LessonCardProps) {
       type="button"
       onClick={onTap}
       className={cn(
-        'w-full text-left bg-card rounded-xl border border-border p-4 space-y-2',
+        'w-full text-left bg-card rounded-xl border border-border/50 p-4 space-y-2',
         'active:bg-muted/50 transition-colors'
       )}
     >

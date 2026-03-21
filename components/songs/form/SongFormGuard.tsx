@@ -19,17 +19,8 @@ export default function SongFormGuard({ mode, songId, onSuccess }: Props) {
 
   if (mode === 'edit' && loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl text-muted-foreground">Loading...</div>
-        <div className="p-4 bg-muted rounded text-xs font-mono max-w-lg break-all border border-border">
-          <p className="font-bold mb-2">Debug Info:</p>
-          <p>Song ID: {songId}</p>
-          <p>Loading: {String(loading)}</p>
-          <p>Error: {String(error)}</p>
-          <p>Supabase URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Defined' : 'Missing'}</p>
-          <p>Supabase Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Defined' : 'Missing'}</p>
-          <p>Timestamp: {new Date().toISOString()}</p>
-        </div>
       </div>
     );
   }

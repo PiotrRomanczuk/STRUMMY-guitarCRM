@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, Eye, EyeOff, GraduationCap, Plus } from 'lucide-react';
+import { BookOpen, Eye, EyeOff, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ListPageHeader } from '@/components/v2/primitives/ListPageHeader';
 import type { TheoryCourse } from './theory.types';
 
 const LEVEL_STYLES: Record<string, string> = {
@@ -20,40 +22,22 @@ interface CourseListDesktopProps {
 export default function CourseListDesktop({ courses, isStaff }: CourseListDesktopProps) {
   return (
     <div className="max-w-7xl mx-auto px-8 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Theory Courses</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Structured lessons on music theory and guitar fundamentals
-          </p>
-        </div>
-        {isStaff && (
-          <Link href="/dashboard/theory/new">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Course
-            </Button>
-          </Link>
-        )}
-      </div>
+      <ListPageHeader
+        title="Theory Courses"
+        subtitle="Structured lessons on music theory and guitar fundamentals"
+        action={isStaff ? { label: 'New Course', href: '/dashboard/theory/new' } : undefined}
+      />
 
       {courses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
-            <GraduationCap className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <h3 className="text-base font-semibold mb-1">No courses yet</h3>
-          <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-            {isStaff
-              ? 'Create your first theory course for students.'
-              : 'No courses available yet. Check back soon!'}
-          </p>
-          {isStaff && (
-            <Link href="/dashboard/theory/new">
-              <Button size="sm">Create Course</Button>
-            </Link>
-          )}
-        </div>
+        <EmptyState
+          icon={GraduationCap}
+          title="No courses yet"
+          message={isStaff
+            ? 'Create your first theory course for students.'
+            : 'No courses available yet. Check back soon!'}
+          actionLabel={isStaff ? 'New Course' : undefined}
+          actionHref={isStaff ? '/dashboard/theory/new' : undefined}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => (

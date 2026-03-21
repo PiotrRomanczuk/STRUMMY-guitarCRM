@@ -219,9 +219,9 @@ describe('mapSupabaseError', () => {
   });
 
   describe('fallback behavior', () => {
-    it('should return original message when no mapping found', () => {
+    it('should return generic message when no mapping found', () => {
       const message = mapSupabaseError({ message: 'Some unknown error' });
-      expect(message).toBe('Some unknown error');
+      expect(message).toBe('An unexpected error occurred');
     });
 
     it('should return default message when error is null', () => {

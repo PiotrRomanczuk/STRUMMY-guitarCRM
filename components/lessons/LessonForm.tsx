@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import useLessonForm, { UseLessonFormProps } from './useLessonForm';
+import useLessonForm, { UseLessonFormProps } from './hooks/useLessonForm';
 import { ProfileSelect } from './LessonForm.ProfileSelect';
 import { SongSelect } from './LessonForm.SongSelect';
 import { LessonFormFields } from './LessonForm.Fields';

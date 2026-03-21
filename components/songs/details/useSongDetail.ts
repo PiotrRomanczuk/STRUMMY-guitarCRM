@@ -26,7 +26,7 @@ async function loadSongDetail(songId: string): Promise<Song | undefined> {
 
   const { data, error: fetchError } = await supabase
     .from('songs')
-    .select('*')
+    .select('id, title, author, level, key, chords, audio_files, gallery_images, cover_image_url, youtube_url, ultimate_guitar_link, spotify_link_url, tiktok_short_url, lyrics_with_chords, short_title, notes, category, capo_fret, strumming_pattern, tempo, time_signature, duration_ms, release_year, search_vector, deleted_at, created_at, updated_at')
     .eq('id', songId)
     .is('deleted_at', null)
     .single();

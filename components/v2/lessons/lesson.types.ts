@@ -5,11 +5,15 @@ export type LessonRole = 'admin' | 'teacher' | 'student';
 export interface LessonListV2Props {
   initialLessons: LessonWithProfiles[];
   role: LessonRole;
+  currentYear: number;
   students?: StudentProfile[];
   teachers?: StudentProfile[];
   selectedStudentId?: string;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  onSyncCalendar?: () => void;
+  isSyncing?: boolean;
+  onYearChange?: (year: number) => void;
 }
 
 export interface StudentProfile {

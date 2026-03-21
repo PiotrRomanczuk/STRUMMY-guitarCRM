@@ -73,7 +73,7 @@ export async function fetchContextData(contextKey: string, context: AgentContext
 async function fetchCurrentUser(supabase: SupabaseClientType, userId: string) {
   const { data: user, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, email, full_name, is_admin, is_teacher, is_student, is_active, student_status, avatar_url, phone, created_at, updated_at')
     .eq('id', userId)
     .single();
 
@@ -91,7 +91,7 @@ async function fetchCurrentStudent(supabase: SupabaseClientType, context: AgentC
   if (context.entityType === 'student' && context.entityId) {
     const { data: student, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, email, full_name, is_student, is_active, student_status, avatar_url, phone, created_at, updated_at')
       .eq('id', context.entityId)
       .single();
 
@@ -111,7 +111,7 @@ async function fetchRecentLessons(supabase: SupabaseClientType, context: AgentCo
   // RLS enforces access; additionally scope by userId when available [BMS-112]
   let query = supabase
     .from('lessons')
-    .select('*')
+    .select('id, student_id, teacher_id, scheduled_at, duration_minutes, status, notes, created_at')
     .order('scheduled_at', { ascending: false })
     .limit(5);
 
@@ -138,7 +138,7 @@ async function fetchStudentData(supabase: SupabaseClientType, context: AgentCont
   if (studentIds) {
     const { data: students, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, email, full_name, is_student, is_active, student_status, avatar_url, phone, created_at, updated_at')
       .in('id', studentIds);
 
     if (error) {
@@ -157,7 +157,7 @@ async function fetchStudentData(supabase: SupabaseClientType, context: AgentCont
 async function fetchLessonHistory(supabase: SupabaseClientType, context: AgentContext) {
   let query = supabase
     .from('lessons')
-    .select('*')
+    .select('id, student_id, teacher_id, scheduled_at, duration_minutes, status, notes, created_at')
     .order('scheduled_at', { ascending: false })
     .limit(20);
 
@@ -181,7 +181,7 @@ async function fetchLessonHistory(supabase: SupabaseClientType, context: AgentCo
 async function fetchAssignmentHistory(supabase: SupabaseClientType, context: AgentContext) {
   let query = supabase
     .from('assignments')
-    .select('*')
+    .select('id, student_id, teacher_id, title, description, status, due_date, created_at')
     .order('created_at', { ascending: false })
     .limit(10);
 
@@ -207,7 +207,7 @@ async function fetchAssignmentSong(supabase: SupabaseClientType, context: AgentC
   if (songInfo?.title) {
     const { data: song, error } = await supabase
       .from('songs')
-      .select('*')
+      .select('id, title, author, level, key, chords, tempo, capo_fret, strumming_pattern, category, lyrics_with_chords, youtube_url, ultimate_guitar_link, spotify_link_url, created_at')
       .eq('title', songInfo.title)
       .single();
 
@@ -228,7 +228,7 @@ async function fetchLessonDetails(supabase: SupabaseClientType, context: AgentCo
   if (context.entityType === 'lesson' && context.entityId) {
     const { data: lesson, error } = await supabase
       .from('lessons')
-      .select('*')
+      .select('id, student_id, teacher_id, scheduled_at, duration_minutes, status, notes, created_at, updated_at')
       .eq('id', context.entityId)
       .single();
 

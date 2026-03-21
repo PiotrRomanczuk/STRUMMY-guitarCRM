@@ -53,7 +53,7 @@ export function AttentionWidget({ items }: AttentionWidgetProps) {
   const totalCount = items.length;
 
   return (
-    <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+    <div className="bg-card rounded-xl border border-border/50 p-4 space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium flex items-center gap-2">

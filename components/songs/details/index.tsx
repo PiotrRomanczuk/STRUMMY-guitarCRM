@@ -27,7 +27,7 @@ async function loadSongData(songId: string): Promise<Song | null> {
 
     const { data, error } = await supabase
       .from('songs')
-      .select('*')
+      .select('id, title, author, level, key, chords, audio_files, gallery_images, cover_image_url, youtube_url, ultimate_guitar_link, spotify_link_url, tiktok_short_url, lyrics_with_chords, short_title, notes, category, capo_fret, strumming_pattern, tempo, time_signature, duration_ms, release_year, search_vector, deleted_at, created_at, updated_at')
       .eq('id', songId)
       .is('deleted_at', null)
       .single();
@@ -53,7 +53,7 @@ async function loadVideos(songId: string): Promise<SongVideo[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('song_videos')
-      .select('*')
+      .select('id, song_id, uploaded_by, google_drive_file_id, google_drive_folder_id, title, filename, mime_type, file_size_bytes, duration_seconds, thumbnail_url, display_order, video_type, published_to_instagram, published_to_tiktok, published_to_youtube_shorts, instagram_media_id, tiktok_media_id, youtube_shorts_id, created_at, updated_at')
       .eq('song_id', songId)
       .order('created_at', { ascending: false });
 

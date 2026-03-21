@@ -1,7 +1,7 @@
 interface Profile {
   id: string;
   email: string;
-  full_name: string;
+  full_name: string | null;
 }
 
 interface Props {
@@ -34,7 +34,7 @@ export function ProfileSelect({ value, onChange, options, label, name, error }: 
         <option value="">Select a {label.toLowerCase()}</option>
         {options.map((option) => (
           <option key={option.id} value={option.id}>
-            {option.full_name} ({option.email})
+            {option.full_name ?? option.email} ({option.email})
           </option>
         ))}
       </select>
