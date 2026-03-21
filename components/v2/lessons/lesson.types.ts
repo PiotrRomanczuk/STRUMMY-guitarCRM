@@ -8,6 +8,8 @@ export interface LessonListV2Props {
   students?: StudentProfile[];
   teachers?: StudentProfile[];
   selectedStudentId?: string;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export interface StudentProfile {

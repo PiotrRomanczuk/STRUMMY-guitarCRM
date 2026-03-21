@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/api/unified-db';
 import { extractBearerToken, authenticateWithBearerToken } from '@/lib/bearer-auth';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 
 /**
@@ -119,35 +120,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create song through unified API
-    const result = await db.songs.create({
-      title: body.title,
-      author: body.author,
-      level: body.level,
-      key: body.key,
-      ultimate_guitar_link: body.ultimate_guitar_link || '',
-      chords: body.chords || null,
-      short_title: body.short_title || null,
-      youtube_url: body.youtube_url || null,
-      gallery_images: body.gallery_images || null,
-    });
+    // Use admin client to bypass RLS — request is already authenticated via bearer token
+    const supabase = createAdminClient();
+    const { data: song, error: insertError } = await supabase
+      .from('songs')
+      .insert({
+        title: body.title,
+        author: body.author,
+        level: body.level,
+        key: body.key,
+        ultimate_guitar_link: body.ultimate_guitar_link || '',
+        chords: body.chords || null,
+        short_title: body.short_title || null,
+        youtube_url: body.youtube_url || null,
+        gallery_images: body.gallery_images || null,
+      })
+      .select()
+      .single();
 
-    if (result.error) {
+    if (insertError) {
       return NextResponse.json(
         {
           error: 'Failed to create song',
-          details: result.error.message,
-          database: result.isLocal ? 'local' : 'remote',
+          details: insertError.message,
         },
-        { status: result.status || 500 }
+        { status: 500 }
       );
     }
 
     return NextResponse.json(
       {
-        song: result.data,
+        song,
         meta: {
-          database: result.isLocal ? 'local' : 'remote',
           created: true,
         },
       },

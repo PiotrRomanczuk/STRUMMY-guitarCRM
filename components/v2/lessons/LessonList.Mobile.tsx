@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, User, Plus, BookOpen } from 'lucide-react';
+import { Plus, BookOpen, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fastStaggerContainer, listItem } from '@/lib/animations/variants';
 
@@ -11,19 +11,15 @@ import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { CollapsibleFilterBar } from '@/components/v2/primitives/CollapsibleFilterBar';
 import { FloatingActionButton } from '@/components/v2/primitives/FloatingActionButton';
 import { SwipeableListItem } from '@/components/v2/primitives/SwipeableListItem';
-import {
-  formatLessonDate,
-  formatLessonTime,
-  getLessonStatusStyle,
-  getLessonStatusLabel,
-} from './lesson.helpers';
+import { LessonCard } from './LessonList.Card';
 import { LESSON_STATUS_OPTIONS } from './lesson.types';
 import type { LessonListV2Props } from './lesson.types';
-import type { LessonWithProfiles } from '@/schemas/LessonSchema';
 
 export function LessonListMobile({
   initialLessons,
   role,
+  onRefresh,
+  isRefreshing,
 }: LessonListV2Props) {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -49,6 +45,21 @@ export function LessonListMobile({
       title="Lessons"
       subtitle={`${filteredLessons.length} lesson${filteredLessons.length !== 1 ? 's' : ''}`}
       showBack={false}
+      headerActions={
+        onRefresh ? (
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Refresh lessons"
+          >
+            <RefreshCw
+              className={cn('h-5 w-5', isRefreshing && 'animate-spin')}
+            />
+          </button>
+        ) : undefined
+      }
       fab={
         canCreate ? (
           <FloatingActionButton
@@ -96,72 +107,6 @@ export function LessonListMobile({
         </motion.div>
       )}
     </MobilePageShell>
-  );
-}
-
-function LessonCard({
-  lesson,
-  role,
-  onTap,
-}: {
-  lesson: LessonWithProfiles;
-  role: string;
-  onTap: () => void;
-}) {
-  const displayDate = lesson.date ?? lesson.scheduled_at ?? null;
-  const displayTime = lesson.start_time ?? lesson.scheduled_at ?? null;
-
-  return (
-    <button
-      type="button"
-      onClick={onTap}
-      className={cn(
-        'w-full text-left bg-card rounded-xl border border-border p-4 space-y-2',
-        'active:bg-muted/50 transition-colors'
-      )}
-    >
-      {/* Row 1: Title + Status */}
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-medium text-sm truncate text-foreground">
-          {lesson.title || 'Untitled Lesson'}
-        </span>
-        <span
-          className={cn(
-            'inline-flex items-center rounded-full px-2.5 py-0.5',
-            'text-[11px] sm:text-xs font-medium border shrink-0',
-            getLessonStatusStyle(lesson.status)
-          )}
-        >
-          {getLessonStatusLabel(lesson.status)}
-        </span>
-      </div>
-
-      {/* Row 2: Date + Time */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Calendar className="h-3.5 w-3.5 shrink-0" />
-        <span>{formatLessonDate(displayDate)}</span>
-        {displayTime && (
-          <>
-            <span aria-hidden>·</span>
-            <span>{formatLessonTime(displayTime)}</span>
-          </>
-        )}
-      </div>
-
-      {/* Row 3: Student (or Teacher for student view) */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <User className="h-3.5 w-3.5 shrink-0" />
-        <span className="truncate">
-          {role === 'student'
-            ? lesson.teacher_profile?.full_name ||
-              lesson.teacher_profile?.email ||
-              'Teacher'
-            : lesson.profile?.full_name ||
-              lesson.profile?.email ||
-              'Student'}
-        </span>
-      </div>
-    </button>
   );
 }
 

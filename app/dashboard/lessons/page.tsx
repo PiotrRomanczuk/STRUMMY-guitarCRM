@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import LessonList from '@/components/lessons/list';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { redirect } from 'next/navigation';
