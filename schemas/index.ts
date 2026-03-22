@@ -12,3 +12,4 @@ export * from './OnboardingSchema';
 export * from './InviteUserSchema';
 export * from './AuthSchema';
 export * from './SongRequestSchema';
+export * from './RecurringLessonSchema';
