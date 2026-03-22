@@ -10,6 +10,7 @@ import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { BottomActionSheet } from '@/components/v2/primitives/BottomActionSheet';
 import { Button } from '@/components/ui/button';
 import { InfoRow } from './LessonDetail.InfoRow';
+import { PostLessonActions } from './PostLessonActions';
 import { formatLessonDate, formatLessonTime, getLessonStatusStyle, getLessonStatusLabel } from './lesson.helpers';
 import type { LessonWithProfiles } from '@/schemas/LessonSchema';
 import type { Database } from '@/database.types';
@@ -165,6 +166,17 @@ export function LessonDetailV2({
               ))}
           </motion.div>
         </div>
+      )}
+
+      {/* Post-Lesson Quick Assign */}
+      {isCompleted && canEdit && lesson.lesson_songs.length > 0 && (
+        <PostLessonActions
+          lessonId={lesson.id!}
+          studentId={lesson.student_id}
+          songs={lesson.lesson_songs
+            .filter((ls) => ls.song !== null)
+            .map((ls) => ({ id: ls.song!.id, title: ls.song!.title }))}
+        />
       )}
 
       {/* Actions Bottom Sheet */}
