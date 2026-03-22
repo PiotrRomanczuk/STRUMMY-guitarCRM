@@ -21,7 +21,7 @@ Guitar CRM uses PostgreSQL via Supabase with Row Level Security (RLS).
 | `assignment_history` | Assignment change tracking | ✅ |
 | `lesson_history` | Lesson change tracking | ✅ |
 | `song_status_history` | Song progress tracking | ✅ |
-| `student_song_progress` | Overall student progress | ✅ |
+| `student_song_progress` | **DEPRECATED** — use `student_repertoire` | ⚠️ |
 | `practice_sessions` | Practice session logging | ✅ |
 
 ### Views

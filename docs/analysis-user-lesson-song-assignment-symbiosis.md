@@ -457,7 +457,7 @@ Teachers can create reusable templates (`assignment_templates`) to quickly gener
 | `assignment_templates` | Reusable homework templates | `teacher_id` | -- |
 | `student_repertoire` | Lifetime song progress (SSOT) | `student_id`, `song_id` | `assigned_by` |
 | `practice_sessions` | Student practice logs | `student_id` | `song_id` |
-| `student_song_progress` | Legacy progress (migrated) | `student_id`, `song_id` | -- |
+| `student_song_progress` | **DEPRECATED** -- replaced by `student_repertoire` | `student_id`, `song_id` | -- |
 | `song_status_history` | Progress change audit | `student_id`, `song_id` | -- |
 | `audit_log` | Full entity change history | `entity_type`, `entity_id` | `actor_id` |
 
