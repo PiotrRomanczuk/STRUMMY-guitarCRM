@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { LyricsViewer } from './LyricsViewer';
 import { VideoPlayer } from './VideoPlayer';
+import { RelatedLessons } from './SongDetail.RelatedLessons';
+import { RelatedStudents } from './SongDetail.RelatedStudents';
 import type { SongDetailV2Props } from './SongDetail';
 
 export default function SongDetailDesktop({ song, isTeacher, onDelete }: SongDetailV2Props) {
@@ -108,6 +110,8 @@ export default function SongDetailDesktop({ song, isTeacher, onDelete }: SongDet
             )}
           </div>
           <DesktopLinks song={song} />
+          <RelatedLessons songId={song.id} />
+          <RelatedStudents songId={song.id} />
         </div>
       </div>
     </div>

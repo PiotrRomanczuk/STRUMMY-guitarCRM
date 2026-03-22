@@ -8,6 +8,7 @@ import { StepWizardForm } from '@/components/v2/primitives';
 import { FormFieldText, FormFieldSelect } from '@/components/shared/FormField';
 import SpotifySearch from '@/components/songs/form/SpotifySearch';
 import CategoryCombobox from '@/components/songs/form/CategoryCombobox';
+import FormAlert from '@/components/shared/FormAlert';
 import { MUSIC_KEY_OPTIONS, LEVEL_OPTIONS } from '@/components/songs/form/options';
 import { useSongMutation } from '@/components/songs/form/useSongMutation';
 import {
@@ -102,7 +103,10 @@ function buildSteps(
       label: 'Basic Information',
       requiredFields: ['title', 'author', 'level', 'key'],
       content: (
-        <div className="space-y-5">
+        <div className="space-y-4">
+          {(errors.title || errors.author || errors.level || errors.key || errors.category) && (
+            <FormAlert type="error" message="Please fix the errors below to continue." />
+          )}
           <SpotifySearch onSelect={onSpotifySelect} />
           <FormFieldText
             label="Song Title" id="title" value={formData.title} error={errors.title}
@@ -132,7 +136,10 @@ function buildSteps(
     {
       label: 'Resources & Media',
       content: (
-        <div className="space-y-5">
+        <div className="space-y-4">
+          {(errors.youtube_url || errors.spotify_link_url || errors.ultimate_guitar_link || errors.tiktok_short_url) && (
+            <FormAlert type="error" message="Please fix the errors below to continue." />
+          )}
           <FormFieldText
             label="YouTube URL" id="youtube_url" type="url"
             value={formData.youtube_url} error={errors.youtube_url}
@@ -162,7 +169,10 @@ function buildSteps(
     {
       label: 'Musical Details',
       content: (
-        <div className="space-y-5">
+        <div className="space-y-4">
+          {(errors.capo_fret || errors.tempo || errors.strumming_pattern || errors.chords) && (
+            <FormAlert type="error" message="Please fix the errors below to continue." />
+          )}
           <FormFieldText
             label="Capo Fret" id="capo_fret" type="number"
             value={formData.capo_fret?.toString() || ''} error={errors.capo_fret}

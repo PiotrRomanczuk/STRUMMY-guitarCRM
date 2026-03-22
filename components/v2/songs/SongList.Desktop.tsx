@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Music, Search, ArrowUpDown } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -86,16 +87,33 @@ export default function SongListDesktop({ songs, isTeacher }: SongListV2Props) {
         />
       )}
 
-      <div className={cn('grid gap-6', selectedSong ? 'grid-cols-1 xl:grid-cols-[1fr_380px]' : 'grid-cols-1')}>
-        <SongsTable
-          songs={filtered}
-          sortField={sortField}
-          sortDir={sortDir}
-          selectedSongId={selectedSongId}
-          onSort={toggleSort}
-          onSelect={setSelectedSongId}
-        />
-        {selectedSong && <SongPreviewPanel song={selectedSong} onClose={() => setSelectedSongId(null)} />}
+      <div className="flex gap-6">
+        <div className="flex-1 min-w-0">
+          <SongsTable
+            songs={filtered}
+            sortField={sortField}
+            sortDir={sortDir}
+            selectedSongId={selectedSongId}
+            onSort={toggleSort}
+            onSelect={setSelectedSongId}
+          />
+        </div>
+        <AnimatePresence>
+          {selectedSong && (
+            <motion.div
+              key="panel"
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 380, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="shrink-0 overflow-hidden hidden xl:block"
+            >
+              <div className="w-[380px]">
+                <SongPreviewPanel song={selectedSong} onClose={() => setSelectedSongId(null)} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -136,23 +154,24 @@ function SongsTable({ songs, sortField, sortDir, selectedSongId, onSort, onSelec
 function SongRow({ song, selected, onSelect }: {
   song: SongListV2Props['songs'][number]; selected: boolean; onSelect: (id: string | null) => void;
 }) {
+  const router = useRouter();
   return (
     <TableRow
-      onClick={() => onSelect(selected ? null : song.id)}
+      onClick={() => selected ? router.push(`/dashboard/songs/${song.id}`) : onSelect(song.id)}
       className={cn(
         'cursor-pointer transition-colors border-transparent',
         selected ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : 'hover:bg-muted/50'
       )}
     >
       <TableCell>
-        <Link href={`/dashboard/songs/${song.id}`} className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3">
           <div className="relative w-10 h-10 rounded-[10px] overflow-hidden shrink-0 bg-muted flex items-center justify-center">
             {song.cover_image_url ? (
               <Image src={song.cover_image_url} alt={song.title || 'Song'} fill sizes="40px" className="object-cover" />
             ) : (<Music className="h-4 w-4 text-muted-foreground" />)}
           </div>
-          <span className="font-semibold text-foreground group-hover:text-primary transition-colors">{song.title || 'Untitled'}</span>
-        </Link>
+          <span className="font-semibold text-foreground">{song.title || 'Untitled'}</span>
+        </div>
       </TableCell>
       <TableCell className="text-muted-foreground">{song.author || 'Unknown'}</TableCell>
       <TableCell className="text-muted-foreground">{song.category || '-'}</TableCell>
