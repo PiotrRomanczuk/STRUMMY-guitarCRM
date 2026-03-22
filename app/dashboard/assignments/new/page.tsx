@@ -34,7 +34,7 @@ export default async function NewAssignmentPage({ searchParams }: NewAssignmentP
     logger.error('Error fetching students:', error);
   }
 
-  let initialData = undefined;
+  let initialData: { id: string; title: string; description: string | null; due_date: string | null; status: string; student_id: string; teacher_id: string; song_id: string | null } | undefined = undefined;
 
   if (templateId) {
     const { data: template } = await supabase
@@ -88,7 +88,7 @@ export default async function NewAssignmentPage({ searchParams }: NewAssignmentP
       <AssignmentForm
         mode="create"
         students={students || []}
-        initialData={initialData}
+        initialData={initialData ? { id: initialData.id, title: initialData.title, description: initialData.description, due_date: initialData.due_date, status: initialData.status as 'not_started', student_id: initialData.student_id, teacher_id: initialData.teacher_id } : undefined}
         userId={user.id}
       />
     </div>

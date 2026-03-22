@@ -3,6 +3,18 @@
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 
+export type RepertoireItem = {
+  id: string;
+  song_id: string;
+  title: string;
+  artist: string;
+  current_status: string;
+  self_rating: number | null;
+  priority: string;
+  last_practiced_at: string | null;
+  total_practice_minutes: number;
+};
+
 export type StudentDashboardData = {
   studentName: string | null;
   nextLesson: {
@@ -29,6 +41,7 @@ export type StudentDashboardData = {
     artist: string;
     last_played: string;
   }[];
+  repertoire: RepertoireItem[];
   allSongs: {
     id: string;
     title: string;
@@ -152,6 +165,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     nextLesson: nextLessonData,
     lastLesson: lastLessonData,
     assignments: assignmentsData || [],
+    repertoire: [], // TODO: populate from student_repertoire in next iteration
     recentSongs:
       recentLessonSongs
         ?.filter((ls) => ls.songs !== null)

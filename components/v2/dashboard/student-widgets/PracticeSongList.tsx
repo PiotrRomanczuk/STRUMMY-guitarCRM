@@ -1,6 +1,17 @@
 import Link from 'next/link';
 import { Music } from 'lucide-react';
-import type { RepertoireItem } from '@/app/actions/student/dashboard';
+
+type RepertoireItem = {
+  id: string;
+  song_id: string;
+  title: string;
+  artist: string;
+  current_status: string;
+  self_rating: number | null;
+  priority: string;
+  last_practiced_at: string | null;
+  total_practice_minutes: number;
+};
 
 const STATUS_COLORS: Record<string, string> = {
   to_learn: 'bg-slate-500',
