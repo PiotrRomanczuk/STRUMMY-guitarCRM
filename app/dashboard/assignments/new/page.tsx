@@ -51,6 +51,7 @@ export default async function NewAssignmentPage({ searchParams }: NewAssignmentP
         teacher_id: user.id,
         student_id: '', // User must select student
         due_date: null,
+        song_id: null,
         id: '', // New assignment
       };
     }
@@ -64,6 +65,7 @@ export default async function NewAssignmentPage({ searchParams }: NewAssignmentP
       status: 'not_started' as const,
       teacher_id: user.id,
       student_id: studentId,
+      song_id: null,
       id: '',
     };
   }

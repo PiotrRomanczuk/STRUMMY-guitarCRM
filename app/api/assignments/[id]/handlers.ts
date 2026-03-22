@@ -21,6 +21,7 @@ interface UpdateInput {
   due_date?: string;
   status?: string;
   lesson_id?: string | null;
+  song_id?: string | null;
 }
 
 /**
@@ -80,6 +81,7 @@ function buildUpdateData(input: UpdateInput) {
   if (input.due_date !== undefined) updateData.due_date = input.due_date;
   if (input.status !== undefined) updateData.status = input.status;
   if (input.lesson_id !== undefined) updateData.lesson_id = input.lesson_id;
+  if (input.song_id !== undefined) updateData.song_id = input.song_id;
   return updateData;
 }
 
@@ -111,7 +113,8 @@ export async function getAssignmentHandler(
       *,
       teacher_profile:profiles!assignments_teacher_id_fkey(id, email, full_name),
       student_profile:profiles!assignments_student_id_fkey(id, email, full_name),
-      lesson:lessons(id, lesson_teacher_number, scheduled_at, status)
+      lesson:lessons(id, lesson_teacher_number, scheduled_at, status),
+      song:songs(id, title, author)
     `
     )
     .eq('id', assignmentId)
@@ -183,7 +186,8 @@ export async function updateAssignmentHandler(
       *,
       teacher_profile:profiles!assignments_teacher_id_fkey(id, email, full_name),
       student_profile:profiles!assignments_student_id_fkey(id, email, full_name),
-      lesson:lessons(id, lesson_teacher_number, scheduled_at, status)
+      lesson:lessons(id, lesson_teacher_number, scheduled_at, status),
+      song:songs(id, title, author)
     `
     )
     .single();

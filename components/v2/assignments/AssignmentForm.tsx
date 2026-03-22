@@ -6,6 +6,7 @@ import { useAssignmentMutations } from '@/components/assignments/hooks/useAssign
 import { StepWizardForm } from '@/components/v2/primitives/StepWizardForm';
 import { toast } from 'sonner';
 import { StepStudent, StepContent, StepSchedule } from './AssignmentForm.Steps';
+import { SongPicker } from './AssignmentForm.SongPicker';
 
 interface AssignmentFormProps {
   mode: 'create' | 'edit';
@@ -16,6 +17,7 @@ interface AssignmentFormProps {
     due_date: string | null;
     status: string;
     student_id: string;
+    song_id: string | null;
   };
   students: Array<{ id: string; full_name: string | null; email: string }>;
   teacherId: string;
@@ -35,6 +37,7 @@ export function AssignmentForm({
     title: initialData?.title ?? '',
     description: initialData?.description ?? '',
     dueDate: initialData?.due_date ? initialData.due_date.slice(0, 10) : '',
+    songId: initialData?.song_id ?? '',
   });
 
   const update = (field: string, value: string) =>
@@ -48,6 +51,7 @@ export function AssignmentForm({
         description: formData.description.trim() || undefined,
         due_date: formData.dueDate ? new Date(formData.dueDate).toISOString() : undefined,
         student_id: formData.studentId,
+        song_id: formData.songId || null,
       };
       if (mode === 'edit' && initialData) {
         await updateAssignment(initialData.id, payload);
@@ -85,6 +89,18 @@ export function AssignmentForm({
           onTitleChange={(v) => update('title', v)}
           onDescriptionChange={(v) => update('description', v)}
         />
+      ),
+    },
+    {
+      label: 'Song',
+      content: (
+        <div className="space-y-4">
+          <h2 className="text-base font-semibold">Link a Song</h2>
+          <p className="text-sm text-muted-foreground">
+            Optionally link a song from the repertoire to this assignment.
+          </p>
+          <SongPicker value={formData.songId} onChange={(v) => update('songId', v)} />
+        </div>
       ),
     },
     {

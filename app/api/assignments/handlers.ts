@@ -18,6 +18,7 @@ type QueryParams = {
   teacher_id?: string;
   student_id?: string;
   lesson_id?: string;
+  song_id?: string;
   status?: string;
   search?: string;
   due_date_from?: string;
@@ -33,6 +34,7 @@ type AssignmentInput = {
   teacher_id: string;
   student_id: string;
   lesson_id?: string | null;
+  song_id?: string | null;
   status?: string;
 };
 
@@ -44,7 +46,8 @@ function buildAssignmentQuery(supabase: SupabaseClient, userId: string, profile:
       *,
       teacher_profile:profiles!assignments_teacher_id_fkey(id, email, full_name),
       student_profile:profiles!assignments_student_id_fkey(id, email, full_name),
-      lesson:lessons(id, lesson_teacher_number, scheduled_at)
+      lesson:lessons(id, lesson_teacher_number, scheduled_at),
+      song:songs(id, title, author)
     `);
 
   // Exclude soft-deleted assignments
@@ -67,6 +70,7 @@ function applyFilters(query: ReturnType<typeof buildAssignmentQuery>, filters: R
   if (filters.teacher_id) result = result.eq('teacher_id', filters.teacher_id);
   if (filters.student_id) result = result.eq('student_id', filters.student_id);
   if (filters.lesson_id) result = result.eq('lesson_id', filters.lesson_id);
+  if (filters.song_id) result = result.eq('song_id', filters.song_id);
   if (filters.status) result = result.eq('status', filters.status);
   if (filters.search) {
     result = result.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
@@ -91,6 +95,7 @@ export async function getAssignmentsHandler(
       teacher_id: queryParams.teacher_id,
       student_id: queryParams.student_id,
       lesson_id: queryParams.lesson_id,
+      song_id: queryParams.song_id,
       status: queryParams.status,
       search: queryParams.search,
       due_date_from: queryParams.due_date_from,
@@ -227,6 +232,7 @@ export async function createAssignmentHandler(
         teacher_id: input.teacher_id,
         student_id: input.student_id,
         lesson_id: input.lesson_id,
+        song_id: input.song_id,
         status: input.status || 'not_started',
       })
       .select(
@@ -234,7 +240,8 @@ export async function createAssignmentHandler(
         *,
         teacher_profile:profiles!assignments_teacher_id_fkey(id, email, full_name),
         student_profile:profiles!assignments_student_id_fkey(id, email, full_name),
-        lesson:lessons(id, lesson_teacher_number, scheduled_at)
+        lesson:lessons(id, lesson_teacher_number, scheduled_at),
+        song:songs(id, title, author)
       `
       )
       .single();
@@ -303,7 +310,8 @@ export async function getAssignmentHandler(
         *,
         teacher_profile:profiles!assignments_teacher_id_fkey(id, email, full_name),
         student_profile:profiles!assignments_student_id_fkey(id, email, full_name),
-        lesson:lessons(id, lesson_teacher_number, scheduled_at)
+        lesson:lessons(id, lesson_teacher_number, scheduled_at),
+        song:songs(id, title, author)
       `
       )
       .eq('id', assignmentId)
@@ -382,6 +390,7 @@ export async function updateAssignmentHandler(
         teacher_id: input.teacher_id,
         student_id: input.student_id,
         lesson_id: input.lesson_id,
+        song_id: input.song_id,
         status: input.status,
         updated_at: new Date().toISOString(),
       })
@@ -391,7 +400,8 @@ export async function updateAssignmentHandler(
         *,
         teacher_profile:profiles!assignments_teacher_id_fkey(id, email, full_name),
         student_profile:profiles!assignments_student_id_fkey(id, email, full_name),
-        lesson:lessons(id, lesson_teacher_number, scheduled_at)
+        lesson:lessons(id, lesson_teacher_number, scheduled_at),
+        song:songs(id, title, author)
       `
       )
       .single();

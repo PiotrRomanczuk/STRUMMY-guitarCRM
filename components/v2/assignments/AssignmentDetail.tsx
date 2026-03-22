@@ -12,6 +12,7 @@ import {
   AlertCircle,
   CheckCircle,
   Play,
+  Music,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -103,6 +104,18 @@ export function AssignmentDetail({ assignmentId, canEdit = false }: AssignmentDe
           )}
         </div>
       </div>
+
+      {assignment.song && (
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1">
+            <Music className="h-3.5 w-3.5" />
+            Linked Song
+          </div>
+          <Link href={`/dashboard/songs/${assignment.song.id}`} className="text-sm font-medium hover:text-primary transition-colors">
+            {assignment.song.title} - {assignment.song.author}
+          </Link>
+        </div>
+      )}
 
       {assignment.lesson && (
         <div className="bg-card rounded-xl border border-border p-4">
