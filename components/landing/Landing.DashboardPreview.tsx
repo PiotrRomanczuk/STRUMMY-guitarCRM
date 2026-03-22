@@ -5,10 +5,10 @@ import { LandingDashboardMockup } from './Landing.DashboardMockup';
 
 export function LandingDashboardPreview() {
   return (
-    <section className="py-24 bg-secondary/30">
+    <section className="py-24 bg-secondary/30 dark:bg-secondary/10">
       <div className="container mx-auto px-4">
         <AnimatedSection className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.01em] text-foreground mb-4">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.01em] text-foreground mb-4">
             Everything you need, at a glance
           </h2>
           <p className="text-lg leading-[1.7] text-muted-foreground max-w-2xl mx-auto">

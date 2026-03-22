@@ -22,7 +22,7 @@ const studentFeatures = [
 function RoleCard({ title, items, delay }: { title: string; items: string[]; delay: number }) {
   return (
     <AnimatedSection delay={delay}>
-      <div className="rounded-2xl glass p-8 landing-shadow-card h-full">
+      <div className="rounded-2xl border border-border dark:border-0 bg-card dark:bg-card p-8 landing-shadow-card h-full">
         <h3 className="text-xl font-bold text-foreground mb-6">{title}</h3>
         <ul className="space-y-4">
           {items.map((item) => (
@@ -42,7 +42,7 @@ export function LandingRoles() {
     <section id="for-teachers" className="py-24">
       <div className="container mx-auto px-4">
         <AnimatedSection className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.01em] text-foreground mb-4">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.01em] text-foreground mb-4">
             Built for everyone in the studio
           </h2>
           <p className="text-lg leading-[1.7] text-muted-foreground">

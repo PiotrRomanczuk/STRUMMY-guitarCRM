@@ -103,7 +103,7 @@ export function SwipeableListItem({
               handleClose();
             }}
             className={cn(
-              'flex items-center justify-center',
+              'flex flex-col items-center justify-center gap-1',
               'w-[72px] h-full',
               action.variant === 'destructive'
                 ? 'bg-destructive text-destructive-foreground'

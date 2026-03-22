@@ -105,9 +105,9 @@ function PasswordInput({
           data-testid={dataTestId}
           className={cn(
             'h-12 pl-10 pr-10 rounded-lg',
-            'bg-card dark:bg-muted/30',
-            'border-border focus-visible:border-primary focus-visible:ring-primary/50',
-            error && 'border-destructive focus-visible:ring-destructive/50'
+            'bg-card dark:bg-background',
+            'border-0 focus:ring-2 focus:ring-primary/50',
+            error && 'ring-2 ring-destructive/50'
           )}
         />
         <button

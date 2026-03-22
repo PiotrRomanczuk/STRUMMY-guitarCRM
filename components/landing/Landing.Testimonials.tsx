@@ -28,27 +28,27 @@ const testimonials = [
 
 export function LandingTestimonials() {
   return (
-    <section className="py-24 bg-secondary/30">
+    <section className="py-24 bg-secondary/30 dark:bg-secondary/10">
       <div className="container mx-auto px-4">
         <AnimatedSection className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.01em] text-foreground mb-4">
-            Loved by teachers everywhere
+          <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.01em] text-foreground mb-4">
+            What teachers are saying
           </h2>
           <p className="text-lg leading-[1.7] text-muted-foreground">
-            Don&apos;t just take our word for it.
+            Feedback from our early adopters.
           </p>
         </AnimatedSection>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {testimonials.map((t, i) => (
             <AnimatedSection key={t.name} delay={i * 0.1}>
-              <div className="rounded-2xl border border-border bg-card p-6 landing-shadow-card h-full flex flex-col">
+              <div className="rounded-2xl border border-border dark:border-0 bg-card dark:bg-card p-6 landing-shadow-card h-full flex flex-col">
                 <span className="text-3xl text-primary font-serif leading-none mb-3">
                   &ldquo;
                 </span>
                 <p className="text-sm text-foreground leading-relaxed flex-1">{t.quote}</p>
-                <div className="flex items-center gap-3 mt-6 pt-4 border-t border-border">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                <div className="flex items-center gap-3 mt-6 pt-4 border-t border-border dark:border-muted">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 dark:bg-primary/15 flex items-center justify-center text-sm font-bold text-primary">
                     {t.avatar}
                   </div>
                   <div>

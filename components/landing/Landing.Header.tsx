@@ -20,9 +20,9 @@ export function LandingHeader() {
   const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
+    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 dark:bg-background/60 border-b border-border/50 dark:border-transparent">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        <Link href="/" className="text-2xl font-bold text-primary tracking-tight">
+        <Link href="/" className="text-2xl font-black text-primary tracking-tight">
           Strummy
         </Link>
 
@@ -53,7 +53,10 @@ export function LandingHeader() {
           >
             Log in
           </Link>
-          <Button asChild className="rounded-full px-5 text-sm font-semibold bg-gradient-to-br from-[hsl(38,92%,50%)] to-[hsl(30,90%,42%)] text-[#271900] hover:opacity-90">
+          <Button asChild variant="outline" className="rounded-full px-5 text-sm font-semibold border-primary/30 text-primary hover:bg-primary/5">
+            <Link href="/sign-in?demo=true">Try Demo</Link>
+          </Button>
+          <Button asChild className="rounded-full px-5 text-sm font-semibold dark:bg-[image:var(--gradient-gold)] dark:text-primary-foreground dark:hover:opacity-90">
             <Link href="/sign-up">Start Free Trial</Link>
           </Button>
         </div>
@@ -79,7 +82,7 @@ export function LandingHeader() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-border bg-background px-4 pb-4 space-y-3">
+        <div className="md:hidden border-t border-border dark:border-transparent bg-background dark:bg-card/90 dark:backdrop-blur-xl px-4 pb-4 space-y-3">
           {links.map((l) => (
             <a
               key={l.label}
@@ -98,7 +101,12 @@ export function LandingHeader() {
             >
               Log in
             </Link>
-            <Button asChild className="rounded-full px-5 text-sm font-semibold">
+            <Button asChild variant="outline" className="rounded-full px-5 text-sm font-semibold border-primary/30 text-primary hover:bg-primary/5">
+              <Link href="/sign-in?demo=true" onClick={() => setOpen(false)}>
+                Try Demo
+              </Link>
+            </Button>
+            <Button asChild className="rounded-full px-5 text-sm font-semibold dark:bg-[image:var(--gradient-gold)] dark:text-primary-foreground dark:hover:opacity-90">
               <Link href="/sign-up" onClick={() => setOpen(false)}>
                 Start Free Trial
               </Link>

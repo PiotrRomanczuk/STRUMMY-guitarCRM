@@ -13,56 +13,50 @@ interface PracticeSongListProps {
 export function PracticeSongList({ songs }: PracticeSongListProps) {
   if (songs.length === 0) {
     return (
-      <div className="rounded-xl bg-card border border-border p-4">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          Practice Songs
-        </h2>
+      <section className="rounded-[10px] bg-card p-5">
+        <h2 className="text-foreground font-bold text-xl mb-2">My Songs</h2>
         <p className="text-sm text-muted-foreground py-2">
           No songs in your repertoire yet. Ask your teacher to add some!
         </p>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="rounded-xl bg-card border border-border p-4 space-y-2">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Practice Songs
-        </h2>
+    <section>
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-foreground font-bold text-xl">My Songs</h2>
         <Link
           href="/dashboard/songs"
-          className="text-xs text-primary font-medium min-h-[44px] flex items-center"
+          className="text-[10px] font-bold uppercase tracking-widest
+                     text-muted-foreground hover:text-primary transition-colors"
         >
-          View all
+          View All
         </Link>
       </div>
-      <div className="space-y-1">
+      <div className="flex gap-4 overflow-x-auto pb-2 -mx-2 px-2"
+           style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
         {songs.map((song) => (
           <Link
             key={song.id}
             href={`/dashboard/songs/${song.id}`}
-            className="flex items-center gap-3 rounded-lg p-2.5
-                       active:bg-muted/50 transition-colors min-h-[44px]"
+            className="min-w-[200px] bg-card p-5 rounded-[10px] flex flex-col gap-3
+                       shrink-0 active:scale-[0.98] transition-transform"
           >
-            <div className="shrink-0 p-1.5 rounded-md bg-muted">
-              <Music className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+              <Music className="h-5 w-5 text-primary" />
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-foreground truncate">
-                {song.title}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">
-                {song.artist}
-              </p>
+            <div className="min-w-0">
+              <p className="text-foreground font-bold truncate">{song.title}</p>
+              <p className="text-muted-foreground text-xs truncate">{song.artist}</p>
             </div>
-            <span className="text-[11px] text-muted-foreground shrink-0">
+            <span className="text-[10px] text-muted-foreground font-medium">
               {formatRelative(song.last_played)}
             </span>
           </Link>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 

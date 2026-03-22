@@ -23,7 +23,7 @@ function parseZodErrors(err: unknown): Record<string, string> {
 
 async function loadProfileFromDb(userId: string): Promise<ProfileEdit> {
   const supabase = createClient();
-  const { data, error } = await supabase.from('profiles').select('id, email, full_name, first_name, last_name, username, bio').eq('id', userId).single();
+  const { data, error } = await supabase.from('profiles').select('id, email, full_name, first_name, last_name').eq('id', userId).single();
 
   // If no profile exists yet, return empty form
   if (error && error.code === 'PGRST116') {
@@ -39,8 +39,8 @@ async function loadProfileFromDb(userId: string): Promise<ProfileEdit> {
   return {
     firstname,
     lastname,
-    username: data.username || '',
-    bio: data.bio || '',
+    username: '',
+    bio: '',
   };
 }
 
@@ -61,8 +61,6 @@ async function saveProfileToDb(userId: string, profileData: ProfileEdit) {
       .update({
         first_name: validatedData.firstname,
         last_name: validatedData.lastname,
-        username: validatedData.username,
-        bio: validatedData.bio,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
@@ -72,8 +70,6 @@ async function saveProfileToDb(userId: string, profileData: ProfileEdit) {
       id: userId,
       first_name: validatedData.firstname,
       last_name: validatedData.lastname,
-      username: validatedData.username,
-      bio: validatedData.bio,
     });
     if (error) throw error;
   }

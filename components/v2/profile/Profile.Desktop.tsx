@@ -3,7 +3,6 @@
 import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { ProfileV2Props } from './Profile';
@@ -77,47 +76,12 @@ export default function ProfileDesktop({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="desktop-username" className="text-sm font-medium">
-            Username
-          </Label>
-          <Input
-            id="desktop-username"
-            value={formData.username ?? ''}
-            onChange={(e) => onChange({ ...formData, username: e.target.value })}
-            onBlur={() => onBlur('username')}
-            placeholder="@username"
-            className={cn(validationErrors.username && 'border-destructive')}
-          />
-          {validationErrors.username && (
-            <p className="text-xs text-destructive">{validationErrors.username}</p>
-          )}
-        </div>
-
         {userEmail && (
           <div className="space-y-2">
             <Label className="text-sm font-medium">Email</Label>
             <Input value={userEmail} disabled className="opacity-60" />
           </div>
         )}
-
-        <div className="space-y-2">
-          <Label htmlFor="desktop-bio" className="text-sm font-medium">
-            Bio
-          </Label>
-          <Textarea
-            id="desktop-bio"
-            value={formData.bio ?? ''}
-            onChange={(e) => onChange({ ...formData, bio: e.target.value })}
-            onBlur={() => onBlur('bio')}
-            placeholder="Tell students about yourself..."
-            rows={4}
-            className={cn('resize-none', validationErrors.bio && 'border-destructive')}
-          />
-          {validationErrors.bio && (
-            <p className="text-xs text-destructive">{validationErrors.bio}</p>
-          )}
-        </div>
 
         <div className="flex gap-3 pt-4 border-t border-border">
           <Button type="submit" disabled={saving}>

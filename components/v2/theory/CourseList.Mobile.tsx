@@ -103,7 +103,7 @@ export function CourseListMobile({ courses, isStaff }: CourseListMobileProps) {
           </p>
           {isStaff && (
             <Link href="/dashboard/theory/new">
-              <Button size="sm">Create Course</Button>
+              <Button size="sm">New Course</Button>
             </Link>
           )}
         </div>

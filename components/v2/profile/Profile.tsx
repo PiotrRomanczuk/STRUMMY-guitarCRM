@@ -65,7 +65,13 @@ export function ProfileV2({ userId, userEmail }: ProfileV2WrapperProps) {
     validationErrors,
     saving,
     success,
-    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+    error: error instanceof Error
+      ? error
+      : error
+        ? new Error(
+            (error as { message?: string }).message ?? JSON.stringify(error)
+          )
+        : null,
     onChange: setFormData,
     onBlur: handleBlur,
     onSubmit: handleSubmit,

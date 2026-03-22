@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useMemo, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useMemo, useRef, FormEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { SignInSchema } from '@/schemas/AuthSchema';
@@ -13,11 +13,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import FormAlert from '@/components/shared/FormAlert';
-import { Mail, ArrowRight } from 'lucide-react';
+import { Mail, ArrowRight, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function SignInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const demoTriggered = useRef(false);
   const [isChecking, setIsChecking] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,6 +41,22 @@ export default function SignInPage() {
     };
     checkUser();
   }, [router]);
+
+  // Auto-fill demo credentials when ?demo=true
+  const isDemo = searchParams.get('demo') === 'true' && !isChecking;
+  useEffect(() => {
+    if (!isDemo || demoTriggered.current) return;
+    demoTriggered.current = true;
+    // Defer state updates to avoid synchronous setState in effect
+    requestAnimationFrame(() => {
+      setEmail('sarah@strummy.app');
+      setPassword('Demo2024!');
+      setTimeout(() => {
+        const form = document.querySelector('form');
+        if (form) form.requestSubmit();
+      }, 150);
+    });
+  }, [isDemo]);
 
   // Validate fields using useMemo to avoid setState in effect
   const fieldErrors = useMemo(() => {
@@ -151,8 +169,8 @@ export default function SignInPage() {
               placeholder="name@example.com"
               aria-invalid={!!fieldErrors.email}
               className={cn(
-                'h-12 pl-10 rounded-lg bg-card dark:bg-muted/30',
-                fieldErrors.email && 'border-destructive'
+                'h-12 pl-10 rounded-lg bg-card dark:bg-background border-0 focus:ring-2 focus:ring-primary/50',
+                fieldErrors.email && 'ring-2 ring-destructive/50'
               )}
             />
           </div>
@@ -182,24 +200,50 @@ export default function SignInPage() {
         {/* Form Error */}
         {error && <FormAlert type="error" message={error} />}
 
-        {/* Submit Button */}
+        {/* Submit Button - gold gradient */}
         <Button
           type="submit"
           disabled={loading}
           data-testid="signin-button"
-          className="w-full h-12 rounded-lg font-bold text-base mt-2 bg-gradient-to-br from-[hsl(38,92%,50%)] to-[hsl(30,90%,42%)] text-[#271900] hover:opacity-90 transition-opacity"
+          className="w-full h-12 rounded-lg font-bold text-base mt-2 dark:bg-[image:var(--gradient-gold)] dark:text-primary-foreground dark:hover:opacity-90"
         >
           {loading ? 'Signing in...' : 'Continue'}
           {!loading && <ArrowRight className="ml-2 h-5 w-5" />}
         </Button>
       </form>
 
+      {/* Try Demo */}
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">or</span>
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        disabled={loading}
+        onClick={() => {
+          setEmail('sarah@strummy.app');
+          setPassword('Demo2024!');
+          setTimeout(() => {
+            const form = document.querySelector('form');
+            if (form) form.requestSubmit();
+          }, 100);
+        }}
+        className="w-full h-12 rounded-lg font-bold text-base border-primary/30 text-primary hover:bg-primary/5"
+      >
+        <Play className="mr-2 h-4 w-4" /> Try Demo Account
+      </Button>
+
       {/* Footer */}
       <div className="text-center text-sm text-muted-foreground mt-2">
         Don&apos;t have an account?{' '}
         <Link
           href="/sign-up"
-          className="font-semibold text-primary hover:underline underline-offset-4 ml-1"
+          className="font-semibold text-primary hover:text-primary/80 underline-offset-4 ml-1 transition-colors"
         >
           Create your account
         </Link>
@@ -223,12 +267,12 @@ export default function SignInPage() {
       )}
 
       {/* Pro Tip Card - only visible on larger screens */}
-      <div className="mt-8 rounded-xl overflow-hidden relative h-32 w-full group hidden sm:block">
+      <div className="mt-8 rounded-xl overflow-hidden relative h-32 w-full group hidden sm:block dark:bg-muted/40">
         <div
-          className="absolute inset-0 bg-gradient-to-br from-primary/20 via-card to-card opacity-60"
+          className="absolute inset-0 bg-gradient-to-br from-primary/15 via-card to-card dark:from-primary/10 dark:via-transparent dark:to-transparent opacity-60"
           aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent dark:from-card dark:via-card/60" />
         <div className="absolute bottom-3 left-4 right-4 flex justify-between items-end">
           <div>
             <p className="text-xs font-medium text-primary mb-0.5">Pro Tip</p>
@@ -236,7 +280,6 @@ export default function SignInPage() {
               Automate your lesson scheduling today.
             </p>
           </div>
-          <span className="text-muted-foreground/50">✨</span>
         </div>
       </div>
     </AuthLayout>

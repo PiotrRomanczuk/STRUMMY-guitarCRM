@@ -5,14 +5,6 @@ import { staggerContainer, listItem } from '@/lib/animations/variants';
 import { Users, Music, BookOpen, ClipboardList } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-interface StatItem {
-  label: string;
-  value: number;
-  icon: LucideIcon;
-  color: string;
-  bgColor: string;
-}
-
 interface StatsWidgetProps {
   totalStudents: number;
   songsInLibrary: number;
@@ -20,72 +12,64 @@ interface StatsWidgetProps {
   pendingAssignments: number;
 }
 
-export function StatsWidget({
-  totalStudents,
-  songsInLibrary,
-  lessonsThisWeek,
-  pendingAssignments,
-}: StatsWidgetProps) {
-  const stats: StatItem[] = [
-    {
-      label: 'Students',
-      value: totalStudents,
-      icon: Users,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
-    },
-    {
-      label: 'Songs',
-      value: songsInLibrary,
-      icon: Music,
-      color: 'text-yellow-600 dark:text-yellow-400',
-      bgColor: 'bg-yellow-500/10',
-    },
-    {
-      label: 'This Week',
-      value: lessonsThisWeek,
-      icon: BookOpen,
-      color: 'text-green-600 dark:text-green-400',
-      bgColor: 'bg-green-500/10',
-    },
-    {
-      label: 'Pending',
-      value: pendingAssignments,
-      icon: ClipboardList,
-      color: 'text-destructive',
-      bgColor: 'bg-destructive/10',
-    },
-  ];
+const stats = [
+  { label: 'Active Students', key: 'totalStudents', icon: Users },
+  { label: 'Songs', key: 'songsInLibrary', icon: Music },
+  { label: 'This Week', key: 'lessonsThisWeek', icon: BookOpen },
+  { label: 'Pending', key: 'pendingAssignments', icon: ClipboardList },
+] as const;
+
+export function StatsWidget(props: StatsWidgetProps) {
+  const valueMap: Record<string, number> = {
+    totalStudents: props.totalStudents,
+    songsInLibrary: props.songsInLibrary,
+    lessonsThisWeek: props.lessonsThisWeek,
+    pendingAssignments: props.pendingAssignments,
+  };
 
   return (
     <motion.div
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="grid grid-cols-2 gap-3"
+      className="grid grid-cols-2 lg:grid-cols-4 gap-4"
     >
-      {stats.map((stat) => {
-        const Icon = stat.icon;
-        return (
-          <motion.div
-            key={stat.label}
-            variants={listItem}
-            className="bg-card rounded-xl border border-border/50 p-4 flex items-center gap-3 dark:shadow-[0_0_20px_hsl(38_92%_50%/0.06)]"
-          >
-            <div
-              className={`w-10 h-10 rounded-lg ${stat.bgColor} flex items-center justify-center shrink-0`}
-            >
-              <Icon className={`h-5 w-5 ${stat.color}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-lg font-bold leading-tight">{stat.value}</p>
-              <p className="text-xs text-muted-foreground truncate">
-                {stat.label}
-              </p>
-            </div>
-          </motion.div>
-        );
-      })}
+      {stats.map((stat) => (
+        <StatCard
+          key={stat.key}
+          label={stat.label}
+          value={valueMap[stat.key]}
+          icon={stat.icon}
+        />
+      ))}
+    </motion.div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: number;
+  icon: LucideIcon;
+}) {
+  return (
+    <motion.div
+      variants={listItem}
+      className="bg-card rounded-[10px] p-5 flex flex-col justify-between
+                 group hover:bg-muted transition-colors"
+    >
+      <div className="flex justify-between items-start mb-3">
+        <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">
+          {label}
+        </span>
+        <Icon className="h-5 w-5 text-primary/40 group-hover:text-primary transition-colors" />
+      </div>
+      <span className="text-foreground text-4xl font-black leading-none">
+        {value}
+      </span>
     </motion.div>
   );
 }

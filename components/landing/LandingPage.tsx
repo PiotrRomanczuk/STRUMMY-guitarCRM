@@ -10,7 +10,6 @@ import { LandingTestimonials } from './Landing.Testimonials';
 import { LandingIntegrations } from './Landing.Integrations';
 import { LandingCTA } from './Landing.CTA';
 import { LandingFooter } from './Landing.Footer';
-import { LandingChatButton } from './Landing.ChatButton';
 
 export function LandingPage() {
   return (
@@ -25,7 +24,6 @@ export function LandingPage() {
       <LandingIntegrations />
       <LandingCTA />
       <LandingFooter />
-      <LandingChatButton />
     </div>
   );
 }

@@ -53,11 +53,11 @@ export function AttentionWidget({ items }: AttentionWidgetProps) {
   const totalCount = items.length;
 
   return (
-    <div className="bg-card rounded-xl border border-border/50 p-4 space-y-3">
+    <div className="bg-card rounded-[10px] p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium flex items-center gap-2">
-          <AlertCircle className="h-3.5 w-3.5 text-orange-500" />
+        <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-orange-500" />
           Needs Attention
           {totalCount > 0 && (
             <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-destructive/10 text-destructive border border-destructive/20">

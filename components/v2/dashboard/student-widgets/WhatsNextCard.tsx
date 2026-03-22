@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Calendar, ClipboardList, ChevronRight } from 'lucide-react';
 
 interface WhatsNextCardProps {
   nextLesson: {
@@ -19,11 +18,7 @@ export function WhatsNextCard({ nextLesson, topAssignment }: WhatsNextCardProps)
   const hasContent = nextLesson || topAssignment;
 
   return (
-    <div className="rounded-xl bg-card border border-border/50 p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-primary uppercase tracking-wide">
-        What&apos;s Next
-      </h2>
-
+    <div className="rounded-[10px] bg-card border-l-4 border-primary p-5 space-y-4">
       {!hasContent && (
         <p className="text-sm text-muted-foreground py-2">
           Nothing scheduled. Enjoy your free time!
@@ -33,42 +28,33 @@ export function WhatsNextCard({ nextLesson, topAssignment }: WhatsNextCardProps)
       {nextLesson && (
         <Link
           href={`/dashboard/lessons/${nextLesson.id}`}
-          className="flex items-center gap-3 rounded-lg bg-primary/5 border border-primary/10
-                     p-3 active:bg-primary/10 transition-colors min-h-[44px]"
+          className="block active:opacity-80 transition-opacity"
         >
-          <div className="shrink-0 p-2 rounded-lg bg-primary/10">
-            <Calendar className="h-4 w-4 text-primary" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-foreground truncate">
-              {nextLesson.title || 'Upcoming Lesson'}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {formatLessonDate(nextLesson.scheduled_at)}
-            </p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          <p className="text-primary font-bold text-lg mb-0.5">
+            {formatLessonDate(nextLesson.scheduled_at)}
+          </p>
+          <p className="text-muted-foreground text-sm mb-4">
+            {nextLesson.title || 'Upcoming Lesson'}
+          </p>
+          <button className="w-full bg-gradient-to-r from-primary to-warning
+                             text-primary-foreground font-bold py-3 rounded-[10px] text-sm
+                             hover:opacity-90 transition-opacity active:scale-95">
+            Join Lesson
+          </button>
         </Link>
       )}
 
       {topAssignment && (
-        <div
-          className="flex items-center gap-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10
-                     p-3 min-h-[44px]"
-        >
-          <div className="shrink-0 p-2 rounded-lg bg-yellow-500/10">
-            <ClipboardList className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-foreground truncate">
-              {topAssignment.title}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {topAssignment.due_date
-                ? `Due ${formatShortDate(topAssignment.due_date)}`
-                : 'No due date'}
-            </p>
-          </div>
+        <div className="bg-secondary p-4 rounded-lg">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mb-1">
+            Current Focus
+          </p>
+          <p className="text-foreground font-bold">{topAssignment.title}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {topAssignment.due_date
+              ? `Due ${formatShortDate(topAssignment.due_date)}`
+              : 'No due date'}
+          </p>
         </div>
       )}
     </div>

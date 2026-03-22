@@ -46,6 +46,22 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+
+  /* M3 "Virtuoso's Studio" surface tokens */
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-on-surface: var(--foreground);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-outline-m3: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary: var(--on-primary);
+  --color-tertiary: var(--tertiary);
+  --color-surface-tint: var(--surface-tint);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -167,35 +183,52 @@
 }
 
 .dark {
-  --background: hsl(0 0% 7.5%);
-  --foreground: hsl(40 20% 95%);
-  --card: hsl(20 3% 12.5%);
-  --card-foreground: hsl(40 20% 95%);
-  --popover: hsl(20 3% 12.5%);
-  --popover-foreground: hsl(40 20% 95%);
-  --primary: hsl(42 90% 55%);
-  --primary-foreground: hsl(0 0% 8%);
-  --secondary: hsl(20 3% 15%);
-  --secondary-foreground: hsl(40 20% 90%);
-  --muted: hsl(20 3% 17%);
-  --muted-foreground: hsl(36 20% 67%);
+  /* M3 "Virtuoso's Studio" — obsidian + gold */
+  --background: #131313;
+  --foreground: #e5e2e1;
+  --card: #201f1f;
+  --card-foreground: #e5e2e1;
+  --popover: #201f1f;
+  --popover-foreground: #e5e2e1;
+  --primary: #ffd183;
+  --primary-foreground: #422c00;
+  --secondary: #1c1b1b;
+  --secondary-foreground: #d5c4ad;
+  --muted: #2a2a2a;
+  --muted-foreground: #d5c4ad;
   --accent: hsl(350 75% 45%);
   --accent-foreground: hsl(0 0% 100%);
-  --destructive: hsl(0 84% 60%);
+  --destructive: #ffb4ab;
   --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(30 8% 15%);
-  --input: hsl(30 8% 15%);
-  --ring: hsl(42 90% 55%);
-  --sidebar: hsl(0 0% 6%);
-  --sidebar-foreground: hsl(40 20% 90%);
-  --sidebar-primary: hsl(42 90% 55%);
-  --sidebar-primary-foreground: hsl(20 14% 4%);
-  --sidebar-accent: hsl(20 10% 12%);
-  --sidebar-accent-foreground: hsl(40 20% 95%);
-  --sidebar-border: hsl(0 0% 14%);
-  --sidebar-ring: hsl(42 90% 55%);
+  --border: #504534;
+  --input: #0e0e0e;
+  --ring: #ffd183;
+  --sidebar: #131313;
+  --sidebar-foreground: #e5e2e1;
+  --sidebar-primary: #ffd183;
+  --sidebar-primary-foreground: #422c00;
+  --sidebar-accent: #1c1b1b;
+  --sidebar-accent-foreground: #e5e2e1;
+  --sidebar-border: #504534;
+  --sidebar-ring: #ffd183;
 
-  /* Keeping existing chart colors for now */
+  /* M3 surface tiers */
+  --surface-container: #201f1f;
+  --surface-container-low: #1c1b1b;
+  --surface-container-high: #2a2a2a;
+  --surface-container-highest: #353534;
+  --surface-container-lowest: #0e0e0e;
+
+  /* M3 semantic tokens */
+  --on-surface-variant: #d5c4ad;
+  --outline: #9d8f7a;
+  --outline-variant: #504534;
+  --primary-container: #f2b127;
+  --on-primary: #422c00;
+  --tertiary: #a9e0ff;
+  --surface-tint: #fdbb32;
+
+  /* Chart colors */
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -235,7 +268,32 @@
 
 @layer utilities {
   .glass {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+    background: rgba(32, 31, 31, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-nav {
+    background: rgba(32, 31, 31, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .bg-gold-gradient {
+    background: linear-gradient(135deg, #ffd183, #f2b127);
+  }
+
+  .text-label-stitch {
+    @apply text-[10px] font-bold uppercase tracking-widest;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 
   .glow {

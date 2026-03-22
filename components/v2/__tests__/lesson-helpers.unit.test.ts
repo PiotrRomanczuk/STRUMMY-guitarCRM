@@ -9,59 +9,39 @@ import {
 // getLessonStatusStyle
 // ──────────────────────────────────────────────────────────────────────────────
 describe('getLessonStatusStyle', () => {
-  it('returns green classes for COMPLETED status', () => {
+  it('returns emerald classes for COMPLETED status', () => {
     const result = getLessonStatusStyle('COMPLETED');
-    expect(result).toContain('bg-green-500/10');
-    expect(result).toContain('text-green-600');
-  });
-
-  it('includes dark mode variant for COMPLETED', () => {
-    const result = getLessonStatusStyle('COMPLETED');
-    expect(result).toContain('dark:text-green-400');
-    expect(result).toContain('dark:border-green-500/30');
+    expect(result).toContain('bg-emerald-500/10');
+    expect(result).toContain('text-emerald-400');
+    expect(result).toContain('border-transparent');
   });
 
   it('returns destructive classes for CANCELLED status', () => {
     const result = getLessonStatusStyle('CANCELLED');
     expect(result).toContain('bg-destructive/10');
-    expect(result).toContain('text-destructive');
-  });
-
-  it('includes dark mode variant for CANCELLED', () => {
-    const result = getLessonStatusStyle('CANCELLED');
-    expect(result).toContain('dark:text-red-400');
-    expect(result).toContain('dark:border-destructive/30');
+    expect(result).toContain('text-red-400');
+    expect(result).toContain('border-transparent');
   });
 
   it('returns primary classes for IN_PROGRESS status', () => {
     const result = getLessonStatusStyle('IN_PROGRESS');
-    expect(result).toContain('bg-primary/10');
+    expect(result).toContain('bg-primary/15');
     expect(result).toContain('text-primary');
+    expect(result).toContain('border-transparent');
   });
 
-  it('includes dark mode variant for IN_PROGRESS', () => {
-    const result = getLessonStatusStyle('IN_PROGRESS');
-    expect(result).toContain('dark:text-primary');
-    expect(result).toContain('dark:border-primary/30');
-  });
-
-  it('returns yellow classes for SCHEDULED status', () => {
+  it('returns primary classes for SCHEDULED status', () => {
     const result = getLessonStatusStyle('SCHEDULED');
-    expect(result).toContain('bg-yellow-500/10');
-    expect(result).toContain('text-yellow-600');
-  });
-
-  it('includes dark mode variant for SCHEDULED', () => {
-    const result = getLessonStatusStyle('SCHEDULED');
-    expect(result).toContain('dark:text-yellow-400');
-    expect(result).toContain('dark:border-yellow-500/30');
+    expect(result).toContain('bg-primary/15');
+    expect(result).toContain('text-primary');
+    expect(result).toContain('border-transparent');
   });
 
   it('returns muted fallback classes for null status', () => {
     const result = getLessonStatusStyle(null);
     expect(result).toContain('bg-muted');
     expect(result).toContain('text-muted-foreground');
-    expect(result).toContain('border-border');
+    expect(result).toContain('border-transparent');
   });
 
   it('returns muted fallback classes for undefined status', () => {

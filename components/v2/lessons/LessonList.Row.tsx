@@ -26,7 +26,7 @@ export function DesktopRow({
   const displayTime = lesson.start_time ?? lesson.scheduled_at ?? null;
 
   return (
-    <TableRow className="hover:bg-muted/50 transition-colors border-border">
+    <TableRow className="hover:bg-muted/50 transition-colors border-transparent">
       <TableCell>
         <Link
           href={`/dashboard/lessons/${lesson.id}`}
@@ -55,7 +55,7 @@ export function DesktopRow({
         <span
           className={cn(
             'inline-flex items-center rounded-full px-2.5 py-0.5',
-            'text-xs font-medium border',
+            'text-[10px] font-bold uppercase tracking-widest',
             getLessonStatusStyle(lesson.status)
           )}
         >

@@ -27,13 +27,13 @@ export function ChartWidget({ data }: ChartWidgetProps) {
   const hasData = data.some((d) => d.lessons > 0 || d.assignments > 0);
 
   return (
-    <div className="bg-card rounded-xl border border-border/50 p-4 lg:p-5">
-      <div className="mb-4">
-        <h3 className="text-sm font-medium flex items-center gap-2">
-          <TrendingUp className="h-3.5 w-3.5 text-primary" />
-          <span className="text-primary">Weekly Progress</span>
-        </h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
+    <section className="bg-card rounded-[10px] p-6 lg:p-8">
+      <div className="mb-6">
+        <h2 className="text-foreground font-bold text-lg flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-primary" />
+          Weekly Progress
+        </h2>
+        <p className="text-xs text-muted-foreground mt-1">
           Lessons and assignments this week
         </p>
       </div>
@@ -51,6 +51,6 @@ export function ChartWidget({ data }: ChartWidgetProps) {
       ) : (
         <LazyChart data={data} />
       )}
-    </div>
+    </section>
   );
 }

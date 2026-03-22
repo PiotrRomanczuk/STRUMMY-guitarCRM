@@ -48,7 +48,7 @@ export function MobileMoreMenuV2({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
+      <DrawerContent className="max-h-[85vh] bg-[#1c1b1b]">
         <DrawerHeader className="pb-1">
           <DrawerTitle className="text-base font-semibold">Menu</DrawerTitle>
         </DrawerHeader>
@@ -60,7 +60,7 @@ export function MobileMoreMenuV2({
         >
           {groups.map((group) => (
             <motion.div key={group.label} variants={listItem}>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-3 mb-1.5">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#d5c4ad] px-3 mb-1.5">
                 {group.label}
               </p>
               <div className="space-y-0.5">
@@ -77,10 +77,10 @@ export function MobileMoreMenuV2({
                         'transition-colors min-h-[44px]',
                         active
                           ? 'bg-primary/10 text-primary'
-                          : 'text-foreground hover:bg-muted/50',
+                          : 'text-[#d5c4ad] hover:text-primary hover:bg-[#353534]',
                       )}
                     >
-                      <item.icon className="w-5 h-5 shrink-0" />
+                      <item.icon className={cn('w-5 h-5 shrink-0', active && 'text-primary')} />
                       {item.label}
                     </Link>
                   );
@@ -89,7 +89,7 @@ export function MobileMoreMenuV2({
             </motion.div>
           ))}
 
-          <motion.div variants={listItem} className="pt-2 border-t border-border">
+          <motion.div variants={listItem} className="pt-2 border-t border-[#504534]">
             <button
               onClick={handleSignOut}
               className={cn(

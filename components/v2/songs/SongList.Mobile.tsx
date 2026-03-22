@@ -23,6 +23,12 @@ const LEVEL_FILTERS = [
   { label: 'Advanced', value: 'advanced' },
 ];
 
+const LEVEL_BADGE_STYLES: Record<string, string> = {
+  beginner: 'bg-emerald-500/10 text-emerald-400',
+  intermediate: 'bg-primary/15 text-primary',
+  advanced: 'bg-destructive/10 text-red-400',
+};
+
 export function SongListMobile({ songs, isTeacher, onRefresh }: SongListV2Props) {
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -36,9 +42,7 @@ export function SongListMobile({ songs, isTeacher, onRefresh }: SongListV2Props)
         (s) => s.title?.toLowerCase().includes(q) || s.author?.toLowerCase().includes(q)
       );
     }
-    if (levelFilter) {
-      result = result.filter((s) => s.level === levelFilter);
-    }
+    if (levelFilter) result = result.filter((s) => s.level === levelFilter);
     return result;
   }, [songs, search, levelFilter]);
 
@@ -47,47 +51,31 @@ export function SongListMobile({ songs, isTeacher, onRefresh }: SongListV2Props)
       title="Songs"
       subtitle={`${songs.length} song${songs.length !== 1 ? 's' : ''}`}
       showBack={false}
-      fab={
-        isTeacher ? (
-          <FloatingActionButton
-            onClick={() => router.push('/dashboard/songs/new')}
-            label="Add new song"
-            icon={<Plus className="h-6 w-6" />}
-          />
-        ) : undefined
-      }
+      fab={isTeacher ? (
+        <FloatingActionButton
+          onClick={() => router.push('/dashboard/songs/new')}
+          label="Add new song"
+          icon={<Plus className="h-6 w-6" />}
+        />
+      ) : undefined}
     >
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search songs..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-9 min-h-[44px] text-base"
+          className="pl-9 min-h-[44px] text-base bg-card border-transparent focus:ring-1 focus:ring-primary/30"
         />
       </div>
-
-      {/* Filter chips */}
-      <CollapsibleFilterBar
-        filters={LEVEL_FILTERS}
-        active={levelFilter}
-        onChange={setLevelFilter}
-      />
-
-      {/* Song list */}
+      <CollapsibleFilterBar filters={LEVEL_FILTERS} active={levelFilter} onChange={setLevelFilter} />
       {filtered.length === 0 ? (
         <SongListEmpty isTeacher={isTeacher} hasFilters={!!search || !!levelFilter} />
       ) : (
-        <motion.div
-          variants={safeVariants(fastStaggerContainer)}
-          initial="hidden"
-          animate="visible"
-          className="space-y-2"
-        >
+        <motion.div variants={safeVariants(fastStaggerContainer)} initial="hidden" animate="visible" className="space-y-2">
           {filtered.map((song) => (
             <motion.div key={song.id} variants={safeVariants(listItem)}>
-              <SongCard song={song} isTeacher={isTeacher} onRefresh={onRefresh} />
+              <SongCard song={song} isTeacher={isTeacher} />
             </motion.div>
           ))}
         </motion.div>
@@ -96,77 +84,34 @@ export function SongListMobile({ songs, isTeacher, onRefresh }: SongListV2Props)
   );
 }
 
-interface SongCardProps {
-  song: SongWithStatus;
-  isTeacher: boolean;
-  onRefresh: () => void;
-}
-
-function SongCard({ song, isTeacher }: SongCardProps) {
+function SongCard({ song, isTeacher }: { song: SongWithStatus; isTeacher: boolean }) {
   const router = useRouter();
-
   return (
-    <SwipeableListItem
-      onEdit={isTeacher ? () => router.push(`/dashboard/songs/${song.id}/edit`) : undefined}
-    >
+    <SwipeableListItem onEdit={isTeacher ? () => router.push(`/dashboard/songs/${song.id}/edit`) : undefined}>
       <Link
         href={`/dashboard/songs/${song.id}`}
-        className={cn(
-          'flex items-center gap-3 p-4',
-          'bg-card rounded-xl border border-border/50',
-          'active:bg-muted/50 transition-colors'
-        )}
+        className="flex items-center gap-3 p-4 bg-card rounded-[10px] active:bg-muted transition-colors"
       >
-        {/* Cover image */}
-        <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-muted flex items-center justify-center border border-border">
+        <div className="relative w-12 h-12 rounded-[10px] overflow-hidden shrink-0 bg-muted flex items-center justify-center">
           {song.cover_image_url ? (
-            <Image
-              src={song.cover_image_url}
-              alt={song.title || 'Song cover'}
-              fill
-              sizes="48px"
-              className="object-cover"
-            />
+            <Image src={song.cover_image_url} alt={song.title || 'Song cover'} fill sizes="48px" className="object-cover" />
           ) : (
             <Music className="h-5 w-5 text-muted-foreground" />
           )}
         </div>
-
-        {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">
-            {song.title || 'Untitled'}
-          </p>
-          <p className="text-xs text-muted-foreground truncate">
-            {song.author || 'Unknown artist'}
-          </p>
+          <p className="text-sm font-semibold text-foreground truncate">{song.title || 'Untitled'}</p>
+          <p className="text-xs text-muted-foreground truncate">{song.author || 'Unknown artist'}</p>
         </div>
-
-        {/* Level badge */}
-        <LevelBadge level={song.level} />
+        {song.level && (
+          <span className={cn(
+            'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider shrink-0',
+            LEVEL_BADGE_STYLES[song.level] ?? 'bg-muted text-muted-foreground'
+          )}>
+            {song.level}
+          </span>
+        )}
       </Link>
     </SwipeableListItem>
-  );
-}
-
-function LevelBadge({ level }: { level?: string | null }) {
-  if (!level) return null;
-
-  const styles: Record<string, string> = {
-    beginner: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
-    intermediate: 'bg-primary/10 text-primary border-primary/20',
-    advanced: 'bg-destructive/10 text-destructive border-destructive/20',
-  };
-
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5',
-        'text-[11px] sm:text-xs font-medium border shrink-0',
-        styles[level] ?? 'bg-muted text-muted-foreground border-border'
-      )}
-    >
-      {level}
-    </span>
   );
 }

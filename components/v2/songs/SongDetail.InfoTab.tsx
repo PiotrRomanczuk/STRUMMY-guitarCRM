@@ -28,20 +28,20 @@ export function InfoTab({ song }: InfoTabProps) {
   ].filter(Boolean) as { icon: React.ReactNode; label: string; value: string }[];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Metadata grid */}
       {metaItems.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {metaItems.map((item) => (
             <div
               key={item.label}
-              className="bg-muted/50 rounded-lg p-3 border border-border"
+              className="bg-card rounded-xl p-4 flex flex-col justify-between h-[84px] hover:bg-muted transition-colors"
             >
-              <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                {item.icon}
-                <span className="text-xs font-medium">{item.label}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">{item.label}</span>
+                <span className="text-primary/60 [&_svg]:h-[18px] [&_svg]:w-[18px]">{item.icon}</span>
               </div>
-              <p className="text-sm font-semibold text-foreground">{item.value}</p>
+              <p className="text-base font-semibold text-foreground">{item.value}</p>
             </div>
           ))}
         </div>
@@ -49,12 +49,12 @@ export function InfoTab({ song }: InfoTabProps) {
 
       {/* Strumming pattern */}
       {song.strumming_pattern && (
-        <div className="bg-muted/50 rounded-lg p-3 border border-border">
-          <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-            <Waves className="h-3.5 w-3.5" />
-            <span className="text-xs font-medium">Strumming</span>
+        <div className="bg-card rounded-xl p-4 space-y-2 hover:bg-muted transition-colors">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">Strumming Pattern</span>
+            <Waves className="h-[18px] w-[18px] text-primary/60" />
           </div>
-          <p className="text-sm font-semibold text-foreground font-mono">
+          <p className="font-mono text-base tracking-[0.2em] font-bold text-foreground">
             {song.strumming_pattern}
           </p>
         </div>
@@ -62,9 +62,17 @@ export function InfoTab({ song }: InfoTabProps) {
 
       {/* Chords */}
       {song.chords && (
-        <div className="bg-muted/50 rounded-lg p-3 border border-border">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Chords</p>
-          <p className="text-sm font-mono text-foreground">{song.chords}</p>
+        <div className="bg-card rounded-xl p-4 space-y-2 hover:bg-muted transition-colors">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">Chords</span>
+          </div>
+          <div className="flex items-center gap-4">
+            {song.chords.split(/\s+/).map((chord) => (
+              <span key={chord} className="font-mono text-lg font-extrabold text-primary">
+                {chord}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
@@ -84,8 +92,10 @@ function ExternalLinks({ song }: { song: Song }) {
   if (links.length === 0) return null;
 
   return (
-    <div className="space-y-2">
-      <p className="text-xs font-medium text-muted-foreground">External Resources</p>
+    <div className="space-y-3">
+      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        Quick Links
+      </p>
       <div className="flex flex-wrap gap-2">
         {links.map((link) => (
           <Button key={link.label} variant="outline" size="sm" asChild className="min-h-[44px]">

@@ -99,17 +99,17 @@ function buildSteps(
 ) {
   return [
     {
-      label: 'Essential Info',
+      label: 'Basic Information',
       requiredFields: ['title', 'author', 'level', 'key'],
       content: (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <SpotifySearch onSelect={onSpotifySelect} />
           <FormFieldText
-            label="Title" id="title" value={formData.title} error={errors.title}
+            label="Song Title" id="title" value={formData.title} error={errors.title}
             onChange={(v) => onChange('title', v)} onBlur={() => onBlur('title')} required
           />
           <FormFieldText
-            label="Author" id="author" value={formData.author} error={errors.author}
+            label="Artist" id="author" value={formData.author} error={errors.author}
             onChange={(v) => onChange('author', v)} onBlur={() => onBlur('author')} required
           />
           <FormFieldSelect
@@ -132,7 +132,7 @@ function buildSteps(
     {
       label: 'Resources & Media',
       content: (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <FormFieldText
             label="YouTube URL" id="youtube_url" type="url"
             value={formData.youtube_url} error={errors.youtube_url}
@@ -162,7 +162,7 @@ function buildSteps(
     {
       label: 'Musical Details',
       content: (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <FormFieldText
             label="Capo Fret" id="capo_fret" type="number"
             value={formData.capo_fret?.toString() || ''} error={errors.capo_fret}

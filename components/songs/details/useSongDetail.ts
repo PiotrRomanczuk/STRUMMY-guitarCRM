@@ -88,6 +88,7 @@ export function useSongDetail(songId: string, onDeleted?: () => void) {
 
     return () => {
       isMounted = false;
+      lastFetchedIdRef.current = null;
     };
   }, [songId]);
 

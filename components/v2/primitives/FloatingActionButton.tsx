@@ -16,12 +16,7 @@ interface FloatingActionButtonProps {
 }
 
 /**
- * Floating action button positioned at bottom-right, above the mobile nav bar.
- * Uses safe-area-inset to avoid being hidden behind system UI.
- *
- * - 56px (w-14 h-14) touch target
- * - Primary color with shadow
- * - Scale-down on active press
+ * M3 Stitch FAB -- gold gradient, rounded-[14px], positioned bottom-right.
  */
 export function FloatingActionButton({
   onClick,
@@ -35,9 +30,10 @@ export function FloatingActionButton({
       onClick={onClick}
       aria-label={label}
       className={cn(
-        'fixed right-4 z-40 rounded-full shadow-lg',
-        'bg-primary text-primary-foreground',
+        'fixed right-4 z-40',
+        'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground',
         'w-14 h-14 flex items-center justify-center',
+        'rounded-[14px] shadow-lg shadow-primary/20',
         'bottom-[calc(4rem+env(safe-area-inset-bottom)+1rem)]',
         'active:scale-95 transition-transform',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',

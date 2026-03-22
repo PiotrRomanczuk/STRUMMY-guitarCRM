@@ -28,7 +28,8 @@ function GoogleAuthButton({
       disabled={disabled || loading}
       className={cn(
         'w-full h-12 rounded-lg font-semibold',
-        'bg-card hover:bg-accent transition-all',
+        'bg-card hover:bg-secondary transition-all',
+        'dark:bg-muted/40 dark:border-0 dark:hover:bg-muted/60',
         className
       )}
     >

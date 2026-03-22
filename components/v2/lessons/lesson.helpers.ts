@@ -43,20 +43,21 @@ export function formatLessonTime(timeString: string | null | undefined): string 
 }
 
 /**
- * Map lesson status to v2 design system status badge styles.
+ * Map lesson status to M3 Stitch design system status badge styles.
+ * No visible borders -- uses bg color shifts only.
  */
 export function getLessonStatusStyle(status: string | null | undefined): string {
   switch (status) {
     case 'COMPLETED':
-      return 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 dark:border-green-500/30';
+      return 'bg-emerald-500/10 text-emerald-400 border-transparent';
     case 'CANCELLED':
-      return 'bg-destructive/10 text-destructive dark:text-red-400 border-destructive/20 dark:border-destructive/30';
+      return 'bg-destructive/10 text-red-400 border-transparent';
     case 'IN_PROGRESS':
-      return 'bg-primary/10 text-primary dark:text-primary border-primary/20 dark:border-primary/30';
+      return 'bg-primary/15 text-primary border-transparent';
     case 'SCHEDULED':
-      return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20 dark:border-yellow-500/30';
+      return 'bg-primary/15 text-primary border-transparent';
     default:
-      return 'bg-muted text-muted-foreground border-border';
+      return 'bg-muted text-muted-foreground border-transparent';
   }
 }
 

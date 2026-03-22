@@ -32,30 +32,27 @@ function ProgressBar({
   stepLabel?: string;
 }) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex items-center gap-3">
         {Array.from({ length: totalSteps }, (_, i) => (
           <div
             key={i}
             className={cn(
-              'flex-1 h-1.5 rounded-full transition-colors',
-              i < currentStep ? 'bg-primary' : 'bg-muted'
+              'w-2.5 h-2.5 rounded-full transition-colors',
+              i < currentStep ? 'bg-primary' : 'border-2 border-muted'
             )}
           />
         ))}
       </div>
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col items-center">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Step {currentStep} of {totalSteps}
-          {stepLabel && (
-            <span className="font-medium text-foreground ml-1">
-              — {stepLabel}
-            </span>
-          )}
         </p>
-        <p className="text-xs text-muted-foreground">
-          {Math.round((currentStep / totalSteps) * 100)}%
-        </p>
+        {stepLabel && (
+          <p className="text-base font-semibold text-foreground mt-1">
+            {stepLabel}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -113,7 +110,7 @@ export default function StepWizardForm({
         {steps[currentStep]?.content}
       </div>
 
-      <div className="flex gap-3 pt-4 border-t border-border sticky bottom-0 bg-background pb-safe">
+      <div className="flex gap-3 pt-4 sticky bottom-0 bg-background/80 backdrop-blur-xl pb-safe z-20">
         {currentStep > 0 && (
           <Button
             type="button"
@@ -137,7 +134,11 @@ export default function StepWizardForm({
             <ChevronRight className="ml-2 h-4 w-4" />
           </Button>
         ) : (
-          <Button type="submit" className="flex-1" disabled={submitDisabled}>
+          <Button
+            type="submit"
+            className="flex-1 bg-[image:var(--gradient-gold)] text-primary-foreground font-semibold shadow-lg hover:opacity-90"
+            disabled={submitDisabled}
+          >
             {submitLabel}
           </Button>
         )}

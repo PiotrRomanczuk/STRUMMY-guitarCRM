@@ -36,7 +36,7 @@ export default function SignUpPage() {
           </div>
 
           {/* Instructions */}
-          <div className="bg-card rounded-xl p-4 text-left w-full border border-border">
+          <div className="bg-card rounded-xl p-4 text-left w-full border border-border dark:border-0 dark:bg-muted/40">
             <p className="text-sm font-medium text-foreground mb-2">What to do next:</p>
             <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
               <li>Check your inbox (and spam folder)</li>
@@ -64,7 +64,7 @@ export default function SignUpPage() {
           {/* Continue to Sign In */}
           <Button
             onClick={() => router.push('/sign-in')}
-            className="w-full h-12 rounded-lg font-bold text-base"
+            className="w-full h-12 rounded-lg font-bold text-base dark:bg-[image:var(--gradient-gold)] dark:text-primary-foreground dark:hover:opacity-90"
           >
             Continue to Sign In
             <ArrowRight className="ml-2 h-5 w-5" />
@@ -76,9 +76,9 @@ export default function SignUpPage() {
 
   return (
     <div className="relative min-h-screen w-full flex flex-col bg-background">
-      {/* Subtle background gradient */}
+      {/* Ambient glow */}
       <div
-        className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-primary/8 dark:bg-primary/5 blur-3xl pointer-events-none"
         aria-hidden="true"
       />
 
@@ -89,7 +89,7 @@ export default function SignUpPage() {
           <button
             type="button"
             onClick={() => router.push('/sign-in')}
-            className="flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-muted transition-colors"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-muted dark:hover:bg-card transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -130,8 +130,8 @@ export default function SignUpPage() {
                   placeholder="Jimi"
                   aria-invalid={!!state.fieldErrors?.firstName}
                   className={cn(
-                    'h-12 rounded-xl bg-card dark:bg-muted/30',
-                    state.fieldErrors?.firstName && 'border-destructive'
+                    'h-12 rounded-xl bg-card dark:bg-background border-0 focus:ring-2 focus:ring-primary/50',
+                    state.fieldErrors?.firstName && 'ring-2 ring-destructive/50'
                   )}
                 />
                 {state.fieldErrors?.firstName && (
@@ -159,8 +159,8 @@ export default function SignUpPage() {
                   placeholder="Hendrix"
                   aria-invalid={!!state.fieldErrors?.lastName}
                   className={cn(
-                    'h-12 rounded-xl bg-card dark:bg-muted/30',
-                    state.fieldErrors?.lastName && 'border-destructive'
+                    'h-12 rounded-xl bg-card dark:bg-background border-0 focus:ring-2 focus:ring-primary/50',
+                    state.fieldErrors?.lastName && 'ring-2 ring-destructive/50'
                   )}
                 />
                 {state.fieldErrors?.lastName && (
@@ -193,8 +193,8 @@ export default function SignUpPage() {
                   placeholder="jimi@experience.com"
                   aria-invalid={!!state.fieldErrors?.email}
                   className={cn(
-                    'h-12 pl-11 rounded-xl bg-card dark:bg-muted/30',
-                    state.fieldErrors?.email && 'border-destructive'
+                    'h-12 pl-11 rounded-xl bg-card dark:bg-background border-0 focus:ring-2 focus:ring-primary/50',
+                    state.fieldErrors?.email && 'ring-2 ring-destructive/50'
                   )}
                 />
               </div>
@@ -263,7 +263,7 @@ export default function SignUpPage() {
             <Button
               type="submit"
               disabled={state.loading}
-              className="w-full h-14 rounded-xl font-bold text-base mt-4 shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
+              className="w-full h-14 rounded-xl font-bold text-base mt-4 shadow-[0_0_20px_hsl(var(--primary)/0.3)] dark:bg-[image:var(--gradient-gold)] dark:text-primary-foreground dark:hover:opacity-90"
             >
               {state.loading ? 'Creating Account...' : 'Create Account'}
               {!state.loading && <ArrowRight className="ml-2 h-5 w-5" />}

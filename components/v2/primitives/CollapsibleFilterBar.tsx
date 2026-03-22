@@ -21,9 +21,8 @@ interface CollapsibleFilterBarProps {
 }
 
 /**
- * Horizontal scroll filter chips bar.
- * Uses overflow-x-auto with hidden scrollbar for a clean swipe experience.
- * Includes an "All" chip as the first option.
+ * Horizontal scroll filter chips bar -- M3 Stitch design.
+ * Active chip: gold bg, dark text. Inactive: surface-container bg, subtle border.
  */
 export function CollapsibleFilterBar({
   filters,
@@ -69,13 +68,13 @@ function FilterChip({ label, active, onClick }: FilterChipProps) {
       onClick={onClick}
       className={cn(
         'inline-flex items-center justify-center',
-        'h-11 px-4 rounded-full',
+        'h-9 px-5 rounded-full',
         'text-sm font-medium whitespace-nowrap',
-        'transition-colors',
+        'transition-all active:scale-95',
         'min-h-[44px]',
         active
-          ? 'bg-primary text-primary-foreground'
-          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+          ? 'bg-primary text-primary-foreground shadow-[0_0_15px_rgba(255,209,131,0.2)]'
+          : 'bg-card text-muted-foreground border border-border/15 hover:text-foreground'
       )}
       aria-pressed={active}
     >

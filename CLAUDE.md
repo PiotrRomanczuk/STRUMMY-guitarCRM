@@ -265,7 +265,7 @@ Tests live in `/__tests__` mirroring source structure.
 ## Dev Credentials (Local Only)
 ```
 Admin: p.romanczuk@gmail.com / test123_admin
-Teacher: teacher@example.com / test123_teacher
-Student: student@example.com / test123_student
+Teacher (Demo): sarah@strummy.app / Demo2024!
+Student (Demo): emma@strummy.app / Demo2024!
 ```
 Seed with: `npm run seed`

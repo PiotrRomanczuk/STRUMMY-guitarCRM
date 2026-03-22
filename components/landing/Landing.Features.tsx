@@ -41,19 +41,19 @@ export function LandingFeatures() {
     <section id="features" className="py-24">
       <div className="container mx-auto px-4">
         <AnimatedSection className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.01em] text-foreground mb-4">
-            The Teacher&apos;s Toolkit
+          <h2 className="text-3xl sm:text-4xl font-black tracking-[-0.01em] text-foreground mb-4">
+            Everything you need to run your studio
           </h2>
           <p className="text-lg leading-[1.7] text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to inspire and manage without overhead.
+            From scheduling to AI-powered insights, Strummy has it all.
           </p>
         </AnimatedSection>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (
             <AnimatedSection key={f.title} delay={i * 0.08}>
-              <div className="group rounded-2xl glass p-6 landing-shadow-card hover:landing-shadow-card-hover transition-all duration-300 h-full">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <div className="group rounded-2xl border border-border dark:border-0 bg-card dark:bg-card p-6 landing-shadow-card hover:landing-shadow-card-hover dark:hover:bg-muted/60 transition-all duration-300 h-full">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/15 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <f.icon size={20} className="text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">{f.title}</h3>

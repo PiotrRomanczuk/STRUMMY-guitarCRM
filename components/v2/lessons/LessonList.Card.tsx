@@ -23,19 +23,19 @@ export function LessonCard({ lesson, role, onTap }: LessonCardProps) {
       type="button"
       onClick={onTap}
       className={cn(
-        'w-full text-left bg-card rounded-xl border border-border/50 p-4 space-y-2',
-        'active:bg-muted/50 transition-colors'
+        'w-full text-left bg-card rounded-[10px] p-4 space-y-2',
+        'hover:bg-muted transition-colors'
       )}
     >
       {/* Row 1: Title + Status */}
       <div className="flex items-center justify-between gap-2">
-        <span className="font-medium text-sm truncate text-foreground">
+        <span className="font-bold text-sm truncate text-foreground">
           {lesson.title || 'Untitled Lesson'}
         </span>
         <span
           className={cn(
             'inline-flex items-center rounded-full px-2.5 py-0.5',
-            'text-[11px] sm:text-xs font-medium border shrink-0',
+            'text-[10px] font-bold uppercase tracking-widest shrink-0',
             getLessonStatusStyle(lesson.status)
           )}
         >

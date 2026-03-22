@@ -81,10 +81,10 @@ export function LandingPricing() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 dark:bg-primary/15 border border-primary/20 dark:border-0 mb-4">
             <span className="text-xs font-medium text-primary uppercase tracking-wider">Pricing</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl sm:text-4xl font-black text-foreground mb-4">
             Simple, honest pricing
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
@@ -92,7 +92,7 @@ export function LandingPricing() {
           </p>
 
           {/* Toggle */}
-          <div className="inline-flex items-center gap-4 p-1 rounded-full bg-muted border border-border">
+          <div className="inline-flex items-center gap-4 p-1 rounded-full bg-muted border border-border dark:border-0 dark:bg-card">
             <button
               onClick={() => setIsYearly(false)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
@@ -124,8 +124,8 @@ export function LandingPricing() {
               key={plan.name}
               className={`relative rounded-2xl p-8 transition-all duration-500 ${
                 plan.popular
-                  ? 'bg-card border-2 border-primary shadow-2xl shadow-primary/10 scale-105 z-10'
-                  : 'bg-card/50 border border-border/50 hover:border-border hover:bg-card'
+                  ? 'bg-card border-2 border-primary dark:border-primary/60 shadow-2xl shadow-primary/10 scale-105 z-10'
+                  : 'bg-card/50 dark:bg-card border border-border/50 dark:border-0 hover:border-border hover:bg-card dark:hover:bg-muted/40'
               }`}
             >
               {/* Popular badge */}

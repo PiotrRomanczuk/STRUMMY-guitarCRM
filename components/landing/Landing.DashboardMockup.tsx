@@ -22,9 +22,9 @@ const attention = [
 
 export function LandingDashboardMockup() {
   return (
-    <div className="rounded-2xl border border-border bg-card landing-shadow-card overflow-hidden">
+    <div className="rounded-2xl border border-border dark:border-0 bg-card landing-shadow-card overflow-hidden">
       {/* Title bar */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-secondary/50">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border dark:border-muted bg-secondary/50 dark:bg-muted/40">
         <div className="flex gap-1.5">
           <span className="w-3 h-3 rounded-full bg-destructive/60" />
           <span className="w-3 h-3 rounded-full bg-primary/60" />
@@ -39,7 +39,7 @@ export function LandingDashboardMockup() {
         {/* Stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {stats.map((s) => (
-            <div key={s.label} className="rounded-xl bg-secondary/60 p-3">
+            <div key={s.label} className="rounded-xl bg-secondary/60 dark:bg-muted/40 p-3">
               <div className="flex items-center gap-2 mb-1">
                 <s.icon size={14} className="text-primary" />
                 <span className="text-xs text-muted-foreground">{s.label}</span>
@@ -51,7 +51,7 @@ export function LandingDashboardMockup() {
 
         <div className="grid sm:grid-cols-2 gap-4">
           {/* Today's Agenda */}
-          <div className="rounded-xl border border-border p-4 bg-card">
+          <div className="rounded-xl border border-border dark:border-0 p-4 bg-card dark:bg-muted/30">
             <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
               <Clock size={14} className="text-primary" /> Today&apos;s Agenda
             </h4>
@@ -71,7 +71,7 @@ export function LandingDashboardMockup() {
           </div>
 
           {/* Needs Attention */}
-          <div className="rounded-xl border border-border p-4 bg-card">
+          <div className="rounded-xl border border-border dark:border-0 p-4 bg-card dark:bg-muted/30">
             <h4 className="text-sm font-semibold text-foreground mb-3">Needs Attention</h4>
             <div className="space-y-2.5">
               {attention.map((s) => (

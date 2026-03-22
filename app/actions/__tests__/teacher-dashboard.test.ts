@@ -415,15 +415,14 @@ describe('getTeacherDashboardData', () => {
         };
       }
 
+      if (table === 'lesson_songs') {
+        // Return 25 unique song IDs to match expected songsInLibrary count
+        const songLinks = Array.from({ length: 25 }, (_, i) => ({ song_id: `song-${i}` }));
+        return chainable({ data: songLinks });
+      }
+
       if (table === 'songs') {
-        return {
-          select: (fields: string, options: any) => {
-            if (options?.count === 'exact') {
-              return chainable({ count: 25 });
-            }
-            return chainable({ data: [] });
-          },
-        };
+        return chainable({ data: [] });
       }
 
       if (table === 'assignments') {
@@ -527,20 +526,22 @@ describe('getTeacherDashboardData', () => {
         };
       }
 
+      if (table === 'lesson_songs') {
+        return chainable({
+          data: [
+            { song_id: 's1' },
+            { song_id: 's2' },
+          ],
+        });
+      }
+
       if (table === 'songs') {
-        return {
-          select: (fields: string, options: any) => {
-            if (options?.count === 'exact') {
-              return chainable({ count: 2 });
-            }
-            return chainable({
-              data: [
-                { id: 's1', title: 'Wonderwall', author: 'Oasis', level: 'beginner' },
-                { id: 's2', title: 'Stairway', author: 'Led Zeppelin', level: 'advanced' },
-              ],
-            });
-          },
-        };
+        return chainable({
+          data: [
+            { id: 's1', title: 'Wonderwall', author: 'Oasis', level: 'beginner' },
+            { id: 's2', title: 'Stairway', author: 'Led Zeppelin', level: 'advanced' },
+          ],
+        });
       }
 
       return chainable({ data: [], count: 0 });

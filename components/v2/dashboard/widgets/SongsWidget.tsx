@@ -15,27 +15,25 @@ interface SongsWidgetProps {
 }
 
 const difficultyStyles: Record<string, string> = {
-  Easy: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
-  Medium: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20',
-  Hard: 'bg-destructive/10 text-destructive border-destructive/20',
+  Easy: 'bg-green-500/10 text-green-400',
+  Medium: 'bg-primary/10 text-primary',
+  Hard: 'bg-destructive/10 text-destructive',
 };
 
 export function SongsWidget({ songs }: SongsWidgetProps) {
   const displaySongs = songs.slice(0, 5);
 
   return (
-    <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
-      <div className="flex items-center justify-between p-4 border-b border-border/30">
-        <h3 className="text-sm font-medium flex items-center gap-2">
-          <Music className="h-3.5 w-3.5 text-primary" />
-          <span className="text-primary">Song Library</span>
-          <span className="text-muted-foreground">({songs.length})</span>
-        </h3>
+    <section className="bg-card rounded-[10px] p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-foreground font-bold text-lg">
+          Song Library ({songs.length})
+        </h2>
         <Link
           href="/dashboard/songs"
-          className="text-xs text-primary font-medium hover:underline"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors font-bold"
         >
-          View all
+          VIEW ALL
         </Link>
       </div>
 
@@ -50,26 +48,26 @@ export function SongsWidget({ songs }: SongsWidgetProps) {
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-border/30">
+        <div className="space-y-1">
           {displaySongs.map((song) => (
             <Link
               key={song.id}
               href={`/dashboard/songs/${song.id}`}
-              className="flex items-center justify-between px-4 py-3
+              className="flex items-center justify-between p-3 rounded-lg
                          hover:bg-muted/50 transition-colors min-h-[44px]"
             >
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{song.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                  {song.artist}
-                </p>
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                  <Music className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">{song.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{song.artist}</p>
+                </div>
               </div>
               <div className="flex items-center gap-2 shrink-0 ml-3">
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5
-                              text-[11px] font-medium border
-                              ${difficultyStyles[song.difficulty] || difficultyStyles.Medium}`}
-                >
+                <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5
+                  rounded-full ${difficultyStyles[song.difficulty] ?? difficultyStyles.Medium}`}>
                   {song.difficulty}
                 </span>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -78,6 +76,6 @@ export function SongsWidget({ songs }: SongsWidgetProps) {
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }

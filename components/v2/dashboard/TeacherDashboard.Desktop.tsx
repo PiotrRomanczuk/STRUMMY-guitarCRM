@@ -1,14 +1,13 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { staggerContainer, listItem } from '@/lib/animations/variants';
+import { format } from 'date-fns';
 import { StatsWidget } from './widgets/StatsWidget';
 import { AgendaWidget } from './widgets/AgendaWidget';
-import { AttentionWidget } from './widgets/AttentionWidget';
 import { ActivityWidget } from './widgets/ActivityWidget';
-import { ChartWidget } from './widgets/ChartWidget';
 import { StudentsWidget } from './widgets/StudentsWidget';
-import { SongsWidget } from './widgets/SongsWidget';
+import { QuickActionsGrid } from './widgets/QuickActions';
+import { MiniCalendar } from './widgets/MiniCalendar';
+import { ChartWidget } from './widgets/ChartWidget';
 import { SOTWCard } from '@/components/v2/song-of-the-week';
 import type { TeacherDashboardV2Props } from './TeacherDashboard';
 
@@ -19,18 +18,18 @@ export default function TeacherDashboardDesktop({
   isAdmin,
   sotw,
 }: TeacherDashboardV2Props) {
-  const displayName = fullName || email || 'Coach';
+  const displayName = fullName?.split(' ')[0] || email?.split('@')[0] || 'Coach';
+  const greeting = getGreeting();
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-6 space-y-6">
+    <div className="w-full max-w-[1600px] mx-auto px-8 lg:px-12 py-8 space-y-10">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
-          Welcome back,{' '}
-          <span className="text-primary">{displayName}</span>
+        <h1 className="text-xl font-bold tracking-tight text-foreground">
+          {greeting}, {displayName}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Here&apos;s what&apos;s happening with your guitar students today.
+        <p className="text-xs text-muted-foreground font-medium opacity-70 uppercase tracking-tighter">
+          {format(new Date(), 'MMMM d, yyyy')}
         </p>
       </div>
 
@@ -42,37 +41,34 @@ export default function TeacherDashboardDesktop({
         pendingAssignments={data.stats.pendingAssignments}
       />
 
-      {/* Two-column: Agenda + Attention */}
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-      >
-        <motion.div variants={listItem}>
+      {/* Content Grid: 60/40 split */}
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
+        {/* Left Column (60%) */}
+        <div className="lg:col-span-6 space-y-8">
           <AgendaWidget items={data.agenda} />
-        </motion.div>
-        <motion.div variants={listItem}>
-          <AttentionWidget items={data.needsAttention} />
-        </motion.div>
-      </motion.div>
+          <ActivityWidget activities={data.activities} />
+        </div>
+
+        {/* Right Column (40%) */}
+        <div className="lg:col-span-4 space-y-8">
+          <QuickActionsGrid />
+          <StudentsWidget students={data.students} />
+          <MiniCalendar />
+        </div>
+      </div>
 
       {/* Song of the Week */}
       {sotw && <SOTWCard sotw={sotw} isAdmin={isAdmin} />}
-
-      {/* Three-column: Students + Songs + Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <StudentsWidget students={data.students} />
-          <SongsWidget songs={data.songs} />
-        </div>
-        <div>
-          <ActivityWidget activities={data.activities} />
-        </div>
-      </div>
 
       {/* Chart */}
       <ChartWidget data={data.chartData} />
     </div>
   );
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
 }

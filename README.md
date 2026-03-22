@@ -6,8 +6,8 @@ Try the app at [strummy.app](https://strummy.app) with these read-only demo acco
 
 | Role | Email | Password |
 |:-----|:------|:---------|
-| **Teacher** | `teacher@example.com` | `test123_teacher` |
-| **Student** | `student@example.com` | `test123_student` |
+| **Teacher** | `sarah@strummy.app` | `Demo2024!` |
+| **Student** | `emma@strummy.app` | `Demo2024!` |
 
 ---
 
@@ -402,9 +402,8 @@ npm run dev    # http://localhost:3000
 ```
 
 Demo accounts after seeding:
-- **Admin:** `p.romanczuk@gmail.com` / `test123_admin`
-- **Teacher:** `teacher@example.com` / `test123_teacher`
-- **Student:** `student@example.com` / `test123_student`
+- **Teacher:** `sarah@strummy.app` / `Demo2024!`
+- **Student:** `emma@strummy.app` / `Demo2024!`
 
 ---
 

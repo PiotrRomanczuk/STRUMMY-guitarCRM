@@ -2,12 +2,15 @@
 
 import { motion } from 'framer-motion';
 import { staggerContainer, listItem, cardEntrance, safeVariants } from '@/lib/animations/variants';
+import { Flame } from 'lucide-react';
 import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { SOTWCard } from '@/components/v2/song-of-the-week';
 import { StatPills } from './student-widgets/StatPills';
 import { WhatsNextCard } from './student-widgets/WhatsNextCard';
 import { PracticeSongList } from './student-widgets/PracticeSongList';
 import { QuickLinks } from './student-widgets/QuickLinks';
+import { StreakTracker } from './student-widgets/StreakTracker';
+import { AchievementBadges } from './student-widgets/AchievementBadges';
 import type { StudentDashboardV2Props } from './StudentDashboard';
 
 export function StudentDashboardMobile({
@@ -28,14 +31,29 @@ export function StudentDashboardMobile({
         variants={safeVariants(staggerContainer)}
         initial="hidden"
         animate="visible"
-        className="space-y-4"
+        className="space-y-6"
       >
-        {/* Section 1: Stat pills */}
+        {/* Streak banner */}
+        <motion.div variants={safeVariants(listItem)}>
+          <div className="flex items-center gap-2 text-primary font-medium">
+            <Flame className="h-5 w-5" fill="currentColor" />
+            <span className="tracking-wide uppercase text-xs font-bold">
+              Keep practicing!
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Stat pills */}
         <motion.div variants={safeVariants(listItem)}>
           <StatPills stats={data.stats} />
         </motion.div>
 
-        {/* Section 2: What's Next card */}
+        {/* Streak tracker */}
+        <motion.div variants={safeVariants(listItem)}>
+          <StreakTracker streakDays={data.stats.completedLessons} />
+        </motion.div>
+
+        {/* What's Next card */}
         <motion.div variants={safeVariants(cardEntrance)}>
           <WhatsNextCard
             nextLesson={data.nextLesson}
@@ -43,22 +61,24 @@ export function StudentDashboardMobile({
           />
         </motion.div>
 
-        {/* Section 3: Practice Focus */}
-        {sotw && (
-          <motion.div variants={safeVariants(listItem)}>
-            <SOTWCard
-              sotw={sotw}
-              sotwInRepertoire={sotwInRepertoire}
-              isStudent
-            />
-          </motion.div>
-        )}
-
+        {/* Practice songs */}
         <motion.div variants={safeVariants(listItem)}>
           <PracticeSongList songs={data.recentSongs.slice(0, 4)} />
         </motion.div>
 
-        {/* Section 4: Quick links */}
+        {/* Song of the Week */}
+        {sotw && (
+          <motion.div variants={safeVariants(listItem)}>
+            <SOTWCard sotw={sotw} sotwInRepertoire={sotwInRepertoire} isStudent />
+          </motion.div>
+        )}
+
+        {/* Achievements */}
+        <motion.div variants={safeVariants(listItem)}>
+          <AchievementBadges />
+        </motion.div>
+
+        {/* Quick links */}
         <motion.div variants={safeVariants(listItem)}>
           <QuickLinks totalAssignments={data.stats.activeAssignments} />
         </motion.div>

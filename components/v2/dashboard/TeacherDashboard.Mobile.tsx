@@ -2,11 +2,10 @@
 
 import { motion } from 'framer-motion';
 import { staggerContainer, listItem, safeVariants } from '@/lib/animations/variants';
+import { PlayCircle, UserPlus, Library, BarChart3 } from 'lucide-react';
 import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { StatsWidget } from './widgets/StatsWidget';
-import { AgendaWidget } from './widgets/AgendaWidget';
-import { AttentionWidget } from './widgets/AttentionWidget';
-import { SwipeableWidgets } from './widgets/SwipeableWidgets';
+import { ActivityWidget } from './widgets/ActivityWidget';
 import { QuickActionsFAB } from './widgets/QuickActions';
 import { SOTWCard } from '@/components/v2/song-of-the-week';
 import type { TeacherDashboardV2Props } from './TeacherDashboard';
@@ -20,11 +19,12 @@ export function TeacherDashboardMobile({
 }: TeacherDashboardV2Props) {
   const greeting = getGreeting();
   const displayName = fullName?.split(' ')[0] || email?.split('@')[0] || 'Coach';
+  const lessonCount = data.agenda.filter((a) => a.type === 'lesson').length;
 
   return (
     <MobilePageShell
       title={`${greeting}, ${displayName}`}
-      subtitle="Here's your day at a glance"
+      subtitle={`You have ${lessonCount} lesson${lessonCount !== 1 ? 's' : ''} today`}
       showBack={false}
       fab={<QuickActionsFAB />}
     >
@@ -32,9 +32,9 @@ export function TeacherDashboardMobile({
         variants={safeVariants(staggerContainer)}
         initial="hidden"
         animate="visible"
-        className="space-y-4"
+        className="space-y-6"
       >
-        {/* Stats overview */}
+        {/* Stats chips */}
         <motion.div variants={safeVariants(listItem)}>
           <StatsWidget
             totalStudents={data.stats.totalStudents}
@@ -44,12 +44,16 @@ export function TeacherDashboardMobile({
           />
         </motion.div>
 
-        {/* Swipeable: Agenda + Attention */}
+        {/* Today's Lessons */}
+        {data.agenda.length > 0 && (
+          <motion.div variants={safeVariants(listItem)}>
+            <LessonCards items={data.agenda.slice(0, 4)} />
+          </motion.div>
+        )}
+
+        {/* Quick Actions 2x2 */}
         <motion.div variants={safeVariants(listItem)}>
-          <SwipeableWidgets labels={['Agenda', 'Needs Attention']}>
-            <AgendaWidget items={data.agenda} />
-            <AttentionWidget items={data.needsAttention} />
-          </SwipeableWidgets>
+          <MobileQuickActions />
         </motion.div>
 
         {/* Song of the Week */}
@@ -59,12 +63,10 @@ export function TeacherDashboardMobile({
           </motion.div>
         )}
 
-        {/* Recent students - compact card list */}
-        {data.students.length > 0 && (
-          <motion.div variants={safeVariants(listItem)}>
-            <StudentCards students={data.students.slice(0, 5)} />
-          </motion.div>
-        )}
+        {/* Activity feed */}
+        <motion.div variants={safeVariants(listItem)}>
+          <ActivityWidget activities={data.activities} />
+        </motion.div>
       </motion.div>
     </MobilePageShell>
   );
@@ -77,54 +79,68 @@ function getGreeting(): string {
   return 'Good evening';
 }
 
-function StudentCards({
-  students,
-}: {
-  students: { id: string; name: string; level: string; nextLesson: string }[];
+function LessonCards({ items }: {
+  items: { id: string; title: string; time?: string; status: string }[];
 }) {
+  const badgeStyle: Record<string, string> = {
+    completed: 'bg-secondary text-muted-foreground/40',
+    overdue: 'bg-emerald-500/10 text-emerald-400',
+    upcoming: 'bg-primary/10 text-primary',
+  };
+  const badgeLabel: Record<string, string> = {
+    completed: 'Completed', overdue: 'In Progress', upcoming: 'Upcoming',
+  };
+
   return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-medium text-muted-foreground px-1">
-        Your Students
-      </h3>
+    <section className="space-y-3">
+      <h3 className="text-xl font-bold text-foreground">Today&apos;s Lessons</h3>
       <div className="space-y-2">
-        {students.map((student) => (
-          <a
-            key={student.id}
-            href={`/dashboard/users/${student.id}`}
-            className="block bg-card rounded-xl border border-border/50 p-4
-                       active:bg-muted/50 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{student.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {student.level} &middot; Next: {student.nextLesson}
-                </p>
-              </div>
-              <LevelBadge level={student.level} />
+        {items.map((item) => (
+          <div key={item.id}
+            className="bg-card p-4 rounded-[10px] flex items-center justify-between
+                       active:scale-[0.98] transition-transform">
+            <div className="flex items-center gap-3">
+              {item.time && (
+                <>
+                  <p className="text-xs font-bold text-muted-foreground min-w-[50px] text-center">{item.time}</p>
+                  <div className="h-8 w-px bg-border/30" />
+                </>
+              )}
+              <h4 className="font-bold text-foreground text-sm truncate">{item.title}</h4>
             </div>
-          </a>
+            <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-tighter ${badgeStyle[item.status] ?? badgeStyle.upcoming}`}>
+              {badgeLabel[item.status] ?? 'Upcoming'}
+            </span>
+          </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
-function LevelBadge({ level }: { level: string }) {
-  const styles =
-    level === 'Advanced'
-      ? 'bg-primary/10 text-primary border-primary/20'
-      : level === 'Intermediate'
-        ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20'
-        : 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20';
+function MobileQuickActions() {
+  const actions = [
+    { label: 'Start\nLesson', href: '/dashboard/lessons/new', Icon: PlayCircle },
+    { label: 'Add\nStudent', href: '/dashboard/users/invite', Icon: UserPlus },
+    { label: 'Song\nLibrary', href: '/dashboard/songs', Icon: Library },
+    { label: 'Teacher\nReports', href: '/dashboard/stats', Icon: BarChart3 },
+  ];
 
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5
-                  text-[11px] font-medium border shrink-0 ${styles}`}
-    >
-      {level}
-    </span>
+    <div className="grid grid-cols-2 gap-3">
+      {actions.map((action) => (
+        <a
+          key={action.label}
+          href={action.href}
+          className="bg-card p-5 rounded-[10px] flex flex-col gap-3
+                     active:bg-muted transition-colors"
+        >
+          <action.Icon className="h-7 w-7 text-primary" />
+          <span className="text-sm font-bold text-foreground leading-tight whitespace-pre-line">
+            {action.label}
+          </span>
+        </a>
+      ))}
+    </div>
   );
 }

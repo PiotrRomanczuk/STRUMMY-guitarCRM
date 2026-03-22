@@ -42,14 +42,14 @@ export default function AppShellDesktopV2({
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 bottom-0 w-60 bg-card border-r border-border flex flex-col z-40">
+      <aside className="fixed left-0 top-0 bottom-0 w-60 bg-background flex flex-col z-40">
         {/* Logo */}
-        <Link href="/dashboard" className="h-14 flex items-center gap-2.5 px-4 border-b border-border shrink-0 hover:bg-muted/50 transition-colors">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Guitar className="w-4.5 h-4.5 text-primary" />
+        <Link href="/dashboard" className="h-14 flex items-center gap-2.5 px-4 shrink-0 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ffd183] to-[#f2b127] flex items-center justify-center">
+            <Guitar className="w-4.5 h-4.5 text-[#422c00]" />
           </div>
           <div>
-            <h1 className="font-semibold text-sm leading-tight">Strummy</h1>
+            <h1 className="font-semibold text-sm leading-tight text-primary">Strummy</h1>
             <p className="text-[10px] text-muted-foreground leading-tight">{roleLabel}</p>
           </div>
         </Link>
@@ -58,7 +58,7 @@ export default function AppShellDesktopV2({
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
           {groups.map((group) => (
             <div key={group.label}>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-[#d5c4ad] px-3 mb-1">
                 {group.label}
               </p>
               <div className="space-y-0.5">
@@ -70,10 +70,10 @@ export default function AppShellDesktopV2({
                       href={item.path}
                       aria-current={active ? 'page' : undefined}
                       className={cn(
-                        'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
+                        'flex items-center gap-2.5 px-3 py-2 rounded-full text-sm transition-colors',
                         active
-                          ? 'bg-primary/10 text-primary font-medium'
-                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                          ? 'bg-primary text-[#422c00] font-medium'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted dark:text-[#d5c4ad] dark:hover:text-primary dark:hover:bg-[#353534]',
                       )}
                     >
                       <item.icon className="w-4 h-4 shrink-0" />
@@ -87,16 +87,19 @@ export default function AppShellDesktopV2({
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-border p-3 space-y-1.5 shrink-0">
+        <div className="p-3 space-y-1.5 shrink-0 bg-muted dark:bg-[#1c1b1b] rounded-t-xl">
           <div className="flex items-center gap-2 px-2">
             <NotificationBell userId={user?.id} />
             <ModeToggle />
+            <span className="ml-auto text-[10px] font-bold uppercase tracking-widest bg-primary text-[#422c00] px-2 py-0.5 rounded-full">
+              {roleLabel}
+            </span>
           </div>
           <button
             onClick={handleSignOut}
             className={cn(
-              'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm w-full',
-              'text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors',
+              'flex items-center gap-2.5 px-3 py-2 rounded-full text-sm w-full',
+              'text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors dark:text-[#d5c4ad]',
             )}
           >
             <LogOut className="w-4 h-4" />

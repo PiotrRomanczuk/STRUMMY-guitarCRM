@@ -35,14 +35,18 @@ If `--quick` is set, enable both `--skip-review` and `--skip-linear`.
 Run ALL checks. No interactive prompts. Fail fast.
 
 1. `git branch --show-current` — if on `main`, `master`, or `production` → **ABORT**: "Create a feature branch first: `git checkout -b feature/STRUM-XXX-description`"
-2. `git status --porcelain` — if any output → **ABORT**: "Commit or stash changes before running /ship"
+2. `git status --porcelain` — if any uncommitted changes exist, **auto-commit them**:
+   - Stage all changes: `git add -A` then `git reset HEAD -- logs/ playwright-report/` to exclude artifacts
+   - Generate a commit message from the diff (type(scope): description format)
+   - Commit with `Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>`
+   - Do NOT ask the user — always commit. This is the expected behavior.
 3. `git log origin/main..HEAD --oneline` — if zero commits → **ABORT**: "No commits to ship"
 4. Extract Linear ticket ID from branch name (regex: `STRUM-\d+`). Store if found; no warning if missing.
 
 ```
 Pre-flight:
   Branch:  feature/STRUM-123-add-reminders ✓
-  Clean:   no uncommitted changes ✓
+  Changes: auto-committed (or: already clean) ✓
   Commits: 3 ahead of main ✓
   Ticket:  STRUM-123
 ```

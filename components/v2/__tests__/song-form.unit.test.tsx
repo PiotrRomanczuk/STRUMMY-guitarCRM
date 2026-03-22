@@ -149,12 +149,10 @@ describe('SongFormV2', () => {
 
   it('renders with empty fields in create mode', () => {
     render(<SongFormV2 mode="create" />);
-    // Title input should be empty
-    const titleInput = screen.getByLabelText(/title/i);
+    const titleInput = screen.getByLabelText(/song title/i);
     expect(titleInput).toHaveValue('');
-    // Author input should be empty
-    const authorInput = screen.getByLabelText(/author/i);
-    expect(authorInput).toHaveValue('');
+    const artistInput = screen.getByLabelText(/artist/i);
+    expect(artistInput).toHaveValue('');
   });
 
   it('pre-populates fields in edit mode', () => {
@@ -166,15 +164,15 @@ describe('SongFormV2', () => {
       key: 'G',
     } as Song;
     render(<SongFormV2 mode="edit" song={mockSong} />);
-    const titleInput = screen.getByLabelText(/title/i);
+    const titleInput = screen.getByLabelText(/song title/i);
     expect(titleInput).toHaveValue('Wonderwall');
-    const authorInput = screen.getByLabelText(/author/i);
-    expect(authorInput).toHaveValue('Oasis');
+    const artistInput = screen.getByLabelText(/artist/i);
+    expect(artistInput).toHaveValue('Oasis');
   });
 
   it('renders the step wizard with 3 steps', () => {
     render(<SongFormV2 mode="create" />);
-    expect(screen.getByText('Essential Info')).toBeInTheDocument();
+    expect(screen.getByText('Basic Information')).toBeInTheDocument();
     expect(screen.getByText('Resources & Media')).toBeInTheDocument();
     expect(screen.getByText('Musical Details')).toBeInTheDocument();
   });
@@ -184,13 +182,13 @@ describe('SongFormV2', () => {
     expect(screen.getByTestId('spotify-search')).toBeInTheDocument();
   });
 
-  it('fills title and author from Spotify selection', () => {
+  it('fills title and artist from Spotify selection', () => {
     render(<SongFormV2 mode="create" />);
     fireEvent.click(screen.getByTestId('spotify-select-btn'));
-    const titleInput = screen.getByLabelText(/title/i);
+    const titleInput = screen.getByLabelText(/song title/i);
     expect(titleInput).toHaveValue('Test Track');
-    const authorInput = screen.getByLabelText(/author/i);
-    expect(authorInput).toHaveValue('Test Artist');
+    const artistInput = screen.getByLabelText(/artist/i);
+    expect(artistInput).toHaveValue('Test Artist');
   });
 
   it('renders submit button with correct label in create mode', () => {

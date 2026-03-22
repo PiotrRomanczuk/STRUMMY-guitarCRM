@@ -1,12 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { User, Mail, AtSign, FileText, Save } from 'lucide-react';
+import { User, Mail, Save } from 'lucide-react';
 import { staggerContainer, listItem } from '@/lib/animations/variants';
 import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { ProfileV2Props } from './Profile';
@@ -112,23 +111,6 @@ export function ProfileMobile({
             />
           </Field>
 
-          <Field
-            icon={<AtSign className="h-3.5 w-3.5 text-muted-foreground" />}
-            label="Username"
-            error={validationErrors.username}
-          >
-            <Input
-              value={formData.username ?? ''}
-              onChange={(e) => onChange({ ...formData, username: e.target.value })}
-              onBlur={() => onBlur('username')}
-              placeholder="@username"
-              className={cn(
-                'min-h-[44px] text-base',
-                validationErrors.username && 'border-destructive'
-              )}
-            />
-          </Field>
-
           {userEmail && (
             <Field
               icon={<Mail className="h-3.5 w-3.5 text-muted-foreground" />}
@@ -142,23 +124,6 @@ export function ProfileMobile({
             </Field>
           )}
 
-          <Field
-            icon={<FileText className="h-3.5 w-3.5 text-muted-foreground" />}
-            label="Bio"
-            error={validationErrors.bio}
-          >
-            <Textarea
-              value={formData.bio ?? ''}
-              onChange={(e) => onChange({ ...formData, bio: e.target.value })}
-              onBlur={() => onBlur('bio')}
-              placeholder="Tell students about yourself..."
-              rows={3}
-              className={cn(
-                'text-base resize-none',
-                validationErrors.bio && 'border-destructive'
-              )}
-            />
-          </Field>
         </motion.div>
 
         {/* Submit button */}

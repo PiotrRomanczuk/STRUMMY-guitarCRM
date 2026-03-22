@@ -3,47 +3,53 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { slideInBottom, fadeIn } from '@/lib/animations/variants';
-import { Plus, BookOpen, Music, Users, X } from 'lucide-react';
+import { Plus, BookOpen, Music, Users, BarChart3, X } from 'lucide-react';
 import Link from 'next/link';
+import type { LucideIcon } from 'lucide-react';
 
-interface QuickAction {
-  label: string;
-  href: string;
-  icon: typeof Plus;
-  color: string;
-  bgColor: string;
-}
-
-const actions: QuickAction[] = [
-  {
-    label: 'New Lesson',
-    href: '/dashboard/lessons/new',
-    icon: BookOpen,
-    color: 'text-primary',
-    bgColor: 'bg-primary/10',
-  },
-  {
-    label: 'Add Song',
-    href: '/dashboard/songs/new',
-    icon: Music,
-    color: 'text-yellow-600 dark:text-yellow-400',
-    bgColor: 'bg-yellow-500/10',
-  },
-  {
-    label: 'Add Student',
-    href: '/dashboard/users/invite',
-    icon: Users,
-    color: 'text-green-600 dark:text-green-400',
-    bgColor: 'bg-green-500/10',
-  },
+const actions: { label: string; href: string; icon: LucideIcon }[] = [
+  { label: 'New Lesson', href: '/dashboard/lessons/new', icon: BookOpen },
+  { label: 'Add Student', href: '/dashboard/users/invite', icon: Users },
+  { label: 'Import Song', href: '/dashboard/songs/new', icon: Music },
+  { label: 'Report', href: '/dashboard/stats', icon: BarChart3 },
 ];
 
+/** Desktop 2x2 grid of quick actions */
+export function QuickActionsGrid() {
+  return (
+    <section className="bg-card rounded-[10px] p-6">
+      <h2 className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-5">
+        Quick Actions
+      </h2>
+      <div className="grid grid-cols-2 gap-3">
+        {actions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <Link
+              key={action.label}
+              href={action.href}
+              className="flex flex-col items-center justify-center p-4 rounded-xl
+                         bg-secondary hover:bg-primary hover:text-primary-foreground
+                         transition-all group min-h-[80px]"
+            >
+              <Icon className="h-5 w-5 mb-2 text-primary group-hover:text-primary-foreground transition-colors" />
+              <span className="text-xs font-bold text-foreground group-hover:text-primary-foreground transition-colors">
+                {action.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** Mobile FAB with action sheet */
 export function QuickActionsFAB() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      {/* Overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -57,7 +63,6 @@ export function QuickActionsFAB() {
         )}
       </AnimatePresence>
 
-      {/* Action sheet */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -78,12 +83,8 @@ export function QuickActionsFAB() {
                   className="flex items-center gap-3 px-3 py-3 rounded-lg
                              active:bg-muted/50 transition-colors min-h-[44px]"
                 >
-                  <div
-                    className={`w-8 h-8 rounded-md ${action.bgColor} flex items-center justify-center`}
-                  >
-                    <Icon className={`h-4 w-4 ${action.color}`} />
-                  </div>
-                  <span className="text-sm font-medium">{action.label}</span>
+                  <Icon className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-bold">{action.label}</span>
                 </Link>
               );
             })}
@@ -91,25 +92,20 @@ export function QuickActionsFAB() {
         )}
       </AnimatePresence>
 
-      {/* FAB */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="fixed right-4 z-50 rounded-full shadow-lg
-                   bg-primary text-primary-foreground
+        className="fixed right-4 z-50 rounded-[14px] shadow-lg
+                   bg-gradient-to-br from-primary to-warning text-primary-foreground
                    w-14 h-14 flex items-center justify-center
                    bottom-[calc(4rem+env(safe-area-inset-bottom)+1rem)]
-                   active:scale-95 transition-transform"
+                   active:scale-90 transition-transform"
         aria-label={isOpen ? 'Close quick actions' : 'Open quick actions'}
       >
         <motion.div
           animate={{ rotate: isOpen ? 45 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          {isOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Plus className="h-6 w-6" />
-          )}
+          {isOpen ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
         </motion.div>
       </button>
     </>

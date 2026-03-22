@@ -181,12 +181,22 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     assignments: 0,
   }));
 
-  // Songs: query real songs from the songs table
-  const { data: songRows } = await supabase
-    .from('songs')
-    .select('id, title, author, level')
-    .order('created_at', { ascending: false })
-    .limit(10);
+  // Songs: only songs used in this teacher's lessons (via lesson_songs)
+  const { data: lessonSongLinks } = await supabase
+    .from('lesson_songs')
+    .select('song_id, lessons!inner(teacher_id)')
+    .eq('lessons.teacher_id', user.id);
+
+  const teacherSongIds = [...new Set((lessonSongLinks ?? []).map((r) => r.song_id))];
+
+  const { data: songRows } = teacherSongIds.length > 0
+    ? await supabase
+        .from('songs')
+        .select('id, title, author, level')
+        .in('id', teacherSongIds)
+        .order('created_at', { ascending: false })
+        .limit(10)
+    : { data: [] };
 
   const songs: TeacherDashboardData['songs'] = (songRows || []).map((song) => ({
     id: song.id,
@@ -268,9 +278,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   ].sort((a, b) => b.time.localeCompare(a.time));
 
   // Real stats from Supabase
-  const { count: songsCount } = await supabase
-    .from('songs')
-    .select('*', { count: 'exact', head: true });
+  const songsCount = teacherSongIds.length;
 
   const { count: lessonsThisWeekCount } = await supabase
     .from('lessons')
@@ -281,7 +289,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   const { count: pendingAssignmentsCount } = await supabase
     .from('assignments')
     .select('*', { count: 'exact', head: true })
-    .in('status', ['OPEN', 'IN_PROGRESS']);
+    .in('status', ['not_started', 'in_progress', 'pending']);
 
   // Needs-attention: students with no recent lesson (14+ days) or overdue assignments
   const twoWeeksAgo = new Date();

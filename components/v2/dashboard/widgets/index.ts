@@ -1,4 +1,5 @@
 export { StatsWidget } from './StatsWidget';
 export { AgendaWidget } from './AgendaWidget';
 export { AttentionWidget } from './AttentionWidget';
-export { QuickActionsFAB } from './QuickActions';
+export { QuickActionsFAB, QuickActionsGrid } from './QuickActions';
+export { MiniCalendar } from './MiniCalendar';
