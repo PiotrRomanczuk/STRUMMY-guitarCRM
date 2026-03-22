@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Music } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -8,6 +9,7 @@ import { ListPageHeader } from '@/components/v2/primitives/ListPageHeader';
 import { StatusBadge } from '@/components/v2/primitives/StatusBadge';
 import { REPERTOIRE_STATUS_STYLES, REPERTOIRE_STATUS_LABELS } from './repertoire.styles';
 import { SelfRating } from './SelfRating';
+import { cardEntrance } from '@/lib/animations/variants';
 import type { StudentRepertoireWithSong } from '@/types/StudentRepertoire';
 
 interface DesktopRepertoireListProps {
@@ -39,12 +41,17 @@ export default function DesktopRepertoireList({
           message="Add songs to start tracking progress."
         />
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
+        <motion.div
+          variants={cardEntrance}
+          initial="hidden"
+          animate="visible"
+          className="rounded-xl overflow-hidden bg-card shadow-2xl shadow-black/20"
+        >
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50 border-transparent">
+              <TableRow className="hover:bg-transparent border-transparent">
                 {['Song', 'Status', 'Key', 'Rating', 'Last Practiced'].map((h) => (
-                  <TableHead key={h} className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{h}</TableHead>
+                  <TableHead key={h} className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{h}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -94,7 +101,7 @@ export default function DesktopRepertoireList({
               ))}
             </TableBody>
           </Table>
-        </div>
+        </motion.div>
       )}
     </div>
   );
