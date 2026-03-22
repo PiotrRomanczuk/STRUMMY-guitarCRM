@@ -19,10 +19,13 @@ describe('generateRecurringDates', () => {
     });
 
     const timestamps = dates.map((d) => new Date(d).getTime());
-    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
 
-    expect(timestamps[1] - timestamps[0]).toBe(oneWeekMs);
-    expect(timestamps[2] - timestamps[1]).toBe(oneWeekMs);
+    // Allow for DST transitions (±1 hour from exact 7 days)
+    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+    const tolerance = 60 * 60 * 1000; // 1 hour
+
+    expect(Math.abs(timestamps[1] - timestamps[0] - oneWeekMs)).toBeLessThanOrEqual(tolerance);
+    expect(Math.abs(timestamps[2] - timestamps[1] - oneWeekMs)).toBeLessThanOrEqual(tolerance);
   });
 
   it('uses the correct time for all dates', () => {

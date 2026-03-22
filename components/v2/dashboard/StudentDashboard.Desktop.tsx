@@ -50,7 +50,7 @@ export default function StudentDashboardDesktop({
       </div>
 
       {/* Practice songs */}
-      <PracticeSongList songs={data.recentSongs.slice(0, 6)} />
+      <PracticeSongList songs={data.recentSongs.slice(0, 6)} repertoire={data.repertoire} />
 
       {/* Achievements + SOTW */}
       <motion.div

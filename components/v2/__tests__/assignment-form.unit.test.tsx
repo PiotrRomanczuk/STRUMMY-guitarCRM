@@ -100,6 +100,22 @@ jest.mock('@/components/v2/assignments/AssignmentForm.Steps', () => ({
   ),
 }));
 
+// Mock the SongPicker component
+jest.mock('@/components/v2/assignments/AssignmentForm.SongPicker', () => ({
+  SongPicker: ({ selectedSongId, onSelect }: { selectedSongId: string; onSelect: (id: string) => void }) => (
+    <div data-testid="step-song">
+      <select
+        data-testid="song-select"
+        value={selectedSongId}
+        onChange={(e) => onSelect(e.target.value)}
+      >
+        <option value="">No song</option>
+        <option value="song-1">Test Song</option>
+      </select>
+    </div>
+  ),
+}));
+
 import { AssignmentForm } from '@/components/v2/assignments/AssignmentForm';
 
 const defaultStudents = [
@@ -171,10 +187,12 @@ describe('AssignmentForm', () => {
       const nextButton = screen.getByRole('button', { name: /next/i });
       expect(nextButton).not.toBeDisabled();
       fireEvent.click(nextButton);
+      // Now on Song step, click Next to go to Schedule
+      fireEvent.click(screen.getByRole('button', { name: /next/i }));
       expect(screen.getByTestId('step-schedule')).toBeInTheDocument();
     });
 
-    it('validates ALL required fields at the final step (step 2)', () => {
+    it('validates ALL required fields at the final step', () => {
       render(<AssignmentForm {...defaultProps} />);
       fireEvent.change(screen.getByTestId('student-select'), {
         target: { value: 'student-1' },
@@ -183,7 +201,8 @@ describe('AssignmentForm', () => {
       fireEvent.change(screen.getByTestId('title-input'), {
         target: { value: 'Practice chords' },
       });
-      fireEvent.click(screen.getByRole('button', { name: /next/i }));
+      fireEvent.click(screen.getByRole('button', { name: /next/i })); // Content → Song
+      fireEvent.click(screen.getByRole('button', { name: /next/i })); // Song → Schedule
       const createButton = screen.getByRole('button', { name: /create/i });
       expect(createButton).not.toBeDisabled();
     });
@@ -200,7 +219,8 @@ describe('AssignmentForm', () => {
       fireEvent.change(screen.getByTestId('title-input'), {
         target: { value: 'Scale practice' },
       });
-      fireEvent.click(screen.getByRole('button', { name: /next/i }));
+      fireEvent.click(screen.getByRole('button', { name: /next/i })); // Content → Song
+      fireEvent.click(screen.getByRole('button', { name: /next/i })); // Song → Schedule
       fireEvent.click(screen.getByRole('button', { name: /create/i }));
       await waitFor(() => {
         expect(mockCreateAssignment).toHaveBeenCalledWith(
@@ -228,8 +248,9 @@ describe('AssignmentForm', () => {
           }}
         />
       );
-      fireEvent.click(screen.getByRole('button', { name: /next/i }));
-      fireEvent.click(screen.getByRole('button', { name: /next/i }));
+      fireEvent.click(screen.getByRole('button', { name: /next/i })); // Student → Content
+      fireEvent.click(screen.getByRole('button', { name: /next/i })); // Content → Song
+      fireEvent.click(screen.getByRole('button', { name: /next/i })); // Song → Schedule
       const updateButton = screen.getByRole('button', { name: /update/i });
       expect(updateButton).toBeDisabled();
     });
@@ -270,8 +291,9 @@ describe('AssignmentForm', () => {
           }}
         />
       );
-      fireEvent.click(screen.getByRole('button', { name: /next/i }));
-      fireEvent.click(screen.getByRole('button', { name: /next/i }));
+      fireEvent.click(screen.getByRole('button', { name: /next/i })); // Student → Content
+      fireEvent.click(screen.getByRole('button', { name: /next/i })); // Content → Song
+      fireEvent.click(screen.getByRole('button', { name: /next/i })); // Song → Schedule
       expect(screen.getByRole('button', { name: /update/i })).toBeInTheDocument();
     });
   });
@@ -279,7 +301,7 @@ describe('AssignmentForm', () => {
   describe('step indicators', () => {
     it('renders step count indicator', () => {
       render(<AssignmentForm {...defaultProps} />);
-      expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument();
+      expect(screen.getByText(/step 1 of 4/i)).toBeInTheDocument();
     });
 
     it('shows current step label', () => {

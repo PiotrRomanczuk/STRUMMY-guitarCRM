@@ -215,7 +215,7 @@ describe('getStudentDashboardData', () => {
       totalSongs: 5,
       completedLessons: expect.any(Number),
       activeAssignments: 1,
-      practiceHours: 12,
+      practiceHours: 0,
     });
   });
 

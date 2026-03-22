@@ -63,7 +63,7 @@ export function StudentDashboardMobile({
 
         {/* Practice songs */}
         <motion.div variants={safeVariants(listItem)}>
-          <PracticeSongList songs={data.recentSongs.slice(0, 4)} />
+          <PracticeSongList songs={data.recentSongs.slice(0, 4)} repertoire={data.repertoire?.slice(0, 4)} />
         </motion.div>
 
         {/* Song of the Week */}
