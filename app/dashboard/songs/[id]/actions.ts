@@ -65,3 +65,48 @@ export async function getSongStudents(songId: string): Promise<SongStudentItem[]
 
   return Array.from(studentMap.values());
 }
+
+export type RepertoireStudentItem = {
+  id: string;
+  current_status: string;
+  started_at: string | null;
+  mastered_at: string | null;
+  self_rating: number | null;
+  total_practice_minutes: number;
+  last_practiced_at: string | null;
+  priority: string;
+  student: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  } | null;
+};
+
+export async function getSongStudentsFromRepertoire(
+  songId: string
+): Promise<RepertoireStudentItem[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('student_repertoire')
+    .select(
+      `
+      id, current_status, started_at, mastered_at,
+      self_rating, total_practice_minutes, last_practiced_at, priority,
+      student:profiles!student_repertoire_student_id_fkey(
+        id, full_name, email, avatar_url
+      )
+    `
+    )
+    .eq('song_id', songId)
+    .eq('is_active', true)
+    .order('current_status', { ascending: false });
+
+  if (error) {
+    logger.error('Error fetching song students from repertoire:', error);
+    return [];
+  }
+
+  return (data as unknown as RepertoireStudentItem[]) || [];
+}
