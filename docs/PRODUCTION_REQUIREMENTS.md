@@ -164,7 +164,7 @@ supabase db push
 | `assignment_history` | Change tracking | ⚠️ Optional |
 | `lesson_history` | Change tracking | ⚠️ Optional |
 | `song_status_history` | Progress tracking | ⚠️ Optional |
-| `student_song_progress` | Overall progress | ⚠️ Optional |
+| `student_song_progress` | **DEPRECATED** — use `student_repertoire` | ⛔ Deprecated |
 | `practice_sessions` | Practice logging | ⚠️ Optional |
 | `ai_conversations` | AI chat history | ⚠️ Optional (for AI features) |
 | `ai_messages` | AI messages | ⚠️ Optional (for AI features) |
