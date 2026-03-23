@@ -7,6 +7,7 @@ import { SOTWCard } from '@/components/v2/song-of-the-week';
 import { StatPills } from './student-widgets/StatPills';
 import { WhatsNextCard } from './student-widgets/WhatsNextCard';
 import { PracticeSongList } from './student-widgets/PracticeSongList';
+import { RepertoireProgress } from './student-widgets/RepertoireProgress';
 import { QuickLinks } from './student-widgets/QuickLinks';
 import { StreakTracker } from './student-widgets/StreakTracker';
 import { AchievementBadges } from './student-widgets/AchievementBadges';
@@ -49,8 +50,12 @@ export default function StudentDashboardDesktop({
         />
       </div>
 
-      {/* Practice songs */}
-      <PracticeSongList songs={data.recentSongs.slice(0, 6)} />
+      {/* Repertoire progress (falls back to recent songs if no repertoire) */}
+      {data.repertoire && data.repertoire.length > 0 ? (
+        <RepertoireProgress items={data.repertoire} maxItems={6} />
+      ) : (
+        <PracticeSongList songs={data.recentSongs.slice(0, 6)} />
+      )}
 
       {/* Achievements + SOTW */}
       <motion.div

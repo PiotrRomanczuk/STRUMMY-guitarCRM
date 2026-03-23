@@ -1,10 +1,11 @@
-import { Music, BookOpen, ClipboardList } from 'lucide-react';
+import { Music, BookOpen, ClipboardList, Timer } from 'lucide-react';
 
 interface StatPillsProps {
   stats: {
     totalSongs: number;
     completedLessons: number;
     activeAssignments: number;
+    practiceHours?: number;
   };
 }
 
@@ -19,6 +20,9 @@ export function StatPills({ stats }: StatPillsProps) {
       icon: ClipboardList,
       label: `${stats.activeAssignments} ${stats.activeAssignments === 1 ? 'task' : 'tasks'}`,
     },
+    ...(stats.practiceHours !== undefined && stats.practiceHours > 0
+      ? [{ icon: Timer, label: `${stats.practiceHours}h practice` }]
+      : []),
   ];
 
   return (

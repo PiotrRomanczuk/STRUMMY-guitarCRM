@@ -51,9 +51,11 @@ jest.mock('@/lib/supabase/server', () => ({
 describe('getStudentDashboardData', () => {
   const studentId = '123e4567-e89b-12d3-a456-426614174000';
   const _now = new Date().toISOString();
+  let repertoireCallCount = 0;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    repertoireCallCount = 0;
   });
 
   it('should return dashboard data for authenticated student', async () => {
@@ -187,6 +189,59 @@ describe('getStudentDashboardData', () => {
         };
       }
 
+      if (table === 'student_repertoire') {
+        repertoireCallCount++;
+        if (repertoireCallCount === 1) {
+          // First call: repertoire items query (select complex, eq, eq, order, order, limit)
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  order: () => ({
+                    order: () => ({
+                      limit: () => Promise.resolve({
+                        data: [
+                          {
+                            id: 'rep-1',
+                            song_id: 'song-1',
+                            current_status: 'started',
+                            priority: 'high',
+                            last_practiced_at: '2026-01-30T10:00:00Z',
+                            total_practice_minutes: 90,
+                            self_rating: 3,
+                            song: { id: 'song-1', title: 'Wonderwall', author: 'Oasis' },
+                          },
+                        ],
+                      }),
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (repertoireCallCount === 2) {
+          // Second call: count query (select with count option)
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => Promise.resolve({ count: 3 }),
+              }),
+            }),
+          };
+        }
+        // Third call: practice sum query
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => Promise.resolve({
+                data: [{ total_practice_minutes: 90 }],
+              }),
+            }),
+          }),
+        };
+      }
+
       return {
         select: () => ({
           eq: () => Promise.resolve({ data: null }),
@@ -211,11 +266,23 @@ describe('getStudentDashboardData', () => {
     expect(result.assignments).toHaveLength(1);
     expect(result.recentSongs).toHaveLength(1);
     expect(result.allSongs).toHaveLength(2);
+    expect(result.repertoire).toHaveLength(1);
+    expect(result.repertoire[0]).toEqual({
+      id: 'rep-1',
+      song_id: 'song-1',
+      song_title: 'Wonderwall',
+      song_author: 'Oasis',
+      current_status: 'started',
+      priority: 'high',
+      last_practiced_at: '2026-01-30T10:00:00Z',
+      total_practice_minutes: 90,
+      self_rating: 3,
+    });
     expect(result.stats).toEqual({
-      totalSongs: 5,
+      totalSongs: 3,
       completedLessons: expect.any(Number),
       activeAssignments: 1,
-      practiceHours: 12,
+      practiceHours: 2,
     });
   });
 
@@ -428,7 +495,9 @@ describe('getStudentDashboardData', () => {
 
     expect(result.recentSongs).toEqual([]);
     expect(result.allSongs).toEqual([]);
+    // totalSongs now comes from student_repertoire, not songs table
     expect(result.stats.totalSongs).toBe(0);
+    expect(result.repertoire).toEqual([]);
   });
 
   it('should filter out null songs from recent songs', async () => {
