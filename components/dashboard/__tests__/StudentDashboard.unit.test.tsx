@@ -141,6 +141,7 @@ function createMockDashboardData(
       { id: 'song-1', title: 'Wonderwall', artist: 'Oasis' },
       { id: 'song-2', title: 'Wish You Were Here', artist: 'Pink Floyd' },
     ],
+    repertoire: [],
     stats: {
       totalSongs: 5,
       completedLessons: 3,

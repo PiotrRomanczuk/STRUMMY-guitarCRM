@@ -8,6 +8,7 @@ import { SOTWCard } from '@/components/v2/song-of-the-week';
 import { StatPills } from './student-widgets/StatPills';
 import { WhatsNextCard } from './student-widgets/WhatsNextCard';
 import { PracticeSongList } from './student-widgets/PracticeSongList';
+import { RepertoireProgress } from './student-widgets/RepertoireProgress';
 import { QuickLinks } from './student-widgets/QuickLinks';
 import { StreakTracker } from './student-widgets/StreakTracker';
 import { AchievementBadges } from './student-widgets/AchievementBadges';
@@ -61,9 +62,13 @@ export function StudentDashboardMobile({
           />
         </motion.div>
 
-        {/* Practice songs */}
+        {/* Repertoire progress (falls back to recent songs if no repertoire) */}
         <motion.div variants={safeVariants(listItem)}>
-          <PracticeSongList songs={data.recentSongs.slice(0, 4)} />
+          {data.repertoire && data.repertoire.length > 0 ? (
+            <RepertoireProgress items={data.repertoire} maxItems={4} />
+          ) : (
+            <PracticeSongList songs={data.recentSongs.slice(0, 4)} />
+          )}
         </motion.div>
 
         {/* Song of the Week */}
