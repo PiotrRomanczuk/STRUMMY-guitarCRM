@@ -112,6 +112,7 @@ export default function MobileLessonForm({
             selectedSongIds={formData.song_ids || []}
             onChange={onSongChange}
             error={errors.song_ids}
+            studentId={formData.student_id}
           />
         </div>
       ),
