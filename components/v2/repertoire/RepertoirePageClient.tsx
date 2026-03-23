@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import type { StudentRepertoireWithSong } from '@/types/StudentRepertoire';
 import { RepertoireList } from './RepertoireList';
 import { AddSongSheet } from './AddSongSheet';
+import { PracticeLogButton } from '@/components/v2/practice';
 
 interface RepertoirePageClientProps {
   repertoire: StudentRepertoireWithSong[];
@@ -41,6 +42,7 @@ export function RepertoirePageClient({
           onOpenChange={setSheetOpen}
         />
       )}
+      {viewMode === 'student' && <PracticeLogButton />}
     </>
   );
 }
