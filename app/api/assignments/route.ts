@@ -35,6 +35,7 @@ function extractQueryParams(searchParams: URLSearchParams) {
     teacher_id: searchParams.get('teacher_id') || undefined,
     student_id: searchParams.get('student_id') || undefined,
     lesson_id: searchParams.get('lesson_id') || undefined,
+    song_id: searchParams.get('song_id') || undefined,
     status: searchParams.get('status') || undefined,
     search: searchParams.get('search') || undefined,
     due_date_from: searchParams.get('due_date_from') || undefined,

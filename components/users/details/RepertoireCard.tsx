@@ -8,6 +8,8 @@ import type { StudentRepertoireWithSong } from '@/types/StudentRepertoire';
 import { addSongToNextLessonAction } from '@/app/actions/repertoire';
 import { AssessmentComparison } from '@/components/repertoire/AssessmentComparison';
 import { SelfRatingStars } from '@/components/repertoire/SelfRatingStars';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { SONG_STATUS_DESCRIPTIONS } from '@/lib/constants';
 import { toast } from 'sonner';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -16,6 +18,14 @@ const STATUS_COLORS: Record<string, string> = {
   remembered: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
   started: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
   to_learn: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  mastered: 'Mastered',
+  with_author: 'Play Along',
+  remembered: 'Remembered',
+  started: 'Started',
+  to_learn: 'To Learn',
 };
 
 function AddToNextLessonButton({
@@ -97,9 +107,16 @@ export function RepertoireCard({ item, studentId, onEditConfig, viewMode = 'teac
                 >
                   {item.song.title}
                 </Link>
-                <Badge className={`text-[10px] ${STATUS_COLORS[item.current_status] || ''}`}>
-                  {item.current_status.replace('_', ' ')}
-                </Badge>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge className={`text-[10px] ${STATUS_COLORS[item.current_status] || ''}`}>
+                      {STATUS_LABELS[item.current_status] || item.current_status.replace('_', ' ')}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    {SONG_STATUS_DESCRIPTIONS[item.current_status as keyof typeof SONG_STATUS_DESCRIPTIONS] || item.current_status}
+                  </TooltipContent>
+                </Tooltip>
                 {item.priority === 'high' && (
                   <Badge
                     variant="outline"

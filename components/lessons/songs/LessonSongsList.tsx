@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { SONG_STATUS_DESCRIPTIONS } from '@/lib/constants';
 import { LessonSongSelector } from './LessonSongSelector';
 import { LessonSongStatusSelect } from './LessonSongStatusSelect';
 import { Database } from '@/database.types';
@@ -38,7 +40,7 @@ const statusConfig: Record<LessonSongStatus, { label: string; className: string 
     className: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
   },
   with_author: {
-    label: 'With Author',
+    label: 'Play Along',
     className: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
   },
   mastered: {
@@ -50,14 +52,21 @@ const statusConfig: Record<LessonSongStatus, { label: string; className: string 
 function SongStatusBadge({ status }: { status: LessonSongStatus }) {
   const config = statusConfig[status] || statusConfig.to_learn;
   return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-        config.className
-      )}
-    >
-      {config.label}
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          className={cn(
+            'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium cursor-default',
+            config.className
+          )}
+        >
+          {config.label}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        {SONG_STATUS_DESCRIPTIONS[status as keyof typeof SONG_STATUS_DESCRIPTIONS] || status}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

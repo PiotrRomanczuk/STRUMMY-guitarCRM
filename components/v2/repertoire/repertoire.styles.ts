@@ -8,7 +8,7 @@ export const REPERTOIRE_STATUS_STYLES: Record<string, string> = {
 
 export const REPERTOIRE_STATUS_LABELS: Record<string, string> = {
   mastered: 'Mastered',
-  with_author: 'With Author',
+  with_author: 'Play Along',
   remembered: 'Remembered',
   started: 'Started',
   to_learn: 'To Learn',

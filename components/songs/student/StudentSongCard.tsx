@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -12,42 +11,26 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Music2,
-  Guitar,
-  ExternalLink,
-  Loader2,
-  Youtube,
-  Play,
-  FileText,
-} from 'lucide-react';
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
+import { Music2, Guitar, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SongWithStatus as Song } from '@/components/songs/types';
 import { getStatusBadgeClasses } from '@/lib/utils/status-colors';
 import { cardEntrance } from '@/lib/animations';
 import { useHaptic } from '@/hooks/use-haptic';
+import {
+  difficultyColors,
+  difficultyLabels,
+  statusLabels,
+  statusLabelsWithEmoji,
+  statusDescriptions,
+} from './StudentSongs.constants';
+import { StudentSongCardResources } from './StudentSongCard.Resources';
 
-const difficultyColors: Record<string, string> = {
-  beginner: 'bg-green-500/10 text-green-500 border-green-500/20',
-  intermediate: 'bg-primary/10 text-primary border-primary/20',
-  advanced: 'bg-destructive/10 text-destructive border-destructive/20',
-};
-
-const difficultyLabels: Record<string, string> = {
-  beginner: 'Beginner',
-  intermediate: 'Intermediate',
-  advanced: 'Advanced',
-};
-
-const statusLabels: Record<string, string> = {
-  to_learn: 'To Learn',
-  learning: 'Learning',
-  practicing: 'Practicing',
-  improving: 'Improving',
-  mastered: 'Mastered',
-  started: 'Started',
-  remembered: 'Remembered',
-  with_author: 'With Author',
-};
+const STATUS_KEYS = ['to_learn', 'learning', 'practicing', 'improving', 'mastered'] as const;
 
 interface StudentSongCardProps {
   song: Song;
@@ -57,7 +40,6 @@ interface StudentSongCardProps {
 
 export function StudentSongCard({ song, onStatusChange, isUpdating }: StudentSongCardProps) {
   const haptic = useHaptic();
-  const hasResources = song.youtube_url || song.ultimate_guitar_link || song.spotify_link_url || song.audio_files;
 
   return (
     <motion.div
@@ -91,12 +73,19 @@ export function StudentSongCard({ song, onStatusChange, isUpdating }: StudentSon
               {difficultyLabels[song.level || 'beginner']}
             </Badge>
             {song.status && (
-              <Badge
-                variant="outline"
-                className={cn('capitalize', getStatusBadgeClasses('song', song.status))}
-              >
-                {statusLabels[song.status] || song.status.replace('_', ' ')}
-              </Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="outline"
+                    className={cn('capitalize cursor-help', getStatusBadgeClasses('song', song.status))}
+                  >
+                    {statusLabels[song.status] || song.status.replace('_', ' ')}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-[220px]">
+                  {statusDescriptions[song.status] || song.status.replace('_', ' ')}
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
         </div>
@@ -138,11 +127,15 @@ export function StudentSongCard({ song, onStatusChange, isUpdating }: StudentSon
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="to_learn">📝 To Learn</SelectItem>
-              <SelectItem value="learning">🎵 Learning</SelectItem>
-              <SelectItem value="practicing">🎸 Practicing</SelectItem>
-              <SelectItem value="improving">📈 Improving</SelectItem>
-              <SelectItem value="mastered">🏆 Mastered</SelectItem>
+              {STATUS_KEYS.map((key) => (
+                <SelectItem
+                  key={key}
+                  value={key}
+                  description={statusDescriptions[key]}
+                >
+                  {statusLabelsWithEmoji[key]}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {isUpdating && (
@@ -154,73 +147,7 @@ export function StudentSongCard({ song, onStatusChange, isUpdating }: StudentSon
         </div>
 
         {/* Resources */}
-        <div className="space-y-3">
-          <h4 className="text-xs font-medium text-muted-foreground mb-2">
-            Quick Resources
-          </h4>
-
-          {hasResources ? (
-            <div className="grid grid-cols-2 gap-2">
-              {song.youtube_url && (
-                <a
-                  href={song.youtube_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 h-9 px-3 text-xs font-medium bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                >
-                  <Youtube className="w-4 h-4" />
-                  YouTube
-                </a>
-              )}
-              {song.ultimate_guitar_link && (
-                <a
-                  href={song.ultimate_guitar_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 h-9 px-3 text-xs font-medium bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
-                >
-                  <FileText className="w-4 h-4" />
-                  Tabs
-                </a>
-              )}
-              {song.spotify_link_url && (
-                <a
-                  href={song.spotify_link_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 h-9 px-3 text-xs font-medium bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                >
-                  <Play className="w-4 h-4" />
-                  Spotify
-                </a>
-              )}
-              {song.audio_files && (
-                <a
-                  href={Object.values(song.audio_files)[0] ?? '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 h-9 px-3 text-xs font-medium bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                >
-                  <Music2 className="w-4 h-4" />
-                  Audio
-                </a>
-              )}
-            </div>
-          ) : (
-            <div className="text-xs text-muted-foreground text-center py-2">
-              No resources available yet
-            </div>
-          )}
-
-          {/* View Details */}
-          <Link
-            href={`/dashboard/songs/${song.id}`}
-            className="w-full inline-flex items-center justify-center h-9 px-4 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-colors"
-          >
-            View Full Details
-            <ExternalLink className="w-4 h-4 ml-2" />
-          </Link>
-        </div>
+        <StudentSongCardResources song={song} />
       </div>
     </motion.div>
   );

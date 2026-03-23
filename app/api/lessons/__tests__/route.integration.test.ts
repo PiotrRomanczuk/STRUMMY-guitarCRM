@@ -25,6 +25,22 @@ jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(),
 }));
 
+jest.mock('@/lib/getUserWithRolesSSR', () => ({
+  getUserWithRolesSSR: jest.fn().mockResolvedValue({
+    user: { id: '00000000-bbbb-4000-a000-000000000002' },
+    isAdmin: false,
+    isTeacher: true,
+    isStudent: false,
+    isParent: false,
+    isDevelopment: false,
+  }),
+}));
+
+jest.mock('@/lib/auth/test-account-guard', () => ({
+  guardTestAccountMutation: jest.fn().mockReturnValue(null),
+  assertNotTestAccount: jest.fn(),
+}));
+
 /* ---------- Imports ---------- */
 import {
   createMockQueryBuilder,
@@ -469,7 +485,10 @@ describe('Lesson CRUD integration', () => {
       const qb = createMockQueryBuilder(lessonWithJoins);
       qb.single.mockResolvedValueOnce({ data: lessonWithJoins, error: null });
 
-      const mockSupabase = { from: jest.fn(() => qb) };
+      const mockSupabase = {
+        auth: { getUser: jest.fn().mockResolvedValue({ data: { user: teacherCtx.user }, error: null }) },
+        from: jest.fn(() => qb),
+      };
       (createClient as jest.Mock).mockResolvedValue(mockSupabase);
 
       // Dynamic import to get the server action after mocks are set up
@@ -494,7 +513,10 @@ describe('Lesson CRUD integration', () => {
       const qb = createMockQueryBuilder(null);
       qb.single.mockResolvedValueOnce({ data: null, error: null });
 
-      const mockSupabase = { from: jest.fn(() => qb) };
+      const mockSupabase = {
+        auth: { getUser: jest.fn().mockResolvedValue({ data: { user: teacherCtx.user }, error: null }) },
+        from: jest.fn(() => qb),
+      };
       (createClient as jest.Mock).mockResolvedValue(mockSupabase);
 
       const { sendLessonSummaryEmail } = await import(

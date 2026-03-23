@@ -3,6 +3,18 @@
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 
+export type RepertoireItem = {
+  id: string;
+  song_id: string;
+  title: string;
+  artist: string;
+  current_status: string;
+  self_rating: number | null;
+  priority: string;
+  last_practiced_at: string | null;
+  total_practice_minutes: number;
+};
+
 export type StudentDashboardData = {
   studentName: string | null;
   nextLesson: {
@@ -20,7 +32,7 @@ export type StudentDashboardData = {
     id: string;
     title: string;
     due_date: string | null;
-    status: 'pending' | 'completed' | 'overdue';
+    status: 'not_started' | 'in_progress' | 'completed' | 'overdue' | 'cancelled';
     description: string | null;
   }[];
   recentSongs: {
@@ -29,6 +41,7 @@ export type StudentDashboardData = {
     artist: string;
     last_played: string;
   }[];
+  repertoire: RepertoireItem[];
   allSongs: {
     id: string;
     title: string;
@@ -38,7 +51,7 @@ export type StudentDashboardData = {
     totalSongs: number;
     completedLessons: number;
     activeAssignments: number;
-    practiceHours: number; // Mocked for now
+    practiceHours: number;
   };
 };
 
@@ -79,12 +92,12 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     .limit(1)
     .maybeSingle();
 
-  // 2. Fetch Pending Assignments
+  // 2. Fetch Active Assignments (not completed, not cancelled)
   const { data: assignmentsData } = await supabase
     .from('assignments')
     .select('id, title, due_date, status, description')
     .eq('student_id', user.id)
-    .eq('status', 'pending')
+    .in('status', ['not_started', 'in_progress'])
     .order('due_date', { ascending: true })
     .limit(5);
 
@@ -136,11 +149,23 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     .eq('student_id', user.id)
     .lt('scheduled_at', now);
 
+  // 5. Fetch total practice minutes from student_repertoire
+  const { data: practiceData } = await supabase
+    .from('student_repertoire')
+    .select('total_practice_minutes')
+    .eq('student_id', user.id);
+
+  const totalPracticeMinutes = (practiceData || []).reduce(
+    (sum, r) => sum + (r.total_practice_minutes || 0),
+    0
+  );
+
   return {
     studentName: profileData?.full_name || null,
     nextLesson: nextLessonData,
     lastLesson: lastLessonData,
     assignments: assignmentsData || [],
+    repertoire: [], // TODO: populate from student_repertoire in next iteration
     recentSongs:
       recentLessonSongs
         ?.filter((ls) => ls.songs !== null)
@@ -164,7 +189,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
       totalSongs: totalSongs || 0,
       completedLessons: completedLessons || 0,
       activeAssignments: assignmentsData?.length || 0,
-      practiceHours: 12, // Mocked
+      practiceHours: Math.round(totalPracticeMinutes / 60),
     },
   };
 }

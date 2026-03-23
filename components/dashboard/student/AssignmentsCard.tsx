@@ -9,7 +9,7 @@ interface Assignment {
   id: string;
   title: string;
   due_date: string | null;
-  status: 'pending' | 'completed' | 'overdue';
+  status: 'not_started' | 'in_progress' | 'completed' | 'overdue' | 'cancelled';
   description: string | null;
 }
 
@@ -51,7 +51,11 @@ export function AssignmentsCard({ assignments }: AssignmentsCardProps) {
                     )}
                   </div>
                   <Badge variant={isOverdue ? 'destructive' : 'secondary'} className="text-xs">
-                    {isOverdue ? 'Overdue' : 'Pending'}
+                    {isOverdue
+                      ? 'Overdue'
+                      : assignment.status === 'in_progress'
+                        ? 'In Progress'
+                        : 'Not Started'}
                   </Badge>
                 </div>
               );

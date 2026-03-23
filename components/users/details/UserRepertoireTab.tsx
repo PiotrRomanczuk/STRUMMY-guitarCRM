@@ -65,7 +65,7 @@ export default function UserRepertoireTab({ userId, repertoire, viewMode = 'teac
               <SelectItem value="to_learn">To Learn</SelectItem>
               <SelectItem value="started">Started</SelectItem>
               <SelectItem value="remembered">Remembered</SelectItem>
-              <SelectItem value="with_author">With Author</SelectItem>
+              <SelectItem value="with_author">Play Along</SelectItem>
               <SelectItem value="mastered">Mastered</SelectItem>
             </SelectContent>
           </Select>

@@ -33,7 +33,7 @@ const STATUS_OPTIONS: { value: SongProgressStatus; label: string }[] = [
   { value: 'to_learn', label: 'To Learn' },
   { value: 'started', label: 'Started' },
   { value: 'remembered', label: 'Remembered' },
-  { value: 'with_author', label: 'With Author' },
+  { value: 'with_author', label: 'Play Along' },
   { value: 'mastered', label: 'Mastered' },
 ];
 

@@ -115,11 +115,18 @@ export function getStatusVariant(status: string | null | undefined): BadgeVarian
   return statusMap[statusLower] || 'default';
 }
 
+/** Display label overrides for statuses that don't auto-format well. */
+const STATUS_LABEL_OVERRIDES: Record<string, string> = {
+  with_author: 'Play Along',
+};
+
 /**
  * Helper function to format status text
  */
 export function formatStatus(status: string | null | undefined): string {
   if (!status) return 'Unknown';
+
+  if (STATUS_LABEL_OVERRIDES[status]) return STATUS_LABEL_OVERRIDES[status];
 
   return status
     .split('_')

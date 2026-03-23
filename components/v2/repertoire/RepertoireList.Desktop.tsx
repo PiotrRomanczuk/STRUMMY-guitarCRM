@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { Music } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ListPageHeader } from '@/components/v2/primitives/ListPageHeader';
 import { StatusBadge } from '@/components/v2/primitives/StatusBadge';
 import { REPERTOIRE_STATUS_STYLES, REPERTOIRE_STATUS_LABELS } from './repertoire.styles';
+import { SONG_STATUS_DESCRIPTIONS } from '@/lib/constants';
 import { SelfRating } from './SelfRating';
 import type { StudentRepertoireWithSong } from '@/types/StudentRepertoire';
 
@@ -65,11 +67,20 @@ export default function DesktopRepertoireList({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <StatusBadge
-                      status={item.current_status}
-                      styleMap={REPERTOIRE_STATUS_STYLES}
-                      labelMap={REPERTOIRE_STATUS_LABELS}
-                    />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <StatusBadge
+                            status={item.current_status}
+                            styleMap={REPERTOIRE_STATUS_STYLES}
+                            labelMap={REPERTOIRE_STATUS_LABELS}
+                          />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        {SONG_STATUS_DESCRIPTIONS[item.current_status as keyof typeof SONG_STATUS_DESCRIPTIONS] || item.current_status}
+                      </TooltipContent>
+                    </Tooltip>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground font-mono">
                     {item.preferred_key || item.song.key || '-'}

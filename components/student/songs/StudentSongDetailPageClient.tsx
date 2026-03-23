@@ -35,7 +35,7 @@ const statusLabels: Record<string, string> = {
   to_learn: 'To Learn',
   started: 'Started',
   remembered: 'Remembered',
-  with_author: 'With Author',
+  with_author: 'Play Along',
   mastered: 'Mastered',
 };
 

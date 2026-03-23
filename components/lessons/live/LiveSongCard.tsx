@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Music } from 'lucide-react';
 import { toast } from 'sonner';
 import { useHaptic } from '@/hooks/use-haptic';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { SONG_STATUS_DESCRIPTIONS } from '@/lib/constants';
 import { updateLessonSongStatus } from '@/app/dashboard/lessons/actions';
 import { StatusStepper } from './StatusStepper';
 import {
@@ -68,12 +70,19 @@ export function LiveSongCard({ lessonId, lessonSong }: LiveSongCardProps) {
               </p>
             </div>
           </div>
-          <Badge
-            variant="secondary"
-            className={`shrink-0 ${colors.bg} ${colors.text}`}
-          >
-            {STATUS_LABELS[status]}
-          </Badge>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant="secondary"
+                className={`shrink-0 ${colors.bg} ${colors.text}`}
+              >
+                {STATUS_LABELS[status]}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              {SONG_STATUS_DESCRIPTIONS[status as keyof typeof SONG_STATUS_DESCRIPTIONS] || status}
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         <StatusStepper

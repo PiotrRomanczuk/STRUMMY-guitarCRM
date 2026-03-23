@@ -205,6 +205,42 @@ export async function updateLessonSongStatus(
   revalidatePath(`/dashboard/lessons/${lessonId}`);
 }
 
+const lessonSongNotesSchema = z.object({
+  lessonId: z.string().uuid(),
+  songId: z.string().uuid(),
+  notes: z.string().max(2000, 'Song notes cannot exceed 2000 characters'),
+});
+
+export async function updateLessonSongNotes(
+  lessonId: string,
+  songId: string,
+  notes: string
+): Promise<{ success: true } | { error: string }> {
+  const { isDevelopment } = await getUserWithRolesSSR();
+  assertNotTestAccount(isDevelopment);
+
+  const parsed = lessonSongNotesSchema.safeParse({ lessonId, songId, notes });
+  if (!parsed.success) {
+    return { error: 'Invalid input for song notes' };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('lesson_songs')
+    .update({ notes: parsed.data.notes })
+    .eq('lesson_id', parsed.data.lessonId)
+    .eq('song_id', parsed.data.songId);
+
+  if (error) {
+    logger.error('Error updating lesson song notes:', error);
+    return { error: 'Failed to save song notes' };
+  }
+
+  revalidatePath(`/dashboard/lessons/${lessonId}`);
+  return { success: true };
+}
+
 export interface AssignableLesson {
   id: string;
   scheduled_at: string;
@@ -253,4 +289,78 @@ export async function getAssignableLessons(): Promise<AssignableLesson[]> {
     title: lesson.title,
     student: Array.isArray(lesson.student) ? lesson.student[0] : lesson.student,
   })) as AssignableLesson[];
+}
+
+export async function quickAssignSongFromLesson(
+  lessonId: string,
+  songId: string,
+  songTitle: string,
+  studentId: string
+): Promise<{ success: true; assignmentId: string } | { alreadyExists: true } | { error: string }> {
+  const { isDevelopment } = await getUserWithRolesSSR();
+  const guard = guardTestAccountMutation(isDevelopment);
+  if (guard) return { error: guard.error };
+
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return { error: 'Unauthorized' };
+
+  const { data: existing } = await supabase
+    .from('assignments')
+    .select('id')
+    .eq('lesson_id', lessonId)
+    .eq('title', `Practice: ${songTitle}`)
+    .eq('student_id', studentId)
+    .maybeSingle();
+
+  if (existing) return { alreadyExists: true };
+
+  const { data: nextLesson } = await supabase
+    .from('lessons')
+    .select('scheduled_at')
+    .eq('student_id', studentId)
+    .eq('status', 'SCHEDULED')
+    .gt('scheduled_at', new Date().toISOString())
+    .order('scheduled_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const dueDate = nextLesson?.scheduled_at
+    || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from('assignments')
+    .insert({
+      title: `Practice: ${songTitle}`,
+      student_id: studentId,
+      teacher_id: user.id,
+      lesson_id: lessonId,
+      due_date: dueDate,
+      status: 'not_started',
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    logger.error('Failed to quick-assign song:', error);
+    return { error: error.message };
+  }
+
+  revalidatePath(`/dashboard/lessons/${lessonId}`);
+  return { success: true, assignmentId: data.id };
+}
+
+export async function bulkAssignSongsFromLesson(
+  lessonId: string,
+  songs: { id: string; title: string }[],
+  studentId: string
+): Promise<{ created: number; skipped: number }> {
+  let created = 0;
+  let skipped = 0;
+  for (const song of songs) {
+    const result = await quickAssignSongFromLesson(lessonId, song.id, song.title, studentId);
+    if ('success' in result) created++;
+    else skipped++;
+  }
+  return { created, skipped };
 }

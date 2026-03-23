@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { Music, CheckCircle2, Clock, ChevronDown } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { SONG_STATUS_DESCRIPTIONS } from '@/lib/constants';
 
 type SongStatus = 'to_learn' | 'started' | 'remembered' | 'with_author' | 'mastered';
 
@@ -25,7 +27,7 @@ const STATUS_CONFIG: Record<SongStatus, { label: string; className: string }> = 
   to_learn: { label: 'To Learn', className: 'border-transparent bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
   started: { label: 'Started', className: 'border-transparent bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
   remembered: { label: 'Remembered', className: 'border-transparent bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
-  with_author: { label: 'With Author', className: 'border-transparent bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
+  with_author: { label: 'Play Along', className: 'border-transparent bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
   mastered: { label: 'Mastered', className: 'border-transparent bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
 };
 
@@ -52,7 +54,14 @@ function SongItem({ song }: { song: PracticeTodaySong }) {
           </p>
         )}
       </div>
-      <Badge className={cn('shrink-0', config.className)}>{config.label}</Badge>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge className={cn('shrink-0', config.className)}>{config.label}</Badge>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          {SONG_STATUS_DESCRIPTIONS[song.status as keyof typeof SONG_STATUS_DESCRIPTIONS] || song.status}
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 }

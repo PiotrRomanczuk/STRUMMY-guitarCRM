@@ -93,11 +93,7 @@ export function StudentDashboardClient({ data, sotw, sotwInRepertoire = false }:
     title: a.title,
     studentName: 'You', // Mocked
     dueDate: a.due_date || 'No due date',
-    status: (a.status === 'completed'
-      ? 'completed'
-      : a.status === 'overdue'
-      ? 'overdue'
-      : 'pending') as 'pending' | 'completed' | 'overdue',
+    status: a.status,
   }));
 
   // Defaults to 'started' since the dashboard action doesn't fetch individual song statuses

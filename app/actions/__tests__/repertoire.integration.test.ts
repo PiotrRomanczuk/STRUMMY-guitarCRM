@@ -19,6 +19,22 @@ jest.mock('next/cache', () => ({
   revalidatePath: jest.fn(),
 }));
 
+jest.mock('@/lib/getUserWithRolesSSR', () => ({
+  getUserWithRolesSSR: jest.fn().mockResolvedValue({
+    user: { id: '00000000-cccc-4000-a000-000000000003' },
+    isAdmin: false,
+    isTeacher: false,
+    isStudent: true,
+    isParent: false,
+    isDevelopment: false,
+  }),
+}));
+
+jest.mock('@/lib/auth/test-account-guard', () => ({
+  guardTestAccountMutation: jest.fn().mockReturnValue(null),
+  assertNotTestAccount: jest.fn(),
+}));
+
 /* ---------- Imports ---------- */
 
 import {

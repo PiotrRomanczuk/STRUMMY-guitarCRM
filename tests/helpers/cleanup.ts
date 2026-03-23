@@ -573,7 +573,7 @@ export async function cleanupOrphanedSongProgress(): Promise<{ deleted: number; 
 
     for (const progress of orphanedProgress) {
       const { error: deleteError } = await supabase
-        .from('student_song_progress')
+        .from('student_repertoire')
         .delete()
         .eq('id', progress.id);
 

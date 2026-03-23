@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { staggerContainer, listItem } from '@/lib/animations/variants';
 import { Button } from '@/components/ui/button';
-import { LiveSongCard } from '@/components/lessons/live/LiveSongCard';
+import { LiveLessonSongCard } from './LiveLessonSongCard';
 import { LiveLessonNotes } from '@/components/lessons/live/LiveLessonNotes';
 import { updateLessonStatus } from '@/components/lessons/live/actions';
 import { formatLessonDate } from './lesson.helpers';
@@ -111,7 +111,7 @@ export function LiveLessonMobile({ lesson }: LiveLessonV2Props) {
             </div>
             {songsWithData.map((ls) => (
               <motion.div key={ls.id} variants={listItem}>
-                <LiveSongCard lessonId={lesson.id} lessonSong={ls} />
+                <LiveLessonSongCard lessonId={lesson.id} lessonSong={ls} />
               </motion.div>
             ))}
           </motion.div>

@@ -1,5 +1,5 @@
 import { LessonForm } from '@/components/lessons';
-import { LessonFormV2 } from '@/components/v2/lessons';
+import { NewLessonTabs } from '@/components/v2/lessons/NewLessonTabs';
 import { getUIVersion } from '@/lib/ui-version.server';
 
 interface NewLessonPageProps {
@@ -17,7 +17,7 @@ export default async function NewLessonPage({ searchParams }: NewLessonPageProps
 
   if (uiVersion === 'v2') {
     return (
-      <LessonFormV2
+      <NewLessonTabs
         initialData={Object.keys(initialData).length > 0 ? initialData : undefined}
       />
     );

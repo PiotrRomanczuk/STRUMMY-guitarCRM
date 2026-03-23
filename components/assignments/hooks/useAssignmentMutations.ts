@@ -9,6 +9,7 @@ interface CreateAssignmentInput {
   status?: 'not_started' | 'in_progress' | 'completed' | 'overdue' | 'cancelled';
   student_id: string;
   lesson_id?: string | null;
+  song_id?: string | null;
 }
 
 interface UpdateAssignmentInput {
@@ -17,6 +18,7 @@ interface UpdateAssignmentInput {
   due_date?: string;
   status?: 'not_started' | 'in_progress' | 'completed' | 'overdue' | 'cancelled';
   lesson_id?: string | null;
+  song_id?: string | null;
 }
 
 /**

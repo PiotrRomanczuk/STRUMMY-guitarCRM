@@ -19,7 +19,7 @@ lesson_songs (junction: lesson <-> song)
   id, lesson_id -> lessons, song_id -> songs,
   status (song_progress_status), notes
 
-student_song_progress (consolidated progress per student per song)
+student_song_progress (DEPRECATED — replaced by student_repertoire)
   id, student_id -> profiles, song_id -> songs,
   current_status, started_at, mastered_at,
   total_practice_minutes, practice_session_count, last_practiced_at,
@@ -45,9 +45,11 @@ skills / student_skills
                    /      |      \
           teacher_id  student_id  student_id
                 /         |          \
-       +-------+    +-----+-----+    +-------------------+
-       |lessons|    |assignments |    |student_song_progress|
-       +---+---+    +-----------+    +-------------------+
+       +-------+    +-----+-----+    +-------------------------+
+       |lessons|    |assignments |    |student_song_progress    |
+       +---+---+    +-----------+    |(DEPRECATED — use        |
+                                     | student_repertoire)     |
+                                     +-------------------------+
            |                              |
     lesson_id                          song_id
            |                              |
@@ -60,7 +62,7 @@ skills / student_skills
 
 1. **No direct user-to-song relationship for repertoire**: A student's song repertoire is derived indirectly from `lessons -> lesson_songs -> songs`. There is no way to assign a song to a student outside a lesson context.
 
-2. **`student_song_progress` is disconnected from the UI**: The table exists in the schema but the user detail page (`/dashboard/users/[id]`) doesn't use it. Instead, it re-derives songs from lesson_songs every time.
+2. **`student_song_progress` is DEPRECATED**: This table has been superseded by `student_repertoire` (see migration `20260222000000`). All code now reads from `student_repertoire`.
 
 3. **No user-specific song configuration**: Song attributes like key, capo, strumming pattern live on the global `songs` table. A student who plays "Wonderwall" in a different key or with a different capo position has nowhere to store that preference.
 
@@ -68,7 +70,7 @@ skills / student_skills
 
 5. **No repertoire management workflow**: Teachers can't curate a student's song list outside of lesson context. There's no "add song to student's repertoire" action, no ordering/prioritization, no active/inactive distinction.
 
-6. **Dual progress tracking is confusing**: Both `lesson_songs.status` and `student_song_progress.current_status` track song progress. The relationship between them is undefined -- which is the source of truth?
+6. **Dual progress tracking resolved**: `student_repertoire` is now the single source of truth for song progress. `lesson_songs.status` tracks per-lesson progress; `student_repertoire.current_status` tracks lifetime progress. `student_song_progress` is deprecated.
 
 ---
 
@@ -443,7 +445,7 @@ Student opens /dashboard/users/[own-id]?tab=songs
 4. Add `repertoire_id` column to `lesson_songs`
 5. Backfill `lesson_songs.repertoire_id` using student_id from lesson + song_id
 6. Add RLS policies to `student_repertoire`
-7. Keep `student_song_progress` temporarily for backwards compatibility
+7. ~~Keep `student_song_progress` temporarily for backwards compatibility~~ -- DONE: deprecated in migration `20260322000001`
 
 ### Phase 2: Backend (APIs & Server Actions)
 
@@ -466,8 +468,8 @@ Student opens /dashboard/users/[own-id]?tab=songs
 
 ### Phase 4: Cleanup
 
-1. Drop `student_song_progress` table (after verifying full migration)
-2. Remove derived song queries from user detail page
+1. ~~Drop `student_song_progress` table~~ -- In progress: table deprecated in migration `20260322000001`, will be dropped in a future migration
+2. ~~Remove derived song queries from user detail page~~ -- DONE: `fetchUserData` now queries `student_repertoire` directly
 3. Update views (`v_song_usage_stats`, etc.) to use `student_repertoire`
 
 ---

@@ -31,7 +31,7 @@ const statusLabels: Record<string, string> = {
   // Legacy statuses
   started: '▶️ Started',
   remembered: '🧠 Remembered',
-  with_author: '👨‍🎤 With Author',
+  with_author: '🎵 Play Along',
 };
 
 const statusColors: Record<string, string> = {

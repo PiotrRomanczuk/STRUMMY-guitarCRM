@@ -11,6 +11,7 @@ export interface Assignment {
   teacher_id: string;
   student_id: string;
   lesson_id: string | null;
+  song_id: string | null;
   created_at: string;
   updated_at: string;
   teacher_profile?: {
@@ -29,6 +30,11 @@ export interface Assignment {
     scheduled_at: string;
     status: string;
   };
+  song?: {
+    id: string;
+    title: string;
+    author: string;
+  } | null;
 }
 
 /**

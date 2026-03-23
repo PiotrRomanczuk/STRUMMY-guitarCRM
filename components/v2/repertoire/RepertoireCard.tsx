@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Music, Keyboard, ChevronRight, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { SONG_STATUS_DESCRIPTIONS } from '@/lib/constants';
 import type { StudentRepertoireWithSong } from '@/types/StudentRepertoire';
 import { SelfRating } from './SelfRating';
 
@@ -18,7 +20,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   mastered: 'Mastered',
-  with_author: 'With Author',
+  with_author: 'Play Along',
   remembered: 'Remembered',
   started: 'Started',
   to_learn: 'To Learn',
@@ -73,15 +75,22 @@ export function RepertoireCard({ item, viewMode = 'teacher' }: RepertoireCardPro
               High
             </span>
           )}
-          <span
-            className={cn(
-              'inline-flex items-center rounded-full px-2.5 py-0.5',
-              'text-[11px] font-medium border',
-              STATUS_STYLES[item.current_status] ?? STATUS_STYLES.to_learn
-            )}
-          >
-            {STATUS_LABELS[item.current_status] ?? item.current_status}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className={cn(
+                  'inline-flex items-center rounded-full px-2.5 py-0.5',
+                  'text-[11px] font-medium border cursor-default',
+                  STATUS_STYLES[item.current_status] ?? STATUS_STYLES.to_learn
+                )}
+              >
+                {STATUS_LABELS[item.current_status] ?? item.current_status}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {SONG_STATUS_DESCRIPTIONS[item.current_status as keyof typeof SONG_STATUS_DESCRIPTIONS] || item.current_status}
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

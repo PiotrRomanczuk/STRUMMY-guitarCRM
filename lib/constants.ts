@@ -113,6 +113,24 @@ export const SONG_STATUS = {
 
 export type SongStatus = (typeof SONG_STATUS)[keyof typeof SONG_STATUS];
 
+/** Human-friendly display labels for song progress statuses. */
+export const SONG_STATUS_LABELS: Record<SongStatus, string> = {
+  to_learn: 'To Learn',
+  started: 'Started',
+  remembered: 'Remembered',
+  with_author: 'Play Along',
+  mastered: 'Mastered',
+};
+
+/** Descriptive tooltips explaining what each song progress status means. */
+export const SONG_STATUS_DESCRIPTIONS: Record<SongStatus, string> = {
+  to_learn: 'Song is queued — not started yet',
+  started: 'Student has begun learning chords and structure',
+  remembered: 'Can play from memory without looking at chords',
+  with_author: 'Can play along with the original recording at full tempo',
+  mastered: 'Performance-ready — clean, confident, and expressive',
+};
+
 // =============================================================================
 // DIFFICULTY LEVELS
 // =============================================================================

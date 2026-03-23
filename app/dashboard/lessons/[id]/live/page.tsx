@@ -22,6 +22,7 @@ interface LessonRow {
   lesson_songs: {
     id: string;
     status: Database['public']['Enums']['lesson_song_status'];
+    notes: string | null;
     song: { id: string; title: string; author: string } | null;
   }[];
 }
@@ -43,6 +44,7 @@ async function fetchLessonForLive(id: string): Promise<LessonRow | null> {
       lesson_songs(
         id,
         status,
+        notes,
         song:songs(id, title, author)
       )
     `

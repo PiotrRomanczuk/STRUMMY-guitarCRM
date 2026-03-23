@@ -19,6 +19,7 @@ export const AssignmentSchema = z.object({
   teacher_id: z.string().uuid(),
   student_id: z.string().uuid(),
   lesson_id: z.string().uuid().optional().nullable(), // Optional link to lesson
+  song_id: z.string().uuid().optional().nullable(), // Optional link to song
   status: AssignmentStatusEnum.default('not_started'),
   created_at: z.string().datetime().optional(),
   updated_at: z.string().datetime().optional(),
@@ -32,6 +33,7 @@ export const AssignmentInputSchema = z.object({
   teacher_id: z.string().uuid(),
   student_id: z.string().uuid(),
   lesson_id: z.string().uuid().optional().nullable(), // Optional link to lesson
+  song_id: z.string().uuid().optional().nullable(), // Optional link to song
   status: AssignmentStatusEnum.optional(),
 });
 
@@ -64,12 +66,21 @@ export const AssignmentWithProfilesSchema = AssignmentSchema.extend({
     })
     .optional()
     .nullable(),
+  song: z
+    .object({
+      id: z.string().uuid(),
+      title: z.string(),
+      author: z.string(),
+    })
+    .optional()
+    .nullable(),
 });
 // Assignment filter schema
 export const AssignmentFilterSchema = z.object({
   teacher_id: z.string().uuid().optional(),
   student_id: z.string().uuid().optional(),
   lesson_id: z.string().uuid().optional(),
+  song_id: z.string().uuid().optional(),
   status: AssignmentStatusEnum.optional(),
   search: z.string().optional(),
   due_date_from: z.string().datetime().optional(),

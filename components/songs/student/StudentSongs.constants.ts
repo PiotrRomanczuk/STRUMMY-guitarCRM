@@ -31,7 +31,7 @@ export const statusLabels: Record<string, string> = {
   // Legacy statuses
   started: 'Started',
   remembered: 'Remembered',
-  with_author: 'With Author',
+  with_author: 'Play Along',
 };
 
 export const statusLabelsWithEmoji: Record<string, string> = {
@@ -43,7 +43,15 @@ export const statusLabelsWithEmoji: Record<string, string> = {
   // Legacy statuses
   started: 'Started',
   remembered: 'Remembered',
-  with_author: 'With Author',
+  with_author: 'Play Along',
+};
+
+export const statusDescriptions: Record<string, string> = {
+  to_learn: "This song has been added to your list. You haven't started working on it yet.",
+  learning: 'You\'re actively learning the chords, strumming pattern, and song structure.',
+  practicing: 'You can play the song at ~75% speed. Building fluency through regular practice.',
+  improving: 'You can play along with the original recording at full speed. Refining your timing, dynamics, and feel.',
+  mastered: 'You can play this song confidently from memory with solid technique.',
 };
 
 export function formatDuration(ms: number): string {

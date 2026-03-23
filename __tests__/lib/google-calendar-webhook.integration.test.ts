@@ -9,8 +9,10 @@ import { POST } from '@/app/api/webhooks/google-calendar/route';
 import { enableCalendarWebhook } from '@/app/actions/calendar-webhook';
 import { createMockNextRequest, createMockQueryBuilder } from '@/lib/testing/integration-helpers';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 jest.mock('@/lib/supabase/server', () => ({ createClient: jest.fn() }));
+jest.mock('@/lib/supabase/admin', () => ({ createAdminClient: jest.fn() }));
 
 jest.mock('@/lib/services/google-calendar-sync', () => ({
   fetchAndSyncRecentEvents: jest.fn().mockResolvedValue({ success: true, count: 3 }),
@@ -85,7 +87,7 @@ describe('Google Calendar Webhook (Journey 7)', () => {
 
     it('triggers fetchAndSyncRecentEvents for a valid subscription', async () => {
       const subscriptionQb = createMockQueryBuilder({ user_id: 'user-abc' });
-      (createClient as jest.Mock).mockResolvedValue({ from: jest.fn().mockReturnValue(subscriptionQb) });
+      (createAdminClient as jest.Mock).mockReturnValue({ from: jest.fn().mockReturnValue(subscriptionQb) });
 
       const req = createMockNextRequest('/api/webhooks/google-calendar', {
         method: 'POST',
@@ -104,7 +106,7 @@ describe('Google Calendar Webhook (Journey 7)', () => {
 
     it('returns 200 "ignored" for unknown channel (prevents Google retries)', async () => {
       const emptyQb = createMockQueryBuilder(null, { message: 'Not found' });
-      (createClient as jest.Mock).mockResolvedValue({ from: jest.fn().mockReturnValue(emptyQb) });
+      (createAdminClient as jest.Mock).mockReturnValue({ from: jest.fn().mockReturnValue(emptyQb) });
 
       const req = createMockNextRequest('/api/webhooks/google-calendar', {
         method: 'POST',

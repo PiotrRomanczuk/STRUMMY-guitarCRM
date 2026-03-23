@@ -3,6 +3,8 @@
 import { RepertoireItem } from '@/app/dashboard/users/[id]/actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { SONG_STATUS_DESCRIPTIONS } from '@/lib/constants';
 
 type Props = {
   repertoire: RepertoireItem[];
@@ -20,6 +22,14 @@ const STATUS_COLORS: Record<string, string> = {
   remembered: 'bg-warning hover:bg-warning/90',
   with_author: 'bg-primary hover:bg-primary/90',
   to_learn: 'bg-muted-foreground hover:bg-muted-foreground/90',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  mastered: 'Mastered',
+  with_author: 'Play Along',
+  remembered: 'Remembered',
+  started: 'Started',
+  to_learn: 'To Learn',
 };
 
 export function StudentRepertoire({ repertoire }: Props) {
@@ -51,9 +61,16 @@ export function StudentRepertoire({ repertoire }: Props) {
                       <p className="text-sm text-muted-foreground">{song.author}</p>
                     </div>
                     <div className="mt-2 flex items-center justify-between">
-                      <Badge className={STATUS_COLORS[song.status] || 'bg-muted-foreground'}>
-                        {song.status.replace('_', ' ')}
-                      </Badge>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge className={STATUS_COLORS[song.status] || 'bg-muted-foreground'}>
+                            {STATUS_LABELS[song.status] || song.status.replace('_', ' ')}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          {SONG_STATUS_DESCRIPTIONS[song.status as keyof typeof SONG_STATUS_DESCRIPTIONS] || song.status}
+                        </TooltipContent>
+                      </Tooltip>
                       <span className="text-xs text-muted-foreground">
                         {new Date(song.lastPlayed).toLocaleDateString('en-US', {
                           year: 'numeric',

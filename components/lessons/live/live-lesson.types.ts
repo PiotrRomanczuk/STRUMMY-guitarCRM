@@ -14,7 +14,7 @@ export const STATUS_LABELS: Record<LessonSongStatus, string> = {
   to_learn: 'To Learn',
   started: 'Started',
   remembered: 'Remembered',
-  with_author: 'With Author',
+  with_author: 'Play Along',
   mastered: 'Mastered',
 };
 
@@ -49,6 +49,7 @@ export const STATUS_COLORS: Record<LessonSongStatus, { bg: string; text: string;
 export interface LiveLessonSong {
   id: string;
   status: LessonSongStatus;
+  notes: string | null;
   song: {
     id: string;
     title: string;
