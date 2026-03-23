@@ -51,14 +51,19 @@ export function StudentStep({ selectedStudent, error, onOpen }: StudentStepProps
 interface SongsStepProps {
   selectedSongs: { id: string; title: string; author: string }[];
   onOpen: () => void;
+  /** Optional slot for extra actions (e.g., "Copy from last lesson" button) */
+  actions?: React.ReactNode;
 }
 
-export function SongsStep({ selectedSongs, onOpen }: SongsStepProps) {
+export function SongsStep({ selectedSongs, onOpen, actions }: SongsStepProps) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Music className="h-5 w-5 text-primary" />
-        <h2 className="text-base font-semibold">Select Songs</h2>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Music className="h-5 w-5 text-primary" />
+          <h2 className="text-base font-semibold">Select Songs</h2>
+        </div>
+        {actions}
       </div>
       <button
         type="button"
