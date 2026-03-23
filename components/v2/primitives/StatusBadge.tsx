@@ -12,7 +12,7 @@ export function StatusBadge({ status, styleMap, labelMap, className }: StatusBad
     <span
       className={cn(
         'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border',
-        styleMap[status] ?? 'bg-muted text-muted-foreground border-border',
+        styleMap[status] ?? 'bg-muted text-muted-foreground dark:text-zinc-400 border-border',
         className
       )}
     >

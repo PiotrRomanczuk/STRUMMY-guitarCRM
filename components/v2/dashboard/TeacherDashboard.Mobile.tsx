@@ -83,7 +83,7 @@ function LessonCards({ items }: {
   items: { id: string; title: string; time?: string; status: string }[];
 }) {
   const badgeStyle: Record<string, string> = {
-    completed: 'bg-secondary text-muted-foreground/40',
+    completed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400/80',
     overdue: 'bg-emerald-500/10 text-emerald-400',
     upcoming: 'bg-primary/10 text-primary',
   };

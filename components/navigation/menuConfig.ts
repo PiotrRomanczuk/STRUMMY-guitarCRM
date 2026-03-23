@@ -48,8 +48,10 @@ export const NOTIFICATION_ITEM: NotificationItem = {
   hasIndicator: true,
 };
 
-function getTeacherGroups(): MenuGroup[] {
-  return [
+const DEMO_HIDDEN_ITEMS = ['skills', 'health', 'logs', 'cohorts', 'chord-analysis'];
+
+function getTeacherGroups(isDemoAccount?: boolean): MenuGroup[] {
+  const groups: MenuGroup[] = [
     {
       label: 'Teaching',
       items: [
@@ -86,6 +88,17 @@ function getTeacherGroups(): MenuGroup[] {
       ],
     },
   ];
+
+  if (isDemoAccount) {
+    return groups
+      .map((g) => ({
+        ...g,
+        items: g.items.filter((item) => !DEMO_HIDDEN_ITEMS.includes(item.id)),
+      }))
+      .filter((g) => g.items.length > 0);
+  }
+
+  return groups;
 }
 
 function getStudentGroups(): MenuGroup[] {
@@ -113,10 +126,11 @@ interface RoleFlags {
   isAdmin: boolean;
   isTeacher: boolean;
   isStudent: boolean;
+  isDemoAccount?: boolean;
 }
 
-export function getMenuGroups({ isAdmin, isTeacher, isStudent }: RoleFlags): MenuGroup[] {
-  if (isAdmin || isTeacher) return getTeacherGroups();
+export function getMenuGroups({ isAdmin, isTeacher, isStudent, isDemoAccount }: RoleFlags): MenuGroup[] {
+  if (isAdmin || isTeacher) return getTeacherGroups(isDemoAccount);
   if (isStudent) return getStudentGroups();
   return [];
 }

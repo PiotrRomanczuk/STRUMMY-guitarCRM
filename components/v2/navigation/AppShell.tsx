@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import { HeaderV2 } from './Header';
 import { MobileBottomNavV2 } from './MobileBottomNav';
 import { MobileMoreMenuV2 } from './MobileMoreMenu';
+import { DemoBanner } from '@/components/demo/DemoBanner';
 
 const AppShellDesktopV2 = lazy(() => import('./AppShell.Desktop'));
 
@@ -16,9 +17,10 @@ interface AppShellV2Props {
   isAdmin: boolean;
   isTeacher: boolean;
   isStudent: boolean;
+  isDevelopment?: boolean;
 }
 
-function MobileShell({ children, user, isAdmin, isTeacher, isStudent }: AppShellV2Props) {
+function MobileShell({ children, user, isAdmin, isTeacher, isStudent, isDevelopment }: AppShellV2Props) {
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const openMore = useCallback(() => setMoreMenuOpen(true), []);
   useKeyboardViewport();
@@ -32,6 +34,7 @@ function MobileShell({ children, user, isAdmin, isTeacher, isStudent }: AppShell
         isStudent={isStudent}
       />
       <main className="pt-14 pb-16 md:pb-0 min-h-screen bg-background px-4">
+        {isDevelopment && <DemoBanner />}
         {children}
       </main>
       <MobileBottomNavV2
@@ -46,6 +49,7 @@ function MobileShell({ children, user, isAdmin, isTeacher, isStudent }: AppShell
         isAdmin={isAdmin}
         isTeacher={isTeacher}
         isStudent={isStudent}
+        isDemoAccount={isDevelopment}
       />
       <Toaster />
     </>

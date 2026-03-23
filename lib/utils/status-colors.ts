@@ -42,10 +42,10 @@ export const STATUS_VARIANTS: Record<StatusVariant, StatusColorClasses> = {
     badge: 'text-primary bg-primary/10 border-primary/20',
   },
   muted: {
-    text: 'text-muted-foreground',
+    text: 'text-muted-foreground dark:text-zinc-400',
     bg: 'bg-muted',
     border: 'border-border',
-    badge: 'text-muted-foreground bg-muted border-border',
+    badge: 'text-muted-foreground dark:text-zinc-400 bg-muted border-border',
   },
   special: {
     text: 'text-purple-600 dark:text-purple-400',

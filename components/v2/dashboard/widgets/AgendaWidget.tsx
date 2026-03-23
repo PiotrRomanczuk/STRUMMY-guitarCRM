@@ -95,7 +95,7 @@ function AgendaRow({ item, isActive }: { item: AgendaItem; isActive: boolean }) 
         )}
       </div>
       <span className={`text-[10px] font-bold uppercase tracking-widest shrink-0
-        ${item.status === 'completed' ? 'text-muted-foreground bg-secondary px-3 py-1 rounded-full' : ''}
+        ${item.status === 'completed' ? 'text-emerald-600 dark:text-emerald-400/80 bg-emerald-500/10 px-3 py-1 rounded-full' : ''}
         ${item.status === 'overdue' ? 'text-destructive' : ''}
         ${item.status === 'upcoming' && !isActive ? 'text-muted-foreground' : ''}
         ${isActive ? 'hidden' : ''}`}>

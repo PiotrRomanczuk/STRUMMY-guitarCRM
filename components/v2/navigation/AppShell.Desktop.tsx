@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { getMenuGroups } from '@/components/navigation/menuConfig';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { NotificationBell } from '@/components/notifications';
+import { DemoBanner } from '@/components/demo/DemoBanner';
 import { Toaster } from 'sonner';
 
 interface AppShellDesktopV2Props {
@@ -16,6 +17,7 @@ interface AppShellDesktopV2Props {
   isAdmin: boolean;
   isTeacher: boolean;
   isStudent: boolean;
+  isDevelopment?: boolean;
 }
 
 function isActive(pathname: string | null, path: string): boolean {
@@ -26,10 +28,10 @@ function isActive(pathname: string | null, path: string): boolean {
 }
 
 export default function AppShellDesktopV2({
-  children, user, isAdmin, isTeacher, isStudent,
+  children, user, isAdmin, isTeacher, isStudent, isDevelopment,
 }: AppShellDesktopV2Props) {
   const pathname = usePathname();
-  const groups = getMenuGroups({ isAdmin, isTeacher, isStudent });
+  const groups = getMenuGroups({ isAdmin, isTeacher, isStudent, isDemoAccount: isDevelopment });
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -109,8 +111,11 @@ export default function AppShellDesktopV2({
       </aside>
 
       {/* Main content */}
-      <main className="ml-60 flex-1 min-h-screen bg-background p-6 lg:p-8">
-        {children}
+      <main className="ml-60 flex-1 min-h-screen bg-background">
+        {isDevelopment && <DemoBanner />}
+        <div className="p-6 lg:p-8">
+          {children}
+        </div>
       </main>
       <Toaster />
     </div>

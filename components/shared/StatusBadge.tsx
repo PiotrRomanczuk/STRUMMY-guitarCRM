@@ -44,19 +44,19 @@ export default function StatusBadge({
   testId,
 }: StatusBadgeProps) {
   const variantClasses: Record<BadgeVariant, string> = {
-    default: 'bg-muted text-muted-foreground',
+    default: 'bg-muted text-muted-foreground dark:text-zinc-400',
     success: 'bg-success/15 text-success dark:bg-success/20',
     warning: 'bg-warning/15 text-warning dark:bg-warning/20',
     danger: 'bg-destructive/15 text-destructive dark:bg-destructive/20',
     info: 'bg-primary/15 text-primary dark:bg-primary/20',
-    gray: 'bg-muted text-muted-foreground',
+    gray: 'bg-muted text-muted-foreground dark:text-zinc-400',
     blue: 'bg-primary/15 text-primary dark:bg-primary/20',
     green: 'bg-success/15 text-success dark:bg-success/20',
     yellow: 'bg-warning/15 text-warning dark:bg-warning/20',
     red: 'bg-destructive/15 text-destructive dark:bg-destructive/20',
     purple: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 dark:bg-purple-500/20',
     active: 'bg-success/15 text-success dark:bg-success/20',
-    inactive: 'bg-muted text-muted-foreground',
+    inactive: 'bg-muted text-muted-foreground dark:text-zinc-400',
     registered: 'bg-primary/15 text-primary dark:bg-primary/20',
     shadow: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 dark:bg-purple-500/20',
   };

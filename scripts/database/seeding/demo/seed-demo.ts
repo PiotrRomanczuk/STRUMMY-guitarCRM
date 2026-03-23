@@ -326,6 +326,47 @@ const STUDENT_LESSONS: Record<string, { notes: string }[]> = {
   ],
 };
 
+const LESSON_TITLES: Record<string, string[]> = {
+  'emma@strummy.app': [
+    'Open Chords: G, C, D',
+    'Wonderwall Strumming Pattern',
+    'Wonderwall: Metronome Practice',
+    'Brown Eyed Girl: Verse Progression',
+    'Blackbird Fingerpicking Intro',
+    'Brown Eyed Girl: Performance Ready',
+    'Blackbird: Full Arrangement',
+    'Wish You Were Here: Acoustic Intro',
+    'Performance Practice: 2-Song Set',
+    'Wish You Were Here: Bridge Section',
+    'Fingerpicking Workshop: Travis Picking',
+    'Repertoire Review & Goal Setting',
+  ],
+  'carlos@strummy.app': [
+    'Barre Chords: F & Bm',
+    'Hotel California: Intro Riff',
+    'Hotel California: Dynamics',
+    'Nothing Else Matters: Picking Pattern',
+    'Hotel California: Full Arrangement',
+    'Stairway to Heaven: Fingerpicking',
+    'Lead Guitar: Minor Pentatonic',
+    'Solo Improvisation: Blues Backing',
+  ],
+  'lily@strummy.app': [
+    'Chord Triangle: G, C, D',
+    'Wish You Were Here: Capo & Transposition',
+    'Brown Eyed Girl: Backing Track',
+    'Wonderwall: Full Song Structure',
+    'Performance: Brown Eyed Girl',
+    'Fingerpicking Foundations',
+  ],
+  'james@strummy.app': [
+    'Guitar Basics: First Chords',
+    'Open Chord Progressions',
+    'Wonderwall: Verse Rhythm',
+    'Strumming Patterns Workshop',
+  ],
+};
+
 // lesson_songs per completed lesson index (song title + status)
 type LessonSongSpec = { title: string; status: string; notes?: string };
 const LESSON_SONGS_BY_STUDENT: Record<string, LessonSongSpec[][]> = {
@@ -404,19 +445,20 @@ interface WeekLesson {
   hour: number;
   email: string;
   notes: string;
+  title: string;
 }
 
 const THIS_WEEK_SCHEDULE: WeekLesson[] = [
-  { dow: 0, hour: 10, email: 'emma@strummy.app',   notes: 'Review Wish You Were Here progress + set weekly goals' },
-  { dow: 0, hour: 14, email: 'carlos@strummy.app',  notes: 'Solo improvisation continued — phrasing and dynamics' },
-  { dow: 1, hour: 10, email: 'lily@strummy.app',    notes: 'Blackbird fingerpicking — bars 1-8 at slow tempo' },
-  { dow: 1, hour: 15, email: 'james@strummy.app',   notes: 'Chord transitions speed drill + metronome work' },
-  { dow: 2, hour: 11, email: 'emma@strummy.app',    notes: 'Nothing Else Matters intro — picking pattern at 50 BPM' },
-  { dow: 3, hour: 10, email: 'carlos@strummy.app',  notes: 'Pentatonic scale patterns — all 5 positions' },
-  { dow: 3, hour: 14, email: 'lily@strummy.app',    notes: 'Wonderwall performance prep with backing track' },
-  { dow: 4, hour: 10, email: 'james@strummy.app',   notes: 'Strumming pattern workshop — down-up and muting' },
-  { dow: 4, hour: 15, email: 'emma@strummy.app',    notes: 'Repertoire run-through: 3-song setlist practice' },
-  { dow: 5, hour: 11, email: 'carlos@strummy.app',  notes: 'Hotel California full arrangement — verse + solo' },
+  { dow: 0, hour: 10, email: 'emma@strummy.app',   notes: 'Review Wish You Were Here progress + set weekly goals', title: 'Wish You Were Here: Weekly Review' },
+  { dow: 0, hour: 14, email: 'carlos@strummy.app',  notes: 'Solo improvisation continued — phrasing and dynamics', title: 'Solo Improvisation: Phrasing' },
+  { dow: 1, hour: 10, email: 'lily@strummy.app',    notes: 'Blackbird fingerpicking — bars 1-8 at slow tempo', title: 'Blackbird: Bars 1-8' },
+  { dow: 1, hour: 15, email: 'james@strummy.app',   notes: 'Chord transitions speed drill + metronome work', title: 'Chord Transitions: Speed Drill' },
+  { dow: 2, hour: 11, email: 'emma@strummy.app',    notes: 'Nothing Else Matters intro — picking pattern at 50 BPM', title: 'Nothing Else Matters: Picking Intro' },
+  { dow: 3, hour: 10, email: 'carlos@strummy.app',  notes: 'Pentatonic scale patterns — all 5 positions', title: 'Pentatonic Scale: All Positions' },
+  { dow: 3, hour: 14, email: 'lily@strummy.app',    notes: 'Wonderwall performance prep with backing track', title: 'Wonderwall: Performance Prep' },
+  { dow: 4, hour: 10, email: 'james@strummy.app',   notes: 'Strumming pattern workshop — down-up and muting', title: 'Strumming & Muting Workshop' },
+  { dow: 4, hour: 15, email: 'emma@strummy.app',    notes: 'Repertoire run-through: 3-song setlist practice', title: 'Setlist Run-Through' },
+  { dow: 5, hour: 11, email: 'carlos@strummy.app',  notes: 'Hotel California full arrangement — verse + solo', title: 'Hotel California: Full Arrangement' },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -430,7 +472,7 @@ function daysFromNow(days: number): string {
 function getWeekScheduleLessons(
   userIds: Record<string, string>,
   teacherId: string,
-): { teacher_id: string; student_id: string; status: string; scheduled_at: string; notes: string; lesson_teacher_number: number }[] {
+): { teacher_id: string; student_id: string; status: string; scheduled_at: string; notes: string; title: string; lesson_teacher_number: number }[] {
   const now = new Date();
   const dayOfWeek = now.getDay();
   const currentHour = now.getHours();
@@ -453,6 +495,7 @@ function getWeekScheduleLessons(
       status: isPast ? 'COMPLETED' : 'SCHEDULED',
       scheduled_at: date.toISOString(),
       notes: l.notes,
+      title: l.title,
       lesson_teacher_number: 0, // trigger auto-sets this
     };
   });
@@ -515,6 +558,7 @@ async function main() {
         is_student: user.isStudent,
         is_admin: false,
         is_development: true,
+        ...(user.isStudent ? { student_status: 'active' } : {}),
       },
       { onConflict: 'id' }
     );
@@ -610,6 +654,7 @@ async function main() {
         status: 'COMPLETED',
         scheduled_at: daysFromNow(-(weeksAgo * 7)),
         notes: completedNotes[i].notes,
+        title: LESSON_TITLES[email]?.[i] ?? `Lesson ${i + 1}`,
       });
     }
 

@@ -25,7 +25,7 @@ const statusColors: Record<string, string> = {
   IN_PROGRESS: 'bg-warning/10 text-warning border-warning/20',
   COMPLETED: 'bg-success/10 text-success border-success/20',
   CANCELLED: 'bg-destructive/10 text-destructive border-destructive/20',
-  RESCHEDULED: 'bg-muted text-muted-foreground border-border',
+  RESCHEDULED: 'bg-muted text-muted-foreground dark:text-zinc-400 border-border',
 };
 
 const statusLabels: Record<string, string> = {

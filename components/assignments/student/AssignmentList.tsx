@@ -16,11 +16,11 @@ interface AssignmentListProps {
 }
 
 const statusConfig = {
-  not_started: { label: 'Not Started', color: 'bg-muted text-muted-foreground border-0' },
+  not_started: { label: 'Not Started', color: 'bg-muted text-muted-foreground dark:text-zinc-400 border-0' },
   in_progress: { label: 'In Progress', color: 'bg-primary/10 text-primary border-0' },
   completed: { label: 'Completed', color: 'bg-success/15 text-success border-0' },
   overdue: { label: 'Overdue', color: 'bg-destructive/10 text-destructive border-0' },
-  cancelled: { label: 'Cancelled', color: 'bg-muted text-muted-foreground border-0' },
+  cancelled: { label: 'Cancelled', color: 'bg-muted text-muted-foreground dark:text-zinc-400 border-0' },
 };
 
 export function AssignmentList({ assignments }: AssignmentListProps) {

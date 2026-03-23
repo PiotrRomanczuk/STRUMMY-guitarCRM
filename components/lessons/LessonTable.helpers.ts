@@ -42,6 +42,6 @@ export function getStatusColor(status: string | null | undefined): string {
     case 'RESCHEDULED':
       return 'text-purple-500 bg-purple-500/10 border-purple-500/20';
     default:
-      return 'text-muted-foreground bg-muted border-border';
+      return 'text-muted-foreground dark:text-zinc-400 bg-muted border-border';
   }
 }
