@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, production]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -442,89 +442,7 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         continue-on-error: true
 
-  # Job 10: Deploy to Vercel (Preview - Main)
-  deploy-preview-main:
-    name: Deploy to Vercel (Preview - Main)
-    runs-on: ubuntu-latest
-    needs: [quality-gate, deploy-database]
-    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.quality-gate.result == 'success'
-    environment:
-      name: preview
-      url: ${{ steps.deploy.outputs.url }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN_GITHUB_ACTIONS }}
-
-      - name: Build Project Artifacts
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN_GITHUB_ACTIONS }}
-
-      - name: Deploy to Vercel
-        id: deploy
-        run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN_GITHUB_ACTIONS }})
-          echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          echo "Deployed to: $DEPLOYMENT_URL"
-
-      - name: Comment deployment URL on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v8
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '🚀 Deployed to preview (main): ${{ steps.deploy.outputs.url }}'
-            })
-
-  # Job 11: Deploy to Vercel (Production)
-  deploy-production:
-    name: Deploy to Vercel (Production)
-    runs-on: ubuntu-latest
-    needs: [quality-gate, deploy-database]
-    if: always() && github.ref == 'refs/heads/production' && github.event_name == 'push' && needs.quality-gate.result == 'success'
-    environment:
-      name: production
-      url: https://guitar-crm.vercel.app
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN_GITHUB_ACTIONS }}
-
-      - name: Build Project Artifacts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN_GITHUB_ACTIONS }}
-
-      - name: Deploy to Vercel
-        id: deploy
-        run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN_GITHUB_ACTIONS }})
-          echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          echo "Deployed to: $DEPLOYMENT_URL"
-
-  # Job 10: Deploy Preview (for PRs)
+  # Deploy Preview (for PRs only — production deploys are manual via deploy.yml)
   deploy-preview:
     name: Deploy Preview (PR)
     runs-on: ubuntu-latest
