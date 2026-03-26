@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { hashApiKey } from '@/lib/api-keys';
 import type { User } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
@@ -38,11 +39,12 @@ function isApiKey(token: string): boolean {
  * Validate API key and return associated user
  */
 async function validateApiKey(apiKey: string): Promise<AuthResult> {
-  const supabase = await createClient();
+  // Use admin client to bypass RLS — there's no authenticated session yet
+  const adminClient = createAdminClient();
   const keyHash = hashApiKey(apiKey);
 
   // Find active API key with matching hash
-  const { data: apiKeyRecord, error } = await supabase
+  const { data: apiKeyRecord, error } = await adminClient
     .from('api_keys')
     .select('user_id, is_active')
     .eq('key_hash', keyHash)
@@ -58,18 +60,21 @@ async function validateApiKey(apiKey: string): Promise<AuthResult> {
   }
 
   // Update last_used_at timestamp (non-blocking)
-  supabase
+  adminClient
     .from('api_keys')
     .update({ last_used_at: new Date().toISOString() })
     .eq('key_hash', keyHash)
-    .then(() => {
-      // Silent update - don't block request
-    }, (err) => {
-      logger.error('Failed to update API key last_used_at:', err);
-    });
+    .then(
+      () => {
+        // Silent update - don't block request
+      },
+      (err) => {
+        logger.error('Failed to update API key last_used_at:', err);
+      }
+    );
 
   // Get user details from auth.users
-  const { data: userData, error: userError } = await supabase.auth.admin.getUserById(
+  const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(
     apiKeyRecord.user_id
   );
 
@@ -183,24 +188,24 @@ export async function authenticateRequest(request: Request): Promise<AuthResult>
  * }
  * ```
  */
-export async function requireAuth(request: Request): Promise<{
-  user: User;
-  errorResponse?: never;
-} | {
-  user?: never;
-  errorResponse: Response;
-}> {
+export async function requireAuth(request: Request): Promise<
+  | {
+      user: User;
+      errorResponse?: never;
+    }
+  | {
+      user?: never;
+      errorResponse: Response;
+    }
+> {
   const auth = await authenticateRequest(request);
 
   if (!auth.user) {
     return {
-      errorResponse: new Response(
-        JSON.stringify({ error: auth.error || 'Unauthorized' }),
-        {
-          status: auth.status,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      ),
+      errorResponse: new Response(JSON.stringify({ error: auth.error || 'Unauthorized' }), {
+        status: auth.status,
+        headers: { 'Content-Type': 'application/json' },
+      }),
     };
   }
 

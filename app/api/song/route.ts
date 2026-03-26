@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
@@ -12,6 +11,8 @@ import {
   deleteSongHandler,
 } from './handlers';
 import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import { authenticateRequest } from '@/lib/auth/api-auth';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 
 type SupabaseServerClient = SupabaseClient<Database>;
@@ -19,11 +20,7 @@ type SupabaseServerClient = SupabaseClient<Database>;
 /**
  * Helper to get or create user profile
  */
-async function getOrCreateProfile(
-  supabase: SupabaseServerClient,
-  userId: string,
-  email: string
-) {
+async function getOrCreateProfile(supabase: SupabaseServerClient, userId: string, email: string) {
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('is_admin, is_teacher, is_student, is_development')
@@ -153,47 +150,83 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/song
- * Create a new song (requires teacher or admin role)
+ * Create a new song (requires teacher or admin role).
+ * Supports both cookie-based session auth and API key bearer tokens.
  */
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
+    const hasAuthHeader = !!request.headers.get('Authorization');
 
-    let config;
-    try {
-      config = getSupabaseConfig();
-    } catch (configError) {
-      logger.error('[API/Songs] Supabase config error:', configError);
-      return NextResponse.json({ error: 'Database configuration error' }, { status: 500 });
-    }
+    let user;
+    let supabase;
+    let profile;
 
-    const supabase = createServerClient<Database>(config.url, config.anonKey, {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Ignored
-          }
+    if (hasAuthHeader) {
+      // API key / bearer token path
+      const auth = await authenticateRequest(request);
+      if (!auth.user) {
+        return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
+      }
+      user = auth.user;
+      supabase = createAdminClient();
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_admin, is_teacher, is_student, is_development')
+        .eq('id', user.id)
+        .single();
+
+      if (!profileData) {
+        return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+      }
+
+      profile = {
+        isAdmin: profileData.is_admin,
+        isTeacher: profileData.is_teacher,
+        isStudent: profileData.is_student,
+        isDevelopment: profileData.is_development ?? false,
+      };
+    } else {
+      // Cookie-based auth path (original behavior)
+      const cookieStore = await cookies();
+
+      let config;
+      try {
+        config = getSupabaseConfig();
+      } catch (configError) {
+        logger.error('[API/Songs] Supabase config error:', configError);
+        return NextResponse.json({ error: 'Database configuration error' }, { status: 500 });
+      }
+
+      supabase = createServerClient<Database>(config.url, config.anonKey, {
+        cookies: {
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // Ignored
+            }
+          },
         },
-      },
-    });
+      });
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      const {
+        data: { user: cookieUser },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+      if (!cookieUser) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
 
-    const profile = await getOrCreateProfile(supabase, user.id, user.email || '');
+      user = cookieUser;
+      profile = await getOrCreateProfile(supabase, user.id, user.email || '');
 
-    if (!profile) {
-      return NextResponse.json({ error: 'Error creating user profile' }, { status: 500 });
+      if (!profile) {
+        return NextResponse.json({ error: 'Error creating user profile' }, { status: 500 });
+      }
     }
 
     if (profile.isDevelopment) {
@@ -201,7 +234,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-
     const result = await createSongHandler(supabase, user, profile, body);
 
     if (result.error) {
@@ -214,7 +246,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined,
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error instanceof Error
+              ? error.message
+              : 'Unknown error'
+            : undefined,
       },
       { status: 500 }
     );
