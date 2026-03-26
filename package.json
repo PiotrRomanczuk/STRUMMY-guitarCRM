@@ -1,6 +1,6 @@
 {
   "name": "strummy",
-  "version": "0.118.0",
+  "version": "0.119.0",
   "private": true,
   "scripts": {
     "dev": "NODE_OPTIONS='--max-http-header-size=65536' nodemon --exec next dev",
