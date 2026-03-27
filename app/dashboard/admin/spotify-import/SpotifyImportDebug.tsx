@@ -27,6 +27,21 @@ const statusConfig = {
   },
 };
 
+function renderCoverPreview(step: PipelineStep) {
+  const out = step.output;
+  if (!out || typeof out !== 'object' || !('coverUrl' in out) || !out.coverUrl) return null;
+  return (
+    <div className="flex items-center gap-3">
+      <img src={String(out.coverUrl)} alt="Album cover" className="h-16 w-16 rounded-md shadow" />
+      <div>
+        <p className="font-medium">{String(out.title)}</p>
+        <p className="text-muted-foreground text-sm">{String(out.artist)}</p>
+        <p className="text-muted-foreground text-xs">{String(out.album)}</p>
+      </div>
+    </div>
+  );
+}
+
 function StepCard({ step, index }: { step: PipelineStep; index: number }) {
   const config = statusConfig[step.status];
   const Icon = config.icon;
@@ -72,23 +87,7 @@ function StepCard({ step, index }: { step: PipelineStep; index: number }) {
           </div>
         )}
         {/* Show cover image if present */}
-        {step.output &&
-          typeof step.output === 'object' &&
-          'coverUrl' in step.output &&
-          step.output.coverUrl && (
-            <div className="flex items-center gap-3">
-              <img
-                src={step.output.coverUrl as string}
-                alt="Album cover"
-                className="h-16 w-16 rounded-md shadow"
-              />
-              <div>
-                <p className="font-medium">{step.output.title as string}</p>
-                <p className="text-muted-foreground text-sm">{step.output.artist as string}</p>
-                <p className="text-muted-foreground text-xs">{step.output.album as string}</p>
-              </div>
-            </div>
-          )}
+        {renderCoverPreview(step)}
       </CardContent>
     </Card>
   );
