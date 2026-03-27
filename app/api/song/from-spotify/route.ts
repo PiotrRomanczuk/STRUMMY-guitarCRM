@@ -51,23 +51,30 @@ export async function POST(request: Request) {
       );
     }
 
-    // Parse request body
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    // Parse spotify_url from query param (?url=...) or JSON body
+    let spotifyUrl: string | null = null;
+
+    const { searchParams } = new URL(request.url);
+    spotifyUrl = searchParams.get('url');
+
+    if (!spotifyUrl) {
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
+      const parsed = RequestSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+          { status: 400 }
+        );
+      }
+      spotifyUrl = parsed.data.spotify_url;
     }
 
-    const parsed = RequestSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    const trackId = extractTrackId(parsed.data.spotify_url);
+    const trackId = extractTrackId(spotifyUrl);
     if (!trackId) {
       return NextResponse.json({ error: 'Invalid Spotify URL or track ID' }, { status: 400 });
     }
