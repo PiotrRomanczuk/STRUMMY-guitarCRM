@@ -1,5 +1,6 @@
 import { LessonForm } from '@/components/lessons';
 import { NewLessonTabs } from '@/components/v2/lessons/NewLessonTabs';
+import { NewLessonTabsStitch } from '@/components/v2/stitch/lessons/NewLessonTabsStitch';
 import { getUIVersion } from '@/lib/ui-version.server';
 
 interface NewLessonPageProps {
@@ -14,6 +15,14 @@ export default async function NewLessonPage({ searchParams }: NewLessonPageProps
   if (song) initialData.song_ids = song.split(',');
 
   const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v3') {
+    return (
+      <NewLessonTabsStitch
+        initialData={Object.keys(initialData).length > 0 ? initialData : undefined}
+      />
+    );
+  }
 
   if (uiVersion === 'v2') {
     return (

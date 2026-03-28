@@ -101,7 +101,8 @@ temp/
 .env.sentry-build-plugin
 
 # Design reference files
-stitch/
+/stitch/
+!components/v2/stitch/
 landing.html
 
 # Playwright MCP

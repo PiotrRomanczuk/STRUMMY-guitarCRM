@@ -1,5 +1,6 @@
 import { UserForm } from '@/components/users';
 import { UserFormV2 } from '@/components/v2/users';
+import { UserFormStitch } from '@/components/v2/stitch/users';
 import { getUIVersion } from '@/lib/ui-version.server';
 
 export const metadata = {
@@ -9,6 +10,10 @@ export const metadata = {
 
 export default async function CreateUserPage() {
   const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v3') {
+    return <UserFormStitch />;
+  }
 
   if (uiVersion === 'v2') {
     return <UserFormV2 />;

@@ -8,6 +8,6 @@ import type { UIVersion } from './ui-version';
 export async function getUIVersion(): Promise<UIVersion> {
   const jar = await cookies();
   const raw = jar.get(COOKIE_NAME)?.value;
-  if (raw === 'v1' || raw === 'v2') return raw;
+  if (raw === 'v1' || raw === 'v2' || raw === 'v3') return raw;
   return DEFAULT_VERSION;
 }
