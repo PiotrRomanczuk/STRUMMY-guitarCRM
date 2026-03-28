@@ -14,6 +14,13 @@ interface LessonCardProps {
   onTap: () => void;
 }
 
+const STATUS_BORDER: Record<string, string> = {
+  SCHEDULED: 'border-l-primary',
+  IN_PROGRESS: 'border-l-amber-400',
+  COMPLETED: 'border-l-emerald-400',
+  CANCELLED: 'border-l-destructive',
+};
+
 export function LessonCard({ lesson, role, onTap }: LessonCardProps) {
   const displayDate = lesson.date ?? lesson.scheduled_at ?? null;
   const displayTime = lesson.start_time ?? lesson.scheduled_at ?? null;
@@ -23,8 +30,9 @@ export function LessonCard({ lesson, role, onTap }: LessonCardProps) {
       type="button"
       onClick={onTap}
       className={cn(
-        'w-full text-left bg-card rounded-[10px] p-4 space-y-2',
-        'hover:bg-muted transition-colors'
+        'w-full text-left bg-card rounded-[10px] px-4 py-3.5 space-y-2',
+        'border-l-4 shadow-sm hover:bg-muted/50 transition-colors',
+        STATUS_BORDER[lesson.status ?? ''] ?? 'border-l-primary'
       )}
     >
       {/* Row 1: Title + Status */}

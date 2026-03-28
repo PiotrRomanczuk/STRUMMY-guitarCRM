@@ -90,11 +90,11 @@ function SongCard({ song, isTeacher }: { song: SongWithStatus; isTeacher: boolea
     <SwipeableListItem onEdit={isTeacher ? () => router.push(`/dashboard/songs/${song.id}/edit`) : undefined}>
       <Link
         href={`/dashboard/songs/${song.id}`}
-        className="flex items-center gap-3 p-4 bg-card rounded-[10px] active:bg-muted transition-colors"
+        className="flex items-center gap-3 p-4 bg-card rounded-[10px] shadow-sm active:bg-muted transition-colors"
       >
-        <div className="relative w-12 h-12 rounded-[10px] overflow-hidden shrink-0 bg-muted flex items-center justify-center">
+        <div className="relative w-14 h-14 rounded-[10px] overflow-hidden shrink-0 bg-muted flex items-center justify-center">
           {song.cover_image_url ? (
-            <Image src={song.cover_image_url} alt={song.title || 'Song cover'} fill sizes="48px" className="object-cover" />
+            <Image src={song.cover_image_url} alt={song.title || 'Song cover'} fill sizes="56px" className="object-cover" />
           ) : (
             <Music className="h-5 w-5 text-muted-foreground" />
           )}

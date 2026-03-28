@@ -133,9 +133,12 @@ function MobileQuickActions() {
           key={action.label}
           href={action.href}
           className="bg-card p-5 rounded-[10px] flex flex-col gap-3
+                     border border-border/30
                      active:bg-muted transition-colors"
         >
-          <action.Icon className="h-7 w-7 text-primary" />
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <action.Icon className="h-5 w-5 text-primary" />
+          </div>
           <span className="text-sm font-bold text-foreground leading-tight whitespace-pre-line">
             {action.label}
           </span>

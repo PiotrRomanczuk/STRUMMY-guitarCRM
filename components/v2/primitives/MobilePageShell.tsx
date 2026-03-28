@@ -60,7 +60,8 @@ export function MobilePageShell({
       {/* Sticky header */}
       <header
         className={cn(
-          'sticky top-0 z-30 bg-[rgba(32,31,31,0.7)] backdrop-blur-[20px]',
+          'sticky top-0 z-30 bg-background/80 backdrop-blur-xl',
+          'border-b border-border/50',
           'px-4 py-3'
         )}
       >

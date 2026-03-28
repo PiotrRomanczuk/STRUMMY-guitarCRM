@@ -34,9 +34,13 @@ export function CollapsibleFilterBar({
   return (
     <div
       className={cn(
-        'flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4',
+        'relative -mx-4 px-4',
         className
       )}
+    >
+    <div
+      className="flex gap-2 overflow-x-auto scrollbar-hide pb-1
+                 [mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)]"
     >
       <FilterChip
         label={allLabel}
@@ -51,6 +55,7 @@ export function CollapsibleFilterBar({
           onClick={() => onChange(filter.value)}
         />
       ))}
+    </div>
     </div>
   );
 }

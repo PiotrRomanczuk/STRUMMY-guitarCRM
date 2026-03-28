@@ -97,7 +97,7 @@ export function LessonDetailV2({
       </motion.div>
 
       {/* Info Cards */}
-      <div className="space-y-3">
+      <div className="bg-card rounded-xl border border-border/50 divide-y divide-border/50 overflow-hidden">
         <InfoRow icon={Calendar} label="Date" value={formatLessonDate(displayDate)} />
         {displayTime && (
           <InfoRow icon={Calendar} label="Time" value={formatLessonTime(displayTime)} />
