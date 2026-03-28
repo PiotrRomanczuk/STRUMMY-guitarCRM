@@ -15,7 +15,7 @@ interface ActivityWidgetProps {
 
 export function ActivityWidget({ activities }: ActivityWidgetProps) {
   return (
-    <section className="bg-card rounded-[10px] p-6 lg:p-8">
+    <section className="bg-card rounded-[10px] p-6 lg:p-8 border border-border/30">
       <h2 className="text-foreground font-bold text-lg mb-6">
         Recent Activity
       </h2>

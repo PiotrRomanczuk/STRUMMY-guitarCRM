@@ -34,7 +34,7 @@ export function SOTWCard({
         variants={cardEntrance}
         initial="hidden"
         animate="visible"
-        className="bg-card rounded-xl border border-primary/20 overflow-hidden"
+        className="bg-gradient-to-br from-primary/5 to-transparent rounded-xl shadow-sm overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
