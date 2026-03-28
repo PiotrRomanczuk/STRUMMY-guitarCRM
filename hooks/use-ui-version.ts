@@ -34,7 +34,9 @@ export function useUIVersion(): UseUIVersionReturn {
   }, []);
 
   const toggle = useCallback(() => {
-    setVersion(getUIVersionFromCookie() === 'v1' ? 'v2' : 'v1');
+    const current = getUIVersionFromCookie();
+    const next: UIVersion = current === 'v1' ? 'v2' : current === 'v2' ? 'v3' : 'v1';
+    setVersion(next);
   }, [setVersion]);
 
   return { version, setVersion, toggle, pending };

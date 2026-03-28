@@ -2,6 +2,7 @@ import { SongFormGuard } from '@/components/songs';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { redirect } from 'next/navigation';
 import { SongFormV2 } from '@/components/v2/songs/SongForm';
+import { SongFormStitch } from '@/components/v2/stitch/songs';
 import { getUIVersion } from '@/lib/ui-version.server';
 
 export default async function NewSongPage() {
@@ -21,6 +22,10 @@ export default async function NewSongPage() {
         </div>
       </div>
     );
+  }
+
+  if (uiVersion === 'v3') {
+    return <SongFormStitch mode="create" />;
   }
 
   if (uiVersion === 'v2') {

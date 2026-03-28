@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { OnboardingForm } from '@/components/onboarding/OnboardingForm';
 import { OnboardingV2 } from '@/components/v2/onboarding';
 import { OnboardingV2Boundary } from '@/components/v2/onboarding/OnboardingBoundary';
+import { OnboardingStitch } from '@/components/v2/stitch/onboarding';
 import { getUIVersion } from '@/lib/ui-version.server';
 import { Music, Loader2 } from 'lucide-react';
 
@@ -40,6 +41,14 @@ export default async function OnboardingPage() {
 
   const uiVersion = await getUIVersion();
   const firstName = user.user_metadata?.first_name || user.user_metadata?.full_name?.split(' ')[0];
+
+  if (uiVersion === 'v3') {
+    return (
+      <Suspense fallback={<OnboardingLoadingFallback />}>
+        <OnboardingStitch firstName={firstName} />
+      </Suspense>
+    );
+  }
 
   if (uiVersion === 'v2') {
     return (

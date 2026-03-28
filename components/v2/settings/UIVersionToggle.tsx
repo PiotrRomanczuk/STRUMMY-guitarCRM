@@ -3,10 +3,10 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { useUIVersion } from '@/hooks/use-ui-version';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { UIVersion } from '@/lib/ui-version';
 
 interface UIVersionToggleProps {
   className?: string;
@@ -17,17 +17,25 @@ interface UIVersionToggleProps {
  * Triggers a page reload when toggled so server components
  * re-render with the new cookie value.
  */
-export function UIVersionToggle({ className }: UIVersionToggleProps) {
-  const { version, toggle, pending } = useUIVersion();
-  const isV2 = version === 'v2';
+const VERSION_LABELS: Record<UIVersion, string> = {
+  v1: 'Classic',
+  v2: 'Mobile V2',
+  v3: 'Stitch',
+};
 
-  const handleToggle = useCallback(() => {
-    try {
-      toggle();
-    } catch {
-      toast.error('Failed to switch UI version. Please try again.');
-    }
-  }, [toggle]);
+export function UIVersionToggle({ className }: UIVersionToggleProps) {
+  const { version, setVersion, pending } = useUIVersion();
+
+  const handleChange = useCallback(
+    (v: string) => {
+      try {
+        setVersion(v as UIVersion);
+      } catch {
+        toast.error('Failed to switch UI version. Please try again.');
+      }
+    },
+    [setVersion]
+  );
 
   return (
     <div
@@ -41,36 +49,42 @@ export function UIVersionToggle({ className }: UIVersionToggleProps) {
         <div
           className={cn(
             'shrink-0 flex items-center justify-center w-10 h-10 rounded-lg',
-            isV2 ? 'bg-primary/10' : 'bg-muted'
+            version !== 'v1' ? 'bg-primary/10' : 'bg-muted'
           )}
         >
           <Sparkles
             className={cn(
               'h-5 w-5',
-              isV2 ? 'text-primary' : 'text-muted-foreground'
+              version !== 'v1' ? 'text-primary' : 'text-muted-foreground'
             )}
           />
         </div>
         <div className="min-w-0">
           <Label
-            htmlFor="ui-version-toggle"
+            htmlFor="ui-version-select"
             className="text-sm font-medium cursor-pointer"
           >
-            New mobile UI
+            UI Theme
           </Label>
           <p className="text-xs text-muted-foreground">
-            Try the redesigned mobile experience
+            Currently: {VERSION_LABELS[version]}
           </p>
         </div>
       </div>
 
-      <Switch
-        id="ui-version-toggle"
-        checked={isV2}
-        onCheckedChange={handleToggle}
+      <select
+        id="ui-version-select"
+        value={version}
+        onChange={(e) => handleChange(e.target.value)}
         disabled={pending}
-        aria-label={isV2 ? 'Switch to classic UI' : 'Switch to new mobile UI'}
-      />
+        className="text-sm bg-muted border border-border rounded-lg px-3 py-2"
+      >
+        {(['v1', 'v2', 'v3'] as UIVersion[]).map((v) => (
+          <option key={v} value={v}>
+            {VERSION_LABELS[v]}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
