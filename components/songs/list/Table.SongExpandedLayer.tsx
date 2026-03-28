@@ -65,10 +65,6 @@ export default function SongExpandedLayer({ song, onAssignClick }: SongExpandedL
         </div>
       )}
 
-      {song.notes && (
-        <p className="text-xs text-muted-foreground line-clamp-2 italic">{song.notes}</p>
-      )}
-
       {hasResources && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {song.youtube_url && (
