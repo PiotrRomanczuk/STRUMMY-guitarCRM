@@ -43,9 +43,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   log.debug('RootLayout rendering');
-  const { user, isAdmin, isTeacher, isStudent } = await getUserWithRolesSSR();
+  const { user, isAdmin, isTeacher, isStudent, isDevelopment } = await getUserWithRolesSSR();
   const uiVersion = await getUIVersion();
-  log.debug('User roles', { userId: user?.id, isAdmin, isTeacher, isStudent, uiVersion });
+  log.debug('User roles', { userId: user?.id, isAdmin, isTeacher, isStudent, isDevelopment, uiVersion });
 
   // When dynamic switching is enabled, load all fonts
   // Otherwise, load only the active font scheme
@@ -66,7 +66,7 @@ export default async function RootLayout({
         isStudent={isStudent}
       />
       <Providers>
-        <AppShell user={user} isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent} uiVersion={uiVersion}>
+        <AppShell user={user} isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent} isDevelopment={isDevelopment} uiVersion={uiVersion}>
           {children}
         </AppShell>
       </Providers>

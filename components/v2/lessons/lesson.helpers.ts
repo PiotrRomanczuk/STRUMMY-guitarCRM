@@ -57,7 +57,7 @@ export function getLessonStatusStyle(status: string | null | undefined): string 
     case 'SCHEDULED':
       return 'bg-primary/15 text-primary border-transparent';
     default:
-      return 'bg-muted text-muted-foreground border-transparent';
+      return 'bg-muted text-muted-foreground dark:text-zinc-400 border-transparent';
   }
 }
 

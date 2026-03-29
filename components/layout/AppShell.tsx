@@ -23,6 +23,7 @@ interface AppShellProps {
   isAdmin: boolean;
   isTeacher: boolean;
   isStudent: boolean;
+  isDevelopment?: boolean;
   uiVersion?: UIVersion;
 }
 
@@ -32,6 +33,7 @@ export function AppShell({
   isAdmin,
   isTeacher,
   isStudent,
+  isDevelopment = false,
   uiVersion = 'v1',
 }: AppShellProps) {
   const pathname = usePathname();
@@ -78,6 +80,7 @@ export function AppShell({
         isAdmin={isAdmin}
         isTeacher={isTeacher}
         isStudent={isStudent}
+        isDevelopment={isDevelopment}
       >
         {children}
       </AppShellV2>
