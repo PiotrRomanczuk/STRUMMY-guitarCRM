@@ -1,15 +1,11 @@
 'use client';
 
+import { useState } from 'react';
+import { User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { StudentPicker } from '@/components/v2/lessons/LessonForm.Pickers';
 
 interface StepStudentProps {
   students: Array<{ id: string; full_name: string | null; email: string }>;
@@ -18,24 +14,31 @@ interface StepStudentProps {
 }
 
 export function StepStudent({ students, selectedId, onSelect }: StepStudentProps) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const selected = students.find((s) => s.id === selectedId);
+
   return (
     <div className="space-y-4">
       <h2 className="text-base font-semibold">Select Student</h2>
       <p className="text-sm text-muted-foreground">
         Choose which student this assignment is for.
       </p>
-      <Select value={selectedId} onValueChange={onSelect}>
-        <SelectTrigger className="min-h-[44px] text-base">
-          <SelectValue placeholder="Choose a student..." />
-        </SelectTrigger>
-        <SelectContent>
-          {students.map((s) => (
-            <SelectItem key={s.id} value={s.id} className="min-h-[44px]">
-              {s.full_name || s.email}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <button
+        type="button"
+        onClick={() => setPickerOpen(true)}
+        className="w-full flex items-center gap-3 min-h-[44px] px-4 py-3 rounded-lg border border-border bg-card text-left active:bg-muted/50 transition-colors"
+      >
+        <User className="h-4 w-4 text-muted-foreground shrink-0" />
+        <span className={selected ? 'text-sm font-medium' : 'text-sm text-muted-foreground'}>
+          {selected ? selected.full_name || selected.email : 'Choose a student...'}
+        </span>
+      </button>
+      <StudentPicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        students={students}
+        onSelect={(s) => onSelect(s.id)}
+      />
     </div>
   );
 }

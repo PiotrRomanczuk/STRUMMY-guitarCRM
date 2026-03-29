@@ -16,9 +16,9 @@ import { UserDetailTabContent } from './UserDetail.TabContent';
 import type { TabValue } from './UserDetail.TabBar';
 import type { UserDetailV2Props } from './UserDetail';
 
-export function UserDetailMobile({ user, tabsData, parentProfile }: UserDetailV2Props) {
+export function UserDetailMobile({ user, tabsData, parentProfile, initialTab }: UserDetailV2Props) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabValue>('overview');
+  const [activeTab, setActiveTab] = useState<TabValue>((initialTab as TabValue) || 'overview');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);

@@ -11,6 +11,8 @@ import { BottomActionSheet } from '@/components/v2/primitives/BottomActionSheet'
 import { InfoTab } from './SongDetail.InfoTab';
 import { LyricsViewer } from './LyricsViewer';
 import { VideoPlayer } from './VideoPlayer';
+import { RelatedLessons } from './SongDetail.RelatedLessons';
+import { RelatedStudents } from './SongDetail.RelatedStudents';
 import type { SongDetailV2Props } from './SongDetail';
 
 type Tab = 'info' | 'lyrics' | 'video';
@@ -111,6 +113,14 @@ export function SongDetailMobile({ song, isTeacher, onDelete }: SongDetailV2Prop
         {activeTab === 'lyrics' && <LyricsViewer text={song.lyrics_with_chords ?? ''} />}
         {activeTab === 'video' && <VideoPlayer url={song.youtube_url ?? ''} />}
       </div>
+
+      {/* Related sections */}
+      {song && (
+        <>
+          <RelatedLessons songId={song.id} />
+          <RelatedStudents songId={song.id} />
+        </>
+      )}
 
       {/* Actions sheet */}
       {isTeacher && (

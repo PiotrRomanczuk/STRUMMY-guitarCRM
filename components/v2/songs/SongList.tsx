@@ -3,7 +3,7 @@
 import { lazy, Suspense } from 'react';
 import { useLayoutMode } from '@/hooks/use-is-widescreen';
 import { SongListMobile } from './SongList.Mobile';
-import { SongListSkeleton } from './SongList.Skeleton';
+import { SongListSkeleton, SongListPageSkeleton } from './SongList.Skeleton';
 import type { SongWithStatus } from '@/components/songs/types';
 
 const SongListDesktop = lazy(() => import('./SongList.Desktop'));
@@ -24,7 +24,7 @@ export function SongListV2(props: SongListV2Props) {
   if (mode === 'mobile') return <SongListMobile {...props} />;
 
   return (
-    <Suspense fallback={<SongListMobile {...props} />}>
+    <Suspense fallback={<SongListPageSkeleton />}>
       <SongListDesktop {...props} />
     </Suspense>
   );

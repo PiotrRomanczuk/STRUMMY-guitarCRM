@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, listItem } from '@/lib/animations/variants';
 import { Calendar, User } from 'lucide-react';
@@ -44,7 +45,12 @@ export function AgendaWidget({ items }: AgendaWidgetProps) {
           >
             <AnimatePresence mode="popLayout">
               {items.slice(0, 5).map((item, idx) => (
-                <AgendaRow key={item.id} item={item} isActive={idx === 0 && item.status === 'upcoming'} />
+                <AgendaRow
+                  key={item.id}
+                  item={item}
+                  isActive={idx === 0 && item.status === 'upcoming'}
+                  href={item.type === 'lesson' ? `/dashboard/lessons/${item.id}` : undefined}
+                />
               ))}
             </AnimatePresence>
           </motion.div>
@@ -59,7 +65,7 @@ export function AgendaWidget({ items }: AgendaWidgetProps) {
   );
 }
 
-function AgendaRow({ item, isActive }: { item: AgendaItem; isActive: boolean }) {
+function AgendaRow({ item, isActive, href }: { item: AgendaItem; isActive: boolean; href?: string }) {
   const dotClass = isActive
     ? 'bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.5)]'
     : item.status === 'completed'
@@ -69,11 +75,12 @@ function AgendaRow({ item, isActive }: { item: AgendaItem; isActive: boolean }) 
   const statusLabel =
     item.status === 'completed' ? 'Completed' : item.status === 'overdue' ? 'Overdue' : 'Upcoming';
 
-  return (
+  const content = (
     <motion.div
       variants={listItem}
       layout
       className={`relative pl-8 flex items-center justify-between gap-3 min-h-[44px]
+        ${href ? 'hover:bg-muted/50 transition-colors cursor-pointer rounded-[10px]' : ''}
         ${isActive ? 'p-4 bg-secondary border-l-4 border-primary rounded-r-[10px]' : ''}`}
     >
       <div className={`absolute left-[4px] w-4 h-4 rounded-full z-10 ${dotClass}`} />
@@ -103,6 +110,12 @@ function AgendaRow({ item, isActive }: { item: AgendaItem; isActive: boolean }) 
       </span>
     </motion.div>
   );
+
+  if (href) {
+    return <Link href={href}>{content}</Link>;
+  }
+
+  return content;
 }
 
 function EmptyAgenda() {

@@ -35,6 +35,7 @@ interface UserProfile {
   isActive: boolean;
   isRegistered: boolean;
   studentStatus: 'active' | 'archived';
+  avatar_url: string | null;
   created_at: string | null;
 }
 

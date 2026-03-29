@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -38,15 +38,15 @@ export function DesktopUsersTable({
   onDelete,
 }: DesktopUsersTableProps) {
   return (
-    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+    <div className="rounded-xl bg-card shadow-2xl shadow-black/20 overflow-hidden">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-12">
+            <TableRow className="hover:bg-transparent border-transparent">
+              <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">User</TableHead>
+              <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Role</TableHead>
+              <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</TableHead>
+              <TableHead className="w-12 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 <span className="sr-only">Actions</span>
               </TableHead>
             </TableRow>
@@ -65,6 +65,7 @@ export function DesktopUsersTable({
                   />
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
+                      {user.avatar_url && <AvatarImage src={user.avatar_url} alt={getDisplayName(user)} />}
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
                         {getInitials(user)}
                       </AvatarFallback>

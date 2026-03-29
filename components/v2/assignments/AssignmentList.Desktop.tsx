@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { ClipboardList } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ListPageHeader } from '@/components/v2/primitives/ListPageHeader';
 import { StatusBadge } from '@/components/v2/primitives/StatusBadge';
 import { ASSIGNMENT_STATUS_STYLES, ASSIGNMENT_STATUS_LABELS } from './assignment.styles';
+import { cardEntrance } from '@/lib/animations/variants';
 import type { Assignment } from '@/components/assignments/hooks/useAssignment';
 import { format } from 'date-fns';
 
@@ -37,7 +39,12 @@ export default function DesktopAssignmentList({ assignments, isLoading, canCreat
           actionHref={canCreate ? '/dashboard/assignments/new' : undefined}
         />
       ) : (
-        <div className="rounded-xl overflow-hidden bg-card shadow-2xl shadow-black/20">
+        <motion.div
+          variants={cardEntrance}
+          initial="hidden"
+          animate="visible"
+          className="rounded-xl overflow-hidden bg-card shadow-2xl shadow-black/20"
+        >
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-transparent">
@@ -66,7 +73,7 @@ export default function DesktopAssignmentList({ assignments, isLoading, canCreat
               ))}
             </TableBody>
           </Table>
-        </div>
+        </motion.div>
       )}
     </div>
   );

@@ -176,6 +176,7 @@ export default async function UserDetailPage({ params, searchParams }: UserDetai
         }}
         parentProfile={parentProfile as ParentProfile | null}
         linkedStudents={(linkedStudents ?? []) as ParentProfile[]}
+        initialTab={activeTab}
       />
     );
   }
