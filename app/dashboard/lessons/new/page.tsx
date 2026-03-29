@@ -26,9 +26,7 @@ export default async function NewLessonPage({ searchParams }: NewLessonPageProps
 
   if (uiVersion === 'v2') {
     return (
-      <NewLessonTabs
-        initialData={Object.keys(initialData).length > 0 ? initialData : undefined}
-      />
+      <NewLessonTabs initialData={Object.keys(initialData).length > 0 ? initialData : undefined} />
     );
   }
 

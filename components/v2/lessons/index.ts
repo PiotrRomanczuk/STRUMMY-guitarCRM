@@ -4,3 +4,4 @@ export { LessonFormV2 } from './LessonForm';
 export { LiveLessonV2 } from './LiveLesson';
 export { PostLessonActions } from './PostLessonActions';
 export { RecurringLessonForm } from './RecurringLessonForm';
+export { CopyFromLastLesson } from './CopyFromLastLesson';
