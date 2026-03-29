@@ -19,14 +19,15 @@ interface MobileMoreMenuProps {
   isAdmin: boolean;
   isTeacher: boolean;
   isStudent: boolean;
+  isDemoAccount?: boolean;
 }
 
 export function MobileMoreMenuV2({
-  open, onOpenChange, isAdmin, isTeacher, isStudent,
+  open, onOpenChange, isAdmin, isTeacher, isStudent, isDemoAccount,
 }: MobileMoreMenuProps) {
   const pathname = usePathname();
   const prevPathnameRef = useRef(pathname);
-  const groups = getMenuGroups({ isAdmin, isTeacher, isStudent });
+  const groups = getMenuGroups({ isAdmin, isTeacher, isStudent, isDemoAccount });
 
   // Close the menu whenever the route changes (covers browser back/forward,
   // programmatic navigation, and any other navigation besides link clicks).

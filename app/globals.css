@@ -212,6 +212,10 @@
   --sidebar-border: #504534;
   --sidebar-ring: #ffd183;
 
+  /* Override success for dark readability */
+  --success: hsl(142 69% 45%);
+  --success-foreground: hsl(0 0% 100%);
+
   /* M3 surface tiers */
   --surface-container: #201f1f;
   --surface-container-low: #1c1b1b;

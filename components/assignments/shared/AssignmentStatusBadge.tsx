@@ -22,12 +22,12 @@ const statusConfig: Record<
 > = {
   not_started: {
     label: 'Not Started',
-    className: 'bg-muted text-muted-foreground border-border',
+    className: 'bg-muted text-muted-foreground dark:text-zinc-400 border-border',
     icon: Clock,
   },
   pending: {
     label: 'Pending',
-    className: 'bg-muted text-muted-foreground border-border',
+    className: 'bg-muted text-muted-foreground dark:text-zinc-400 border-border',
     icon: Clock,
   },
   in_progress: {
@@ -37,7 +37,7 @@ const statusConfig: Record<
   },
   completed: {
     label: 'Completed',
-    className: 'bg-primary/20 text-primary border-primary/20',
+    className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
     icon: Check,
   },
   overdue: {
@@ -47,7 +47,7 @@ const statusConfig: Record<
   },
   cancelled: {
     label: 'Cancelled',
-    className: 'bg-muted text-muted-foreground border-border',
+    className: 'bg-muted text-muted-foreground dark:text-zinc-400 border-border',
     icon: X,
   },
 };

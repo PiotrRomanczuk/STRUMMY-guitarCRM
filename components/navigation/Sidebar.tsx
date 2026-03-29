@@ -23,9 +23,10 @@ interface SidebarProps {
   isAdmin: boolean;
   isTeacher: boolean;
   isStudent: boolean;
+  isDemoAccount?: boolean;
 }
 
-export function Sidebar({ user, isAdmin, isTeacher, isStudent }: SidebarProps) {
+export function Sidebar({ user, isAdmin, isTeacher, isStudent, isDemoAccount }: SidebarProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -37,7 +38,7 @@ export function Sidebar({ user, isAdmin, isTeacher, isStudent }: SidebarProps) {
 
   if (!user) return null;
 
-  const menuGroups = getMenuGroups({ isAdmin, isTeacher, isStudent });
+  const menuGroups = getMenuGroups({ isAdmin, isTeacher, isStudent, isDemoAccount });
 
   return (
     <>

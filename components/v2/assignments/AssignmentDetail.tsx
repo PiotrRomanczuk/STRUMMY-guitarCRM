@@ -32,7 +32,7 @@ const STATUS_CONFIG: Record<
   string,
   { label: string; icon: typeof Clock; className: string }
 > = {
-  not_started: { label: 'Not Started', icon: Clock, className: 'bg-muted text-muted-foreground' },
+  not_started: { label: 'Not Started', icon: Clock, className: 'bg-muted text-muted-foreground dark:text-zinc-400' },
   in_progress: { label: 'In Progress', icon: Play, className: 'bg-primary/10 text-primary' },
   completed: { label: 'Completed', icon: CheckCircle, className: 'bg-green-500/10 text-green-600 dark:text-green-400' },
   overdue: { label: 'Overdue', icon: AlertCircle, className: 'bg-destructive/10 text-destructive' },

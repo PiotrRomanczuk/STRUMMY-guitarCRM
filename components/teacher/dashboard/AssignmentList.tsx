@@ -16,7 +16,7 @@ interface AssignmentListProps {
 }
 
 const statusConfig = {
-  pending: { label: 'Pending', color: 'bg-muted text-muted-foreground border-0' },
+  pending: { label: 'Pending', color: 'bg-muted text-muted-foreground dark:text-zinc-400 border-0' },
   submitted: { label: 'Submitted', color: 'bg-primary/10 text-primary border-0' },
   overdue: { label: 'Overdue', color: 'bg-destructive/10 text-destructive border-0' },
   completed: {

@@ -38,11 +38,11 @@ interface FilterState {
 }
 
 const statusColors: Record<string, string> = {
-  not_started: 'bg-muted text-muted-foreground border-border',
+  not_started: 'bg-muted text-muted-foreground dark:text-zinc-400 border-border',
   in_progress: 'bg-primary/10 text-primary border-primary/20',
   completed: 'bg-success/10 text-success border-success/20',
   overdue: 'bg-destructive/10 text-destructive border-destructive/20',
-  cancelled: 'bg-muted text-muted-foreground border-border',
+  cancelled: 'bg-muted text-muted-foreground dark:text-zinc-400 border-border',
 };
 
 const statusLabels: Record<string, string> = {
