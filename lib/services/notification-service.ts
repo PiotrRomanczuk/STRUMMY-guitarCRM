@@ -62,13 +62,7 @@ function isStudentEmailEnabled(): boolean {
 export async function sendNotification(
   params: SendNotificationParams
 ): Promise<NotificationResult> {
-  const {
-    type,
-    recipientUserId,
-    templateData,
-    entityType,
-    entityId,
-  } = params;
+  const { type, recipientUserId, templateData, entityType, entityId } = params;
 
   try {
     const supabase = createAdminClient();
@@ -134,12 +128,17 @@ export async function sendNotification(
       if (deliveryChannel === 'email' || deliveryChannel === 'both') {
         const originalChannel = deliveryChannel;
         deliveryChannel = 'in_app';
-        logNotificationSkipped(recipientUserId, type, 'Student emails disabled (STUDENT_EMAILS_ENABLED != true)', {
-          recipient_email: recipient.email,
-          entity_type: entityType,
-          entity_id: entityId,
-          original_channel: originalChannel,
-        });
+        logNotificationSkipped(
+          recipientUserId,
+          type,
+          'Student emails disabled (STUDENT_EMAILS_ENABLED != true)',
+          {
+            recipient_email: recipient.email,
+            entity_type: entityType,
+            entity_id: entityId,
+            original_channel: originalChannel,
+          }
+        );
       }
     }
 
@@ -208,7 +207,10 @@ export async function sendNotification(
       if (!userRateLimit.allowed) {
         await supabase
           .from('notification_log')
-          .update({ status: 'failed', error_message: `User rate limited. Retry after ${userRateLimit.retryAfter}s` })
+          .update({
+            status: 'failed',
+            error_message: `User rate limited. Retry after ${userRateLimit.retryAfter}s`,
+          })
           .eq('id', logEntry.id);
         return {
           success: results.inApp === true,
@@ -233,7 +235,10 @@ export async function sendNotification(
       if (!isSmtpConfigured()) {
         await supabase
           .from('notification_log')
-          .update({ status: 'failed', error_message: 'SMTP not configured: missing GMAIL_USER or GMAIL_APP_PASSWORD' })
+          .update({
+            status: 'failed',
+            error_message: 'SMTP not configured: missing GMAIL_USER or GMAIL_APP_PASSWORD',
+          })
           .eq('id', logEntry.id);
         return {
           success: results.inApp === true,
@@ -260,17 +265,11 @@ export async function sendNotification(
           })
           .eq('id', logEntry.id);
 
-        logNotificationSent(
-          logEntry.id,
-          recipientUserId,
-          type,
-          recipient.email,
-          {
-            entity_type: entityType,
-            entity_id: entityId,
-            subject,
-          }
-        );
+        logNotificationSent(logEntry.id, recipientUserId, type, recipient.email, {
+          entity_type: entityType,
+          entity_id: entityId,
+          subject,
+        });
 
         results.email = true;
       } catch (emailError: unknown) {
@@ -309,16 +308,12 @@ export async function sendNotification(
     };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logError(
-      'sendNotification error',
-      error instanceof Error ? error : new Error(errorMessage),
-      {
-        user_id: recipientUserId,
-        notification_type: type,
-        entity_type: entityType,
-        entity_id: entityId,
-      }
-    );
+    logError('sendNotification error', error instanceof Error ? error : new Error(errorMessage), {
+      user_id: recipientUserId,
+      notification_type: type,
+      entity_type: entityType,
+      entity_id: entityId,
+    });
     return {
       success: false,
       error: errorMessage,
@@ -395,16 +390,12 @@ export async function queueNotification(
     };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logError(
-      'queueNotification error',
-      error instanceof Error ? error : new Error(errorMessage),
-      {
-        user_id: recipientUserId,
-        notification_type: type,
-        entity_type: entityType,
-        entity_id: entityId,
-      }
-    );
+    logError('queueNotification error', error instanceof Error ? error : new Error(errorMessage), {
+      user_id: recipientUserId,
+      notification_type: type,
+      entity_type: entityType,
+      entity_id: entityId,
+    });
     return {
       success: false,
       error: errorMessage,
@@ -462,7 +453,8 @@ export async function checkUserPreference(
   try {
     const supabase = createAdminClient();
 
-    const { data, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
       .from('notification_preferences')
       .select('enabled')
       .eq('user_id', userId)
@@ -474,7 +466,7 @@ export async function checkUserPreference(
       return true;
     }
 
-    return data.enabled;
+    return data.enabled as boolean;
   } catch (error) {
     logError(
       'checkUserPreference error',

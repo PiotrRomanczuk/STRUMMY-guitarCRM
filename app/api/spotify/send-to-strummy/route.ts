@@ -13,25 +13,63 @@ import { logger } from '@/lib/logger';
 import type { SpotifyApiTrack } from '@/types/spotify';
 
 /**
+ * Log an import attempt to apple_shortcut_song_import_log.
+ * Non-blocking — errors are swallowed so they don't affect the response.
+ */
+function logImport(params: {
+  userId: string;
+  spotifyUrl?: string | null;
+  spotifyTrackId?: string | null;
+  songTitle?: string | null;
+  songArtist?: string | null;
+  songId?: string | null;
+  status: 'success' | 'duplicate' | 'error';
+  errorMessage?: string | null;
+  httpStatus: number;
+  source?: string;
+}) {
+  const supabase = createAdminClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (supabase as any)
+    .from('apple_shortcut_song_import_log')
+    .insert({
+      user_id: params.userId,
+      spotify_url: params.spotifyUrl ?? null,
+      spotify_track_id: params.spotifyTrackId ?? null,
+      song_title: params.songTitle ?? null,
+      song_artist: params.songArtist ?? null,
+      song_id: params.songId ?? null,
+      status: params.status,
+      error_message: params.errorMessage ?? null,
+      http_status: params.httpStatus,
+      source: params.source ?? 'shortcut',
+    })
+    .then(
+      () => {},
+      (err) => logger.error('[import-log] Failed to write log', { error: String(err) })
+    );
+}
+
+/**
  * POST /api/spotify/send-to-strummy
  * One-tap: gets currently playing track from Spotify → creates draft song.
- * This is the single endpoint the Apple Shortcut calls.
- * Requires API key auth with teacher/admin role.
+ * Logs every attempt (success and failure) to apple_shortcut_song_import_log.
  */
 export async function POST(request: Request) {
   try {
-    // Auth
     const auth = await authenticateRequest(request);
     if (!auth.user) {
       return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
     }
 
-    // Role check
+    const userId = auth.user.id;
     const supabase = createAdminClient();
+
+    // Role check
     const { data: profileData } = await supabase
       .from('profiles')
       .select('is_admin, is_teacher')
-      .eq('id', auth.user.id)
+      .eq('id', userId)
       .single();
 
     if (
@@ -41,6 +79,12 @@ export async function POST(request: Request) {
         isTeacher: profileData.is_teacher,
       })
     ) {
+      logImport({
+        userId,
+        status: 'error',
+        errorMessage: 'Forbidden: not teacher/admin',
+        httpStatus: 403,
+      });
       return NextResponse.json(
         { error: 'Forbidden: teacher or admin role required' },
         { status: 403 }
@@ -53,44 +97,71 @@ export async function POST(request: Request) {
       nowPlaying = await getCurrentlyPlaying();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (message.includes('SPOTIFY_USER_REFRESH_TOKEN')) {
-        return NextResponse.json(
-          { error: 'Spotify not connected. Visit /dashboard/admin/spotify-connect' },
-          { status: 503 }
-        );
-      }
-      return NextResponse.json({ error: `Spotify error: ${message}` }, { status: 502 });
+      const status = message.includes('SPOTIFY_USER_REFRESH_TOKEN') ? 503 : 502;
+      logImport({ userId, status: 'error', errorMessage: message, httpStatus: status });
+      return NextResponse.json(
+        {
+          error:
+            status === 503
+              ? 'Spotify not connected. Visit /dashboard/admin/spotify-connect'
+              : `Spotify error: ${message}`,
+        },
+        { status }
+      );
     }
 
     if (!nowPlaying) {
+      logImport({ userId, status: 'error', errorMessage: 'Nothing playing', httpStatus: 404 });
       return NextResponse.json(
         { error: 'Nothing is playing on Spotify right now' },
         { status: 404 }
       );
     }
 
-    // Fetch full track data (for all metadata fields)
+    const spotifyUrl = nowPlaying.url;
+    const trackId = nowPlaying.id;
+
+    // Fetch full track data
     let track: SpotifyApiTrack;
     try {
-      track = (await getTrack(nowPlaying.id)) as SpotifyApiTrack;
+      track = (await getTrack(trackId)) as SpotifyApiTrack;
     } catch (error) {
       logger.error('[send-to-strummy] Track fetch failed', { error: String(error) });
+      logImport({
+        userId,
+        spotifyUrl,
+        spotifyTrackId: trackId,
+        songTitle: nowPlaying.title,
+        songArtist: nowPlaying.artist,
+        status: 'error',
+        errorMessage: 'Failed to fetch track from Spotify',
+        httpStatus: 502,
+      });
       return NextResponse.json({ error: 'Failed to fetch track from Spotify' }, { status: 502 });
     }
 
     // Audio features (optional)
     let features: SpotifyAudioFeatures | null = null;
     try {
-      features = (await getAudioFeatures(nowPlaying.id)) as SpotifyAudioFeatures;
+      features = (await getAudioFeatures(trackId)) as SpotifyAudioFeatures;
     } catch {
       // Non-critical
     }
 
-    // Map to draft
     const draft = mapSpotifyToSongDraft(track, features);
 
     const validationResult = SongDraftSchema.safeParse(draft);
     if (!validationResult.success) {
+      logImport({
+        userId,
+        spotifyUrl,
+        spotifyTrackId: trackId,
+        songTitle: nowPlaying.title,
+        songArtist: nowPlaying.artist,
+        status: 'error',
+        errorMessage: 'Draft validation failed',
+        httpStatus: 422,
+      });
       return NextResponse.json(
         {
           error: 'Song data validation failed',
@@ -109,6 +180,16 @@ export async function POST(request: Request) {
 
     if (dbError) {
       if (dbError.code === '23505') {
+        logImport({
+          userId,
+          spotifyUrl,
+          spotifyTrackId: trackId,
+          songTitle: nowPlaying.title,
+          songArtist: nowPlaying.artist,
+          status: 'duplicate',
+          errorMessage: 'Already exists',
+          httpStatus: 409,
+        });
         return NextResponse.json(
           {
             error: `${nowPlaying.title} by ${nowPlaying.artist} already exists in Strummy`,
@@ -118,9 +199,31 @@ export async function POST(request: Request) {
           { status: 409 }
         );
       }
+      logImport({
+        userId,
+        spotifyUrl,
+        spotifyTrackId: trackId,
+        songTitle: nowPlaying.title,
+        songArtist: nowPlaying.artist,
+        status: 'error',
+        errorMessage: dbError.message,
+        httpStatus: 500,
+      });
       logger.error('[send-to-strummy] DB error', { error: dbError.message });
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
+
+    // Success
+    logImport({
+      userId,
+      spotifyUrl,
+      spotifyTrackId: trackId,
+      songTitle: nowPlaying.title,
+      songArtist: nowPlaying.artist,
+      songId: song.id,
+      status: 'success',
+      httpStatus: 201,
+    });
 
     return NextResponse.json(
       {
