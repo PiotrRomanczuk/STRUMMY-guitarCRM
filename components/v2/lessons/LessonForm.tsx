@@ -8,6 +8,7 @@ import { useSongs } from '@/components/lessons/hooks/useSongs';
 import { StepWizardForm, MobilePageShell } from '@/components/v2/primitives';
 import { StudentStep, SongsStep, ScheduleStep, NotesStep } from './LessonForm.Steps';
 import { StudentPicker, SongPicker } from './LessonForm.Pickers';
+import { CopyFromLastLesson } from './CopyFromLastLesson';
 import type { LessonFormData } from '@/components/lessons/hooks/useLessonForm';
 
 interface LessonFormV2Props {
@@ -73,6 +74,13 @@ export function LessonFormV2({ initialData, lessonId }: LessonFormV2Props) {
     [formData.song_ids, handleSongChange]
   );
 
+  const handleCopyFromPrevious = useCallback(
+    (songIds: string[]) => {
+      handleSongChange(songIds);
+    },
+    [handleSongChange]
+  );
+
   if (loading) {
     return (
       <MobilePageShell title={lessonId ? 'Edit Lesson' : 'New Lesson'}>
@@ -120,6 +128,12 @@ export function LessonFormV2({ initialData, lessonId }: LessonFormV2Props) {
         <SongsStep
           selectedSongs={selectedSongs}
           onOpen={() => setSongPickerOpen(true)}
+          actions={
+            <CopyFromLastLesson
+              studentId={formData.student_id}
+              onSongsCopied={handleCopyFromPrevious}
+            />
+          }
         />
       ),
     },
