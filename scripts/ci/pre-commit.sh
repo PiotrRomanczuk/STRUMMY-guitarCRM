@@ -65,7 +65,7 @@ fi
 # 1.2. Run TypeScript type checking
 echo ""
 echo -e "${BLUE}🔧 Running TypeScript type check...${NC}"
-if npx tsc --noEmit; then
+if NODE_OPTIONS='--max-old-space-size=4096' npx tsc --noEmit; then
     print_status 0 "TypeScript types are valid"
 else
     print_status 1 "TypeScript type errors found"

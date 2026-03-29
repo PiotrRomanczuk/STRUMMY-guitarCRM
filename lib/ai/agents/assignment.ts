@@ -54,10 +54,19 @@ ASSIGNMENT STRUCTURE:
 - Main practice tasks with time estimates
 - Cool-down/review section
 - Self-assessment checklist (e.g., "Can you play it 3x without mistakes?")
-- Difficulty progression: easy win → main challenge → stretch goal`,
+- Difficulty progression: easy win → main challenge → stretch goal
 
+OUTPUT FORMAT:
+Structure your response as Markdown with these sections:
+## Warm-Up (5 min)
+## Main Practice Tasks
+## Cool-Down & Review
+## Self-Assessment Checklist
+## Stretch Goal`,
+
+  model: 'meta-llama/llama-3.3-70b-instruct:free',
   temperature: 0.6,
-  maxTokens: 700,
+  maxTokens: 900,
 
   requiredContext: ['currentUser'],
   optionalContext: ['currentStudent', 'assignmentSong', 'studentAssignments', 'studentRepertoire'],

@@ -10,6 +10,12 @@ import { createOpenRouterProvider } from './providers/openrouter';
 import { createOllamaProvider } from './providers/ollama';
 import { logger } from '@/lib/logger';
 
+/**
+ * Whether to use the Vercel AI SDK adapter for OpenRouter.
+ * Set AI_USE_VERCEL_SDK=false to fall back to the custom fetch-based provider.
+ */
+const useVercelSDK = process.env.AI_USE_VERCEL_SDK !== 'false';
+
 export type ProviderType = 'openrouter' | 'ollama' | 'auto';
 
 /**
@@ -59,11 +65,28 @@ const updateFactoryConfig = (config: Partial<ProviderFactoryConfig>): void => {
 };
 
 /**
+ * Creates the appropriate OpenRouter provider (Vercel SDK or legacy fetch).
+ * Uses dynamic import for the Vercel adapter to avoid TransformStream issues in test environments.
+ */
+const createOpenRouter = async (): Promise<AIProvider> => {
+  if (useVercelSDK) {
+    try {
+      const { createVercelAIProvider } = await import('./providers/vercel-ai-adapter');
+      return createVercelAIProvider();
+    } catch {
+      logger.warn(
+        '[AIProviderFactory] Vercel AI SDK unavailable, falling back to fetch-based provider'
+      );
+    }
+  }
+  return createOpenRouterProvider();
+};
+
+/**
  * Automatically selects the best available provider
  */
 const autoSelectProvider = async (): Promise<AIProvider> => {
   const ollama = createOllamaProvider();
-  const openrouter = createOpenRouterProvider();
 
   // If prefer local, try Ollama first
   if (factoryConfig.preferLocal !== false) {
@@ -74,6 +97,7 @@ const autoSelectProvider = async (): Promise<AIProvider> => {
   }
 
   // Try OpenRouter
+  const openrouter = await createOpenRouter();
   const openrouterAvailable = await openrouter.isAvailable();
   if (openrouterAvailable) {
     return openrouter;
@@ -109,7 +133,7 @@ const getProvider = async (): Promise<AIProvider> => {
       break;
 
     case 'openrouter':
-      provider = createOpenRouterProvider();
+      provider = await createOpenRouter();
       break;
 
     case 'auto':

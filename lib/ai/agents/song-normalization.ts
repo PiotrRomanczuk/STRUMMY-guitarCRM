@@ -72,8 +72,13 @@ Your expertise should address:
 - Generating alternative search variations
 - Providing confidence scores for suggested changes
 
-Always respond with valid JSON matching the specified schema.`,
+CRITICAL: Respond ONLY with valid JSON. No markdown code fences, no explanation before or after the JSON. The JSON must match this schema:
+{"normalizedTitle":"string","normalizedArtist":"string","alternativeTitles":["string"],"alternativeArtists":["string"],"confidence":"number (0-100)","reasoning":"string","searchQueries":["string"],"flags":{"hasFeaturing":"boolean","hasTypos":"boolean","hasMissingWords":"boolean","hasSpecialCharacters":"boolean","needsManualReview":"boolean"}}
 
+Example input: Title: "Knockin on heavens door", Artist: "bob dylan"
+Example output: {"normalizedTitle":"Knockin' on Heaven's Door","normalizedArtist":"Bob Dylan","alternativeTitles":["Knocking on Heaven's Door"],"alternativeArtists":[],"confidence":95,"reasoning":"Minor punctuation fixes and capitalization","searchQueries":["track:\\"Knockin' on Heaven's Door\\" artist:\\"Bob Dylan\\"","Knockin' on Heaven's Door Bob Dylan"],"flags":{"hasFeaturing":false,"hasTypos":true,"hasMissingWords":false,"hasSpecialCharacters":false,"needsManualReview":false}}`,
+
+  model: 'google/gemma-3-27b-it:free',
   temperature: 0.3,
   maxTokens: 800,
 
@@ -104,24 +109,61 @@ Always respond with valid JSON matching the specified schema.`,
 };
 
 /**
- * Execute song normalization agent
+ * Build the user message for song normalization
+ */
+function buildNormalizationUserMessage(input: SongNormalizationInput): string {
+  return [
+    'Input Song Data:',
+    `- Title: "${input.title}"`,
+    `- Artist: "${input.artist}"`,
+    input.album ? `- Album: "${input.album}"` : null,
+    input.year ? `- Year: ${input.year}` : null,
+    input.genre ? `- Genre: "${input.genre}"` : null,
+    '',
+    'Analyze and normalize this song data.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+/**
+ * Execute song normalization using Vercel AI SDK structured output.
+ * Falls back to raw JSON parsing via the agent registry if structured output fails.
  */
 export async function generateSongNormalizationAgent(
   input: SongNormalizationInput
 ): Promise<{ success: boolean; data?: SongNormalizationResult; content?: string; error?: string }> {
+  const userMessage = buildNormalizationUserMessage(input);
+
+  // Try structured output first (reliable JSON via Vercel AI SDK)
   try {
-    const userInput = `
-Input Song Data:
-- Title: "${input.title}"
-- Artist: "${input.artist}"
-${input.album ? `- Album: "${input.album}"` : ''}
-${input.year ? `- Year: ${input.year}` : ''}
-${input.genre ? `- Genre: "${input.genre}"` : ''}
+    const { generateStructuredOutput } = await import('../providers/vercel-ai-adapter');
+    const { songNormalizationSchema } = await import('../schemas/song-normalization');
 
-Please analyze and normalize this song data, providing a JSON response with cleaned titles, artists, alternatives, confidence score, reasoning, search queries, and flags for data issues.
-`;
+    const result = await generateStructuredOutput({
+      model: songNormalizationAgent.model || 'google/gemma-3-27b-it:free',
+      systemPrompt: songNormalizationAgent.systemPrompt,
+      userMessage,
+      schema: songNormalizationSchema,
+      schemaName: 'SongNormalization',
+      temperature: songNormalizationAgent.temperature,
+    });
 
-    const response = await executeAgent('song-normalization', { userInput }, {});
+    return {
+      success: true,
+      data: result.data as SongNormalizationResult,
+      content: JSON.stringify(result.data),
+    };
+  } catch (structuredError) {
+    logger.warn(
+      '[SongNormalization] Structured output failed, falling back to raw:',
+      structuredError
+    );
+  }
+
+  // Fallback: use agent registry with raw JSON parsing
+  try {
+    const response = await executeAgent('song-normalization', { userInput: userMessage }, {});
 
     if (!response || !response.success) {
       return {
@@ -133,20 +175,11 @@ Please analyze and normalize this song data, providing a JSON response with clea
     const resultObj = response.result as Record<string, unknown> | null;
     const content = resultObj?.content || response.result || '';
 
-    // Try to parse as JSON
     try {
       const data = JSON.parse(String(content)) as SongNormalizationResult;
-      return {
-        success: true,
-        data,
-        content: String(content),
-      };
+      return { success: true, data, content: String(content) };
     } catch {
-      return {
-        success: false,
-        content: String(content),
-        error: 'Failed to parse JSON response',
-      };
+      return { success: false, content: String(content), error: 'Failed to parse JSON response' };
     }
   } catch (error) {
     return {

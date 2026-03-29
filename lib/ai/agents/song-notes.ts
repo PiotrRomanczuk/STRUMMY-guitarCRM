@@ -13,7 +13,8 @@ export const songNotesAgent: AgentSpecification = {
   description: 'Generates teaching tips and practice suggestions for guitar songs',
   version: '1.0.0',
 
-  purpose: 'Create practical teaching notes for a specific song covering common student mistakes, fingering advice, technique focus areas, and structured practice suggestions.',
+  purpose:
+    'Create practical teaching notes for a specific song covering common student mistakes, fingering advice, technique focus areas, and structured practice suggestions.',
 
   targetUsers: ['admin', 'teacher'],
 
@@ -48,6 +49,7 @@ FORMAT GUIDELINES:
 - Keep tone professional and encouraging
 - Total length: 150–250 words`,
 
+  model: 'meta-llama/llama-3.3-70b-instruct:free',
   temperature: 0.7,
   maxTokens: 600,
 
@@ -61,7 +63,16 @@ FORMAT GUIDELINES:
 
   inputValidation: {
     maxLength: 500,
-    allowedFields: ['title', 'author', 'level', 'key', 'chords', 'tempo', 'strumming_pattern', 'capo_fret'],
+    allowedFields: [
+      'title',
+      'author',
+      'level',
+      'key',
+      'chords',
+      'tempo',
+      'strumming_pattern',
+      'capo_fret',
+    ],
     sensitiveDataHandling: 'allow',
   },
 

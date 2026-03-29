@@ -58,6 +58,7 @@ SUMMARY PRINCIPLES:
 - End with encouragement and preview of next lesson direction
 - Keep parent-friendly: explain jargon briefly when needed`,
 
+  model: 'meta-llama/llama-3.3-70b-instruct:free',
   temperature: 0.7,
   maxTokens: 500,
 

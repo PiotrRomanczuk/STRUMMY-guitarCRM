@@ -62,8 +62,12 @@ EMAIL STYLE:
 - Always include a clear subject line
 - End with encouraging and supportive language
 - For parents: brief jargon explanations, focus on child's growth
-- For students: more casual, motivational, peer-like tone`,
+- For students: more casual, motivational, peer-like tone
 
+OUTPUT FORMAT:
+Always begin your response with exactly "Subject: <subject line>" on its own line, followed by a blank line, then the email body. This format is required for proper parsing.`,
+
+  model: 'meta-llama/llama-3.3-70b-instruct:free',
   temperature: 0.7,
   maxTokens: 800,
 

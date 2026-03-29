@@ -60,8 +60,17 @@ INSIGHT DELIVERY:
 - Provide specific, actionable recommendations
 - Compare to typical learning milestones
 - Celebrate achievements and growth
-- Frame challenges as opportunities`,
+- Frame challenges as opportunities
 
+OUTPUT FORMAT:
+Structure your analysis as Markdown with these sections:
+## Key Observations
+## Strengths & Achievements
+## Areas for Growth
+## Specific Recommendations
+## Next Milestone`,
+
+  model: 'meta-llama/llama-3.3-70b-instruct:free',
   temperature: 0.6,
   maxTokens: 800,
 
@@ -109,8 +118,7 @@ INSIGHT DELIVERY:
 export const adminInsightsAgent: AgentSpecification = {
   id: 'admin-dashboard-insights',
   name: 'Admin Dashboard Business Intelligence',
-  description:
-    'Provides business intelligence and operational insights for school administration',
+  description: 'Provides business intelligence and operational insights for school administration',
   version: '1.1.0',
 
   purpose:
@@ -161,8 +169,17 @@ INSIGHT DELIVERY:
 - Include relevant metrics and period-over-period comparisons
 - Highlight both opportunities and risks
 - Suggest concrete next steps with expected impact
-- Use professional business analysis tone`,
+- Use professional business analysis tone
 
+OUTPUT FORMAT:
+Structure your analysis as Markdown with these sections:
+## Key Findings
+## Metrics Summary
+## Opportunities
+## Risks & Concerns
+## Recommended Actions`,
+
+  model: 'meta-llama/llama-3.3-70b-instruct:free',
   temperature: 0.5,
   maxTokens: 900,
 

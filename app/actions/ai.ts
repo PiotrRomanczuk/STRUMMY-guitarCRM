@@ -2,20 +2,58 @@
 
 'use server';
 
-import { getAIProvider, isAIError, type AIMessage, type AIModelInfo, type AIProvider } from '@/lib/ai';
+import {
+  getAIProvider,
+  isAIError,
+  type AIMessage,
+  type AIModelInfo,
+  type AIProvider,
+} from '@/lib/ai';
 import { DEFAULT_AI_MODEL } from '@/lib/ai-models';
-import { executeAgent } from '@/lib/ai/registry';
+import { getAgent, prepareContext, buildSystemPrompt, buildUserMessage } from '@/lib/ai/registry';
+import type { AgentContext } from '@/lib/ai/registry';
 import { mapToOllamaModel } from '@/lib/ai/model-mappings';
 import { requireAIAuth } from '@/lib/ai/auth';
 import { checkRateLimit } from '@/lib/ai/rate-limiter';
 import { createClient } from '@/lib/supabase/server';
 import type { AIGenerationType } from '@/types/ai-generation';
-import { getConversation, saveConversationMessages, trackAIUsage } from './ai-conversations';
+import {
+  getConversation,
+  getRecentConversationSummaries,
+  saveConversationMessages,
+  trackAIUsage,
+} from './ai-conversations';
+// Vercel AI SDK imports are lazy to avoid TransformStream issues in Jest
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _streamText: typeof import('ai').streamText | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _createOpenAICompatible:
+  | typeof import('@ai-sdk/openai-compatible').createOpenAICompatible
+  | null = null;
+
+async function getStreamText() {
+  if (!_streamText) {
+    const mod = await import('ai');
+    _streamText = mod.streamText;
+  }
+  return _streamText;
+}
+
+async function getCreateOpenAICompatible() {
+  if (!_createOpenAICompatible) {
+    const mod = await import('@ai-sdk/openai-compatible');
+    _createOpenAICompatible = mod.createOpenAICompatible;
+  }
+  return _createOpenAICompatible;
+}
 
 /**
  * Enforce rate limits for a given user and agent.
  */
-async function enforceRateLimit(user: { id: string; role: 'admin' | 'teacher' | 'student' | 'anonymous' }, agentId: string) {
+async function enforceRateLimit(
+  user: { id: string; role: 'admin' | 'teacher' | 'student' | 'anonymous' },
+  agentId: string
+) {
   const result = await checkRateLimit(user.id, user.role, agentId);
   if (!result.allowed) {
     throw new Error(`Rate limit exceeded. Please try again in ${result.retryAfter} seconds.`);
@@ -40,7 +78,9 @@ async function saveAIGeneration(data: {
 }) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
     await supabase.from('ai_generations').insert({
@@ -143,56 +183,77 @@ async function* createAIStreamFromProvider(
 }
 
 /**
- * Execute an agent request and return streaming content
+ * Execute an agent request with TRUE streaming via the AI provider.
+ * Looks up the agent spec, fetches context from DB, builds messages,
+ * and streams the response in real time via SSE.
  */
 async function* executeAgentStream(
   agentId: string,
   input: Record<string, unknown>,
   context: Record<string, unknown> = {},
-  options?: { delayMs?: number; chunkSize?: number },
+  _options?: { delayMs?: number; chunkSize?: number },
   generationType?: AIGenerationType
 ) {
+  let fullContent = '';
   try {
     const user = await requireAIAuth();
     await enforceRateLimit(user, agentId);
 
-    const result = await executeAgent(
-      agentId,
-      input,
-      { ...context, userId: user.id, userRole: user.role },
-    );
-
-    if (result.error) {
-      if (generationType) {
-        saveAIGeneration({
-          generationType,
-          agentId,
-          inputParams: input,
-          outputContent: result.error.message,
-          isSuccessful: false,
-          errorMessage: result.error.message,
-        });
-      }
-      yield `Error: ${result.error.message}`;
+    // 1. Look up agent spec from registry
+    const agent = getAgent(agentId);
+    if (!agent) {
+      yield `Error: Agent '${agentId}' not found.`;
       return;
     }
 
-    const agentResult = result.result as Record<string, unknown> | string | null;
-    const content = String(
-      (typeof agentResult === 'object' && agentResult !== null ? agentResult.content : agentResult)
-      || 'No content generated.'
-    );
+    // 2. Get provider and resolve model
+    const provider = await getAIProvider();
+    const requestedModel = agent.model || DEFAULT_AI_MODEL;
+    const providerModel = await getProviderAppropriateModel(provider, requestedModel);
 
+    // 3. Prepare context (fetch required/optional data from DB)
+    const agentContext: AgentContext = {
+      userId: user.id,
+      userRole: user.role,
+      sessionId: `session_${Date.now()}`,
+      requestId: `req_${Date.now()}`,
+      timestamp: new Date(),
+      entityId: (context.entityId as string) || undefined,
+      entityType: (context.entityType as string) || undefined,
+      contextData: {},
+    };
+    const executionContext = await prepareContext({ agentId, input, context: agentContext }, agent);
+
+    // 4. Build messages from agent spec + context
+    const systemPrompt = buildSystemPrompt(agent, executionContext);
+    const userMessage = buildUserMessage(input, agent);
+    const messages: AIMessage[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ];
+
+    // 5. Stream the response in real time
+    for await (const chunk of createAIStreamFromProvider(provider, {
+      model: providerModel,
+      messages,
+      temperature: agent.temperature,
+      maxTokens: agent.maxTokens,
+    })) {
+      fullContent = chunk;
+      yield chunk;
+    }
+
+    // 6. Track generation after streaming completes
     if (generationType) {
       saveAIGeneration({
         generationType,
         agentId,
+        modelId: providerModel,
+        provider: provider.name?.toLowerCase(),
         inputParams: input,
-        outputContent: content,
+        outputContent: fullContent,
       });
     }
-
-    yield* createAIStream(content, options);
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : 'Failed to generate content.';
     if (generationType) {
@@ -264,7 +325,7 @@ export async function* generateAIResponseStream(
   prompt: string,
   model: string = DEFAULT_AI_MODEL,
   conversationId?: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ) {
   const startMs = Date.now();
   let fullContent = '';
@@ -282,14 +343,19 @@ export async function* generateAIResponseStream(
       return;
     }
 
-    // Build messages: system prompt + prior conversation history + new user prompt
-    const messages: AIMessage[] = [
-      {
-        role: 'system',
-        content:
-          'You are a helpful assistant for the Guitar CRM admin dashboard. Keep your answers concise and relevant to managing a music school.',
-      },
-    ];
+    // Build system prompt with cross-session memory and tool awareness
+    let systemContent =
+      'You are a helpful assistant for the Guitar CRM admin dashboard. Keep your answers concise and relevant to managing a music school.\n\nYou have access to tools that can look up songs in the catalog, find student information, view lesson history, and check student repertoire. Use these tools when the teacher asks questions about specific students or songs.';
+
+    // Inject recent conversation summaries for cross-session awareness
+    if (!conversationId) {
+      const { summaries } = await getRecentConversationSummaries(3);
+      if (summaries.length > 0) {
+        systemContent += `\n\nRecent conversation topics (for context, do not repeat unless relevant):\n- ${summaries.join('\n- ')}`;
+      }
+    }
+
+    const messages: AIMessage[] = [{ role: 'system', content: systemContent }];
 
     if (conversationId) {
       const { data: conv } = await getConversation(conversationId);
@@ -305,24 +371,56 @@ export async function* generateAIResponseStream(
 
     messages.push({ role: 'user', content: prompt });
 
-    // Use true streaming helper (falls back to fake streaming if not supported)
-    for await (const chunk of createAIStreamFromProvider(
-      provider,
-      {
-        model: providerModel,
-        messages,
-        temperature: 0.7,
-      },
-      signal
-    )) {
-      // Check if cancelled
-      if (signal?.aborted) {
-        yield `[Cancelled]`;
-        return;
-      }
+    // Use Vercel AI SDK with tool calling for the chat assistant
+    const useToolCalling =
+      process.env.AI_USE_VERCEL_SDK !== 'false' && !!process.env.OPENROUTER_API_KEY;
 
-      fullContent = chunk;
-      yield chunk;
+    if (useToolCalling) {
+      const createOAICompat = await getCreateOpenAICompatible();
+      const sdkStreamText = await getStreamText();
+      const { chatTools: tools } = await import('@/lib/ai/tools');
+
+      const sdkProvider = createOAICompat({
+        name: 'openrouter',
+        baseURL: 'https://openrouter.ai/api/v1',
+        apiKey: process.env.OPENROUTER_API_KEY!,
+        headers: {
+          'HTTP-Referer': process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000',
+          'X-Title': 'Guitar CRM',
+        },
+      });
+
+      const result = sdkStreamText({
+        model: sdkProvider.chatModel(providerModel),
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        temperature: 0.7,
+        tools,
+        maxSteps: 3,
+        abortSignal: signal,
+      });
+
+      for await (const chunk of result.textStream) {
+        if (signal?.aborted) {
+          yield `[Cancelled]`;
+          return;
+        }
+        fullContent += chunk;
+        yield fullContent;
+      }
+    } else {
+      // Fallback: use generic provider (no tool calling)
+      for await (const chunk of createAIStreamFromProvider(
+        provider,
+        { model: providerModel, messages, temperature: 0.7 },
+        signal
+      )) {
+        if (signal?.aborted) {
+          yield `[Cancelled]`;
+          return;
+        }
+        fullContent = chunk;
+        yield chunk;
+      }
     }
 
     // Save generation after streaming completes
@@ -346,7 +444,7 @@ export async function* generateAIResponseStream(
       }).catch((e) => logger.error('[AI] saveConversationMessages error:', e));
     }
     trackAIUsage({ modelId: providerModel, latencyMs }).catch((e) =>
-      logger.error('[AI] trackAIUsage error:', e),
+      logger.error('[AI] trackAIUsage error:', e)
     );
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : 'Failed to generate AI response.';
@@ -387,9 +485,10 @@ export async function generateAIResponse(
     }
 
     const result = extractAgentResult(response) as Record<string, unknown> | string;
-    const content = typeof result === 'object' && result !== null
-      ? String(result.content || '')
-      : String(result || '');
+    const content =
+      typeof result === 'object' && result !== null
+        ? String(result.content || '')
+        : String(result || '');
 
     saveAIGeneration({
       generationType: 'chat',
@@ -459,9 +558,7 @@ export async function* generateLessonNotesStream(params: {
   skillsWorked?: string;
   nextSteps?: string;
 }) {
-  const context = params.studentId
-    ? { entityId: params.studentId, entityType: 'student' }
-    : {};
+  const context = params.studentId ? { entityId: params.studentId, entityType: 'student' } : {};
   yield* executeAgentStream('lesson-notes-assistant', params, context, undefined, 'lesson_notes');
 }
 
@@ -541,9 +638,7 @@ export async function* generateAssignmentStream(params: {
   timeAvailable?: string;
   additionalNotes?: string;
 }) {
-  const context = params.studentId
-    ? { entityId: params.studentId, entityType: 'student' }
-    : {};
+  const context = params.studentId ? { entityId: params.studentId, entityType: 'student' } : {};
   yield* executeAgentStream('assignment-generator', params, context, undefined, 'assignment');
 }
 
@@ -623,9 +718,7 @@ export async function* generateEmailDraftStream(params: {
   tone?: string;
   additional_info?: string;
 }) {
-  const context = params.studentId
-    ? { entityId: params.studentId, entityType: 'student' }
-    : {};
+  const context = params.studentId ? { entityId: params.studentId, entityType: 'student' } : {};
   yield* executeAgentStream('email-draft-generator', params, context, undefined, 'email_draft');
 }
 
@@ -724,10 +817,14 @@ export async function* generatePostLessonSummaryStream(params: {
   challengesNoted?: string;
   nextSteps?: string;
 }) {
-  const context = params.studentId
-    ? { entityId: params.studentId, entityType: 'student' }
-    : {};
-  yield* executeAgentStream('post-lesson-summary', params, context, undefined, 'post_lesson_summary');
+  const context = params.studentId ? { entityId: params.studentId, entityType: 'student' } : {};
+  yield* executeAgentStream(
+    'post-lesson-summary',
+    params,
+    context,
+    undefined,
+    'post_lesson_summary'
+  );
 }
 
 export async function generatePostLessonSummary(params: {
@@ -779,7 +876,8 @@ export async function generatePostLessonSummary(params: {
 
     return { success: true, summary };
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : 'Failed to generate post-lesson summary';
+    const errorMsg =
+      error instanceof Error ? error.message : 'Failed to generate post-lesson summary';
     logger.error('[AI] generatePostLessonSummary error:', error);
     saveAIGeneration({
       generationType: 'post_lesson_summary',
@@ -813,10 +911,14 @@ export async function* analyzeStudentProgressStream(params: {
   lessonHistory?: Record<string, unknown>[];
   skillAssessments?: Record<string, unknown>[];
 }) {
-  const context = params.studentId
-    ? { entityId: params.studentId, entityType: 'student' }
-    : {};
-  yield* executeAgentStream('student-progress-insights', params, context, undefined, 'student_progress');
+  const context = params.studentId ? { entityId: params.studentId, entityType: 'student' } : {};
+  yield* executeAgentStream(
+    'student-progress-insights',
+    params,
+    context,
+    undefined,
+    'student_progress'
+  );
 }
 
 export async function analyzeStudentProgress(params: {
@@ -920,7 +1022,9 @@ export async function* enhanceSongNotesStream(params: {
       params.tempo && `Tempo: ${params.tempo} BPM`,
       params.strumming_pattern && `Strumming pattern: ${params.strumming_pattern}`,
       params.capo_fret && `Capo: fret ${params.capo_fret}`,
-    ].filter(Boolean).join('\n');
+    ]
+      .filter(Boolean)
+      .join('\n');
 
     const messages: AIMessage[] = [
       {

@@ -13,7 +13,8 @@ export const songNotesEnhancerAgent: AgentSpecification = {
   description: 'Expands rough teacher notes into polished teaching documentation',
   version: '1.0.0',
 
-  purpose: 'Take rough bullet points or shorthand notes written by a teacher and expand them into clear, structured teaching notes with proper guitar terminology and actionable practice suggestions.',
+  purpose:
+    'Take rough bullet points or shorthand notes written by a teacher and expand them into clear, structured teaching notes with proper guitar terminology and actionable practice suggestions.',
 
   targetUsers: ['admin', 'teacher'],
 
@@ -25,7 +26,7 @@ export const songNotesEnhancerAgent: AgentSpecification = {
 
   limitations: [
     'Works best with at least 2-3 rough points to expand',
-    'Preserves the teacher\'s intent — does not add unrelated content',
+    "Preserves the teacher's intent — does not add unrelated content",
     'Cannot verify technical accuracy of teacher-provided information',
   ],
 
@@ -46,6 +47,7 @@ SONG CONTEXT (use to add relevant detail):
 ROUGH NOTES INPUT:
 The teacher's rough notes will be provided in the user message. Expand them faithfully.`,
 
+  model: 'meta-llama/llama-3.3-70b-instruct:free',
   temperature: 0.5,
   maxTokens: 600,
 
@@ -59,7 +61,17 @@ The teacher's rough notes will be provided in the user message. Expand them fait
 
   inputValidation: {
     maxLength: 2000,
-    allowedFields: ['roughNotes', 'title', 'author', 'level', 'key', 'chords', 'tempo', 'strumming_pattern', 'capo_fret'],
+    allowedFields: [
+      'roughNotes',
+      'title',
+      'author',
+      'level',
+      'key',
+      'chords',
+      'tempo',
+      'strumming_pattern',
+      'capo_fret',
+    ],
     sensitiveDataHandling: 'allow',
   },
 

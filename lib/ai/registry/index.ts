@@ -49,6 +49,8 @@ export { fetchContextData } from './context-fetcher';
 export {
   executeAgent as executeAgentCore,
   prepareContext,
+  buildSystemPrompt,
+  buildUserMessage,
   generateRequestId,
   hashInput,
 } from './execution';

@@ -18,7 +18,9 @@ const DEFAULT_PAGE_SIZE = 20;
 
 async function getAuthUserId(): Promise<string> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error('Unauthorized');
   return user.id;
 }
@@ -90,7 +92,11 @@ export async function listConversations(
     return { data: (data as AIConversationSummary[]) ?? [], total: count ?? 0 };
   } catch (err) {
     logger.error('[AI Conversations] list error:', err);
-    return { data: [], total: 0, error: err instanceof Error ? err.message : 'Failed to list conversations' };
+    return {
+      data: [],
+      total: 0,
+      error: err instanceof Error ? err.message : 'Failed to list conversations',
+    };
   }
 }
 
@@ -103,7 +109,9 @@ export async function getConversation(
 
     const { data: conversation, error: convError } = await supabase
       .from('ai_conversations')
-      .select('id, user_id, title, model_id, context_type, context_id, is_archived, created_at, updated_at')
+      .select(
+        'id, user_id, title, model_id, context_type, context_id, is_archived, created_at, updated_at'
+      )
       .eq('id', id)
       .single();
 
@@ -111,7 +119,9 @@ export async function getConversation(
 
     const { data: messages, error: msgError } = await supabase
       .from('ai_messages')
-      .select('id, conversation_id, role, content, model_id, tokens_used, latency_ms, is_helpful, created_at')
+      .select(
+        'id, conversation_id, role, content, model_id, tokens_used, latency_ms, is_helpful, created_at'
+      )
       .eq('conversation_id', id)
       .order('created_at', { ascending: true });
 
@@ -141,10 +151,7 @@ export async function updateConversationTitle(
     await getAuthUserId();
     const supabase = await createClient();
 
-    const { error } = await supabase
-      .from('ai_conversations')
-      .update({ title })
-      .eq('id', id);
+    const { error } = await supabase.from('ai_conversations').update({ title }).eq('id', id);
 
     if (error) return { error: error.message };
     return {};
@@ -188,10 +195,7 @@ export async function deleteConversation(id: string): Promise<{ error?: string }
     await getAuthUserId();
     const supabase = await createClient();
 
-    const { error } = await supabase
-      .from('ai_conversations')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('ai_conversations').delete().eq('id', id);
 
     if (error) return { error: error.message };
     return {};
@@ -242,9 +246,10 @@ export async function saveConversationMessages(params: {
       .eq('conversation_id', params.conversationId);
 
     if (count !== null && count <= 2) {
-      const shortTitle = params.userMessage.length > 60
-        ? params.userMessage.slice(0, 57) + '...'
-        : params.userMessage;
+      const shortTitle =
+        params.userMessage.length > 60
+          ? params.userMessage.slice(0, 57) + '...'
+          : params.userMessage;
       await supabase
         .from('ai_conversations')
         .update({ title: shortTitle })
@@ -303,5 +308,83 @@ export async function trackAIUsage(params: {
     }
   } catch (err) {
     logger.error('[AI Usage] track error:', err);
+  }
+}
+
+// ── Cross-Session Memory ─────────────────────────────────────
+
+/**
+ * Fetch recent conversation summaries for cross-session memory.
+ * Returns the last N conversation titles/first messages to give the
+ * chat assistant awareness of prior interactions.
+ */
+export async function getRecentConversationSummaries(
+  limit: number = 3
+): Promise<{ summaries: string[]; error?: string }> {
+  try {
+    const userId = await getAuthUserId();
+    const supabase = await createClient();
+
+    const { data: conversations, error } = await supabase
+      .from('ai_conversations')
+      .select('id, title, context_type, updated_at')
+      .eq('is_archived', false)
+      .order('updated_at', { ascending: false })
+      .limit(limit);
+
+    if (error) return { summaries: [], error: error.message };
+    if (!conversations || conversations.length === 0) return { summaries: [] };
+
+    const summaries: string[] = [];
+    for (const conv of conversations) {
+      // Get the first user message as summary if no title
+      if (conv.title) {
+        summaries.push(conv.title);
+      } else {
+        const { data: firstMsg } = await supabase
+          .from('ai_messages')
+          .select('content')
+          .eq('conversation_id', conv.id)
+          .eq('role', 'user')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .single();
+
+        if (firstMsg?.content) {
+          summaries.push(firstMsg.content.slice(0, 100));
+        }
+      }
+    }
+
+    return { summaries };
+  } catch (err) {
+    logger.error('[AI Conversations] getRecentSummaries error:', err);
+    return { summaries: [] };
+  }
+}
+
+// ── Message Feedback ─────────────────────────────────────────
+
+/**
+ * Set is_helpful feedback on an AI message (thumbs up/down)
+ */
+export async function setMessageFeedback(
+  messageId: string,
+  isHelpful: boolean
+): Promise<{ error?: string }> {
+  try {
+    await getAuthUserId();
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from('ai_messages')
+      .update({ is_helpful: isHelpful })
+      .eq('id', messageId);
+
+    if (error) return { error: error.message };
+    return {};
+  } catch (err) {
+    logger.error('[AI Messages] setFeedback error:', err);
+    return { error: err instanceof Error ? err.message : 'Failed to set feedback' };
   }
 }

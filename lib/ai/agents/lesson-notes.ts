@@ -55,8 +55,16 @@ FORMAT GUIDELINES:
 - Include specific song references with difficulty context
 - Note student strengths and areas for improvement
 - Provide concrete, time-boxed practice suggestions
-- Maintain encouraging and professional tone`,
+- Maintain encouraging and professional tone
 
+OUTPUT FORMAT:
+Always structure your response as Markdown with exactly these sections:
+## Topics Covered
+## Progress
+## Practice Recommendations
+## Next Steps`,
+
+  model: 'meta-llama/llama-3.3-70b-instruct:free',
   temperature: 0.6,
   maxTokens: 600,
 
