@@ -15,8 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ClipboardList, Calendar, CheckCircle2, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { VALID_STATUS_TRANSITIONS } from '@/schemas/AssignmentSchema';
-import { toast } from 'sonner';
+import { AssignmentStatusActions } from '@/components/assignments/shared/AssignmentStatusActions';
+import type { AssignmentStatus } from '@/schemas/AssignmentSchema';
 import { logger } from '@/lib/logger';
 
 interface Assignment {
@@ -88,25 +88,16 @@ export function StudentAssignmentsPageClient() {
     fetchAssignments();
   }, [fetchAssignments]);
 
-  const handleStatusChange = async (assignmentId: string, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/assignments/${assignmentId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (!response.ok) throw new Error('Failed to update status');
+  const handleStatusChanged = useCallback(
+    (assignmentId: string, newStatus: AssignmentStatus) => {
       setAssignments((prev) =>
         prev.map((a) =>
-          a.id === assignmentId ? { ...a, status: newStatus as Assignment['status'] } : a
+          a.id === assignmentId ? { ...a, status: newStatus } : a
         )
       );
-      toast.success(`Assignment marked as ${newStatus.replace(/_/g, ' ')}`);
-    } catch (err) {
-      toast.error('Failed to update assignment status');
-      logger.error('Failed to update assignment status', err);
-    }
-  };
+    },
+    []
+  );
 
   if (loading) {
     return (
@@ -219,34 +210,15 @@ export function StudentAssignmentsPageClient() {
                 )}
               </div>
 
-              {(() => {
-                const transitions = VALID_STATUS_TRANSITIONS[assignment.status] || [];
-                if (transitions.length === 0) return null;
-                return (
-                  <div className="flex gap-2 mt-4 pt-2 border-t border-border/50">
-                    {transitions.includes('in_progress') && assignment.status === 'not_started' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => handleStatusChange(assignment.id, 'in_progress')}
-                      >
-                        Start Working
-                      </Button>
-                    )}
-                    {transitions.includes('completed') && (
-                      <Button
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleStatusChange(assignment.id, 'completed')}
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-1" />
-                        Mark Complete
-                      </Button>
-                    )}
-                  </div>
-                );
-              })()}
+              <div className="mt-4 pt-2 border-t border-border/50">
+                <AssignmentStatusActions
+                  assignmentId={assignment.id}
+                  currentStatus={assignment.status}
+                  onStatusChanged={(newStatus) =>
+                    handleStatusChanged(assignment.id, newStatus)
+                  }
+                />
+              </div>
 
               <div className="mt-4 pt-2">
                 <Button asChild variant="outline" className="w-full">

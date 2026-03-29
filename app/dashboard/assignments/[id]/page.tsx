@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { Assignment } from '@/components/assignments/hooks/useAssignment';
 import { HistoryTimeline } from '@/components/shared/HistoryTimeline';
 import { AssignmentStatusSelect } from '@/components/assignments/AssignmentStatusSelect';
+import { AssignmentStatusActions } from '@/components/assignments/shared/AssignmentStatusActions';
 import { AssignmentDetail as AssignmentDetailV2 } from '@/components/v2/assignments';
 import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { getUIVersion } from '@/lib/ui-version.server';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
+import type { AssignmentStatus } from '@/schemas/AssignmentSchema';
 
 /**
  * Format date for display
@@ -300,6 +302,12 @@ export default async function AssignmentDetailPage({ params, searchParams }: Pag
     (profile?.is_student && assignment.student_id === user.id)
   );
   const canManage = !!(profile?.is_admin || profile?.is_teacher);
+  const isStudentOwner = !!(
+    profile?.is_student &&
+    !profile?.is_admin &&
+    !profile?.is_teacher &&
+    assignment.student_id === user.id
+  );
 
   if (uiVersion === 'v2') {
     return (
@@ -356,6 +364,18 @@ export default async function AssignmentDetailPage({ params, searchParams }: Pag
               canEdit={canEdit}
             />
             <AssignmentInfo assignment={assignment as unknown as ExtendedAssignment} />
+
+            {isStudentOwner && (
+              <div className="mt-6 pt-6 border-t border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-3">
+                  Update Status
+                </h3>
+                <AssignmentStatusActions
+                  assignmentId={assignment.id}
+                  currentStatus={assignment.status as AssignmentStatus}
+                />
+              </div>
+            )}
           </div>
         </div>
 
