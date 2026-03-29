@@ -35,8 +35,8 @@ jest.mock('./LessonForm.ProfileSelect', () => ({
 }));
 
 jest.mock('./LessonForm.SongSelect', () => ({
-  SongSelect: ({ selectedSongIds, onChange, error }: { selectedSongIds: string[]; onChange: (ids: string[]) => void; error?: string }) => (
-    <div data-testid="song-select">
+  SongSelect: ({ selectedSongIds, onChange, error, studentId }: { selectedSongIds: string[]; onChange: (ids: string[]) => void; error?: string; studentId?: string }) => (
+    <div data-testid="song-select" data-student-id={studentId || ''}>
       <input
         data-testid="input-songs"
         value={selectedSongIds?.join(',') || ''}
@@ -192,10 +192,25 @@ describe('LessonForm', () => {
 
   it('calls onCancel when cancel button is clicked', () => {
     render(<LessonForm />);
-    
+
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
-    
+
     expect(mockRouter.push).toHaveBeenCalledWith('/dashboard/lessons');
+  });
+
+  it('passes studentId to SongSelect for progress display', () => {
+    (useLessonForm as jest.Mock).mockReturnValue({
+      ...defaultHookValues,
+      formData: {
+        ...defaultHookValues.formData,
+        student_id: 'student-abc',
+      },
+    });
+
+    render(<LessonForm />);
+
+    const songSelect = screen.getByTestId('song-select');
+    expect(songSelect).toHaveAttribute('data-student-id', 'student-abc');
   });
 });

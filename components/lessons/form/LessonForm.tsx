@@ -143,6 +143,7 @@ export default function LessonForm(props: UseLessonFormProps) {
                 selectedSongIds={formData.song_ids || []}
                 onChange={handleSongChange}
                 error={validationErrors.song_ids}
+                studentId={formData.student_id}
               />
 
               <LessonFormActions
