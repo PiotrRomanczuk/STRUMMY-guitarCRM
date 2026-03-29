@@ -390,12 +390,14 @@ export async function* generateAIResponseStream(
         },
       });
 
+      const { stepCountIs } = await import('ai');
+
       const result = sdkStreamText({
         model: sdkProvider.chatModel(providerModel),
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
         temperature: 0.7,
         tools,
-        maxSteps: 3,
+        stopWhen: stepCountIs(3),
         abortSignal: signal,
       });
 

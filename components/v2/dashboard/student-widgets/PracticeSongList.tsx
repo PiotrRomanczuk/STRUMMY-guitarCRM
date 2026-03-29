@@ -1,16 +1,15 @@
 import Link from 'next/link';
 import { Music } from 'lucide-react';
+import type { DashboardRepertoireItem } from '@/app/actions/student/dashboard';
 
-type RepertoireItem = {
+type DisplayItem = {
   id: string;
   song_id: string;
   title: string;
   artist: string;
   current_status: string;
   self_rating: number | null;
-  priority: string;
   last_practiced_at: string | null;
-  total_practice_minutes: number;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -31,15 +30,33 @@ const STATUS_LABELS: Record<string, string> = {
 
 interface PracticeSongListProps {
   songs: { id: string; title: string; artist: string; last_played: string }[];
-  repertoire?: RepertoireItem[];
+  repertoire?: DashboardRepertoireItem[];
+}
+
+function toDisplayItem(r: DashboardRepertoireItem): DisplayItem {
+  return {
+    id: r.id,
+    song_id: r.song_id,
+    title: r.song_title,
+    artist: r.song_author ?? 'Unknown',
+    current_status: r.current_status,
+    self_rating: r.self_rating,
+    last_practiced_at: r.last_practiced_at,
+  };
 }
 
 export function PracticeSongList({ songs, repertoire }: PracticeSongListProps) {
-  const items = repertoire || songs.map((s) => ({
-    id: s.id, song_id: s.id, title: s.title, artist: s.artist,
-    current_status: 'to_learn', self_rating: null, priority: 'normal',
-    last_practiced_at: s.last_played || null, total_practice_minutes: 0,
-  }));
+  const items: DisplayItem[] =
+    repertoire?.map(toDisplayItem) ||
+    songs.map((s) => ({
+      id: s.id,
+      song_id: s.id,
+      title: s.title,
+      artist: s.artist,
+      current_status: 'to_learn',
+      self_rating: null,
+      last_practiced_at: s.last_played || null,
+    }));
 
   if (items.length === 0) {
     return (
@@ -64,8 +81,10 @@ export function PracticeSongList({ songs, repertoire }: PracticeSongListProps) {
           View All
         </Link>
       </div>
-      <div className="flex gap-4 overflow-x-auto pb-2 -mx-2 px-2"
-           style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+      <div
+        className="flex gap-4 overflow-x-auto pb-2 -mx-2 px-2"
+        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+      >
         {items.slice(0, 6).map((item) => (
           <Link
             key={item.id}
@@ -77,7 +96,9 @@ export function PracticeSongList({ songs, repertoire }: PracticeSongListProps) {
               <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
                 <Music className="h-5 w-5 text-primary" />
               </div>
-              <span className={`text-[10px] font-bold text-white px-2 py-0.5 rounded-full ${STATUS_COLORS[item.current_status] || 'bg-slate-500'}`}>
+              <span
+                className={`text-[10px] font-bold text-white px-2 py-0.5 rounded-full ${STATUS_COLORS[item.current_status] || 'bg-slate-500'}`}
+              >
                 {STATUS_LABELS[item.current_status] || item.current_status}
               </span>
             </div>
@@ -88,7 +109,8 @@ export function PracticeSongList({ songs, repertoire }: PracticeSongListProps) {
             <div className="flex items-center justify-between">
               {item.self_rating ? (
                 <span className="text-[10px] text-amber-500 font-medium">
-                  {'★'.repeat(item.self_rating)}{'☆'.repeat(5 - item.self_rating)}
+                  {'★'.repeat(item.self_rating)}
+                  {'☆'.repeat(5 - item.self_rating)}
                 </span>
               ) : (
                 <span className="text-[10px] text-muted-foreground">No rating</span>

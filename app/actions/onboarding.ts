@@ -52,15 +52,28 @@ export async function completeOnboarding(onboardingData: OnboardingData) {
     }
 
     // 2. Persist onboarding preferences
-    const { error: prefsError } = await adminClient
+    // Note: user_preferences table not yet in generated DB types — cast to bypass
+    const { error: prefsError } = await (
+      adminClient as unknown as {
+        from: (table: string) => {
+          upsert: (
+            data: Record<string, unknown>,
+            opts: { onConflict: string }
+          ) => Promise<{ error: Error | null }>;
+        };
+      }
+    )
       .from('user_preferences')
-      .upsert({
-        user_id: user.id,
-        goals: onboardingData.goals,
-        skill_level: onboardingData.skillLevel,
-        learning_style: onboardingData.learningStyle || [],
-        instrument_preference: onboardingData.instrumentPreference || [],
-      }, { onConflict: 'user_id' });
+      .upsert(
+        {
+          user_id: user.id,
+          goals: onboardingData.goals,
+          skill_level: onboardingData.skillLevel,
+          learning_style: onboardingData.learningStyle || [],
+          instrument_preference: onboardingData.instrumentPreference || [],
+        },
+        { onConflict: 'user_id' }
+      );
 
     if (prefsError) {
       logger.error('Error saving preferences:', prefsError);

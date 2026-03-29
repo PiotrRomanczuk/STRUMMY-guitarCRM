@@ -23,7 +23,11 @@ interface StudentDashboardClientProps {
   sotwInRepertoire?: boolean;
 }
 
-export function StudentDashboardClient({ data, sotw, sotwInRepertoire = false }: StudentDashboardClientProps) {
+export function StudentDashboardClient({
+  data,
+  sotw,
+  sotwInRepertoire = false,
+}: StudentDashboardClientProps) {
   // Transform data for components
   const activities = [
     ...(data.lastLesson
@@ -88,12 +92,21 @@ export function StudentDashboardClient({ data, sotw, sotwInRepertoire = false }:
     studentsLearning: 12, // Mocked
   }));
 
+  const statusMap: Record<
+    string,
+    'not_started' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'
+  > = {
+    pending: 'not_started',
+    completed: 'completed',
+    overdue: 'overdue',
+  };
+
   const assignments = data.assignments.map((a) => ({
     id: a.id,
     title: a.title,
     studentName: 'You', // Mocked
     dueDate: a.due_date || 'No due date',
-    status: a.status,
+    status: statusMap[a.status] ?? 'not_started',
   }));
 
   // Defaults to 'started' since the dashboard action doesn't fetch individual song statuses
@@ -129,11 +142,7 @@ export function StudentDashboardClient({ data, sotw, sotwInRepertoire = false }:
       {/* Song of the Week - featured spotlight */}
       {sotw && (
         <motion.div variants={listItem} initial="hidden" animate="visible">
-          <SongOfTheWeekCard
-            sotw={sotw}
-            sotwInRepertoire={sotwInRepertoire}
-            isStudent
-          />
+          <SongOfTheWeekCard sotw={sotw} sotwInRepertoire={sotwInRepertoire} isStudent />
         </motion.div>
       )}
 
@@ -145,9 +154,7 @@ export function StudentDashboardClient({ data, sotw, sotwInRepertoire = false }:
 
       <NextLessonCard lesson={data.nextLesson} />
 
-      {data.lastLesson && (
-        <LastLessonCard lesson={data.lastLesson} />
-      )}
+      {data.lastLesson && <LastLessonCard lesson={data.lastLesson} />}
 
       {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">

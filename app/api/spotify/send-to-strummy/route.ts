@@ -46,7 +46,7 @@ function logImport(params: {
     })
     .then(
       () => {},
-      (err) => logger.error('[import-log] Failed to write log', { error: String(err) })
+      (err: unknown) => logger.error('[import-log] Failed to write log', { error: String(err) })
     );
 }
 

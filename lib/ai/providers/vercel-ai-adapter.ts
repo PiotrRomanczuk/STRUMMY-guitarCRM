@@ -80,7 +80,7 @@ export function createVercelAIProvider(): AIProvider {
             content: m.content,
           })),
           temperature: request.temperature,
-          maxTokens: request.maxTokens,
+          maxOutputTokens: request.maxTokens,
         });
 
         return {
@@ -88,9 +88,9 @@ export function createVercelAIProvider(): AIProvider {
           finishReason: result.finishReason,
           usage: result.usage
             ? {
-                promptTokens: result.usage.promptTokens,
-                completionTokens: result.usage.completionTokens,
-                totalTokens: result.usage.promptTokens + result.usage.completionTokens,
+                promptTokens: result.usage.inputTokens ?? 0,
+                completionTokens: result.usage.outputTokens ?? 0,
+                totalTokens: (result.usage.inputTokens ?? 0) + (result.usage.outputTokens ?? 0),
               }
             : undefined,
         };
@@ -116,7 +116,7 @@ export function createVercelAIProvider(): AIProvider {
             content: m.content,
           })),
           temperature: request.temperature,
-          maxTokens: request.maxTokens,
+          maxOutputTokens: request.maxTokens,
           abortSignal: signal,
         });
 
@@ -135,9 +135,9 @@ export function createVercelAIProvider(): AIProvider {
           finishReason: (await result.finishReason) || 'stop',
           usage: usage
             ? {
-                promptTokens: usage.promptTokens,
-                completionTokens: usage.completionTokens,
-                totalTokens: usage.promptTokens + usage.completionTokens,
+                promptTokens: usage.inputTokens ?? 0,
+                completionTokens: usage.outputTokens ?? 0,
+                totalTokens: (usage.inputTokens ?? 0) + (usage.outputTokens ?? 0),
               }
             : undefined,
         };
@@ -192,8 +192,8 @@ export async function generateStructuredOutput<T>(params: {
     data: result.object,
     usage: result.usage
       ? {
-          promptTokens: result.usage.promptTokens,
-          completionTokens: result.usage.completionTokens,
+          promptTokens: result.usage.inputTokens ?? 0,
+          completionTokens: result.usage.outputTokens ?? 0,
         }
       : undefined,
   };

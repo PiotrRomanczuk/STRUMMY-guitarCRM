@@ -16,7 +16,7 @@ import { logger } from '@/lib/logger';
 export const lookupSong = tool({
   description:
     'Search the song catalog by title, artist, or difficulty level. Returns matching songs with metadata.',
-  parameters: z.object({
+  inputSchema: z.object({
     query: z.string().describe('Search query (song title or artist name)'),
     level: z.string().optional().describe('Filter by difficulty: beginner, intermediate, advanced'),
     limit: z.number().optional().default(5).describe('Max results to return'),
@@ -49,7 +49,7 @@ export const lookupSong = tool({
  */
 export const getStudentInfo = tool({
   description: 'Get student profile information including name, email, level, and enrollment date.',
-  parameters: z.object({
+  inputSchema: z.object({
     studentId: z.string().optional().describe('Student UUID. If not provided, search by name.'),
     name: z.string().optional().describe('Student name to search for'),
   }),
@@ -93,7 +93,7 @@ export const getStudentInfo = tool({
  */
 export const getStudentLessonHistory = tool({
   description: 'Get recent lessons for a student, including dates, notes, and songs covered.',
-  parameters: z.object({
+  inputSchema: z.object({
     studentId: z.string().describe('Student UUID'),
     limit: z.number().optional().default(10).describe('Number of recent lessons to return'),
   }),
@@ -121,7 +121,7 @@ export const getStudentLessonHistory = tool({
  */
 export const getSongRepertoire = tool({
   description: 'Get the songs a student is currently learning or has mastered.',
-  parameters: z.object({
+  inputSchema: z.object({
     studentId: z.string().describe('Student UUID'),
   }),
   execute: async ({ studentId }) => {

@@ -155,10 +155,9 @@ export async function generateSongNormalizationAgent(
       content: JSON.stringify(result.data),
     };
   } catch (structuredError) {
-    logger.warn(
-      '[SongNormalization] Structured output failed, falling back to raw:',
-      structuredError
-    );
+    logger.warn('[SongNormalization] Structured output failed, falling back to raw:', {
+      error: structuredError instanceof Error ? structuredError.message : String(structuredError),
+    });
   }
 
   // Fallback: use agent registry with raw JSON parsing

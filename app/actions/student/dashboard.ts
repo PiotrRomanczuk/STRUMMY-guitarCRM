@@ -118,7 +118,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     nextLesson: nextLessonData,
     lastLesson: lastLessonData,
     assignments: assignmentsData || [],
-    repertoire: [], // TODO: populate from student_repertoire in next iteration
+    repertoire,
     recentSongs:
       recentLessonSongs
         ?.filter((ls) => ls.songs !== null)
@@ -138,7 +138,6 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         title: song.title,
         artist: song.author || 'Unknown Artist',
       })) || [],
-    repertoire,
     stats: {
       totalSongs,
       completedLessons: completedLessons || 0,
