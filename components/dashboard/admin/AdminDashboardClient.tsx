@@ -30,6 +30,7 @@ interface AdminDashboardClientProps {
     totalUsers: number;
     totalTeachers: number;
     totalStudents: number;
+    activeStudents: number;
     totalSongs: number;
     totalLessons: number;
     recentUsers: RecentUser[];
@@ -40,7 +41,13 @@ interface AdminDashboardClientProps {
   sotw?: SongOfTheWeekWithSong | null;
 }
 
-export function AdminDashboardClient({ stats, user, profile, viewMode, sotw }: AdminDashboardClientProps) {
+export function AdminDashboardClient({
+  stats,
+  user,
+  profile,
+  viewMode,
+  sotw,
+}: AdminDashboardClientProps) {
   return (
     <div className="w-full max-w-full overflow-x-hidden min-w-0">
       <div className="space-y-6 sm:space-y-8 lg:space-y-10 w-full max-w-full">
@@ -113,7 +120,8 @@ export function AdminDashboardClient({ stats, user, profile, viewMode, sotw }: A
             />
             <StatsCard
               title="Active Students"
-              value={stats.totalStudents}
+              value={stats.activeStudents}
+              description={`of ${stats.totalStudents} total`}
               icon={Users}
               variant="gradient"
               delay={200}
@@ -184,12 +192,25 @@ export function AdminDashboardClient({ stats, user, profile, viewMode, sotw }: A
   );
 }
 
-function AdminActionLink({ href, icon: Icon, label }: { href: string, icon: React.ComponentType<{ className?: string }>, label: string }) {
+function AdminActionLink({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+}) {
   return (
-    <Link href={href} className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group">
+    <Link
+      href={href}
+      className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group"
+    >
       <div className="flex items-center gap-3">
         <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-        <span className="text-sm font-medium group-hover:text-primary transition-colors">{label}</span>
+        <span className="text-sm font-medium group-hover:text-primary transition-colors">
+          {label}
+        </span>
       </div>
       <Shield className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
     </Link>

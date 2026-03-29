@@ -49,7 +49,7 @@ describe('getUIVersionFromCookie', () => {
   });
 
   it('returns v2 when cookie has an invalid value', () => {
-    document.cookie = `${COOKIE_NAME}=v3;path=/`;
+    document.cookie = `${COOKIE_NAME}=invalid;path=/`;
     const result = getUIVersionFromCookie();
     expect(result).toBe('v2');
   });
