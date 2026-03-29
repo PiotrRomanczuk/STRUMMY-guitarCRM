@@ -9,21 +9,22 @@ import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { HeaderActions, DeleteDialog } from './UserDetail.Actions';
+import { HeaderActions, DeleteDialog, InviteDialog } from './UserDetail.Actions';
+import { sendUserInvite } from '@/app/dashboard/actions';
 import { UserDetailTabBar, getTabIndex, getTabAtIndex } from './UserDetail.TabBar';
 import { UserDetailTabContent } from './UserDetail.TabContent';
 import type { TabValue } from './UserDetail.TabBar';
 import type { UserDetailV2Props } from './UserDetail';
 
-export function UserDetailMobile({
-  user,
-  tabsData,
-  parentProfile,
-}: UserDetailV2Props) {
+export function UserDetailMobile({ user, tabsData, parentProfile }: UserDetailV2Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabValue>('overview');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sendingInvite, setSendingInvite] = useState(false);
+
+  const needsInvite = !user.is_shadow && user.sign_in_count === 0;
 
   const handleDelete = useCallback(async () => {
     setDeleting(true);
@@ -38,6 +39,19 @@ export function UserDetailMobile({
       setShowDeleteDialog(false);
     }
   }, [user.id, router]);
+
+  const handleSendInvite = useCallback(async () => {
+    setSendingInvite(true);
+    try {
+      await sendUserInvite(user.id);
+      toast.success('Invitation email sent');
+      setShowInviteDialog(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to send invite');
+    } finally {
+      setSendingInvite(false);
+    }
+  }, [user.id]);
 
   const [swipeDirection, setSwipeDirection] = useState(0);
 
@@ -60,7 +74,12 @@ export function UserDetailMobile({
   );
 
   const initials = user.full_name
-    ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? user.full_name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
     : user.email.slice(0, 2).toUpperCase();
 
   const roles = [
@@ -74,7 +93,12 @@ export function UserDetailMobile({
     <MobilePageShell
       title={user.full_name || 'User Profile'}
       headerActions={
-        <HeaderActions userId={user.id} onDelete={() => setShowDeleteDialog(true)} />
+        <HeaderActions
+          userId={user.id}
+          needsInvite={needsInvite}
+          onDelete={() => setShowDeleteDialog(true)}
+          onSendInvite={() => setShowInviteDialog(true)}
+        />
       }
     >
       {/* Profile card */}
@@ -92,9 +116,7 @@ export function UserDetailMobile({
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <h2 className="text-base font-semibold truncate">
-              {user.full_name || user.email}
-            </h2>
+            <h2 className="text-base font-semibold truncate">{user.full_name || user.email}</h2>
             <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {roles.map((role) => (
@@ -153,6 +175,15 @@ export function UserDetailMobile({
         userName={user.full_name || user.email}
         deleting={deleting}
         onDelete={handleDelete}
+      />
+
+      <InviteDialog
+        open={showInviteDialog}
+        onOpenChange={setShowInviteDialog}
+        userName={user.full_name || user.email}
+        userEmail={user.email}
+        sending={sendingInvite}
+        onSend={handleSendInvite}
       />
     </MobilePageShell>
   );

@@ -29,6 +29,7 @@ export interface UserDetailData {
   is_parent: boolean;
   avatar_url: string | null;
   notes: string | null;
+  sign_in_count: number;
 }
 
 export interface Lesson {
@@ -80,11 +81,18 @@ export function hasRealName(user: UserProfile): boolean {
 export function getInitials(user: UserProfile): string {
   const parts = [user.firstName, user.lastName].filter(Boolean);
   if (parts.length > 0) {
-    return parts.map((p) => p![0]).join('').toUpperCase();
+    return parts
+      .map((p) => p![0])
+      .join('')
+      .toUpperCase();
   }
   if (user.full_name) {
     const words = user.full_name.trim().split(/\s+/);
-    return words.map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+    return words
+      .map((w) => w[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
   }
   return (user.email?.[0] ?? '?').toUpperCase();
 }

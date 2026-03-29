@@ -17,11 +17,7 @@ const log = createLogger('UserDetailPage');
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('profiles')
-    .select('full_name, email')
-    .eq('id', id)
-    .single();
+  const { data } = await supabase.from('profiles').select('full_name, email').eq('id', id).single();
   const name = data?.full_name || data?.email || 'User';
   return { title: `${name} — User Detail`, description: `View and manage ${name}'s profile` };
 }
@@ -46,6 +42,7 @@ interface UserProfile {
   is_shadow: boolean | null;
   is_parent: boolean;
   parent_id: string | null;
+  sign_in_count: number;
 }
 
 async function fetchUserData(supabase: SupabaseClient, userId: string) {
@@ -129,7 +126,9 @@ export default async function UserDetailPage({ params, searchParams }: UserDetai
 
   const { data: user, error } = await supabase
     .from('profiles')
-    .select('id, email, full_name, avatar_url, notes, created_at, updated_at, is_development, is_admin, is_teacher, is_student, is_shadow, is_parent, parent_id')
+    .select(
+      'id, email, full_name, avatar_url, notes, created_at, updated_at, is_development, is_admin, is_teacher, is_student, is_shadow, is_parent, parent_id, sign_in_count'
+    )
     .eq('id', userId)
     .single();
 
@@ -138,27 +137,30 @@ export default async function UserDetailPage({ params, searchParams }: UserDetai
   }
 
   // Fetch parent profile if this is a student with a linked parent
-  const parentFetch =
-    user.parent_id
-      ? supabase
-          .from('profiles')
-          .select('id, full_name, email')
-          .eq('id', user.parent_id)
-          .single()
-      : Promise.resolve({ data: null });
+  const parentFetch = user.parent_id
+    ? supabase.from('profiles').select('id, full_name, email').eq('id', user.parent_id).single()
+    : Promise.resolve({ data: null });
 
   // Fetch linked students if this is a parent profile
-  const linkedStudentsFetch =
-    user.is_parent
-      ? supabase
-          .from('profiles')
-          .select('id, full_name, email')
-          .eq('parent_id', user.id)
-          .eq('is_student', true)
-      : Promise.resolve({ data: [] });
+  const linkedStudentsFetch = user.is_parent
+    ? supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .eq('parent_id', user.id)
+        .eq('is_student', true)
+    : Promise.resolve({ data: [] });
 
-  const [{ data: parentProfile }, { data: linkedStudents }, { lessons, assignments, repertoire }, uiVersion] =
-    await Promise.all([parentFetch, linkedStudentsFetch, fetchUserData(supabase, userId), getUIVersion()]);
+  const [
+    { data: parentProfile },
+    { data: linkedStudents },
+    { lessons, assignments, repertoire },
+    uiVersion,
+  ] = await Promise.all([
+    parentFetch,
+    linkedStudentsFetch,
+    fetchUserData(supabase, userId),
+    getUIVersion(),
+  ]);
 
   const userName = user.full_name || user.email || 'User';
 
@@ -200,7 +202,9 @@ export default async function UserDetailPage({ params, searchParams }: UserDetai
         lessons={lessons as unknown as Lesson[]}
         assignments={assignments || []}
         repertoire={repertoire}
-        parentProfile={parentProfile as { id: string; full_name: string | null; email: string } | null}
+        parentProfile={
+          parentProfile as { id: string; full_name: string | null; email: string } | null
+        }
       />
     </div>
   );

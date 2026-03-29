@@ -2,12 +2,73 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import {
-  logInviteSent, logInviteFailed,
-  logShadowUserCreated,
-} from '@/lib/auth/auth-event-logger';
+import { logInviteSent, logInviteFailed, logShadowUserCreated } from '@/lib/auth/auth-event-logger';
 import type { AuthEvent } from '@/components/dashboard/admin/auth-events/auth-events.helpers';
 import { logger } from '@/lib/logger';
+
+export async function sendUserInvite(userId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+
+  if (!currentUser) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+
+  const { data: callerProfile } = await supabase
+    .from('profiles')
+    .select('is_admin, is_teacher')
+    .eq('id', currentUser.id)
+    .single();
+
+  if (!callerProfile?.is_admin && !callerProfile?.is_teacher) {
+    throw new Error('Unauthorized: Only admins and teachers can send invites');
+  }
+
+  const { data: targetProfile } = await supabase
+    .from('profiles')
+    .select('email, is_shadow, sign_in_count, full_name')
+    .eq('id', userId)
+    .single();
+
+  if (!targetProfile) {
+    throw new Error('User not found');
+  }
+
+  if (targetProfile.is_shadow) {
+    throw new Error('Cannot send invite to shadow user — they need a real email first');
+  }
+
+  if (targetProfile.sign_in_count > 0) {
+    throw new Error('User has already signed in — no invite needed');
+  }
+
+  const supabaseAdmin = createAdminClient();
+
+  // Reset email confirmation so invite flow works on already-confirmed users
+  await supabaseAdmin.auth.admin.updateUserById(userId, {
+    email_confirm: false,
+  });
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+  const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+    targetProfile.email,
+    {
+      redirectTo: `${baseUrl}/accept-invitation`,
+    }
+  );
+
+  if (inviteError) {
+    logInviteFailed(targetProfile.email, currentUser.id, inviteError.message);
+    throw new Error(`Failed to send invite: ${inviteError.message}`);
+  }
+
+  logInviteSent(targetProfile.email, currentUser.id, userId);
+  return { success: true };
+}
 
 export async function inviteUser(
   email: string,
@@ -42,9 +103,8 @@ export async function inviteUser(
   let userId = existingUser?.id;
 
   if (!userId) {
-    const { data: authData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      email
-    );
+    const { data: authData, error: inviteError } =
+      await supabaseAdmin.auth.admin.inviteUserByEmail(email);
 
     if (inviteError) {
       logInviteFailed(email, currentUser.id, inviteError.message);
@@ -190,8 +250,14 @@ async function cleanupOrphanProfiles(
   // Migrate related data
   await supabaseAdmin.from('lessons').update({ student_id: userId }).eq('student_id', orphan.id);
   await supabaseAdmin.from('lessons').update({ teacher_id: userId }).eq('teacher_id', orphan.id);
-  await supabaseAdmin.from('assignments').update({ student_id: userId }).eq('student_id', orphan.id);
-  await supabaseAdmin.from('assignments').update({ teacher_id: userId }).eq('teacher_id', orphan.id);
+  await supabaseAdmin
+    .from('assignments')
+    .update({ student_id: userId })
+    .eq('student_id', orphan.id);
+  await supabaseAdmin
+    .from('assignments')
+    .update({ teacher_id: userId })
+    .eq('teacher_id', orphan.id);
 
   // Delete orphan
   await supabaseAdmin.from('profiles').delete().eq('id', orphan.id);
