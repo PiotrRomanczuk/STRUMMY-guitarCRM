@@ -27,10 +27,7 @@ export function StitchSection({
 
   return (
     <div
-      className={cn(
-        'rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 overflow-hidden',
-        className
-      )}
+      className={cn('rounded-lg bg-white dark:bg-stone-900 shadow-sm overflow-hidden', className)}
     >
       {collapsible ? (
         <button
@@ -64,9 +61,7 @@ export function StitchSection({
               {icon}
             </span>
           )}
-          <span className="flex-1 font-semibold text-stone-900 dark:text-stone-100">
-            {title}
-          </span>
+          <span className="flex-1 font-semibold text-stone-900 dark:text-stone-100">{title}</span>
           {fieldCount !== undefined && (
             <span className="text-xs font-medium uppercase tracking-wider bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 px-2.5 py-1 rounded-full">
               {fieldCount} fields
@@ -76,9 +71,7 @@ export function StitchSection({
       )}
 
       {(!collapsible || isOpen) && (
-        <div className="px-5 pb-5 pt-1 border-t border-stone-100 dark:border-stone-800">
-          {children}
-        </div>
+        <div className="px-5 pb-5 pt-3 bg-stone-50/50 dark:bg-stone-800/30">{children}</div>
       )}
     </div>
   );

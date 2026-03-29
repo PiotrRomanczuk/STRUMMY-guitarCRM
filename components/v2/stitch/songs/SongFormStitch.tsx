@@ -3,18 +3,19 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { StitchFormShell, StitchAlert, StitchFormActions } from '@/components/v2/stitch';
+import {
+  StitchFormShell,
+  StitchSection,
+  StitchAlert,
+  StitchFormActions,
+} from '@/components/v2/stitch';
 import SpotifySearch from '@/components/songs/form/SpotifySearch';
 import { useSongMutation } from '@/components/songs/form/useSongMutation';
 import { createFormData, clearFieldError } from '@/components/songs/form/helpers';
 import type { SongFormData } from '@/components/songs/form/helpers';
 import type { Song } from '@/schemas/SongSchema';
 import type { SpotifyTrack } from '@/types/spotify';
-import {
-  EssentialInfoSection,
-  ResourcesSection,
-  MusicalDetailsSection,
-} from './SongFormSections';
+import { EssentialInfoSection, ResourcesSection, MusicalDetailsSection } from './SongFormSections';
 
 interface SongFormStitchProps {
   song?: Song | null;
@@ -41,19 +42,16 @@ export function SongFormStitch({ song, mode }: SongFormStitchProps) {
   const title = isEditMode ? 'Edit Song' : 'New Song';
   const submitLabel = isEditMode ? 'SAVE CHANGES' : 'CREATE SONG';
 
-  const handleFieldChange = useCallback(
-    (field: keyof SongFormData, value: string) => {
-      setFormData((prev) => {
-        if (field === 'capo_fret' || field === 'tempo') {
-          const num = value === '' ? null : Number(value);
-          return { ...prev, [field]: num };
-        }
-        return { ...prev, [field]: value };
-      });
-      setErrors((prev) => clearFieldError(prev, field));
-    },
-    []
-  );
+  const handleFieldChange = useCallback((field: keyof SongFormData, value: string) => {
+    setFormData((prev) => {
+      if (field === 'capo_fret' || field === 'tempo') {
+        const num = value === '' ? null : Number(value);
+        return { ...prev, [field]: num };
+      }
+      return { ...prev, [field]: value };
+    });
+    setErrors((prev) => clearFieldError(prev, field));
+  }, []);
 
   const handleFieldBlur = useCallback((_field: string) => {
     // Placeholder for field-level validation on blur
@@ -100,11 +98,8 @@ export function SongFormStitch({ song, mode }: SongFormStitchProps) {
           />
         )}
 
-        <div className="space-y-1">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 px-1">
-            Essential Information
-          </h2>
-          <div className="rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-5 space-y-4">
+        <StitchSection title="Essential Information" collapsible={false}>
+          <div className="space-y-4">
             <SpotifySearch onSelect={handleSpotifySelect} />
             <EssentialInfoSection
               formData={formData}
@@ -113,7 +108,7 @@ export function SongFormStitch({ song, mode }: SongFormStitchProps) {
               onFieldBlur={handleFieldBlur}
             />
           </div>
-        </div>
+        </StitchSection>
 
         <ResourcesSection
           formData={formData}
