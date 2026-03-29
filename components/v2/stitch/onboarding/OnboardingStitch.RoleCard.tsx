@@ -33,11 +33,11 @@ export function RoleCard({ role, isSelected, onSelect }: RoleCardProps) {
       type="button"
       onClick={() => onSelect(role)}
       className={cn(
-        'relative flex flex-col items-center gap-3 rounded-2xl border-2 p-5',
+        'relative flex flex-col items-center gap-3 rounded-lg p-5',
         'transition-all text-left',
         isSelected
-          ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-400'
-          : 'border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800',
+          ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-500/40'
+          : 'bg-white dark:bg-stone-800 shadow-sm'
       )}
     >
       {isSelected && (

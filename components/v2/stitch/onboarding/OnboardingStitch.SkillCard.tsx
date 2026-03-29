@@ -41,14 +41,19 @@ export function SkillCard({ level, isSelected, onSelect }: SkillCardProps) {
       type="button"
       onClick={() => onSelect(level)}
       className={cn(
-        'flex items-center gap-4 w-full rounded-2xl border-2 p-4',
+        'flex items-center gap-4 w-full rounded-lg p-4',
         'transition-all text-left',
         isSelected
-          ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-400'
-          : 'border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800',
+          ? 'bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-500/40'
+          : 'bg-white dark:bg-stone-800 shadow-sm'
       )}
     >
-      <div className={cn('h-11 w-11 shrink-0 rounded-xl flex items-center justify-center', config.iconBg)}>
+      <div
+        className={cn(
+          'h-11 w-11 shrink-0 rounded-xl flex items-center justify-center',
+          config.iconBg
+        )}
+      >
         <Icon className="h-5 w-5 text-stone-700 dark:text-stone-300" />
       </div>
       <div className="flex-1 min-w-0">

@@ -33,14 +33,14 @@ export function StitchButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl',
+        'inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg',
         'text-sm font-bold uppercase tracking-wider',
         'transition-all active:scale-[0.98]',
         'disabled:opacity-50 disabled:pointer-events-none',
         'min-h-[52px]',
         isPrimary && [
-          'bg-gradient-to-r from-amber-600 to-amber-500',
-          'dark:from-amber-500 dark:to-amber-400',
+          'bg-gradient-to-br from-[#f2b127] to-amber-600',
+          'dark:from-amber-400 dark:to-amber-600',
           'text-white shadow-lg shadow-amber-500/25',
           'hover:shadow-xl hover:shadow-amber-500/30',
         ],
@@ -52,11 +52,7 @@ export function StitchButton({
         className
       )}
     >
-      {loading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        icon
-      )}
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : icon}
       {children}
     </button>
   );
@@ -78,7 +74,7 @@ export function StitchFormActions({
   submitIcon,
 }: StitchFormActionsProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-stone-900 border-t border-stone-200 dark:border-stone-800 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <div className="max-w-lg mx-auto flex gap-3">
         <StitchButton
           variant="secondary"

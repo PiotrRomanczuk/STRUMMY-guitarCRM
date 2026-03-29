@@ -22,7 +22,7 @@ export function NewLessonTabsStitch({ initialData }: NewLessonTabsStitchProps) {
   return (
     <div>
       <div className="sticky top-0 z-20 bg-stone-50 dark:bg-stone-950 px-4 pt-2 pb-1">
-        <div className="flex rounded-xl bg-stone-200 dark:bg-stone-800 p-1 max-w-lg mx-auto">
+        <div className="flex rounded-lg bg-stone-200 dark:bg-stone-800 p-1 max-w-lg mx-auto">
           {TABS.map((tab) => (
             <button
               key={tab.value}
@@ -43,19 +43,11 @@ export function NewLessonTabsStitch({ initialData }: NewLessonTabsStitchProps) {
 
       {activeTab === 'single' ? (
         <LessonFormStitch
-          initialData={
-            initialData && Object.keys(initialData).length > 0
-              ? initialData
-              : undefined
-          }
+          initialData={initialData && Object.keys(initialData).length > 0 ? initialData : undefined}
         />
       ) : (
         <RecurringLessonFormStitch
-          initialData={
-            initialData && Object.keys(initialData).length > 0
-              ? initialData
-              : undefined
-          }
+          initialData={initialData && Object.keys(initialData).length > 0 ? initialData : undefined}
         />
       )}
     </div>

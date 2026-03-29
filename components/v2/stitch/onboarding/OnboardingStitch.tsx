@@ -26,9 +26,7 @@ export function OnboardingStitch({ firstName }: OnboardingStitchProps) {
   const [isPending, startTransition] = useTransition();
 
   const toggleGoal = useCallback((goal: string) => {
-    setGoals((prev) =>
-      prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal],
-    );
+    setGoals((prev) => (prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal]));
   }, []);
 
   const handleSubmit = useCallback(() => {
@@ -56,9 +54,9 @@ export function OnboardingStitch({ firstName }: OnboardingStitchProps) {
   const isFormValid = skillLevel !== null && goals.length > 0;
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
+    <div className="min-h-screen bg-stone-50 dark:bg-stone-950 font-[family-name:var(--font-manrope)]">
       {/* Header bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 px-4 py-3">
+      <header className="sticky top-0 z-30 flex items-center justify-between bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl shadow-sm shadow-stone-200/50 dark:shadow-stone-900/50 px-4 py-3">
         <div className="flex items-center gap-3">
           <Menu className="h-5 w-5 text-stone-500" />
           <span className="font-bold text-stone-900 dark:text-stone-100">Strummy</span>
@@ -71,7 +69,7 @@ export function OnboardingStitch({ firstName }: OnboardingStitchProps) {
       <main className="mx-auto max-w-lg px-4 py-8 space-y-8 pb-24">
         {/* Welcome heading */}
         <section>
-          <h1 className="text-3xl font-bold text-stone-900 dark:text-stone-100">
+          <h1 className="text-3xl font-bold text-stone-900 dark:text-stone-100 font-[family-name:var(--font-plus-jakarta)]">
             Welcome to the workshop{firstName ? `, ${firstName}` : ''}.
           </h1>
           <p className="text-stone-500 dark:text-stone-400 mt-2">
@@ -81,7 +79,9 @@ export function OnboardingStitch({ firstName }: OnboardingStitchProps) {
 
         {/* Your Role */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">Your Role</h2>
+          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-[family-name:var(--font-plus-jakarta)]">
+            Your Role
+          </h2>
           <div className="grid grid-cols-2 gap-3">
             <RoleCard role="student" isSelected={role === 'student'} onSelect={setRole} />
             <RoleCard role="teacher" isSelected={role === 'teacher'} onSelect={setRole} />
@@ -90,7 +90,9 @@ export function OnboardingStitch({ firstName }: OnboardingStitchProps) {
 
         {/* Skill Level */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">Skill Level</h2>
+          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-[family-name:var(--font-plus-jakarta)]">
+            Skill Level
+          </h2>
           <div className="space-y-3">
             {SKILL_LEVELS.map((level) => (
               <SkillCard
@@ -105,7 +107,9 @@ export function OnboardingStitch({ firstName }: OnboardingStitchProps) {
 
         {/* Your Goals */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">Your Goals</h2>
+          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-[family-name:var(--font-plus-jakarta)]">
+            Your Goals
+          </h2>
           <div className="flex flex-wrap gap-2">
             {GOALS.map((goal) => (
               <GoalChip
@@ -126,9 +130,7 @@ export function OnboardingStitch({ firstName }: OnboardingStitchProps) {
         <CurriculumCard />
 
         {/* Error */}
-        {error && (
-          <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
-        )}
+        {error && <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>}
 
         {/* Submit */}
         <StitchButton

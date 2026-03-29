@@ -9,16 +9,13 @@ interface StitchAlertProps {
   variant?: 'warning' | 'info';
 }
 
-export function StitchAlert({
-  message,
-  onDismiss,
-  variant = 'warning',
-}: StitchAlertProps) {
+export function StitchAlert({ message, onDismiss, variant = 'warning' }: StitchAlertProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-3 px-4 py-3 rounded-xl',
-        variant === 'warning' && 'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200',
+        'flex items-center gap-3 px-4 py-3 rounded-lg',
+        variant === 'warning' &&
+          'bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200',
         variant === 'info' && 'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200'
       )}
       role="alert"

@@ -23,8 +23,8 @@ export function StitchFormShell({
   const router = useRouter();
 
   return (
-    <div className="min-h-[100dvh] bg-stone-50 dark:bg-stone-950">
-      <header className="sticky top-0 z-30 bg-white/80 dark:bg-stone-900/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-800 px-4 py-3">
+    <div className="min-h-[100dvh] bg-stone-50 dark:bg-stone-950 font-[family-name:var(--font-manrope)]">
+      <header className="sticky top-0 z-30 bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl shadow-sm shadow-stone-200/50 dark:shadow-stone-900/50 px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-2 min-w-0">
             <button
@@ -36,13 +36,11 @@ export function StitchFormShell({
               <ArrowLeft className="h-5 w-5 text-stone-700 dark:text-stone-300" />
             </button>
             <div className="min-w-0">
-              <h1 className="text-lg font-bold text-stone-900 dark:text-stone-100 truncate">
+              <h1 className="text-lg font-bold text-stone-900 dark:text-stone-100 truncate font-[family-name:var(--font-plus-jakarta)]">
                 {title}
               </h1>
               {subtitle && (
-                <p className="text-sm text-stone-500 dark:text-stone-400 truncate">
-                  {subtitle}
-                </p>
+                <p className="text-sm text-stone-500 dark:text-stone-400 truncate">{subtitle}</p>
               )}
             </div>
           </div>
