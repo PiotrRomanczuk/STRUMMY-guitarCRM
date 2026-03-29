@@ -9,19 +9,10 @@ interface StitchFieldLabelProps {
   dotColor?: string;
 }
 
-export function StitchFieldLabel({
-  label,
-  required,
-  dotColor,
-}: StitchFieldLabelProps) {
+export function StitchFieldLabel({ label, required, dotColor }: StitchFieldLabelProps) {
   return (
     <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
-      {dotColor && (
-        <span
-          className={cn('w-2 h-2 rounded-full', dotColor)}
-          aria-hidden="true"
-        />
-      )}
+      {dotColor && <span className={cn('w-2 h-2 rounded-full', dotColor)} aria-hidden="true" />}
       {label}
       {required && <span className="text-stone-400">*</span>}
     </label>
@@ -59,7 +50,7 @@ export function StitchInput({
         placeholder={placeholder}
         aria-invalid={!!error}
         className={cn(
-          'w-full px-4 py-3 rounded-xl text-sm',
+          'w-full px-4 py-3 rounded-lg text-sm',
           'bg-stone-100 dark:bg-stone-800 border-0',
           'text-stone-900 dark:text-stone-100',
           'placeholder:text-stone-400 dark:placeholder:text-stone-500',
@@ -108,7 +99,7 @@ export function StitchTextarea({
         rows={rows}
         aria-invalid={!!error}
         className={cn(
-          'w-full px-4 py-3 rounded-xl text-sm resize-y',
+          'w-full px-4 py-3 rounded-lg text-sm resize-y',
           'bg-stone-100 dark:bg-stone-800 border-0',
           'text-stone-900 dark:text-stone-100',
           'placeholder:text-stone-400 dark:placeholder:text-stone-500',
@@ -155,7 +146,7 @@ export function StitchSelect({
         onBlur={onBlur}
         aria-invalid={!!error}
         className={cn(
-          'w-full px-4 py-3 rounded-xl text-sm appearance-none',
+          'w-full px-4 py-3 rounded-lg text-sm appearance-none',
           'bg-stone-100 dark:bg-stone-800 border-0',
           'text-stone-900 dark:text-stone-100',
           'focus:outline-none focus:ring-2 focus:ring-amber-500/50',
@@ -201,7 +192,7 @@ export function StitchPickerButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-3 px-4 py-3.5 rounded-xl',
+        'w-full flex items-center gap-3 px-4 py-3.5 rounded-lg',
         'bg-stone-100 dark:bg-stone-800',
         'hover:bg-stone-150 dark:hover:bg-stone-700 transition-colors',
         'text-left'

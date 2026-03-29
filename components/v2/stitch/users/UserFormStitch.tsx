@@ -10,6 +10,7 @@ import {
   StitchFieldLabel,
   StitchInput,
   StitchFormActions,
+  StitchAlert,
 } from '@/components/v2/stitch';
 import { UserFormAvatar } from './UserFormStitch.Avatar';
 import { UserFormRoles } from './UserFormStitch.Roles';
@@ -37,8 +38,14 @@ interface UserFormStitchProps {
 export function UserFormStitch({ initialData, isEdit }: UserFormStitchProps) {
   const router = useRouter();
   const {
-    formData, loading, error, validationErrors,
-    handleChange, handleBlur, handleSubmit, setFormData,
+    formData,
+    loading,
+    error,
+    validationErrors,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    setFormData,
   } = useUserFormState(initialData, isEdit);
 
   const handleFieldChange = useCallback(
@@ -61,10 +68,7 @@ export function UserFormStitch({ initialData, isEdit }: UserFormStitchProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <StitchFormShell
-        title={isEdit ? 'Edit User' : 'New User'}
-        onClose={goToUsers}
-      >
+      <StitchFormShell title={isEdit ? 'Edit User' : 'New User'} onClose={goToUsers}>
         <UserFormAvatar />
 
         <div className="text-center mb-6">
@@ -72,17 +76,13 @@ export function UserFormStitch({ initialData, isEdit }: UserFormStitchProps) {
             {isEdit ? 'Edit Profile' : 'Create Profile'}
           </h2>
           <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
-            Fill in the professional details for the new member of the guitar
-            studio.
+            Fill in the professional details for the new member of the guitar studio.
           </p>
         </div>
 
         {error && (
-          <div
-            className="flex items-center gap-3 px-4 py-3 rounded-xl mb-4 bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 text-sm"
-            role="alert"
-          >
-            {error}
+          <div className="mb-4">
+            <StitchAlert variant="warning" message={error} />
           </div>
         )}
 
@@ -178,12 +178,8 @@ export function UserFormStitch({ initialData, isEdit }: UserFormStitchProps) {
               <UserFormStatus
                 isActive={formData.isActive}
                 isShadow={formData.isShadow}
-                onToggleActive={(v) =>
-                  setFormData((prev) => ({ ...prev, isActive: v }))
-                }
-                onToggleShadow={(v) =>
-                  setFormData((prev) => ({ ...prev, isShadow: v }))
-                }
+                onToggleActive={(v) => setFormData((prev) => ({ ...prev, isActive: v }))}
+                onToggleShadow={(v) => setFormData((prev) => ({ ...prev, isShadow: v }))}
               />
             </div>
           </StitchSection>

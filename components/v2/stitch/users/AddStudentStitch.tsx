@@ -56,7 +56,7 @@ export function AddStudentStitch({ onClose, onSuccess }: AddStudentStitchProps) 
         setPhase('idle');
       }
     },
-    [name, email, isValid, hasEmail, onSuccess],
+    [name, email, isValid, hasEmail, onSuccess]
   );
 
   const handleReset = useCallback(() => {
@@ -71,16 +71,12 @@ export function AddStudentStitch({ onClose, onSuccess }: AddStudentStitchProps) 
         <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
           <span className="text-4xl">&#10003;</span>
         </div>
-        <p className="text-lg font-bold text-stone-900 dark:text-stone-100">
-          Student added!
-        </p>
+        <p className="text-lg font-bold text-stone-900 dark:text-stone-100">Student added!</p>
         <div className="flex gap-3">
           <StitchButton variant="secondary" onClick={handleReset}>
             Add Another
           </StitchButton>
-          <StitchButton onClick={onClose}>
-            Done
-          </StitchButton>
+          <StitchButton onClick={onClose}>Done</StitchButton>
         </div>
       </div>
     );
@@ -89,14 +85,24 @@ export function AddStudentStitch({ onClose, onSuccess }: AddStudentStitchProps) 
   return (
     <div className="min-h-[100dvh] bg-stone-50 dark:bg-stone-950">
       {/* Header bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-stone-900/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-800">
-        <button type="button" onClick={onClose} className="p-2 -ml-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors" aria-label="Close">
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl shadow-sm shadow-stone-200/50 dark:shadow-stone-900/50">
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-2 -ml-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+          aria-label="Close"
+        >
           <X className="h-5 w-5 text-stone-500" />
         </button>
         <h1 className="text-sm font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
           New Student
         </h1>
-        <button type="button" onClick={onClose} className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors" aria-label="Close">
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+          aria-label="Close"
+        >
           <X className="h-5 w-5 text-stone-500" />
         </button>
       </header>
@@ -118,7 +124,10 @@ export function AddStudentStitch({ onClose, onSuccess }: AddStudentStitchProps) 
         </p>
 
         {/* Form card */}
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-stone-900 rounded-2xl p-6 shadow-sm space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white dark:bg-stone-900 rounded-lg p-6 shadow-sm space-y-5"
+        >
           {/* Name field */}
           <div>
             <StitchFieldLabel label="Student Name" required />
@@ -128,14 +137,20 @@ export function AddStudentStitch({ onClose, onSuccess }: AddStudentStitchProps) 
           {/* Email field */}
           <div>
             <StitchFieldLabel label="Email" />
-            <StitchInput id="studentEmail" value={email} type="email" placeholder="student@example.com" onChange={setEmail} />
+            <StitchInput
+              id="studentEmail"
+              value={email}
+              type="email"
+              placeholder="student@example.com"
+              onChange={setEmail}
+            />
             <p className="text-xs text-stone-400 dark:text-stone-500 mt-1.5">
               Without email, a shadow profile is created (no login access).
             </p>
           </div>
 
           {/* Divider */}
-          <hr className="border-stone-200 dark:border-stone-800" />
+          <div className="h-px bg-stone-100 dark:bg-stone-800" />
 
           {/* Live preview */}
           <div>
@@ -154,7 +169,9 @@ export function AddStudentStitch({ onClose, onSuccess }: AddStudentStitchProps) 
                   <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400">
                     Student
                   </span>
-                  <span className="text-stone-300 dark:text-stone-600 text-xs" aria-hidden="true">&middot;</span>
+                  <span className="text-stone-300 dark:text-stone-600 text-xs" aria-hidden="true">
+                    &middot;
+                  </span>
                   <span className="text-xs text-stone-400 dark:text-stone-500">
                     {hasEmail ? 'Invite pending' : 'Shadow (no login)'}
                   </span>
