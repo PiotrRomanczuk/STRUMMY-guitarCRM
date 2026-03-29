@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { getSupabaseBrowserClient } from '@/lib/supabase-browser';
 import DeleteConfirmationDialog from '../actions/DeleteConfirmationDialog';
 import QuickAssignDialog from './QuickAssignDialog';
@@ -45,7 +44,6 @@ export default function SongListTable({
   sortDirection = 'desc',
   onSort,
 }: Props) {
-  const router = useRouter();
   const [deletingSongId, setDeletingSongId] = useState<string | null>(null);
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -112,8 +110,9 @@ export default function SongListTable({
     setDeleteError(null);
   };
 
-  const handleRowClick = (id: string) => router.push(`/dashboard/songs/${id}`);
-  const sharedRowProps = { canDelete, selectedStudentId, selectedIds, onToggleSelect, deletingSongId, checkingId, onDeleteClick: handleDeleteClick, onAssignClick: setAssignDialogSong, onRowClick: handleRowClick };
+  const [expandedSongId, setExpandedSongId] = useState<string | null>(null);
+  const handleToggleExpand = (id: string) => setExpandedSongId((prev) => (prev === id ? null : id));
+  const sharedRowProps = { canDelete, selectedStudentId, selectedIds, onToggleSelect, deletingSongId, checkingId, onDeleteClick: handleDeleteClick, onAssignClick: setAssignDialogSong, expandedSongId, onToggleExpand: handleToggleExpand };
 
   return (
     <>
