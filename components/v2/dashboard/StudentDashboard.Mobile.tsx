@@ -11,6 +11,7 @@ import { PracticeSongList } from './student-widgets/PracticeSongList';
 import { QuickLinks } from './student-widgets/QuickLinks';
 import { StreakTracker } from './student-widgets/StreakTracker';
 import { AchievementBadges } from './student-widgets/AchievementBadges';
+import { PracticeLogButton } from '@/components/v2/practice';
 import type { StudentDashboardV2Props } from './StudentDashboard';
 
 export function StudentDashboardMobile({
@@ -83,6 +84,9 @@ export function StudentDashboardMobile({
           <QuickLinks totalAssignments={data.stats.activeAssignments} />
         </motion.div>
       </motion.div>
+
+      {/* Floating practice log button */}
+      <PracticeLogButton />
     </MobilePageShell>
   );
 }
