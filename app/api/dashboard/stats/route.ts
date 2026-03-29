@@ -35,6 +35,7 @@ export async function GET(_request: NextRequest) {
         { count: totalUsers },
         { count: totalTeachers },
         { count: totalStudents },
+        { count: activeStudents },
         { count: totalSongs },
         { count: totalLessons },
       ] = await Promise.all([
@@ -47,6 +48,11 @@ export async function GET(_request: NextRequest) {
           .from('profiles')
           .select('*', { count: 'exact', head: true })
           .eq('is_student', true),
+        supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_student', true)
+          .eq('student_status', 'active'),
         supabase.from('songs').select('*', { count: 'exact', head: true }),
         supabase.from('lessons').select('*', { count: 'exact', head: true }),
       ]);
@@ -57,6 +63,7 @@ export async function GET(_request: NextRequest) {
           totalUsers: totalUsers || 0,
           totalTeachers: totalTeachers || 0,
           totalStudents: totalStudents || 0,
+          activeStudents: activeStudents || 0,
           totalSongs: totalSongs || 0,
           totalLessons: totalLessons || 0,
         },
@@ -118,31 +125,36 @@ export async function GET(_request: NextRequest) {
       const lessonIds = lessons?.map((l) => l.id) || [];
 
       // Get song status counts for these lessons
-      const [{ count: songsLearning }, { count: completedSongs }, { count: totalAssigned }, { count: completedStudentAssignments }, { count: totalStudentAssignments }] =
-        await Promise.all([
-          supabase
-            .from('lesson_songs')
-            .select('*', { count: 'exact', head: true })
-            .in('lesson_id', lessonIds.length > 0 ? lessonIds : ['']),
-          supabase
-            .from('lesson_songs')
-            .select('*', { count: 'exact', head: true })
-            .in('lesson_id', lessonIds.length > 0 ? lessonIds : [''])
-            .eq('status', 'completed'),
-          supabase
-            .from('lesson_songs')
-            .select('*', { count: 'exact', head: true })
-            .in('lesson_id', lessonIds.length > 0 ? lessonIds : ['']),
-          supabase
-            .from('assignments')
-            .select('*', { count: 'exact', head: true })
-            .eq('student_id', user.id)
-            .eq('status', 'completed'),
-          supabase
-            .from('assignments')
-            .select('*', { count: 'exact', head: true })
-            .eq('student_id', user.id),
-        ]);
+      const [
+        { count: songsLearning },
+        { count: completedSongs },
+        { count: totalAssigned },
+        { count: completedStudentAssignments },
+        { count: totalStudentAssignments },
+      ] = await Promise.all([
+        supabase
+          .from('lesson_songs')
+          .select('*', { count: 'exact', head: true })
+          .in('lesson_id', lessonIds.length > 0 ? lessonIds : ['']),
+        supabase
+          .from('lesson_songs')
+          .select('*', { count: 'exact', head: true })
+          .in('lesson_id', lessonIds.length > 0 ? lessonIds : [''])
+          .eq('status', 'completed'),
+        supabase
+          .from('lesson_songs')
+          .select('*', { count: 'exact', head: true })
+          .in('lesson_id', lessonIds.length > 0 ? lessonIds : ['']),
+        supabase
+          .from('assignments')
+          .select('*', { count: 'exact', head: true })
+          .eq('student_id', user.id)
+          .eq('status', 'completed'),
+        supabase
+          .from('assignments')
+          .select('*', { count: 'exact', head: true })
+          .eq('student_id', user.id),
+      ]);
 
       const uniqueTeachers = new Set(lessons?.map((l) => l.teacher_id)).size;
       const lessonsDone = lessons?.length || 0;

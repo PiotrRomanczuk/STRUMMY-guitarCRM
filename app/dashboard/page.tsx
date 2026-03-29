@@ -13,7 +13,9 @@ import { getUIVersion } from '@/lib/ui-version.server';
 
 function resolveActiveView(
   view: string | string[] | undefined,
-  isAdmin: boolean, isTeacher: boolean, isStudent: boolean,
+  isAdmin: boolean,
+  isTeacher: boolean,
+  isStudent: boolean
 ): 'admin' | 'teacher' | 'student' {
   const v = typeof view === 'string' ? view : undefined;
   if (v === 'admin' && isAdmin) return 'admin';
@@ -63,13 +65,19 @@ export default async function DashboardPage({
       { count: totalUsers },
       { count: totalTeachers },
       { count: totalStudents },
+      { count: activeStudents },
       { count: totalSongs },
       { count: totalLessons },
       { data: recentUsers },
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      supabase.from('user_roles').select('*', { count: 'exact', head: true }).eq('role', 'teacher'),
-      supabase.from('user_roles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
+      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_teacher', true),
+      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_student', true),
+      supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_student', true)
+        .eq('student_status', 'active'),
       supabase.from('songs').select('*', { count: 'exact', head: true }),
       supabase.from('lessons').select('*', { count: 'exact', head: true }),
       supabase
@@ -83,9 +91,13 @@ export default async function DashboardPage({
       totalUsers: totalUsers || 0,
       totalTeachers: totalTeachers || 0,
       totalStudents: totalStudents || 0,
+      activeStudents: activeStudents || 0,
       totalSongs: totalSongs || 0,
       totalLessons: totalLessons || 0,
-      recentUsers: (recentUsers as { id: string; full_name: string; email: string; created_at: string }[] | null) || [],
+      recentUsers:
+        (recentUsers as
+          | { id: string; full_name: string; email: string; created_at: string }[]
+          | null) || [],
     };
 
     return (
@@ -104,10 +116,7 @@ export default async function DashboardPage({
 
   // Student View
   if (activeView === 'student') {
-    const [studentData, uiVersion] = await Promise.all([
-      getStudentDashboardData(),
-      getUIVersion(),
-    ]);
+    const [studentData, uiVersion] = await Promise.all([getStudentDashboardData(), getUIVersion()]);
 
     let sotwInRepertoire = false;
     if (sotw) {
@@ -148,10 +157,7 @@ export default async function DashboardPage({
 
   // Teacher View (default)
   if (activeView === 'teacher') {
-    const [teacherData, uiVersion] = await Promise.all([
-      getTeacherDashboardData(),
-      getUIVersion(),
-    ]);
+    const [teacherData, uiVersion] = await Promise.all([getTeacherDashboardData(), getUIVersion()]);
 
     if (uiVersion === 'v2') {
       return (
