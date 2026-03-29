@@ -78,3 +78,70 @@ export function getLessonStatusLabel(status: string | null | undefined): string 
       return 'Scheduled';
   }
 }
+
+export function getSongStatusStyle(status: string | null | undefined): string {
+  switch (status) {
+    case 'mastered':
+      return 'bg-emerald-500/10 text-emerald-400 border-transparent';
+    case 'remembered':
+    case 'with_author':
+      return 'bg-yellow-500/10 text-yellow-400 border-transparent';
+    case 'started':
+      return 'bg-blue-500/10 text-blue-400 border-transparent';
+    case 'to_learn':
+    default:
+      return 'bg-muted text-muted-foreground border-transparent';
+  }
+}
+
+export function getSongStatusLabel(status: string | null | undefined): string {
+  switch (status) {
+    case 'mastered':
+      return 'Mastered';
+    case 'with_author':
+      return 'With Author';
+    case 'remembered':
+      return 'Remembered';
+    case 'started':
+      return 'Started';
+    case 'to_learn':
+    default:
+      return 'To Learn';
+  }
+}
+
+export function getAssignmentStatusStyle(status: string | null | undefined): string {
+  switch (status) {
+    case 'completed':
+      return 'bg-emerald-500/10 text-emerald-400 border-transparent';
+    case 'in_progress':
+      return 'bg-blue-500/10 text-blue-400 border-transparent';
+    case 'pending':
+      return 'bg-yellow-500/10 text-yellow-400 border-transparent';
+    case 'overdue':
+      return 'bg-destructive/10 text-red-400 border-transparent';
+    case 'cancelled':
+      return 'bg-muted text-muted-foreground border-transparent';
+    case 'not_started':
+    default:
+      return 'bg-muted text-muted-foreground border-transparent';
+  }
+}
+
+export function getAssignmentStatusLabel(status: string | null | undefined): string {
+  switch (status) {
+    case 'completed':
+      return 'Completed';
+    case 'in_progress':
+      return 'In Progress';
+    case 'pending':
+      return 'Pending';
+    case 'overdue':
+      return 'Overdue';
+    case 'cancelled':
+      return 'Cancelled';
+    case 'not_started':
+    default:
+      return 'Not Started';
+  }
+}

@@ -268,7 +268,7 @@ export async function addSongToNextLessonAction(
 export async function searchSongsForRepertoireAction(
   query: string,
   studentId: string
-): Promise<{ data: Array<{ id: string; title: string; author: string; level: string | null; key: string | null }> } | { error: string }> {
+): Promise<{ data: Array<{ id: string; title: string; author: string; level: string | null; key: string | null; cover_image_url: string | null }> } | { error: string }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -288,17 +288,12 @@ export async function searchSongsForRepertoireAction(
   const existingSongIds = (existing || []).map((e) => e.song_id);
 
   // Search songs
-  let songQuery = supabase
+  const songQuery = supabase
     .from('songs')
-    .select('id, title, author, level, key')
+    .select('id, title, author, level, key, cover_image_url')
     .is('deleted_at', null)
     .eq('is_draft', false)
-    .order('title', { ascending: true })
-    .limit(20);
-
-  if (query.trim()) {
-    songQuery = songQuery.or(`title.ilike.%${query}%,author.ilike.%${query}%`);
-  }
+    .order('created_at', { ascending: false });
 
   const { data: songs, error } = await songQuery;
 

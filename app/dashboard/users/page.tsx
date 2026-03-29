@@ -15,6 +15,7 @@ interface ProfileRow {
   id: string;
   email: string | null;
   full_name: string | null;
+  avatar_url: string | null;
   is_admin: boolean;
   is_teacher: boolean;
   is_student: boolean;
@@ -39,12 +40,13 @@ function toUserProfile(row: ProfileRow) {
     isActive: row.is_active ?? true,
     isRegistered: !row.is_shadow,
     studentStatus: (row.student_status as 'active' | 'archived') ?? 'active',
+    avatar_url: row.avatar_url ?? null,
     created_at: row.created_at,
   };
 }
 
 const PROFILE_FIELDS =
-  'id, email, full_name, is_admin, is_teacher, is_student, is_active, is_shadow, student_status, created_at';
+  'id, email, full_name, avatar_url, is_admin, is_teacher, is_student, is_active, is_shadow, student_status, created_at';
 
 async function fetchInitialUsers() {
   const { user, isAdmin, isTeacher, isStudent } = await getUserWithRolesSSR();
@@ -86,7 +88,7 @@ async function fetchInitialUsers() {
     query = query.in('id', allowedStudentIds);
   }
 
-  const { data } = await query.eq('student_status', 'active').limit(50);
+  const { data } = await query.limit(50);
 
   return (data ?? []).map((row) => toUserProfile(row as ProfileRow));
 }

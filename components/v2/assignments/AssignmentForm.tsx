@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAssignmentMutations } from '@/components/assignments/hooks/useAssignmentMutations';
 import { StepWizardForm } from '@/components/v2/primitives/StepWizardForm';
+import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { toast } from 'sonner';
 import { StepStudent, StepContent, StepSchedule } from './AssignmentForm.Steps';
 import { SongPicker } from './AssignmentForm.SongPicker';
@@ -115,7 +116,7 @@ export function AssignmentForm({
   ];
 
   return (
-    <div className="px-4 pb-safe">
+    <MobilePageShell title={mode === 'create' ? 'New Assignment' : 'Edit Assignment'}>
       <form onSubmit={handleSubmit}>
         <StepWizardForm
           steps={steps}
@@ -125,7 +126,7 @@ export function AssignmentForm({
           submitDisabled={isLoading}
         />
       </form>
-    </div>
+    </MobilePageShell>
   );
 }
 

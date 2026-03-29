@@ -19,6 +19,7 @@ export default function UserDetailDesktop({
   tabsData,
   parentProfile,
   linkedStudents = [],
+  initialTab,
 }: UserDetailV2Props) {
   const userName = user.full_name || user.email || 'User';
 
@@ -45,7 +46,7 @@ export default function UserDetailDesktop({
 
       <UserDetailTabs
         userId={tabsData.userId}
-        activeTab="overview"
+        activeTab={initialTab || 'overview'}
         lessons={tabsData.lessons as unknown as Lesson[]}
         assignments={tabsData.assignments}
         repertoire={tabsData.repertoire}

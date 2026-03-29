@@ -98,7 +98,40 @@ export default async function LessonDetailPage({ params }: LessonDetailPageProps
     redirect('/sign-in');
   }
 
-  // If user is a student and NOT an admin/teacher, show the student view
+  const uiVersion = await getUIVersion();
+
+  // v2 handles all roles via canEdit/canDelete props — students get read-only
+  if (uiVersion === 'v2') {
+    const lesson = await fetchLesson(id);
+
+    if (!lesson) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-2">Lesson Not Found</h1>
+            <p className="text-gray-600 mb-4">The lesson does not exist.</p>
+            <Link href="/dashboard/lessons" className="text-blue-600 hover:underline">
+              Back to Lessons
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    const canEdit = isAdmin || (isTeacher && lesson.teacher_id === user.id);
+    const canDelete = isAdmin || (isTeacher && lesson.teacher_id === user.id);
+
+    return (
+      <LessonDetailV2
+        lesson={lesson}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        onDelete={handleDeleteLesson.bind(null, id)}
+      />
+    );
+  }
+
+  // v1 fallback: students get the v1 student view
   if (isStudent && !isAdmin && !isTeacher) {
     return <StudentLessonDetailPageClient />;
   }
@@ -121,19 +154,6 @@ export default async function LessonDetailPage({ params }: LessonDetailPageProps
 
   const canEdit = isAdmin || (isTeacher && lesson.teacher_id === user.id);
   const canDelete = isAdmin || (isTeacher && lesson.teacher_id === user.id);
-
-  const uiVersion = await getUIVersion();
-
-  if (uiVersion === 'v2') {
-    return (
-      <LessonDetailV2
-        lesson={lesson}
-        canEdit={canEdit}
-        canDelete={canDelete}
-        onDelete={handleDeleteLesson.bind(null, id)}
-      />
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">

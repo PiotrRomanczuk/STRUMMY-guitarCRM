@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     if (isStudent && !isAdmin && !isTeacher) {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, is_admin, is_teacher, is_student, is_shadow, is_active, student_status, created_at, updated_at')
+        .select('id, email, full_name, avatar_url, is_admin, is_teacher, is_student, is_shadow, is_active, student_status, created_at, updated_at')
         .eq('id', user.id)
         .single();
 
@@ -57,6 +57,7 @@ export async function GET(request: Request) {
         firstName: null,
         lastName: null,
         full_name: data.full_name,
+        avatar_url: data.avatar_url ?? null,
         isAdmin: data.is_admin,
         isTeacher: data.is_teacher,
         isStudent: data.is_student,
@@ -100,7 +101,7 @@ export async function GET(request: Request) {
     // Build query
     let query = supabase
       .from('profiles')
-      .select('id, email, full_name, is_admin, is_teacher, is_student, is_shadow, is_active, student_status, created_at, updated_at', { count: 'exact' });
+      .select('id, email, full_name, avatar_url, is_admin, is_teacher, is_student, is_shadow, is_active, student_status, created_at, updated_at', { count: 'exact' });
 
     // For teachers, restrict to their students only
     if (allowedStudentIds !== null) {
@@ -147,6 +148,7 @@ export async function GET(request: Request) {
       firstName: null,
       lastName: null,
       full_name: profile.full_name,
+      avatar_url: profile.avatar_url ?? null,
       isAdmin: profile.is_admin,
       isTeacher: profile.is_teacher,
       isStudent: profile.is_student,

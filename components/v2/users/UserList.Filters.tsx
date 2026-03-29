@@ -21,6 +21,7 @@ const ROLE_CHIPS = [
 ];
 
 const STATUS_CHIPS = [
+  { label: 'All', value: '' as const },
   { label: 'Active', value: 'active' as const },
   { label: 'Archived', value: 'archived' as const },
 ];

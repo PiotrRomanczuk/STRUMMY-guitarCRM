@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { LyricsViewer } from './LyricsViewer';
 import { VideoPlayer } from './VideoPlayer';
+import { RelatedLessons } from './SongDetail.RelatedLessons';
 import { SongDetailRelatedStudents } from './SongDetail.RelatedStudents';
 import type { SongDetailV2Props } from './SongDetail';
 
@@ -20,8 +21,12 @@ export default function SongDetailDesktop({ song, isTeacher, onDelete }: SongDet
         <div className="max-w-lg mx-auto bg-card rounded-xl p-16 text-center">
           <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-lg font-semibold mb-2">Song not found</h2>
-          <p className="text-sm text-muted-foreground mb-6">This song may have been deleted or you do not have permission.</p>
-          <Button asChild><Link href="/dashboard/songs">Back to songs</Link></Button>
+          <p className="text-sm text-muted-foreground mb-6">
+            This song may have been deleted or you do not have permission.
+          </p>
+          <Button asChild>
+            <Link href="/dashboard/songs">Back to songs</Link>
+          </Button>
         </div>
       </div>
     );
@@ -40,7 +45,13 @@ export default function SongDetailDesktop({ song, isTeacher, onDelete }: SongDet
         <div className="flex items-center gap-4">
           <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-card shrink-0 flex items-center justify-center">
             {song.cover_image_url ? (
-              <Image src={song.cover_image_url} alt={`${song.title} cover`} fill className="object-cover" priority />
+              <Image
+                src={song.cover_image_url}
+                alt={`${song.title} cover`}
+                fill
+                className="object-cover"
+                priority
+              />
             ) : (
               <Music className="h-8 w-8 text-primary/60" />
             )}
@@ -48,11 +59,17 @@ export default function SongDetailDesktop({ song, isTeacher, onDelete }: SongDet
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">{song.title || 'Untitled'}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {song.author || 'Unknown artist'}{song.release_year ? ` (${song.release_year})` : ''}
+              {song.author || 'Unknown artist'}
+              {song.release_year ? ` (${song.release_year})` : ''}
             </p>
             {song.level && (
-              <span className={cn('inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ring-1',
-                levelColors[song.level.toLowerCase()] ?? 'bg-primary/10 text-primary ring-primary/20')}>
+              <span
+                className={cn(
+                  'inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ring-1',
+                  levelColors[song.level.toLowerCase()] ??
+                    'bg-primary/10 text-primary ring-primary/20'
+                )}
+              >
                 {song.level}
               </span>
             )}
@@ -60,11 +77,16 @@ export default function SongDetailDesktop({ song, isTeacher, onDelete }: SongDet
         </div>
         {isTeacher && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => router.push(`/dashboard/songs/${song.id}/edit`)}>
-              <Pencil className="h-4 w-4 mr-2" />Edit
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/dashboard/songs/${song.id}/edit`)}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
             </Button>
             <Button variant="destructive" onClick={onDelete}>
-              <Trash2 className="h-4 w-4 mr-2" />Delete
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
             </Button>
           </div>
         )}
@@ -75,13 +97,17 @@ export default function SongDetailDesktop({ song, isTeacher, onDelete }: SongDet
         <div className="lg:col-span-2 space-y-6">
           {song.lyrics_with_chords && (
             <div className="bg-card rounded-xl p-6">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Lyrics & Chords</h3>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
+                Lyrics & Chords
+              </h3>
               <LyricsViewer text={song.lyrics_with_chords} />
             </div>
           )}
           {song.youtube_url && (
             <div className="bg-card rounded-xl p-6">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Video</h3>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
+                Video
+              </h3>
               <VideoPlayer url={song.youtube_url} />
             </div>
           )}
@@ -89,26 +115,37 @@ export default function SongDetailDesktop({ song, isTeacher, onDelete }: SongDet
 
         <div className="space-y-6">
           <div className="bg-card rounded-xl p-6 space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Details</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Details
+            </h3>
             {song.key && <MetaRow icon={<Guitar />} label="Key" value={song.key} />}
             {song.tempo && <MetaRow icon={<Timer />} label="Tempo" value={`${song.tempo} BPM`} />}
             {song.category && <MetaRow icon={<Tag />} label="Category" value={song.category} />}
             {song.capo_fret != null && (
-              <MetaRow icon={<Music />} label="Capo" value={song.capo_fret === 0 ? 'No capo' : `Fret ${song.capo_fret}`} />
+              <MetaRow
+                icon={<Music />}
+                label="Capo"
+                value={song.capo_fret === 0 ? 'No capo' : `Fret ${song.capo_fret}`}
+              />
             )}
-            {song.strumming_pattern && <MetaRow icon={<Waves />} label="Strumming" value={song.strumming_pattern} />}
+            {song.strumming_pattern && (
+              <MetaRow icon={<Waves />} label="Strumming" value={song.strumming_pattern} />
+            )}
             {song.chords && (
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-1">Chords</p>
                 <div className="flex items-center gap-3">
                   {song.chords.split(/\s+/).map((c) => (
-                    <span key={c} className="font-mono text-base font-extrabold text-primary">{c}</span>
+                    <span key={c} className="font-mono text-base font-extrabold text-primary">
+                      {c}
+                    </span>
                   ))}
                 </div>
               </div>
             )}
           </div>
           <DesktopLinks song={song} />
+          <RelatedLessons songId={song.id} />
           <SongDetailRelatedStudents songId={song.id} />
         </div>
       </div>
@@ -124,7 +161,8 @@ function MetaRow({ icon, label, value }: { icon: React.ReactNode; label: string;
         <span className="text-sm">{label}</span>
       </span>
       <span className="text-sm font-semibold text-foreground">{value}</span>
-    </div>);
+    </div>
+  );
 }
 
 function DesktopLinks({ song }: { song: NonNullable<SongDetailV2Props['song']> }) {
@@ -136,11 +174,18 @@ function DesktopLinks({ song }: { song: NonNullable<SongDetailV2Props['song']> }
   if (!links.length) return null;
   return (
     <div className="bg-card rounded-xl p-6 space-y-3">
-      <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Resources</h3>
+      <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        Resources
+      </h3>
       <div className="space-y-2">
         {links.map((link) => (
-          <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer"
-            className="w-full h-12 bg-muted hover:bg-muted/80 transition-colors rounded-xl flex items-center justify-between px-5">
+          <a
+            key={link.label}
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full h-12 bg-muted hover:bg-muted/80 transition-colors rounded-xl flex items-center justify-between px-5"
+          >
             <span className="text-sm font-medium text-foreground">{link.label}</span>
             <ExternalLink className="h-4 w-4 text-muted-foreground" />
           </a>

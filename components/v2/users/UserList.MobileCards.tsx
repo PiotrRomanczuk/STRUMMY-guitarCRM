@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Plus, Users } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   getDisplayName,
@@ -14,11 +14,12 @@ export function UserCard({ user }: { user: UserProfile }) {
   return (
     <Link
       href={`/dashboard/users/${user.id}`}
-      className="block bg-card rounded-xl border border-border p-4
+      className="block bg-card rounded-[10px] border border-border p-4
                  active:bg-muted/50 transition-colors"
     >
       <div className="flex items-center gap-3">
         <Avatar className="h-10 w-10 shrink-0">
+          {user.avatar_url && <AvatarImage src={user.avatar_url} alt={getDisplayName(user)} />}
           <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
             {getInitials(user)}
           </AvatarFallback>

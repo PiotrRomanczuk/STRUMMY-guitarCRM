@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Plus, BookOpen, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { fastStaggerContainer, listItem } from '@/lib/animations/variants';
+import { fastStaggerContainer, listItem, safeVariants } from '@/lib/animations/variants';
 
 import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { CollapsibleFilterBar } from '@/components/v2/primitives/CollapsibleFilterBar';
@@ -83,7 +83,7 @@ export function LessonListMobile({
         <LessonListEmpty canCreate={canCreate} router={router} />
       ) : (
         <motion.div
-          variants={filteredLessons.length > 30 ? undefined : fastStaggerContainer}
+          variants={filteredLessons.length > 30 ? undefined : safeVariants(fastStaggerContainer)}
           initial={filteredLessons.length > 30 ? false : 'hidden'}
           animate="visible"
           className="space-y-2"
@@ -91,7 +91,7 @@ export function LessonListMobile({
           {filteredLessons.map((lesson) => (
             <motion.div
               key={lesson.id}
-              variants={filteredLessons.length > 30 ? undefined : listItem}
+              variants={filteredLessons.length > 30 ? undefined : safeVariants(listItem)}
             >
               <SwipeableListItem
                 onEdit={canCreate ? () => handleEdit(lesson.id!) : undefined}

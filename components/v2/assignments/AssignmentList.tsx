@@ -7,8 +7,9 @@ import { motion } from 'framer-motion';
 import { ClipboardList, Plus } from 'lucide-react';
 import { useLayoutMode } from '@/hooks/use-is-widescreen';
 import { useAssignmentList } from '@/components/assignments/hooks/useAssignmentList';
-import { staggerContainer, listItem } from '@/lib/animations/variants';
+import { staggerContainer, listItem, safeVariants } from '@/lib/animations/variants';
 import type { Assignment } from '@/components/assignments/hooks/useAssignment';
+import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { CollapsibleFilterBar } from '@/components/v2/primitives/CollapsibleFilterBar';
 import { FloatingActionButton } from '@/components/v2/primitives/FloatingActionButton';
 import { AssignmentListSkeleton } from './AssignmentList.Skeleton';
@@ -64,7 +65,19 @@ function MobileView({ assignments, isLoading, canCreate }: MobileViewProps) {
   if (isLoading) return <AssignmentListSkeleton />;
 
   return (
-    <div className="px-4 space-y-4">
+    <MobilePageShell
+      title="Assignments"
+      subtitle={`${filtered.length} assignment${filtered.length !== 1 ? 's' : ''}`}
+      showBack={false}
+      fab={
+        canCreate ? (
+          <FloatingActionButton
+            onClick={() => router.push('/dashboard/assignments/new')}
+            label="Create assignment"
+          />
+        ) : undefined
+      }
+    >
       <CollapsibleFilterBar
         filters={FILTER_OPTIONS}
         active={filter}
@@ -74,22 +87,15 @@ function MobileView({ assignments, isLoading, canCreate }: MobileViewProps) {
       {filtered.length === 0 ? (
         <EmptyState canCreate={canCreate} />
       ) : (
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-2">
+        <motion.div variants={safeVariants(staggerContainer)} initial="hidden" animate="visible" className="space-y-2">
           {filtered.map((assignment) => (
-            <motion.div key={assignment.id} variants={listItem}>
+            <motion.div key={assignment.id} variants={safeVariants(listItem)}>
               <AssignmentCardMobile assignment={assignment} />
             </motion.div>
           ))}
         </motion.div>
       )}
-
-      {canCreate && (
-        <FloatingActionButton
-          onClick={() => router.push('/dashboard/assignments/new')}
-          label="Create assignment"
-        />
-      )}
-    </div>
+    </MobilePageShell>
   );
 }
 

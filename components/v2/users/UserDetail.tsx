@@ -13,6 +13,7 @@ export interface UserDetailV2Props {
   tabsData: UserDetailTabsData;
   parentProfile?: ParentProfile | null;
   linkedStudents?: ParentProfile[];
+  initialTab?: string;
 }
 
 export function UserDetailV2(props: UserDetailV2Props) {

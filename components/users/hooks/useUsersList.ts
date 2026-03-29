@@ -15,6 +15,7 @@ interface UserProfile {
   isActive: boolean;
   isRegistered: boolean;
   studentStatus: 'active' | 'archived';
+  avatar_url: string | null;
   created_at: string | null;
 }
 
@@ -32,7 +33,7 @@ export function useUsersList(
   studentStatusFilter: '' | 'active' | 'archived',
   initialUsers?: UserProfile[]
 ) {
-  const isDefaultState = !search && !roleFilter && !activeFilter && studentStatusFilter === 'active';
+  const isDefaultState = !search && !roleFilter && !activeFilter && !studentStatusFilter;
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['users', search, roleFilter, activeFilter, studentStatusFilter],

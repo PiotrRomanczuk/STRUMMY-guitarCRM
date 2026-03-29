@@ -15,7 +15,7 @@ export function QuickLinks({ totalAssignments }: QuickLinksProps) {
       icon: ListTodo,
       label: `Tasks${totalAssignments > 0 ? ` (${totalAssignments})` : ''}`,
     },
-    { href: '/dashboard/practice', icon: Timer, label: 'Practice' },
+    { href: '/dashboard/repertoire', icon: Timer, label: 'Practice' },
   ];
 
   return (
