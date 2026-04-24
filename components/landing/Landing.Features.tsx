@@ -1,14 +1,11 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import {
-  LandingContainer,
-  SectionKicker,
-  Display,
-  Eyebrow,
-  Placeholder,
-} from './landing-primitives';
+import { LandingContainer, SectionKicker, Display, Eyebrow } from './landing-primitives';
 import { LandingFeatureScreenshot } from './Landing.FeatureScreenshot';
+import { LandingLessonsScreenshot } from './Landing.LessonsScreenshot';
+import { LandingLibraryScreenshot } from './Landing.LibraryScreenshot';
+import { LandingFretboardScreenshot } from './Landing.FretboardScreenshot';
 
 interface Feature {
   n: string;
@@ -42,7 +39,7 @@ const FEATURES: Feature[] = [
       'In-lesson live session mode',
       'AI-generated lesson summaries',
     ],
-    render: <Placeholder label="lessons.png" note="screenshot · drop in later" height={480} />,
+    render: <LandingLessonsScreenshot />,
   },
   {
     n: '03',
@@ -54,7 +51,7 @@ const FEATURES: Feature[] = [
       'Spotify previews attached',
       'Shared across your whole studio',
     ],
-    render: <Placeholder label="songs.png" note="screenshot · drop in later" height={480} />,
+    render: <LandingLibraryScreenshot />,
   },
   {
     n: '04',
@@ -66,9 +63,7 @@ const FEATURES: Feature[] = [
       'Click a note, hear a note',
       'Training quizzes for students',
     ],
-    render: (
-      <Placeholder label="fretboard screenshot" note="live component available" height={480} />
-    ),
+    render: <LandingFretboardScreenshot />,
   },
 ];
 
