@@ -2,26 +2,33 @@
 
 import { LandingHeader } from './Landing.Header';
 import { LandingHero } from './Landing.Hero';
-import { LandingSocialProof } from './Landing.SocialProof';
+import { LandingDayInTheLife } from './Landing.DayInTheLife';
 import { LandingFeatures } from './Landing.Features';
-import { LandingDashboardPreview } from './Landing.DashboardPreview';
-import { LandingRoles } from './Landing.Roles';
-import { LandingTestimonials } from './Landing.Testimonials';
 import { LandingIntegrations } from './Landing.Integrations';
+import { LandingMetrics } from './Landing.Metrics';
+import { LandingFounder } from './Landing.Founder';
+import { LandingBetaCard } from './Landing.BetaCard';
 import { LandingCTA } from './Landing.CTA';
 import { LandingFooter } from './Landing.Footer';
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="landing-editorial min-h-screen font-sans antialiased"
+      style={{
+        background: 'var(--l-ivory)',
+        color: 'var(--l-ink)',
+        fontFeatureSettings: '"ss01", "cv11"',
+      }}
+    >
       <LandingHeader />
       <LandingHero />
-      <LandingSocialProof />
+      <LandingDayInTheLife />
       <LandingFeatures />
-      <LandingDashboardPreview />
-      <LandingRoles />
-      <LandingTestimonials />
       <LandingIntegrations />
+      <LandingMetrics />
+      <LandingFounder />
+      <LandingBetaCard />
       <LandingCTA />
       <LandingFooter />
     </div>

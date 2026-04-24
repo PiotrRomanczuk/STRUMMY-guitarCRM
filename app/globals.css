@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "driver.js/dist/driver.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'driver.js/dist/driver.css';
 
 @plugin "@tailwindcss/typography";
 
@@ -11,6 +11,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-fraunces), 'Iowan Old Style', Georgia, serif;
   --font-music: 'SF Mono', 'SFMono-Regular', ui-monospace, 'Menlo', 'Monaco', 'Consolas', monospace;
   --font-display: var(--font-geist-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -110,7 +111,6 @@
   }
 
   @keyframes shimmer {
-
     0%,
     100% {
       opacity: 1;
@@ -240,16 +240,69 @@
   --chart-5: oklch(0.645 0.246 16.439);
 }
 
-
+/* ── Landing page editorial palette ── */
+.landing-editorial {
+  --l-ivory: #f6f2ea;
+  --l-paper: #fbf8f1;
+  --l-card: #ffffff;
+  --l-ink: #1a1613;
+  --l-ink-2: #2a2420;
+  --l-ink-3: #4a4037;
+  --l-ink-4: #8a7e70;
+  --l-ink-5: #c7bdaf;
+  --l-rule: #e6dccb;
+  --l-rule-2: #efe7d6;
+  --l-gold: #c89523;
+  --l-gold-2: #b17f12;
+  --l-gold-dim: #e9c874;
+  --l-gold-tint: #fbf1d3;
+  --l-success: #3a7d3a;
+  --l-warn: #c89523;
+  --l-danger: #b84a3a;
+  --l-info: #3a5a7d;
+  --l-shadow-sm: 0 1px 2px rgba(26, 22, 19, 0.04), 0 1px 1px rgba(26, 22, 19, 0.03);
+  --l-shadow-md: 0 4px 12px rgba(26, 22, 19, 0.06), 0 2px 4px rgba(26, 22, 19, 0.04);
+  --l-shadow-lg: 0 20px 40px -20px rgba(26, 22, 19, 0.18), 0 8px 18px -10px rgba(26, 22, 19, 0.1);
+  --l-shadow-hero:
+    0 40px 80px -30px rgba(26, 22, 19, 0.35), 0 20px 40px -20px rgba(26, 22, 19, 0.18);
+}
+.dark .landing-editorial {
+  --l-ivory: #15110e;
+  --l-paper: #1a1612;
+  --l-card: #221c17;
+  --l-ink: #f5efe4;
+  --l-ink-2: #e6decd;
+  --l-ink-3: #b5a995;
+  --l-ink-4: #7a6e5e;
+  --l-ink-5: #40372d;
+  --l-rule: #2e2620;
+  --l-rule-2: #362c24;
+  --l-gold: #e7b64a;
+  --l-gold-2: #f0c968;
+  --l-gold-dim: #8a6a1e;
+  --l-gold-tint: #3a2d14;
+  --l-success: #7ac47a;
+  --l-warn: #e7b64a;
+  --l-danger: #e8806e;
+  --l-info: #8ab0d8;
+  --l-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1), 0 1px 1px rgba(0, 0, 0, 0.06);
+  --l-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+  --l-shadow-lg: 0 20px 40px -20px rgba(0, 0, 0, 0.4), 0 8px 18px -10px rgba(0, 0, 0, 0.25);
+  --l-shadow-hero: 0 40px 80px -30px rgba(0, 0, 0, 0.5), 0 20px 40px -20px rgba(0, 0, 0, 0.3);
+}
 
 @layer base {
-
   *,
   *::before,
   *::after {
     @apply border-border outline-ring/50;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease,
-      box-shadow 0.3s ease, fill 0.3s ease, stroke 0.3s ease;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease,
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      fill 0.3s ease,
+      stroke 0.3s ease;
   }
 
   body {
@@ -264,8 +317,8 @@
   }
 
   /* Prevent overscroll bounce in modal/drawer scroll containers */
-  [role="dialog"],
-  [data-state="open"] {
+  [role='dialog'],
+  [data-state='open'] {
     overscroll-behavior: contain;
   }
 }
@@ -346,11 +399,15 @@
   }
 
   .landing-shadow-card {
-    box-shadow: 0 1px 3px hsl(42 90% 45% / 0.04), 0 8px 24px hsl(42 90% 45% / 0.06);
+    box-shadow:
+      0 1px 3px hsl(42 90% 45% / 0.04),
+      0 8px 24px hsl(42 90% 45% / 0.06);
   }
 
   .landing-shadow-card-hover {
-    box-shadow: 0 4px 12px hsl(42 90% 45% / 0.08), 0 16px 40px hsl(42 90% 45% / 0.1);
+    box-shadow:
+      0 4px 12px hsl(42 90% 45% / 0.08),
+      0 16px 40px hsl(42 90% 45% / 0.1);
   }
 
   .landing-perspective-tilt {
@@ -362,8 +419,13 @@
   }
 
   @keyframes landing-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
   }
 }
 
@@ -410,7 +472,6 @@
 
 /* Portrait Display Optimization (1080px+ width in portrait mode) */
 @media (orientation: portrait) and (min-width: 1000px) {
-
   /* For vertical 1080p displays - use 2 columns to maximize horizontal space */
   .portrait\:grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -594,7 +655,7 @@
 
 /* iPhone 17 Pro Max Optimization (430px width) */
 @media (max-width: 430px) {
-  .mobile\:space-y-3> :not([hidden])~ :not([hidden]) {
+  .mobile\:space-y-3 > :not([hidden]) ~ :not([hidden]) {
     margin-top: 0.75rem;
   }
 

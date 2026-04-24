@@ -1,13 +1,11 @@
 export { LandingPage } from './LandingPage';
 export { LandingHeader } from './Landing.Header';
 export { LandingHero } from './Landing.Hero';
-export { LandingSocialProof } from './Landing.SocialProof';
 export { LandingFeatures } from './Landing.Features';
-export { LandingDashboardPreview } from './Landing.DashboardPreview';
-export { LandingDashboardMockup } from './Landing.DashboardMockup';
-export { LandingRoles } from './Landing.Roles';
-export { LandingTestimonials } from './Landing.Testimonials';
 export { LandingIntegrations } from './Landing.Integrations';
+export { LandingMetrics } from './Landing.Metrics';
+export { LandingFounder } from './Landing.Founder';
+export { LandingBetaCard } from './Landing.BetaCard';
 export { LandingCTA } from './Landing.CTA';
 export { LandingFooter } from './Landing.Footer';
-export { LandingPricing } from './Landing.Pricing';
+export { LandingDayInTheLife } from './Landing.DayInTheLife';

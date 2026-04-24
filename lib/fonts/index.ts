@@ -37,6 +37,7 @@ import {
   Figtree,
   Albert_Sans,
   Anybody,
+  Fraunces,
 } from 'next/font/google';
 
 import { ACTIVE_FONT_SCHEME, FONT_SCHEMES } from './fonts.config';
@@ -47,32 +48,140 @@ const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin']
 const inter = Inter({ variable: '--font-inter', subsets: ['latin'] });
 const jetbrainsMono = JetBrains_Mono({ variable: '--font-jetbrains-mono', subsets: ['latin'] });
 const plusJakartaSans = Plus_Jakarta_Sans({ variable: '--font-plus-jakarta', subsets: ['latin'] });
-const firaCode = Fira_Code({ variable: '--font-fira-code', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const spaceGrotesk = Space_Grotesk({ variable: '--font-space-grotesk', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const spaceMono = Space_Mono({ variable: '--font-space-mono', weight: ['400', '700'], subsets: ['latin'] });
-const poppins = Poppins({ variable: '--font-poppins', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const sourceCodePro = Source_Code_Pro({ variable: '--font-source-code', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const dmSans = DM_Sans({ variable: '--font-dm-sans', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const dmSerifDisplay = DM_Serif_Display({ variable: '--font-dm-serif', weight: ['400'], subsets: ['latin'] });
-const ibmPlexMono = IBM_Plex_Mono({ variable: '--font-ibm-plex-mono', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const workSans = Work_Sans({ variable: '--font-work-sans', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const robotoMono = Roboto_Mono({ variable: '--font-roboto-mono', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const manrope = Manrope({ variable: '--font-manrope', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const rubik = Rubik({ variable: '--font-rubik', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const courierPrime = Courier_Prime({ variable: '--font-courier-prime', weight: ['400', '700'], subsets: ['latin'] });
-const nunito = Nunito({ variable: '--font-nunito', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const outfit = Outfit({ variable: '--font-outfit', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const sora = Sora({ variable: '--font-sora', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const redHatMono = Red_Hat_Mono({ variable: '--font-red-hat-mono', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const urbanist = Urbanist({ variable: '--font-urbanist', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const lexend = Lexend({ variable: '--font-lexend', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const archivo = Archivo({ variable: '--font-archivo', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const inconsolata = Inconsolata({ variable: '--font-inconsolata', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const cabin = Cabin({ variable: '--font-cabin', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const epilogue = Epilogue({ variable: '--font-epilogue', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const figtree = Figtree({ variable: '--font-figtree', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const albertSans = Albert_Sans({ variable: '--font-albert-sans', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
-const anybody = Anybody({ variable: '--font-anybody', weight: ['400', '500', '600', '700'], subsets: ['latin'] });
+const firaCode = Fira_Code({
+  variable: '--font-fira-code',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-space-grotesk',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const spaceMono = Space_Mono({
+  variable: '--font-space-mono',
+  weight: ['400', '700'],
+  subsets: ['latin'],
+});
+const poppins = Poppins({
+  variable: '--font-poppins',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const sourceCodePro = Source_Code_Pro({
+  variable: '--font-source-code',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const dmSans = DM_Sans({
+  variable: '--font-dm-sans',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const dmSerifDisplay = DM_Serif_Display({
+  variable: '--font-dm-serif',
+  weight: ['400'],
+  subsets: ['latin'],
+});
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: '--font-ibm-plex-mono',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const workSans = Work_Sans({
+  variable: '--font-work-sans',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const robotoMono = Roboto_Mono({
+  variable: '--font-roboto-mono',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const manrope = Manrope({
+  variable: '--font-manrope',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const rubik = Rubik({
+  variable: '--font-rubik',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const courierPrime = Courier_Prime({
+  variable: '--font-courier-prime',
+  weight: ['400', '700'],
+  subsets: ['latin'],
+});
+const nunito = Nunito({
+  variable: '--font-nunito',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const outfit = Outfit({
+  variable: '--font-outfit',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const sora = Sora({
+  variable: '--font-sora',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const redHatMono = Red_Hat_Mono({
+  variable: '--font-red-hat-mono',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const urbanist = Urbanist({
+  variable: '--font-urbanist',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const lexend = Lexend({
+  variable: '--font-lexend',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const archivo = Archivo({
+  variable: '--font-archivo',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const inconsolata = Inconsolata({
+  variable: '--font-inconsolata',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const cabin = Cabin({
+  variable: '--font-cabin',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const epilogue = Epilogue({
+  variable: '--font-epilogue',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const figtree = Figtree({
+  variable: '--font-figtree',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const albertSans = Albert_Sans({
+  variable: '--font-albert-sans',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
+const fraunces = Fraunces({
+  variable: '--font-fraunces',
+  subsets: ['latin'],
+});
+const anybody = Anybody({
+  variable: '--font-anybody',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+});
 
 // Font mapping
 const fontMap = {
@@ -107,6 +216,7 @@ const fontMap = {
   Figtree: figtree,
   'Albert Sans': albertSans,
   Anybody: anybody,
+  Fraunces: fraunces,
 };
 
 /**
@@ -147,6 +257,6 @@ export function getFontVariableClasses(): string {
  * Get all font classes (for dynamic switching - loads all fonts)
  */
 export function getAllFontClasses(): string {
-  const allClasses = Object.values(fontMap).map(font => font.variable);
+  const allClasses = Object.values(fontMap).map((font) => font.variable);
   return [...new Set(allClasses)].join(' ');
 }
