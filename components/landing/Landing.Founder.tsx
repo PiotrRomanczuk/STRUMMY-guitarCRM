@@ -16,34 +16,37 @@ export function LandingFounder() {
     >
       <LandingContainer>
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.3fr] lg:gap-20">
-          {/* Portrait placeholder */}
+          {/* Portrait */}
           <div className="relative">
             <div
               className="relative grid w-full place-items-center overflow-hidden rounded-xl"
               style={{
                 aspectRatio: '4 / 5',
                 border: '1px solid var(--l-rule)',
-                background: `repeating-linear-gradient(135deg, var(--l-rule-2) 0px, var(--l-rule-2) 1px, transparent 1px, transparent 9px)`,
-                backgroundColor: 'var(--l-card)',
+                background: 'var(--l-paper)',
               }}
             >
-              <div
-                className="rounded-md px-3 py-2 font-mono text-[11px] text-center"
-                style={{
-                  border: '1px solid var(--l-rule)',
-                  background: 'var(--l-card)',
-                  color: 'var(--l-ink-3)',
-                }}
-              >
+              {/* Initials avatar as portrait stand-in */}
+              <div className="flex flex-col items-center gap-4">
                 <div
-                  className="text-[9px] uppercase tracking-[0.12em]"
-                  style={{ color: 'var(--l-gold-2)' }}
+                  className="grid place-items-center rounded-full font-serif text-[64px] font-normal text-white"
+                  style={{
+                    width: 160,
+                    height: 160,
+                    background: 'linear-gradient(135deg, var(--l-gold), var(--l-gold-2))',
+                    boxShadow: 'var(--l-shadow-lg)',
+                  }}
                 >
-                  Portrait
+                  PR
                 </div>
-                <div>founder.jpg</div>
+                <div
+                  className="font-serif text-xl tracking-[-0.01em]"
+                  style={{ color: 'var(--l-ink-2)' }}
+                >
+                  Piotr Romanczuk
+                </div>
               </div>
-              <div className="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 opacity-15">
+              <div className="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 opacity-10">
                 <StaffLines width="100%" height={100} color="var(--l-ink)" />
               </div>
             </div>
@@ -51,7 +54,7 @@ export function LandingFounder() {
               className="mt-3.5 font-mono text-[11px] uppercase tracking-[0.08em]"
               style={{ color: 'var(--l-ink-4)' }}
             >
-              Brooklyn, NY · Est. 2024
+              Poland · Est. 2024
             </div>
           </div>
 
@@ -66,16 +69,16 @@ export function LandingFounder() {
               className="mb-5 font-serif text-[17px] italic leading-[1.7]"
               style={{ color: 'var(--l-ink-2)', textWrap: 'pretty' }}
             >
-              &ldquo;I taught guitar for nine years in Brooklyn — twenty-odd students, mostly kids.
-              Every Sunday I&apos;d sit down with Google Sheets and try to remember what each of
-              them worked on. I built Strummy because I didn&apos;t want to do that anymore.
-              I&apos;m still teaching. I still use it every day.&rdquo;
+              &ldquo;I teach guitar — twenty-odd students, week in, week out. I kept losing track of
+              who played what, which songs we started, what I said last lesson. So I built the tool
+              I wished existed. Strummy runs my entire studio now. I still teach every day, and I
+              still ship code every night.&rdquo;
             </p>
-            <p className="mb-5 text-sm" style={{ color: 'var(--l-ink-3)' }}>
-              <span className="font-medium" style={{ color: 'var(--l-ink-2)' }}>
-                Placeholder copy
-              </span>{' '}
-              — drop in a real founder quote, name, and a photo.
+            <p className="mb-2 text-sm font-medium" style={{ color: 'var(--l-ink-2)' }}>
+              Piotr Romanczuk
+            </p>
+            <p className="mb-5 text-sm" style={{ color: 'var(--l-ink-4)' }}>
+              Guitar teacher, solo founder &amp; developer
             </p>
             <BtnGhost>
               Read the full story
