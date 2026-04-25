@@ -85,15 +85,15 @@ export function StatsKPICards({ lessonStats, songStats }: StatsKPICardsProps) {
         <motion.div
           key={kpi.label}
           variants={listItem}
-          className="bg-card rounded-xl border border-border p-4 space-y-1"
+          className="bg-card rounded-[10px] border border-border p-4 space-y-1"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
+            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium">
               {kpi.label}
             </span>
             <kpi.icon className={`h-3.5 w-3.5 ${kpi.color}`} />
           </div>
-          <div className="text-xl font-bold">{kpi.value}</div>
+          <div className="font-serif text-xl font-normal tracking-[-0.01em]">{kpi.value}</div>
         </motion.div>
       ))}
     </motion.div>

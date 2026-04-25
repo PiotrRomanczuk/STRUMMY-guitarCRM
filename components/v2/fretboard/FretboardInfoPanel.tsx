@@ -12,7 +12,7 @@ export function FretboardInfoPanel(props: InfoPanelProps) {
   const { rootNote, scaleKey, highlightedNotes, useFlats, cagedShape } = props;
 
   return (
-    <aside className="w-[280px] bg-[#1c1b1b] flex flex-col py-8 px-6 gap-8 overflow-y-auto shrink-0">
+    <aside className="w-[260px] border-l border-border bg-card flex flex-col py-5 px-5 gap-5 overflow-y-auto shrink-0">
       <InfoNotesSection
         highlightedNotes={highlightedNotes}
         rootNote={rootNote}

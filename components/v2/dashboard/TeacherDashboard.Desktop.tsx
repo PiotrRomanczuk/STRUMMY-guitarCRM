@@ -1,10 +1,14 @@
 'use client';
 
 import { format } from 'date-fns';
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { StatsWidget } from './widgets/StatsWidget';
 import { AgendaWidget } from './widgets/AgendaWidget';
 import { ActivityWidget } from './widgets/ActivityWidget';
 import { StudentsWidget } from './widgets/StudentsWidget';
+import { AttentionWidget } from './widgets/AttentionWidget';
 import { QuickActionsGrid } from './widgets/QuickActions';
 import { MiniCalendar } from './widgets/MiniCalendar';
 import { ChartWidget } from './widgets/ChartWidget';
@@ -22,18 +26,35 @@ export default function TeacherDashboardDesktop({
   const greeting = getGreeting();
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto px-8 lg:px-12 py-8 space-y-10">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold tracking-tight text-foreground">
-          {greeting}, {displayName}
-        </h1>
-        <p className="text-xs text-muted-foreground font-medium opacity-70 uppercase tracking-tighter">
-          {format(new Date(), 'MMMM d, yyyy')}
-        </p>
+    <div className="w-full max-w-[1600px] mx-auto px-8 lg:px-12 py-7 space-y-6">
+      {/* Greeting */}
+      <div className="flex items-end justify-between">
+        <div>
+          <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-[.16em] mb-1.5">
+            {format(new Date(), 'EEEE · MMMM d, yyyy')}
+          </div>
+          <h1 className="font-serif font-normal text-[38px] tracking-[-0.02em] leading-[1.05]">
+            {greeting}, <em className="italic text-primary">{displayName}</em>.
+          </h1>
+          {data.needsAttention.length > 0 && (
+            <p className="text-muted-foreground text-sm mt-2 max-w-xl">
+              {data.needsAttention.length} {data.needsAttention.length === 1 ? 'student needs' : 'students need'} attention today.
+            </p>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/dashboard/songs/new">Add song</Link>
+          </Button>
+          <Button size="sm" asChild>
+            <Link href="/dashboard/lessons/new">
+              <Plus className="h-3 w-3" /> New lesson
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      {/* Stats row */}
+      {/* Stats */}
       <StatsWidget
         totalStudents={data.stats.totalStudents}
         songsInLibrary={data.stats.songsInLibrary}
@@ -41,24 +62,23 @@ export default function TeacherDashboardDesktop({
         pendingAssignments={data.stats.pendingAssignments}
       />
 
-      {/* Content Grid: 60/40 split */}
-      <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
-        {/* Left Column (60%) */}
-        <div className="lg:col-span-6 space-y-8">
+      {/* Main grid: 1.6fr / 1fr */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-5">
+        {/* Left column */}
+        <div className="space-y-5">
           <AgendaWidget items={data.agenda} />
+          {data.needsAttention.length > 0 && <AttentionWidget items={data.needsAttention} />}
           <ActivityWidget activities={data.activities} />
         </div>
 
-        {/* Right Column (40%) */}
-        <div className="lg:col-span-4 space-y-8">
+        {/* Right column */}
+        <div className="space-y-5">
           <QuickActionsGrid />
-          <StudentsWidget students={data.students} />
           <MiniCalendar />
+          <StudentsWidget students={data.students} />
+          {sotw && <SOTWCard sotw={sotw} isAdmin={isAdmin} />}
         </div>
       </div>
-
-      {/* Song of the Week */}
-      {sotw && <SOTWCard sotw={sotw} isAdmin={isAdmin} />}
 
       {/* Chart */}
       <ChartWidget data={data.chartData} />

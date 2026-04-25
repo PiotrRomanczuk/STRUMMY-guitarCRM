@@ -23,12 +23,15 @@ interface SectionCardProps {
 
 function SectionCard({ icon, title, children }: SectionCardProps) {
   return (
-    <div className="bg-card rounded-xl border border-border p-6">
+    <div className="bg-card border border-border rounded-[10px] p-6">
       <div className="flex items-center gap-3 mb-5">
         <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
           {icon}
         </div>
-        <h3 className="text-base font-semibold">{title}</h3>
+        <div>
+          <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium">Section</p>
+          <h3 className="font-serif text-xl font-normal tracking-[-0.01em]">{title}</h3>
+        </div>
       </div>
       <div className="space-y-5">{children}</div>
     </div>
@@ -46,8 +49,8 @@ function ToggleField({ label, description, checked, onChange }: ToggleFieldProps
   return (
     <div className="flex items-center justify-between gap-4">
       <div>
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
+        <p className="font-mono text-[10px] uppercase tracking-[.14em] font-medium">{label}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
       <Switch checked={checked} onCheckedChange={onChange} />
     </div>
@@ -64,10 +67,11 @@ export default function SettingsDesktop({
   onReset,
 }: SettingsV2Props) {
   return (
-    <div className="max-w-4xl mx-auto px-8 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-8 py-10 space-y-8">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="font-mono text-[11px] uppercase tracking-[.16em] text-muted-foreground">Preferences</p>
+        <h1 className="font-serif font-normal text-[34px] tracking-[-0.02em] leading-none mt-1">Settings</h1>
+        <p className="text-muted-foreground text-[13px] mt-1.5">
           Manage your preferences and account settings
         </p>
       </div>
@@ -98,11 +102,11 @@ export default function SettingsDesktop({
 
         <SectionCard icon={<Palette className="h-5 w-5 text-primary" />} title="Appearance">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Theme</label>
+            <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium">Theme</label>
             <select
               value={settings.theme}
               onChange={(e) => updateSetting('theme', e.target.value as 'light' | 'dark' | 'system')}
-              className="w-full px-3 py-2 text-sm border border-border bg-background rounded-lg"
+              className="w-full px-3 py-2 text-sm border border-border bg-background rounded-[8px]"
             >
               <option value="light">Light</option>
               <option value="dark">Dark</option>
@@ -110,11 +114,11 @@ export default function SettingsDesktop({
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Language</label>
+            <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium">Language</label>
             <select
               value={settings.language}
               onChange={(e) => updateSetting('language', e.target.value as 'en' | 'pl' | 'es' | 'de' | 'fr')}
-              className="w-full px-3 py-2 text-sm border border-border bg-background rounded-lg"
+              className="w-full px-3 py-2 text-sm border border-border bg-background rounded-[8px]"
             >
               <option value="en">English</option>
               <option value="pl">Polski</option>
@@ -143,8 +147,8 @@ export default function SettingsDesktop({
         <SectionCard icon={<Link2 className="h-5 w-5 text-primary" />} title="Integrations">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Google Calendar</p>
-              <p className="text-xs text-muted-foreground">Sync your lesson schedule</p>
+              <p className="font-mono text-[10px] uppercase tracking-[.14em] font-medium">Google Calendar</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Sync your lesson schedule</p>
             </div>
             <span
               className={cn(
@@ -159,8 +163,8 @@ export default function SettingsDesktop({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">API Keys</p>
-              <p className="text-xs text-muted-foreground">Manage external API access</p>
+              <p className="font-mono text-[10px] uppercase tracking-[.14em] font-medium">API Keys</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Manage external API access</p>
             </div>
             <Button variant="outline" size="sm">
               <Key className="h-3.5 w-3.5 mr-1.5" />

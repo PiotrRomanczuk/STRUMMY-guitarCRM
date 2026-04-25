@@ -20,29 +20,30 @@ export default function ProfileDesktop({
   onCancel,
 }: ProfileV2Props) {
   return (
-    <div className="max-w-2xl mx-auto px-8 py-8">
+    <div className="max-w-2xl mx-auto px-8 py-10">
       <div className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold">Edit Profile</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="font-mono text-[11px] uppercase tracking-[.16em] text-muted-foreground">Account</p>
+        <h1 className="font-serif font-normal text-[34px] tracking-[-0.02em] leading-none mt-1">Profile</h1>
+        <p className="text-muted-foreground text-[13px] mt-1.5">
           Update your personal information
         </p>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm" role="alert">
+        <div className="mb-6 p-4 rounded-[10px] bg-destructive/10 border border-destructive/20 text-destructive text-sm" role="alert">
           {error.message}
         </div>
       )}
       {success && (
-        <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-sm" role="status">
+        <div className="mb-6 p-4 rounded-[10px] bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-sm" role="status">
           Profile updated successfully
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="bg-card rounded-xl border border-border p-6 space-y-5">
+      <form onSubmit={onSubmit} className="bg-card border border-border rounded-[10px] p-6 space-y-5">
         <div className="grid grid-cols-2 gap-5">
           <div className="space-y-2">
-            <Label htmlFor="desktop-firstname" className="text-sm font-medium">
+            <Label htmlFor="desktop-firstname" className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium">
               First Name
             </Label>
             <Input
@@ -59,7 +60,7 @@ export default function ProfileDesktop({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="desktop-lastname" className="text-sm font-medium">
+            <Label htmlFor="desktop-lastname" className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium">
               Last Name
             </Label>
             <Input
@@ -78,7 +79,7 @@ export default function ProfileDesktop({
 
         {userEmail && (
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Email</Label>
+            <Label className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium">Email</Label>
             <Input value={userEmail} disabled className="opacity-60" />
           </div>
         )}

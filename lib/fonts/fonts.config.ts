@@ -217,13 +217,23 @@ export const FONT_SCHEMES: Record<string, FontScheme> = {
       mono: { family: 'Red Hat Mono', weights: [400, 500, 600, 700], subsets: ['latin'], variable: '--font-red-hat-mono' },
     },
   },
+
+  fraunces: {
+    name: 'Editorial (Fraunces)',
+    description: 'Editorial serif display + Geist body — warm, musical',
+    fonts: {
+      sans: { family: 'Geist', subsets: ['latin'], variable: '--font-geist-sans' },
+      mono: { family: 'Geist Mono', subsets: ['latin'], variable: '--font-geist-mono' },
+      display: { family: 'Fraunces', weights: [300, 400, 500, 600], subsets: ['latin'], variable: '--font-fraunces' },
+    },
+  },
 };
 
 /**
  * Active Font Scheme
  * Change this to switch between different font combinations
  */
-export const ACTIVE_FONT_SCHEME: keyof typeof FONT_SCHEMES = 'inter';
+export const ACTIVE_FONT_SCHEME: keyof typeof FONT_SCHEMES = 'fraunces';
 
 // Available schemes:
 // - geist (current) - Modern and clean

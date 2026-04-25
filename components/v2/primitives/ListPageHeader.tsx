@@ -29,15 +29,15 @@ export function ListPageHeader({
   const Icon = action?.icon ?? Plus;
 
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="flex items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">{title}</h1>
+        <h1 className="font-serif font-normal text-[34px] tracking-[-0.02em] leading-none">{title}</h1>
         {subtitle ? (
-          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          <div className="text-muted-foreground text-[13px] mt-1.5">{subtitle}</div>
         ) : count !== undefined ? (
-          <p className="text-sm text-muted-foreground mt-1">
+          <div className="text-muted-foreground text-[13px] mt-1.5">
             {count} {countLabel}
-          </p>
+          </div>
         ) : null}
       </div>
       <div className="flex items-center gap-2">

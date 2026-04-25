@@ -102,7 +102,7 @@ function MobileRepertoireList({
           {grouped.map((group) => (
             <div key={group.label}>
               {group.label !== 'ungrouped' && (
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+                <h3 className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium mb-2 flex items-center gap-2">
                   {group.label}
                   <span className="text-xs font-normal">({group.items.length})</span>
                 </h3>

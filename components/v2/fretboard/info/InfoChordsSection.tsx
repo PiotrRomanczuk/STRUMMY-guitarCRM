@@ -1,6 +1,7 @@
 'use client';
 
 import { type NoteName, formatNote, getScaleNotes } from '@/lib/music-theory';
+import { cn } from '@/lib/utils';
 
 interface InfoChordsSectionProps {
   rootNote: NoteName;
@@ -8,59 +9,43 @@ interface InfoChordsSectionProps {
   useFlats: boolean;
 }
 
-/** Diatonic chord qualities for a major scale pattern */
 const DIATONIC_SUFFIXES = ['', 'm', 'm', '', '', 'm', 'dim'];
+const ROMAN_NUMERALS = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
 
 export function InfoChordsSection({ rootNote, scaleKey, useFlats }: InfoChordsSectionProps) {
   const scaleNotes = getScaleNotes(rootNote, scaleKey);
   if (scaleNotes.length === 0) return null;
 
-  // Build diatonic chords from the scale degrees
   const chords = scaleNotes.slice(0, 7).map((note, i) => ({
     name: `${formatNote(note, useFlats)}${DIATONIC_SUFFIXES[i] ?? ''}`,
+    roman: ROMAN_NUMERALS[i] ?? '',
+    quality: DIATONIC_SUFFIXES[i] ?? '',
     note,
     isRoot: note === rootNote,
   }));
 
   return (
-    <section className="flex flex-col gap-4">
-      <h3 className="text-xs uppercase tracking-widest text-[#9d8f7a] font-semibold">
-        Related Chords
-      </h3>
-      <div className="grid grid-cols-2 gap-3">
-        {chords.slice(0, 4).map((chord) => (
-          <div
-            key={chord.name}
-            className={`bg-[#201f1f] p-3 rounded-lg flex flex-col items-center gap-2 transition-transform hover:scale-105 ${
-              chord.isRoot
-                ? 'border-2 border-[#ffd183] ring-4 ring-[#ffd183]/10'
-                : 'border border-transparent hover:border-[#504534]/40'
-            }`}
-          >
-            <span className={`text-lg font-black ${
-              chord.isRoot ? 'text-[#ffd183]' : 'text-[#e5e2e1]'
-            }`}>
-              {chord.name}
-            </span>
-            <div className="w-full aspect-[3/4] bg-[#353534]/30 rounded flex items-center justify-center relative overflow-hidden">
-              <ChordDiagramPlaceholder />
-              {chord.isRoot && (
-                <div className="w-2 h-2 bg-[#ffd183] rounded-full absolute top-1/4 left-1/4" />
-              )}
+    <section>
+      <div className="flex items-center justify-between mb-2.5">
+        <h3 className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground font-medium">
+          Diatonic chords
+        </h3>
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {chords.map((chord) => (
+          <div key={chord.name} className="bg-muted/50 rounded-md py-2 text-center">
+            <div className="font-mono text-[9px] text-muted-foreground tracking-[.08em]">
+              {chord.roman}
+            </div>
+            <div className="font-serif text-base font-medium leading-none mt-0.5">
+              {formatNote(chord.note, useFlats)}
+              <span className="font-mono text-[10px] text-muted-foreground ml-px">
+                {chord.quality}
+              </span>
             </div>
           </div>
         ))}
       </div>
     </section>
-  );
-}
-
-function ChordDiagramPlaceholder() {
-  return (
-    <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 opacity-20">
-      {Array.from({ length: 16 }, (_, i) => (
-        <div key={i} className="border-r border-b border-[#9d8f7a]" />
-      ))}
-    </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { CHROMATIC_NOTES, type NoteName } from '@/lib/music-theory';
+import { cn } from '@/lib/utils';
 
 interface SidebarKeySectionProps {
   rootNote: NoteName;
@@ -9,22 +10,26 @@ interface SidebarKeySectionProps {
 
 export function SidebarKeySection({ rootNote, onRootChange }: SidebarKeySectionProps) {
   return (
-    <section className="flex flex-col gap-3">
-      <h3 className="text-xs uppercase tracking-widest text-[#9d8f7a] font-semibold">
+    <section className="flex flex-col gap-2">
+      <h3 className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground font-medium">
         Key
       </h3>
-      <div className="grid grid-cols-4 gap-1">
+      <div className="grid grid-cols-6 gap-1">
         {CHROMATIC_NOTES.map((note) => {
           const isActive = rootNote === note;
+          const isAccidental = note.length > 1;
           return (
             <button
               key={note}
               onClick={() => onRootChange(note)}
-              className={`h-9 rounded-lg text-xs font-bold transition-all ${
+              className={cn(
+                'py-2.5 rounded-lg font-serif text-base font-medium transition-all',
                 isActive
-                  ? 'bg-[#ffd183] text-[#422c00]'
-                  : 'bg-[#201f1f] hover:bg-[#353534] text-[#e5e2e1]'
-              }`}
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : isAccidental
+                    ? 'bg-muted hover:bg-muted/80 text-foreground'
+                    : 'bg-card border border-border hover:bg-muted text-foreground'
+              )}
             >
               {note}
             </button>

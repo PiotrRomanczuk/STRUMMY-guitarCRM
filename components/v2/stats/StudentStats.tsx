@@ -43,12 +43,12 @@ function StatCard({
   subtitle?: string;
 }) {
   return (
-    <div className="bg-card rounded-xl border border-border p-4 space-y-1">
+    <div className="bg-card rounded-[10px] border border-border p-4 space-y-1">
       <div className="flex items-center gap-2">
         <Icon className="h-3.5 w-3.5 text-primary" />
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+        <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium">{label}</span>
       </div>
-      <div className="text-xl font-bold">{value}</div>
+      <div className="font-serif text-xl font-normal tracking-[-0.01em]">{value}</div>
       {subtitle && (
         <span className="text-xs text-muted-foreground">{subtitle}</span>
       )}
@@ -116,14 +116,14 @@ export function StudentStats({ stats }: StudentStatsProps) {
         {/* Recent lessons */}
         {stats.recentLessons.length > 0 && (
           <motion.div variants={listItem} className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground px-1">
+            <h3 className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium px-1">
               Recent Lessons
             </h3>
             <div className="space-y-2">
               {stats.recentLessons.slice(0, 5).map((lesson) => (
                 <div
                   key={lesson.id}
-                  className="bg-card rounded-xl border border-border p-4 flex items-center gap-3"
+                  className="bg-card rounded-[10px] border border-border p-4 flex items-center gap-3"
                 >
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Calendar className="h-4 w-4 text-primary" />

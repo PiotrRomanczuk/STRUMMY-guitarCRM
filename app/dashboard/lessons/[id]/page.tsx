@@ -22,6 +22,7 @@ interface LessonDetail extends LessonWithProfiles {
   lesson_songs: {
     id: string;
     status: Database['public']['Enums']['lesson_song_status'];
+    notes: string | null;
     song: {
       id: string;
       title: string;
@@ -55,6 +56,7 @@ async function fetchLesson(id: string): Promise<LessonDetail | null> {
         lesson_songs(
           id,
           status,
+          notes,
           song:songs(id, title, author)
         ),
         assignments(

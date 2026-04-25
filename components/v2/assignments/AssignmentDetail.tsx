@@ -2,11 +2,10 @@
 
 import { useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
-  Calendar,
-  User,
   Clock,
   Edit,
   AlertCircle,
@@ -39,6 +38,7 @@ const STATUS_CONFIG: Record<
 };
 
 export function AssignmentDetail({ assignmentId, canEdit = false }: AssignmentDetailProps) {
+  const router = useRouter();
   const { assignment, isLoading, refresh } = useAssignment(assignmentId);
   const { updateAssignment, isLoading: isMutating } = useAssignmentMutations();
 
@@ -62,99 +62,179 @@ export function AssignmentDetail({ assignmentId, canEdit = false }: AssignmentDe
   const StatusIcon = config.icon;
 
   return (
-    <motion.div variants={pageTransition} initial="hidden" animate="visible" className="px-4 space-y-4 pb-safe">
-      <Link href="/dashboard/assignments" className="inline-flex items-center gap-1 text-sm text-muted-foreground min-h-[44px]">
-        <ArrowLeft className="h-4 w-4" />
-        Assignments
-      </Link>
+    <motion.div variants={pageTransition} initial="hidden" animate="visible" className="flex flex-col h-full min-h-0 bg-background">
+      {/* Breadcrumb bar */}
+      <div className="px-8 pt-5 flex items-center gap-3">
+        <Button variant="outline" size="sm" onClick={() => router.push('/dashboard/assignments')}>
+          <ArrowLeft className="h-3 w-3" /> Assignments
+        </Button>
+        <span className="font-mono text-[11px] text-muted-foreground">/</span>
+        <span className="font-mono text-[11px] text-muted-foreground truncate">
+          {assignment.title}
+        </span>
+        <div className="flex-1" />
+        {canEdit && (
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/dashboard/assignments/${assignment.id}/edit`}><Edit className="h-3 w-3" /> Edit</Link>
+          </Button>
+        )}
+      </div>
 
-      <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-        <div className="flex items-start justify-between">
-          <h1 className="text-xl font-bold leading-tight flex-1 mr-2">{assignment.title}</h1>
+      {/* Hero */}
+      <div className="px-8 pt-5 pb-4">
+        <div className="flex items-center gap-2.5 mb-2">
           <div className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium', config.className)}>
             <StatusIcon className="h-3.5 w-3.5" />
             {config.label}
           </div>
         </div>
-        {assignment.description && <p className="text-sm text-muted-foreground">{assignment.description}</p>}
+        <h1 className="font-serif font-normal text-[34px] tracking-[-0.02em] leading-[1.08]">
+          {assignment.title}
+        </h1>
+        {assignment.description && (
+          <p className="text-[13px] text-muted-foreground mt-2">{assignment.description}</p>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <InfoCard icon={User} label="Student" value={assignment.student_profile?.full_name || 'Unknown'} />
-        <InfoCard icon={Calendar} label="Due Date" value={assignment.due_date ? format(new Date(assignment.due_date), 'MMM d, yyyy') : 'No due date'} highlight={assignment.status === 'overdue'} />
-      </div>
+      {/* Content grid */}
+      <div className="flex-1 overflow-y-auto px-8 pb-10">
+        <div className="grid grid-cols-[1.5fr_1fr] gap-5">
+          {/* LEFT column - Details */}
+          <div className="flex flex-col gap-5">
+            <div className="bg-card border border-border rounded-[10px] overflow-hidden">
+              <div className="px-6 py-4 border-b border-border">
+                <div className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground font-medium">
+                  Details
+                </div>
+                <div className="font-serif text-xl mt-0.5">Assignment info</div>
+              </div>
+              <div className="px-6 py-5 flex flex-col gap-3">
+                <InfoRow label="Student">{assignment.student_profile?.full_name || 'Unknown'}</InfoRow>
+                <InfoRow label="Due date">
+                  <span className={cn('font-mono text-[13px]', assignment.status === 'overdue' && 'text-destructive')}>
+                    {assignment.due_date ? format(new Date(assignment.due_date), 'MMM d, yyyy') : 'No due date'}
+                  </span>
+                </InfoRow>
+                <InfoRow label="Status">
+                  <div className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium', config.className)}>
+                    <StatusIcon className="h-3 w-3" />
+                    {config.label}
+                  </div>
+                </InfoRow>
+              </div>
+            </div>
 
-      <div className="sticky bottom-0 bg-background py-4 pb-safe space-y-2">
-        <h2 className="text-base font-semibold">Actions</h2>
-        <div className="flex flex-wrap gap-2">
-          {assignment.status === 'not_started' && (
-            <Button variant="outline" className="min-h-[44px]" onClick={() => handleStatusChange('in_progress')} disabled={isMutating}>
-              <Play className="h-4 w-4 mr-1" />Start
-            </Button>
-          )}
-          {(assignment.status === 'in_progress' || assignment.status === 'overdue') && (
-            <Button variant="default" className="min-h-[44px]" onClick={() => handleStatusChange('completed')} disabled={isMutating}>
-              <CheckCircle className="h-4 w-4 mr-1" />Complete
-            </Button>
-          )}
-          {canEdit && (
-            <Button variant="outline" className="min-h-[44px]" asChild>
-              <Link href={`/dashboard/assignments/${assignment.id}/edit`}><Edit className="h-4 w-4 mr-1" />Edit</Link>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {assignment.song && (
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1">
-            <Music className="h-3.5 w-3.5" />
-            Linked Song
+            {/* Actions card */}
+            <div className="bg-card border border-border rounded-[10px] overflow-hidden">
+              <div className="px-6 py-4 border-b border-border">
+                <div className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground font-medium">
+                  Workflow
+                </div>
+                <div className="font-serif text-xl mt-0.5">Actions</div>
+              </div>
+              <div className="px-6 py-5 flex flex-wrap gap-2">
+                {assignment.status === 'not_started' && (
+                  <Button variant="outline" size="sm" onClick={() => handleStatusChange('in_progress')} disabled={isMutating}>
+                    <Play className="h-3 w-3" /> Start
+                  </Button>
+                )}
+                {(assignment.status === 'in_progress' || assignment.status === 'overdue') && (
+                  <Button size="sm" onClick={() => handleStatusChange('completed')} disabled={isMutating}>
+                    <CheckCircle className="h-3 w-3" /> Complete
+                  </Button>
+                )}
+                {canEdit && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/dashboard/assignments/${assignment.id}/edit`}><Edit className="h-3 w-3" /> Edit</Link>
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-          <Link href={`/dashboard/songs/${assignment.song.id}`} className="text-sm font-medium hover:text-primary transition-colors">
-            {assignment.song.title} - {assignment.song.author}
-          </Link>
-        </div>
-      )}
 
-      {assignment.lesson && (
-        <div className="bg-card rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground mb-1">Linked Lesson</p>
-          <Link href={`/dashboard/lessons/${assignment.lesson.id}`} className="text-sm font-medium hover:text-primary transition-colors">
-            Lesson #{assignment.lesson.lesson_teacher_number} - {format(new Date(assignment.lesson.scheduled_at), 'MMM d, yyyy')}
-          </Link>
+          {/* RIGHT column - Linked items */}
+          <div className="flex flex-col gap-5">
+            {assignment.song && (
+              <div className="bg-card border border-border rounded-[10px] overflow-hidden">
+                <div className="px-6 py-4 border-b border-border">
+                  <div className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground font-medium">
+                    Practice material
+                  </div>
+                  <div className="font-serif text-xl mt-0.5">Linked Song</div>
+                </div>
+                <div className="px-6 py-5">
+                  <div className="flex items-center gap-2">
+                    <Music className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <Link href={`/dashboard/songs/${assignment.song.id}`} className="text-[13px] font-medium hover:text-primary transition-colors">
+                      {assignment.song.title} - {assignment.song.author}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {assignment.lesson && (
+              <div className="bg-card border border-border rounded-[10px] overflow-hidden">
+                <div className="px-6 py-4 border-b border-border">
+                  <div className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground font-medium">
+                    Context
+                  </div>
+                  <div className="font-serif text-xl mt-0.5">Linked Lesson</div>
+                </div>
+                <div className="px-6 py-5">
+                  <Link href={`/dashboard/lessons/${assignment.lesson.id}`} className="text-[13px] font-medium hover:text-primary transition-colors">
+                    Lesson #{assignment.lesson.lesson_teacher_number} - {format(new Date(assignment.lesson.scheduled_at), 'MMM d, yyyy')}
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {!assignment.song && !assignment.lesson && (
+              <div className="bg-card border border-border rounded-[10px] p-8 text-center">
+                <p className="font-serif text-base italic text-muted-foreground">No linked items.</p>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </motion.div>
   );
 }
 
-function InfoCard({ icon: Icon, label, value, highlight = false }: { icon: typeof User; label: string; value: string; highlight?: boolean }) {
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="bg-card rounded-xl border border-border p-4">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-        <Icon className="h-3.5 w-3.5" />{label}
-      </div>
-      <p className={cn('text-sm font-medium truncate', highlight && 'text-destructive')}>{value}</p>
+    <div className="grid grid-cols-[88px_1fr] items-center gap-3">
+      <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.12em]">{label}</div>
+      <div className="text-[13px]">{children}</div>
     </div>
   );
 }
 
 function DetailSkeleton() {
   return (
-    <div className="px-4 space-y-4">
-      <div className="h-5 bg-muted rounded w-24 animate-pulse" />
-      <div className="bg-card rounded-xl border border-border p-4 space-y-3 animate-pulse">
-        <div className="h-6 bg-muted rounded w-3/4" />
-        <div className="h-4 bg-muted rounded w-1/2" />
+    <div className="flex flex-col h-full min-h-0 bg-background">
+      <div className="px-8 pt-5 flex items-center gap-3">
+        <div className="h-8 bg-muted rounded w-28 animate-pulse" />
+        <div className="h-3 bg-muted rounded w-4 animate-pulse" />
+        <div className="h-3 bg-muted rounded w-32 animate-pulse" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        {[1, 2].map((i) => (
-          <div key={i} className="bg-card rounded-xl border border-border p-4 space-y-2 animate-pulse">
+      <div className="px-8 pt-5 pb-4 space-y-2">
+        <div className="h-6 bg-muted rounded-full w-24 animate-pulse" />
+        <div className="h-9 bg-muted rounded w-64 animate-pulse" />
+      </div>
+      <div className="px-8 pb-10">
+        <div className="grid grid-cols-[1.5fr_1fr] gap-5">
+          <div className="bg-card border border-border rounded-[10px] p-6 space-y-3 animate-pulse">
             <div className="h-3 bg-muted rounded w-16" />
-            <div className="h-4 bg-muted rounded w-24" />
+            <div className="h-5 bg-muted rounded w-32" />
+            <div className="h-4 bg-muted rounded w-full" />
+            <div className="h-4 bg-muted rounded w-3/4" />
           </div>
-        ))}
+          <div className="bg-card border border-border rounded-[10px] p-6 space-y-3 animate-pulse">
+            <div className="h-3 bg-muted rounded w-16" />
+            <div className="h-5 bg-muted rounded w-24" />
+          </div>
+        </div>
       </div>
     </div>
   );

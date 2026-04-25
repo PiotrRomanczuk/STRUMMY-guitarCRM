@@ -10,7 +10,20 @@ type SidebarProps = FretboardState & FretboardActions;
 
 export function FretboardSidebar(props: SidebarProps) {
   return (
-    <aside className="w-[250px] bg-[#1c1b1b] flex flex-col gap-8 py-8 px-6 overflow-y-auto shrink-0">
+    <aside className="w-[280px] border-r border-border bg-card flex flex-col gap-5 py-5 px-5 overflow-y-auto shrink-0">
+      {/* Header */}
+      <div>
+        <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.16em]">
+          Studio tool
+        </div>
+        <h2 className="font-serif font-medium text-2xl tracking-[-0.02em] leading-tight mt-1">
+          Fretboard
+        </h2>
+        <div className="font-mono text-[11px] text-muted-foreground mt-0.5">
+          STANDARD · E-A-D-G-B-e
+        </div>
+      </div>
+
       <SidebarScaleSection
         scaleKey={props.scaleKey}
         onScaleChange={props.setScaleKey}

@@ -79,6 +79,15 @@ export function UserListMobile({ initialUsers }: UserListMobileProps) {
         !loading && !error ? `${users.length} student${users.length !== 1 ? 's' : ''}` : undefined
       }
       showBack={false}
+      headerActions={
+        <button
+          type="button"
+          onClick={() => router.push('/dashboard/users/new')}
+          className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center"
+        >
+          <span className="text-lg leading-none">+</span>
+        </button>
+      }
       fab={
         <FloatingActionButton
           onClick={() => router.push('/dashboard/users/new')}

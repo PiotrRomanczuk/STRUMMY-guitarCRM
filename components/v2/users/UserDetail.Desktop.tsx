@@ -28,15 +28,26 @@ export default function UserDetailDesktop({
       variants={fadeIn}
       initial="hidden"
       animate="visible"
-      className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-6 space-y-6"
+      className="w-full max-w-7xl mx-auto px-8 py-7 space-y-6"
     >
-      <Breadcrumbs
-        items={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Users', href: '/dashboard/users' },
-          { label: userName },
-        ]}
-      />
+      {/* Editorial breadcrumb */}
+      <div className="flex items-center gap-3">
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Users', href: '/dashboard/users' },
+            { label: userName },
+          ]}
+        />
+      </div>
+
+      {/* Editorial header */}
+      <div>
+        <div className="font-mono text-[11px] uppercase tracking-[.16em] text-muted-foreground">Student</div>
+        <h1 className="mt-1 font-serif font-normal text-[34px] tracking-[-0.02em] leading-none">
+          {userName}
+        </h1>
+      </div>
 
       <UserDetail
         user={user}

@@ -1,7 +1,8 @@
 'use client';
 
 import { type CAGEDShape } from '@/components/fretboard/caged.helpers';
-import { MaterialIcon } from '@/components/ui/MaterialIcon';
+import { cn } from '@/lib/utils';
+import { Eye, EyeOff } from 'lucide-react';
 
 const CAGED_SHAPES: CAGEDShape[] = ['C', 'A', 'G', 'E', 'D'];
 
@@ -15,39 +16,34 @@ export function InfoPositionsSection({
   onCagedShapeChange,
 }: InfoPositionsSectionProps) {
   const handleToggle = (shape: CAGEDShape) => {
-    if (cagedShape === shape) {
-      onCagedShapeChange('none');
-    } else {
-      onCagedShapeChange(shape);
-    }
+    onCagedShapeChange(cagedShape === shape ? 'none' : shape);
   };
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs uppercase tracking-widest text-[#9d8f7a] font-semibold">
-          Positions
+    <section>
+      <div className="flex items-center justify-between mb-2.5">
+        <h3 className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground font-medium">
+          CAGED positions
         </h3>
-        <span className="text-[10px] text-[#ffd183] bg-[#ffd183]/10 px-2 py-0.5 rounded font-bold uppercase">
+        <span className="font-mono text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded font-medium">
           CAGED
         </span>
       </div>
-      <div className="flex flex-col gap-2">
-        {CAGED_SHAPES.map((shape, i) => {
+      <div className="flex gap-1">
+        {CAGED_SHAPES.map((shape) => {
           const isActive = cagedShape === shape || cagedShape === 'all';
           return (
             <button
               key={shape}
               onClick={() => handleToggle(shape)}
-              className="flex items-center justify-between p-3 bg-[#201f1f] hover:bg-[#353534] rounded-lg text-sm text-left group transition-all"
+              className={cn(
+                'flex-1 py-2.5 rounded-md text-center font-serif text-[15px] font-medium transition-all',
+                isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card border border-border text-foreground/80 hover:bg-muted'
+              )}
             >
-              <span className="text-[#e5e2e1]">Position {i + 1} ({shape})</span>
-              <MaterialIcon
-                icon={isActive ? 'visibility' : 'visibility_off'}
-                className={`text-base transition-colors ${
-                  isActive ? 'text-[#ffd183]' : 'text-[#9d8f7a] group-hover:text-[#ffd183]'
-                }`}
-              />
+              {shape}
             </button>
           );
         })}

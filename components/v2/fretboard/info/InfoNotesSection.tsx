@@ -1,6 +1,7 @@
 'use client';
 
 import { type NoteName, formatNote } from '@/lib/music-theory';
+import { cn } from '@/lib/utils';
 
 interface InfoNotesSectionProps {
   highlightedNotes: NoteName[];
@@ -11,34 +12,37 @@ interface InfoNotesSectionProps {
 export function InfoNotesSection({ highlightedNotes, rootNote, useFlats }: InfoNotesSectionProps) {
   if (highlightedNotes.length === 0) {
     return (
-      <section className="flex flex-col gap-4">
-        <h3 className="text-xs uppercase tracking-widest text-[#9d8f7a] font-semibold">
-          Notes in Scale
+      <section>
+        <h3 className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground font-medium">
+          Scale notes
         </h3>
-        <p className="text-sm text-[#d5c4ad]">Select a scale to see notes.</p>
+        <p className="text-[13px] text-muted-foreground mt-2">Select a scale to see notes.</p>
       </section>
     );
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <h3 className="text-xs uppercase tracking-widest text-[#9d8f7a] font-semibold">
-        Notes in Scale
+    <section>
+      <h3 className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground font-medium mb-2.5">
+        Scale notes
       </h3>
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-4 gap-1">
         {highlightedNotes.map((note, i) => {
           const isRoot = note === rootNote;
           return (
-            <span
+            <div
               key={`${note}-${i}`}
-              className={`px-3 py-1 rounded-lg text-sm font-bold ${
+              className={cn(
+                'py-2.5 rounded-md text-center',
                 isRoot
-                  ? 'bg-[#ffd183] text-[#422c00]'
-                  : 'bg-[#201f1f] text-[#d5c4ad]'
-              }`}
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-card border border-border'
+              )}
             >
-              {formatNote(note, useFlats)}
-            </span>
+              <div className="font-serif text-xl font-medium leading-none tracking-[-0.01em]">
+                {formatNote(note, useFlats)}
+              </div>
+            </div>
           );
         })}
       </div>

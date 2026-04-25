@@ -2,14 +2,9 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, listItem } from '@/lib/animations/variants';
-import {
-  AlertCircle,
-  Calendar,
-  Clock,
-  FileText,
-  ChevronRight,
-} from 'lucide-react';
+import { AlertCircle, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export interface AttentionItem {
   id: string;
@@ -24,109 +19,68 @@ interface AttentionWidgetProps {
   items: AttentionItem[];
 }
 
-const reasonStyles = {
-  no_recent_lesson: {
-    icon: Calendar,
-    label: 'No recent lesson',
-    color: 'text-yellow-600 dark:text-yellow-400',
-    bg: 'bg-yellow-500/10',
-    border: 'border-yellow-500/20',
-  },
-  overdue_assignment: {
-    icon: FileText,
-    label: 'Overdue assignment',
-    color: 'text-destructive',
-    bg: 'bg-destructive/10',
-    border: 'border-destructive/20',
-  },
-  inactive: {
-    icon: Clock,
-    label: 'Inactive',
-    color: 'text-orange-600 dark:text-orange-400',
-    bg: 'bg-orange-500/10',
-    border: 'border-orange-500/20',
-  },
-} as const;
+const SEVERITY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  no_recent_lesson: { bg: 'bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', label: 'needs attention' },
+  overdue_assignment: { bg: 'bg-destructive/10', text: 'text-destructive', label: 'at risk' },
+  inactive: { bg: 'bg-destructive/10', text: 'text-destructive', label: 'at risk' },
+};
 
 export function AttentionWidget({ items }: AttentionWidgetProps) {
-  const displayItems = items.slice(0, 4);
-  const totalCount = items.length;
-
   return (
-    <div className="bg-card rounded-[10px] p-6 space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-orange-500" />
-          Needs Attention
-          {totalCount > 0 && (
-            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-destructive/10 text-destructive border border-destructive/20">
-              {totalCount}
-            </span>
-          )}
-        </h3>
+    <section className="bg-card border border-border rounded-[14px] overflow-hidden">
+      <div className="px-6 pt-5 pb-1 flex items-center justify-between">
+        <div>
+          <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-[.14em] font-medium">
+            Needs attention
+          </div>
+          <div className="font-serif text-lg font-normal tracking-[-0.01em] mt-0.5">
+            {items.length} {items.length === 1 ? 'flag' : 'flags'}
+          </div>
+        </div>
+        <Link href="/dashboard/users?filter=needs-attention" className="text-muted-foreground text-xs hover:text-foreground transition-colors">
+          View all &rarr;
+        </Link>
       </div>
 
-      {/* Content */}
-      {displayItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-6 text-center">
-          <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center mb-2">
-            <AlertCircle className="h-5 w-5 text-green-500" />
-          </div>
-          <p className="text-sm font-medium">All caught up!</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            No students need attention
-          </p>
-        </div>
-      ) : (
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="space-y-2"
-        >
+      <div className="px-6 pb-5">
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
           <AnimatePresence mode="popLayout">
-            {displayItems.map((item) => {
-              const style = reasonStyles[item.reason];
-              const Icon = style.icon;
+            {items.slice(0, 4).map((item) => {
+              const severity = SEVERITY_STYLES[item.reason] ?? SEVERITY_STYLES.no_recent_lesson;
+              const initials = item.studentName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
               return (
                 <motion.div key={item.id} variants={listItem} layout>
                   <Link
                     href={item.actionUrl}
-                    className={`block p-3 rounded-lg border ${style.border} ${style.bg}
-                               active:opacity-70 transition-opacity min-h-[44px]`}
+                    className="flex items-center gap-3 py-2.5 border-b border-border hover:bg-muted/30 -mx-2 px-2 rounded-md transition-colors"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <Icon className={`h-4 w-4 shrink-0 ${style.color}`} />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {item.studentName}
-                          </p>
-                          <p className={`text-xs ${style.color}`}>
-                            {style.label} &middot; {item.daysAgo}d ago
-                          </p>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-semibold shrink-0">
+                      {initials}
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-medium">{item.studentName}</div>
+                      <div className="text-muted-foreground text-xs mt-0.5">
+                        {formatReason(item.reason)} · {item.daysAgo}d ago
+                      </div>
+                    </div>
+                    <span className={cn(
+                      'px-2.5 py-[3px] rounded-full text-[10px] font-medium uppercase tracking-[.06em]',
+                      severity.bg, severity.text
+                    )}>
+                      {severity.label}
+                    </span>
                   </Link>
                 </motion.div>
               );
             })}
           </AnimatePresence>
-
-          {totalCount > 4 && (
-            <Link
-              href="/dashboard/users?filter=needs-attention"
-              className="text-center text-xs text-primary font-medium py-2 min-h-[44px] flex items-center justify-center"
-            >
-              View all {totalCount} items
-            </Link>
-          )}
         </motion.div>
-      )}
-    </div>
+      </div>
+    </section>
   );
+}
+
+function formatReason(reason: string): string {
+  return reason.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
 }

@@ -75,48 +75,60 @@ export default function NotificationCenterDesktop({ userId }: NotificationCenter
   const groups = useMemo(() => groupNotifications(displayed), [displayed]);
 
   return (
-    <div className="max-w-4xl mx-auto px-6 lg:px-8 py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl lg:text-3xl font-bold">Notifications</h1>
-        {unreadCount > 0 && (
-          <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-            <Check className="h-4 w-4 mr-1.5" />
-            Mark all read
-          </Button>
+    <div className="flex flex-col h-full min-h-0">
+      {/* Header */}
+      <div className="px-8 pt-7 pb-5">
+        <div className="flex items-end justify-between mb-4">
+          <div>
+            <div className="font-mono text-[11px] uppercase tracking-[.16em] text-muted-foreground">Inbox</div>
+            <h1 className="mt-1 font-serif font-normal text-[34px] tracking-[-0.02em] leading-none">Notifications</h1>
+            <div className="text-muted-foreground text-[13px] mt-1.5">
+              {displayed.length} {displayed.length === 1 ? 'notification' : 'notifications'}{filterStatus === 'unread' ? ' unread' : ''}
+            </div>
+          </div>
+          {unreadCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+              <Check className="h-4 w-4 mr-1.5" />
+              Mark all read
+            </Button>
+          )}
+        </div>
+
+        <div className="flex gap-2.5 items-center p-3 bg-card border border-border rounded-[10px]">
+          <FilterChip label="All" active={filterStatus === 'all'} onClick={() => setFilterStatus('all')} />
+          <FilterChip
+            label={`Unread${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
+            active={filterStatus === 'unread'}
+            onClick={() => setFilterStatus('unread')}
+          />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-auto px-8 pb-10">
+        {isLoading ? (
+          <NotificationCenterSkeleton />
+        ) : displayed.length === 0 ? (
+          <NotificationCenterEmpty filterStatus={filterStatus} />
+        ) : (
+          <div className="space-y-8">
+            {groups.map((group) => (
+              <div key={group.label}>
+                <h2 className="font-mono text-[10px] text-muted-foreground uppercase tracking-[.14em] font-medium mb-3">
+                  {group.label}
+                </h2>
+                <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-2">
+                  {group.notifications.map((notification) => (
+                    <motion.div key={notification.id} variants={listItem}>
+                      <NotificationItem notification={notification} onMarkAsRead={markAsRead} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
-
-      <div className="flex gap-2">
-        <FilterChip label="All" active={filterStatus === 'all'} onClick={() => setFilterStatus('all')} />
-        <FilterChip
-          label={`Unread${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
-          active={filterStatus === 'unread'}
-          onClick={() => setFilterStatus('unread')}
-        />
-      </div>
-
-      {isLoading ? (
-        <NotificationCenterSkeleton />
-      ) : displayed.length === 0 ? (
-        <NotificationCenterEmpty filterStatus={filterStatus} />
-      ) : (
-        <div className="space-y-8">
-          {groups.map((group) => (
-            <div key={group.label}>
-              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                {group.label}
-              </h2>
-              <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-2">
-                {group.notifications.map((notification) => (
-                  <motion.div key={notification.id} variants={listItem}>
-                    <NotificationItem notification={notification} onMarkAsRead={markAsRead} />
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
