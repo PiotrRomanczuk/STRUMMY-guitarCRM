@@ -18,6 +18,12 @@ const CreateUserSchema = z.object({
   isTeacher: z.boolean().optional(),
   isStudent: z.boolean().optional(),
   isShadow: z.boolean().optional(),
+  inviteEmail: z.string().email().optional().or(z.literal('')),
+});
+
+const PatchUserSchema = z.object({
+  userId: z.string().uuid(),
+  inviteEmail: z.string().email('Invalid invite email'),
 });
 
 export async function GET(request: Request) {
@@ -43,7 +49,9 @@ export async function GET(request: Request) {
     if (isStudent && !isAdmin && !isTeacher) {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, avatar_url, is_admin, is_teacher, is_student, is_shadow, is_active, student_status, created_at, updated_at')
+        .select(
+          'id, email, full_name, avatar_url, is_admin, is_teacher, is_student, is_shadow, is_active, student_status, created_at, updated_at'
+        )
         .eq('id', user.id)
         .single();
 
@@ -69,10 +77,7 @@ export async function GET(request: Request) {
         updated_at: data.updated_at,
       };
 
-      return Response.json(
-        { data: [mapped], total: 1, limit, offset },
-        { status: 200 }
-      );
+      return Response.json({ data: [mapped], total: 1, limit, offset }, { status: 200 });
     }
 
     // Teacher role: can only see students linked via active lessons
@@ -85,23 +90,21 @@ export async function GET(request: Request) {
         .eq('teacher_id', user.id)
         .is('deleted_at', null);
 
-      allowedStudentIds = Array.from(
-        new Set((lessonData || []).map((l) => l.student_id))
-      );
+      allowedStudentIds = Array.from(new Set((lessonData || []).map((l) => l.student_id)));
 
       // If teacher has no students, return empty result
       if (allowedStudentIds.length === 0) {
-        return Response.json(
-          { data: [], total: 0, limit, offset },
-          { status: 200 }
-        );
+        return Response.json({ data: [], total: 0, limit, offset }, { status: 200 });
       }
     }
 
     // Build query
     let query = supabase
       .from('profiles')
-      .select('id, email, full_name, avatar_url, is_admin, is_teacher, is_student, is_shadow, is_active, student_status, created_at, updated_at', { count: 'exact' });
+      .select(
+        'id, email, full_name, avatar_url, is_admin, is_teacher, is_student, is_shadow, is_active, student_status, created_at, updated_at',
+        { count: 'exact' }
+      );
 
     // For teachers, restrict to their students only
     if (allowedStudentIds !== null) {
@@ -210,6 +213,7 @@ export async function POST(request: Request) {
       isAdmin: reqIsAdmin,
       isTeacher: reqIsTeacher,
       isStudent: reqIsStudent,
+      inviteEmail,
     } = parsed.data;
 
     // Permission Check
@@ -241,6 +245,8 @@ export async function POST(request: Request) {
       const newId = randomUUID();
       finalEmail = `shadow_${newId}@placeholder.com`;
 
+      const inviteEmailValue = inviteEmail?.trim() || null;
+
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .insert([
@@ -254,6 +260,7 @@ export async function POST(request: Request) {
             is_teacher: reqIsTeacher || false,
             is_student: reqIsStudent || true,
             is_shadow: true,
+            invite_email: inviteEmailValue,
           },
         ])
         .select()
@@ -324,6 +331,81 @@ export async function POST(request: Request) {
     return Response.json(profileData, { status: 201 });
   } catch (error) {
     logger.error('Error creating user:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/users — Set invite_email on a shadow profile.
+ * When the student later signs up with this email, the handle_new_user
+ * trigger will auto-link them to this shadow profile.
+ */
+export async function PATCH(request: Request) {
+  try {
+    const { user, isAdmin, isTeacher } = await getUserWithRolesSSR();
+
+    if (!user || (!isAdmin && !isTeacher)) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const rawBody = await request.json();
+    const parsed = PatchUserSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
+    }
+
+    const { userId, inviteEmail } = parsed.data;
+    const supabase = await createClient();
+
+    // Verify the profile exists and is a shadow user
+    const { data: profile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('id, is_shadow')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !profile) {
+      return Response.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    if (!profile.is_shadow) {
+      return Response.json(
+        { error: 'invite_email can only be set on shadow profiles' },
+        { status: 400 }
+      );
+    }
+
+    // Check no other profile already uses this email
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('id')
+      .or(`email.eq.${inviteEmail},invite_email.eq.${inviteEmail}`)
+      .neq('id', userId)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      return Response.json(
+        { error: 'This email is already associated with another user' },
+        { status: 409 }
+      );
+    }
+
+    const { data: updated, error: updateError } = await supabase
+      .from('profiles')
+      .update({ invite_email: inviteEmail })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (updateError) {
+      logger.error('Error setting invite_email:', updateError);
+      return Response.json({ error: 'Internal server error' }, { status: 500 });
+    }
+
+    return Response.json(updated, { status: 200 });
+  } catch (error) {
+    logger.error('Error in PATCH /api/users:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
