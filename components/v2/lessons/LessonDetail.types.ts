@@ -4,6 +4,7 @@ import type { Database } from '@/database.types';
 export interface LessonSongItem {
   id: string;
   status: Database['public']['Enums']['lesson_song_status'];
+  notes: string | null;
   song: { id: string; title: string; author: string } | null;
 }
 
