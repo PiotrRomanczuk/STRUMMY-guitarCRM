@@ -69,7 +69,10 @@ function buildQueryChain(finalResult: {
 }) {
   const resolved = Promise.resolve(finalResult);
 
-  const chain = (): Record<string, jest.Mock | ((resolve: (v: unknown) => void, reject: (e: unknown) => void) => Promise<void>)> => ({
+  const chain = (): Record<
+    string,
+    jest.Mock | ((resolve: (v: unknown) => void, reject: (e: unknown) => void) => Promise<void>)
+  > => ({
     select: jest.fn(() => chain()),
     insert: jest.fn(() => chain()),
     update: jest.fn(() => chain()),
@@ -96,7 +99,8 @@ function createMockSupabase(
     error?: { message: string } | null;
     count?: number | null;
   }>,
-  authAdminMock?: { getUserById: jest.Mock }
+  authAdminMock?: { getUserById: jest.Mock },
+  rpcResult?: { data?: unknown; error?: { message: string } | null }
 ) {
   let callIndex = 0;
 
@@ -107,6 +111,7 @@ function createMockSupabase(
       const response = fromResponses[idx] ?? fromResponses[fromResponses.length - 1];
       return buildQueryChain(response);
     }),
+    rpc: jest.fn().mockResolvedValue(rpcResult ?? { data: {}, error: null }),
     auth: {
       admin: authAdminMock ?? {
         getUserById: jest.fn().mockResolvedValue({
@@ -130,10 +135,12 @@ describe('POST /api/admin/link-shadow-user', () => {
   it('returns 401 when not authenticated', async () => {
     mockUnauthenticated();
 
-    const res = await POST(makeRequest({
-      shadowProfileId: SHADOW_ID,
-      realUserId: REAL_USER_ID,
-    }));
+    const res = await POST(
+      makeRequest({
+        shadowProfileId: SHADOW_ID,
+        realUserId: REAL_USER_ID,
+      })
+    );
 
     expect(res.status).toBe(401);
   });
@@ -146,10 +153,12 @@ describe('POST /api/admin/link-shadow-user', () => {
     ]);
     (createAdminClient as jest.Mock).mockReturnValue(mock);
 
-    const res = await POST(makeRequest({
-      shadowProfileId: SHADOW_ID,
-      realUserId: REAL_USER_ID,
-    }));
+    const res = await POST(
+      makeRequest({
+        shadowProfileId: SHADOW_ID,
+        realUserId: REAL_USER_ID,
+      })
+    );
 
     expect(res.status).toBe(403);
     const body = await res.json();
@@ -159,9 +168,7 @@ describe('POST /api/admin/link-shadow-user', () => {
   it('returns 400 for invalid body (missing fields)', async () => {
     mockAuthenticatedUser();
 
-    const mock = createMockSupabase([
-      { data: { is_admin: true, is_teacher: false }, error: null },
-    ]);
+    const mock = createMockSupabase([{ data: { is_admin: true, is_teacher: false }, error: null }]);
     (createAdminClient as jest.Mock).mockReturnValue(mock);
 
     const res = await POST(makeRequest({ shadowProfileId: 'not-a-uuid' }));
@@ -174,9 +181,7 @@ describe('POST /api/admin/link-shadow-user', () => {
   it('returns 400 for non-JSON body', async () => {
     mockAuthenticatedUser();
 
-    const mock = createMockSupabase([
-      { data: { is_admin: true, is_teacher: false }, error: null },
-    ]);
+    const mock = createMockSupabase([{ data: { is_admin: true, is_teacher: false }, error: null }]);
     (createAdminClient as jest.Mock).mockReturnValue(mock);
 
     const req = new Request('http://localhost:3000/api/admin/link-shadow-user', {
@@ -203,10 +208,12 @@ describe('POST /api/admin/link-shadow-user', () => {
     ]);
     (createAdminClient as jest.Mock).mockReturnValue(mock);
 
-    const res = await POST(makeRequest({
-      shadowProfileId: SHADOW_ID,
-      realUserId: REAL_USER_ID,
-    }));
+    const res = await POST(
+      makeRequest({
+        shadowProfileId: SHADOW_ID,
+        realUserId: REAL_USER_ID,
+      })
+    );
 
     expect(res.status).toBe(404);
     const body = await res.json();
@@ -225,10 +232,12 @@ describe('POST /api/admin/link-shadow-user', () => {
     ]);
     (createAdminClient as jest.Mock).mockReturnValue(mock);
 
-    const res = await POST(makeRequest({
-      shadowProfileId: SHADOW_ID,
-      realUserId: REAL_USER_ID,
-    }));
+    const res = await POST(
+      makeRequest({
+        shadowProfileId: SHADOW_ID,
+        realUserId: REAL_USER_ID,
+      })
+    );
 
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -242,7 +251,12 @@ describe('POST /api/admin/link-shadow-user', () => {
       [
         { data: { is_admin: true, is_teacher: false }, error: null },
         {
-          data: { id: SHADOW_ID, email: 'shadow@placeholder.com', full_name: 'Shadow', is_shadow: true },
+          data: {
+            id: SHADOW_ID,
+            email: 'shadow@placeholder.com',
+            full_name: 'Shadow',
+            is_shadow: true,
+          },
           error: null,
         },
       ],
@@ -255,10 +269,12 @@ describe('POST /api/admin/link-shadow-user', () => {
     );
     (createAdminClient as jest.Mock).mockReturnValue(mock);
 
-    const res = await POST(makeRequest({
-      shadowProfileId: SHADOW_ID,
-      realUserId: REAL_USER_ID,
-    }));
+    const res = await POST(
+      makeRequest({
+        shadowProfileId: SHADOW_ID,
+        realUserId: REAL_USER_ID,
+      })
+    );
 
     expect(res.status).toBe(404);
     const body = await res.json();
@@ -272,7 +288,12 @@ describe('POST /api/admin/link-shadow-user', () => {
       [
         { data: { is_admin: true, is_teacher: false }, error: null },
         {
-          data: { id: SHADOW_ID, email: 'shadow@placeholder.com', full_name: 'Shadow', is_shadow: true },
+          data: {
+            id: SHADOW_ID,
+            email: 'shadow@placeholder.com',
+            full_name: 'Shadow',
+            is_shadow: true,
+          },
           error: null,
         },
         { data: { id: REAL_USER_ID }, error: null },
@@ -286,10 +307,12 @@ describe('POST /api/admin/link-shadow-user', () => {
     );
     (createAdminClient as jest.Mock).mockReturnValue(mock);
 
-    const res = await POST(makeRequest({
-      shadowProfileId: SHADOW_ID,
-      realUserId: REAL_USER_ID,
-    }));
+    const res = await POST(
+      makeRequest({
+        shadowProfileId: SHADOW_ID,
+        realUserId: REAL_USER_ID,
+      })
+    );
 
     expect(res.status).toBe(409);
     const body = await res.json();
@@ -311,7 +334,12 @@ describe('POST /api/admin/link-shadow-user', () => {
       [
         { data: { is_admin: true, is_teacher: false }, error: null },
         {
-          data: { id: SHADOW_ID, email: 'shadow@placeholder.com', full_name: 'Shadow Student', is_shadow: true },
+          data: {
+            id: SHADOW_ID,
+            email: 'shadow@placeholder.com',
+            full_name: 'Shadow Student',
+            is_shadow: true,
+          },
           error: null,
         },
         { data: null, error: null },
@@ -327,10 +355,12 @@ describe('POST /api/admin/link-shadow-user', () => {
     );
     (createAdminClient as jest.Mock).mockReturnValue(mock);
 
-    const res = await POST(makeRequest({
-      shadowProfileId: SHADOW_ID,
-      realUserId: REAL_USER_ID,
-    }));
+    const res = await POST(
+      makeRequest({
+        shadowProfileId: SHADOW_ID,
+        realUserId: REAL_USER_ID,
+      })
+    );
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -355,7 +385,12 @@ describe('POST /api/admin/link-shadow-user', () => {
       [
         { data: { is_admin: false, is_teacher: true }, error: null },
         {
-          data: { id: SHADOW_ID, email: 'shadow@placeholder.com', full_name: 'Student', is_shadow: true },
+          data: {
+            id: SHADOW_ID,
+            email: 'shadow@placeholder.com',
+            full_name: 'Student',
+            is_shadow: true,
+          },
           error: null,
         },
         { data: null, error: null },
@@ -371,10 +406,12 @@ describe('POST /api/admin/link-shadow-user', () => {
     );
     (createAdminClient as jest.Mock).mockReturnValue(mock);
 
-    const res = await POST(makeRequest({
-      shadowProfileId: SHADOW_ID,
-      realUserId: REAL_USER_ID,
-    }));
+    const res = await POST(
+      makeRequest({
+        shadowProfileId: SHADOW_ID,
+        realUserId: REAL_USER_ID,
+      })
+    );
 
     expect(res.status).toBe(200);
   });

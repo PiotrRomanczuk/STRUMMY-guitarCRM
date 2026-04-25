@@ -37,11 +37,7 @@ const TEST_PATTERNS = {
       /EDITED$/,
       /UPDATED$/,
     ],
-    artists: [
-      'E2E Test Artist',
-      'Teacher Test Artist',
-      /^E2E Test Artist/,
-    ],
+    artists: ['E2E Test Artist', 'Teacher Test Artist', /^E2E Test Artist/],
   },
   lessons: {
     titles: [
@@ -50,29 +46,15 @@ const TEST_PATTERNS = {
       /^Teacher Lesson \d+/,
       /^Test Lesson \d+/,
     ],
-    notes: [
-      'E2E Test lesson notes',
-    ],
+    notes: ['E2E Test lesson notes'],
   },
   assignments: {
-    titles: [
-      /^E2E Assignment \d+/,
-      /^Teacher Assignment \d+/,
-      /^Test Assignment \d+/,
-    ],
-    descriptions: [
-      /^E2E Test assignment description/,
-    ],
+    titles: [/^E2E Assignment \d+/, /^Teacher Assignment \d+/, /^Test Assignment \d+/],
+    descriptions: [/^E2E Test assignment description/],
   },
   assignmentTemplates: {
-    titles: [
-      /^E2E Template \d+/,
-      /^Teacher Template \d+/,
-      /^Test Template \d+/,
-    ],
-    descriptions: [
-      /^E2E Test template description/,
-    ],
+    titles: [/^E2E Template \d+/, /^Teacher Template \d+/, /^Test Template \d+/],
+    descriptions: [/^E2E Test template description/],
   },
   users: {
     emails: [
@@ -81,23 +63,13 @@ const TEST_PATTERNS = {
       /^e2e\.admin\.\d+@example\.com$/,
       /^test\.\d+@example\.com$/,
     ],
-    firstNames: [
-      'E2ETest',
-      'E2EEdited',
-      /^E2E/,
-    ],
+    firstNames: ['E2ETest', 'E2EEdited', /^E2E/],
   },
   pendingStudents: {
-    emails: [
-      /^e2e\.pending\.\d+@example\.com$/,
-      /^test\.pending\.\d+@example\.com$/,
-    ],
+    emails: [/^e2e\.pending\.\d+@example\.com$/, /^test\.pending\.\d+@example\.com$/],
   },
   aiConversations: {
-    titles: [
-      /^E2E Test Conversation/,
-      /^Test AI Conversation/,
-    ],
+    titles: [/^E2E Test Conversation/, /^Test AI Conversation/],
   },
 };
 
@@ -108,16 +80,18 @@ const TEST_PATTERNS = {
 function getSupabaseClient() {
   // Use local URL if available (set by playwright.config.ts only when local Supabase is running)
   // Otherwise fall back to remote URL
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_LOCAL_URL ||
-                      process.env.NEXT_PUBLIC_SUPABASE_REMOTE_URL ||
-                      process.env.NEXT_PUBLIC_SUPABASE_URL ||
-                      'http://127.0.0.1:54321';
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_LOCAL_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_REMOTE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    'http://127.0.0.1:54321';
 
   // Prefer service role key to bypass RLS policies
-  const supabaseKey = process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ||
-                      process.env.SUPABASE_REMOTE_SERVICE_ROLE_KEY ||
-                      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-                      process.env.NEXT_PUBLIC_SUPABASE_LOCAL_ANON_KEY;
+  const supabaseKey =
+    process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_REMOTE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_LOCAL_ANON_KEY;
 
   if (!supabaseKey) {
     console.error('Available env vars:', {
@@ -141,8 +115,10 @@ function getSupabaseClient() {
     }
   } catch {
     // If JWT decode fails, check env var name as fallback
-    if (process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY === supabaseKey ||
-        process.env.SUPABASE_SERVICE_ROLE_KEY === supabaseKey) {
+    if (
+      process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY === supabaseKey ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY === supabaseKey
+    ) {
       authType = 'SERVICE_ROLE (bypasses RLS)';
     }
   }
@@ -158,7 +134,7 @@ function getSupabaseClient() {
 function matchesPattern(value: string | null, patterns: (RegExp | string)[]): boolean {
   if (!value) return false;
 
-  return patterns.some(pattern => {
+  return patterns.some((pattern) => {
     if (typeof pattern === 'string') {
       return value === pattern;
     }
@@ -192,7 +168,7 @@ export async function cleanupTestSongs(): Promise<{ deleted: number; errors: any
     }
 
     // Filter songs that match test patterns
-    const testSongs = songs.filter(song => {
+    const testSongs = songs.filter((song) => {
       const titleMatches = matchesPattern(song.title, TEST_PATTERNS.songs.titles);
       const artistMatches = matchesPattern(song.author, TEST_PATTERNS.songs.artists);
       return titleMatches || artistMatches;
@@ -202,10 +178,7 @@ export async function cleanupTestSongs(): Promise<{ deleted: number; errors: any
 
     // Delete test songs
     for (const song of testSongs) {
-      const { error: deleteError } = await supabase
-        .from('songs')
-        .delete()
-        .eq('id', song.id);
+      const { error: deleteError } = await supabase.from('songs').delete().eq('id', song.id);
 
       if (deleteError) {
         console.error(`Error deleting song ${song.id}:`, deleteError);
@@ -233,9 +206,7 @@ export async function cleanupTestLessons(): Promise<{ deleted: number; errors: a
   const errors: any[] = [];
 
   try {
-    const { data: lessons, error: fetchError } = await supabase
-      .from('lessons')
-      .select('id, title');
+    const { data: lessons, error: fetchError } = await supabase.from('lessons').select('id, title');
 
     if (fetchError) {
       console.error('Error fetching lessons for cleanup:', fetchError);
@@ -248,17 +219,14 @@ export async function cleanupTestLessons(): Promise<{ deleted: number; errors: a
       return { deleted, errors };
     }
 
-    const testLessons = lessons.filter(lesson =>
+    const testLessons = lessons.filter((lesson) =>
       matchesPattern(lesson.title, TEST_PATTERNS.lessons.titles)
     );
 
     console.log(`Found ${testLessons.length} test lessons to delete`);
 
     for (const lesson of testLessons) {
-      const { error: deleteError } = await supabase
-        .from('lessons')
-        .delete()
-        .eq('id', lesson.id);
+      const { error: deleteError } = await supabase.from('lessons').delete().eq('id', lesson.id);
 
       if (deleteError) {
         console.error(`Error deleting lesson ${lesson.id}:`, deleteError);
@@ -301,7 +269,7 @@ export async function cleanupTestAssignments(): Promise<{ deleted: number; error
       return { deleted, errors };
     }
 
-    const testAssignments = assignments.filter(assignment =>
+    const testAssignments = assignments.filter((assignment) =>
       matchesPattern(assignment.title, TEST_PATTERNS.assignments.titles)
     );
 
@@ -333,7 +301,10 @@ export async function cleanupTestAssignments(): Promise<{ deleted: number; error
 /**
  * Delete test assignment templates from the database
  */
-export async function cleanupTestAssignmentTemplates(): Promise<{ deleted: number; errors: any[] }> {
+export async function cleanupTestAssignmentTemplates(): Promise<{
+  deleted: number;
+  errors: any[];
+}> {
   const supabase = getSupabaseClient();
   let deleted = 0;
   const errors: any[] = [];
@@ -354,9 +325,12 @@ export async function cleanupTestAssignmentTemplates(): Promise<{ deleted: numbe
       return { deleted, errors };
     }
 
-    const testTemplates = templates.filter(template => {
+    const testTemplates = templates.filter((template) => {
       const titleMatches = matchesPattern(template.title, TEST_PATTERNS.assignmentTemplates.titles);
-      const descMatches = matchesPattern(template.description, TEST_PATTERNS.assignmentTemplates.descriptions);
+      const descMatches = matchesPattern(
+        template.description,
+        TEST_PATTERNS.assignmentTemplates.descriptions
+      );
       return titleMatches || descMatches;
     });
 
@@ -410,7 +384,7 @@ export async function cleanupTestUsers(): Promise<{ deleted: number; errors: any
       return { deleted, errors };
     }
 
-    const testProfiles = profiles.filter(profile => {
+    const testProfiles = profiles.filter((profile) => {
       const emailMatches = matchesPattern(profile.email, TEST_PATTERNS.users.emails);
       const fullNameMatches = matchesPattern(profile.full_name, TEST_PATTERNS.users.firstNames);
       return emailMatches || fullNameMatches;
@@ -419,10 +393,7 @@ export async function cleanupTestUsers(): Promise<{ deleted: number; errors: any
     console.log(`Found ${testProfiles.length} test users to delete`);
 
     for (const profile of testProfiles) {
-      const { error: deleteError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', profile.id);
+      const { error: deleteError } = await supabase.from('profiles').delete().eq('id', profile.id);
 
       if (deleteError) {
         console.error(`Error deleting profile ${profile.id}:`, deleteError);
@@ -442,63 +413,22 @@ export async function cleanupTestUsers(): Promise<{ deleted: number; errors: any
 }
 
 /**
- * Delete test pending students from the database
+ * Delete test pending students from the database.
+ * NOTE: pending_students table was dropped in migration 20260425000003.
+ * This function is kept as a no-op for backwards compatibility.
  */
 export async function cleanupTestPendingStudents(): Promise<{ deleted: number; errors: any[] }> {
-  const supabase = getSupabaseClient();
-  let deleted = 0;
-  const errors: any[] = [];
-
-  try {
-    const { data: pendingStudents, error: fetchError } = await supabase
-      .from('pending_students')
-      .select('id, email');
-
-    if (fetchError) {
-      console.error('Error fetching pending students for cleanup:', fetchError);
-      errors.push(fetchError);
-      return { deleted, errors };
-    }
-
-    if (!pendingStudents || pendingStudents.length === 0) {
-      console.log('No pending students found for cleanup');
-      return { deleted, errors };
-    }
-
-    const testPendingStudents = pendingStudents.filter(student =>
-      matchesPattern(student.email, TEST_PATTERNS.pendingStudents.emails)
-    );
-
-    console.log(`Found ${testPendingStudents.length} test pending students to delete`);
-
-    for (const student of testPendingStudents) {
-      const { error: deleteError } = await supabase
-        .from('pending_students')
-        .delete()
-        .eq('id', student.id);
-
-      if (deleteError) {
-        console.error(`Error deleting pending student ${student.id}:`, deleteError);
-        errors.push({ student, error: deleteError });
-      } else {
-        deleted++;
-        console.log(`Deleted test pending student: ${student.email}`);
-      }
-    }
-
-    return { deleted, errors };
-  } catch (error) {
-    console.error('Unexpected error during pending student cleanup:', error);
-    errors.push(error);
-    return { deleted, errors };
-  }
+  return { deleted: 0, errors: [] };
 }
 
 /**
  * Delete orphaned practice sessions (sessions without valid student/song references)
  * Note: Practice sessions are typically cleaned up via CASCADE when users are deleted
  */
-export async function cleanupOrphanedPracticeSessions(): Promise<{ deleted: number; errors: any[] }> {
+export async function cleanupOrphanedPracticeSessions(): Promise<{
+  deleted: number;
+  errors: any[];
+}> {
   const supabase = getSupabaseClient();
   let deleted = 0;
   const errors: any[] = [];
@@ -616,7 +546,7 @@ export async function cleanupTestAIConversations(): Promise<{ deleted: number; e
       return { deleted, errors };
     }
 
-    const testConversations = conversations.filter(conv =>
+    const testConversations = conversations.filter((conv) =>
       matchesPattern(conv.title, TEST_PATTERNS.aiConversations.titles)
     );
 
@@ -678,15 +608,16 @@ export async function cleanupAllTestData(): Promise<void> {
   console.log(`  Orphaned Practice Sessions deleted: ${results.orphanedPracticeSessions.deleted}`);
   console.log(`  Orphaned Song Progress deleted: ${results.orphanedSongProgress.deleted}`);
 
-  const totalErrors = results.assignmentTemplates.errors.length +
-                     results.assignments.errors.length +
-                     results.aiConversations.errors.length +
-                     results.songs.errors.length +
-                     results.lessons.errors.length +
-                     results.pendingStudents.errors.length +
-                     results.users.errors.length +
-                     results.orphanedPracticeSessions.errors.length +
-                     results.orphanedSongProgress.errors.length;
+  const totalErrors =
+    results.assignmentTemplates.errors.length +
+    results.assignments.errors.length +
+    results.aiConversations.errors.length +
+    results.songs.errors.length +
+    results.lessons.errors.length +
+    results.pendingStudents.errors.length +
+    results.users.errors.length +
+    results.orphanedPracticeSessions.errors.length +
+    results.orphanedSongProgress.errors.length;
 
   if (totalErrors > 0) {
     console.log(`  ⚠️  Errors encountered: ${totalErrors}`);
