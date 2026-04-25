@@ -54,6 +54,7 @@ export function LessonSongStatusSelect({
     to_learn: 'To Learn',
     started: 'Started',
     remembered: 'Remembered',
+    slow_tempo: 'Slow Tempo',
     with_author: 'Play Along',
     mastered: 'Mastered',
   };

@@ -6,6 +6,7 @@ export const SONG_STATUS_ORDER: LessonSongStatus[] = [
   'to_learn',
   'started',
   'remembered',
+  'slow_tempo',
   'with_author',
   'mastered',
 ];
@@ -14,6 +15,7 @@ export const STATUS_LABELS: Record<LessonSongStatus, string> = {
   to_learn: 'To Learn',
   started: 'Started',
   remembered: 'Remembered',
+  slow_tempo: 'Slow Tempo',
   with_author: 'Play Along',
   mastered: 'Mastered',
 };
@@ -33,6 +35,11 @@ export const STATUS_COLORS: Record<LessonSongStatus, { bg: string; text: string;
     bg: 'bg-amber-100 dark:bg-amber-900/40',
     text: 'text-amber-700 dark:text-amber-300',
     ring: 'ring-amber-300 dark:ring-amber-600',
+  },
+  slow_tempo: {
+    bg: 'bg-orange-100 dark:bg-orange-900/40',
+    text: 'text-orange-700 dark:text-orange-300',
+    ring: 'ring-orange-300 dark:ring-orange-600',
   },
   with_author: {
     bg: 'bg-purple-100 dark:bg-purple-900/40',
