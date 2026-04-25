@@ -22,14 +22,24 @@ import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { Search, Music, Loader2, Check, Guitar, Tag } from 'lucide-react';
 import { toast } from 'sonner';
-import { searchSongsForRepertoireAction, addSongToRepertoireAction } from '@/app/actions/repertoire';
+import {
+  searchSongsForRepertoireAction,
+  addSongToRepertoireAction,
+} from '@/app/actions/repertoire';
 
 interface AddSongToRepertoireDialogProps {
   studentId: string;
   children: React.ReactNode;
 }
 
-type SearchResult = { id: string; title: string; author: string; level: string | null; key: string | null; cover_image_url: string | null };
+type SearchResult = {
+  id: string;
+  title: string;
+  author: string;
+  level: string | null;
+  key: string | null;
+  cover_image_url: string | null;
+};
 
 const LEVEL_COLORS: Record<string, string> = {
   beginner: 'bg-green-500/10 text-green-600 dark:text-green-400',
@@ -51,6 +61,7 @@ export function AddSongToRepertoireDialog({ studentId, children }: AddSongToRepe
   // Load all available songs when dialog opens
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
     searchSongsForRepertoireAction('', studentId).then((result) => {
       if ('data' in result) {
@@ -154,7 +165,13 @@ export function AddSongToRepertoireDialog({ studentId, children }: AddSongToRepe
                     >
                       <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0 overflow-hidden relative">
                         {song.cover_image_url ? (
-                          <Image src={song.cover_image_url} alt="" fill className="object-cover" sizes="36px" />
+                          <Image
+                            src={song.cover_image_url}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="36px"
+                          />
                         ) : (
                           <Music className="h-4 w-4 text-purple-500" />
                         )}
@@ -173,7 +190,9 @@ export function AddSongToRepertoireDialog({ studentId, children }: AddSongToRepe
                           </span>
                         )}
                         {song.level && (
-                          <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold uppercase rounded px-1.5 py-0.5 ${LEVEL_COLORS[song.level.toLowerCase()] ?? 'bg-muted text-muted-foreground'}`}>
+                          <span
+                            className={`inline-flex items-center gap-0.5 text-[10px] font-bold uppercase rounded px-1.5 py-0.5 ${LEVEL_COLORS[song.level.toLowerCase()] ?? 'bg-muted text-muted-foreground'}`}
+                          >
                             <Tag className="h-2.5 w-2.5" />
                             {song.level}
                           </span>
@@ -190,7 +209,13 @@ export function AddSongToRepertoireDialog({ studentId, children }: AddSongToRepe
             <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
               <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0 overflow-hidden relative">
                 {selectedSong?.cover_image_url ? (
-                  <Image src={selectedSong.cover_image_url} alt="" fill className="object-cover" sizes="36px" />
+                  <Image
+                    src={selectedSong.cover_image_url}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="36px"
+                  />
                 ) : (
                   <Music className="h-4 w-4 text-purple-500" />
                 )}
