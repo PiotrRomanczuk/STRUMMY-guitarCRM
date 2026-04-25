@@ -1071,6 +1071,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          confirmed_active_at: string | null
           created_at: string
           deletion_requested_at: string | null
           deletion_scheduled_for: string | null
@@ -1103,6 +1104,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          confirmed_active_at?: string | null
           created_at?: string
           deletion_requested_at?: string | null
           deletion_scheduled_for?: string | null
@@ -1135,6 +1137,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          confirmed_active_at?: string | null
           created_at?: string
           deletion_requested_at?: string | null
           deletion_scheduled_for?: string | null
@@ -2597,6 +2600,7 @@ export type Database = {
         | "to_learn"
         | "started"
         | "remembered"
+        | "slow_tempo"
         | "with_author"
         | "mastered"
       lesson_status:
@@ -2836,6 +2840,7 @@ export const Constants = {
         "to_learn",
         "started",
         "remembered",
+        "slow_tempo",
         "with_author",
         "mastered",
       ],
