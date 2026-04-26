@@ -48,10 +48,7 @@ function getBaseUrl(): string {
  * Generate a signed unsubscribe link using HMAC token (prevents IDOR).
  * Falls back to the settings page if token generation fails or params are missing.
  */
-function getUnsubscribeLink(
-  recipientUserId?: string,
-  notificationType?: string
-): string {
+function getUnsubscribeLink(recipientUserId?: string, notificationType?: string): string {
   const baseUrl = getBaseUrl();
 
   if (recipientUserId && notificationType) {
@@ -59,7 +56,9 @@ function getUnsubscribeLink(
       const token = generateUnsubscribeToken(recipientUserId, notificationType);
       return `${baseUrl}/api/notifications/unsubscribe?token=${encodeURIComponent(token)}`;
     } catch (err) {
-      logger.warn('[base-template] Could not generate signed unsubscribe token', { error: String(err) });
+      logger.warn('[base-template] Could not generate signed unsubscribe token', {
+        error: String(err),
+      });
     }
   }
 
@@ -95,6 +94,8 @@ export function generateBaseEmailHtml(options: BaseEmailTemplateOptions): string
       <meta name="color-scheme" content="light dark">
       <meta name="supported-color-schemes" content="light dark">
       <title>${subject}</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap" rel="stylesheet">
       <!--[if mso]>
       <noscript>
         <xml>
@@ -105,6 +106,8 @@ export function generateBaseEmailHtml(options: BaseEmailTemplateOptions): string
       </noscript>
       <![endif]-->
       <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap');
+
         /* Dark mode support */
         @media (prefers-color-scheme: dark) {
           .email-container {
@@ -180,11 +183,15 @@ export function generateBaseEmailHtml(options: BaseEmailTemplateOptions): string
     <body style="margin: 0; padding: 0; background-color: #faf8f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
 
       <!-- Preheader text (hidden but shows in email preview) -->
-      ${preheader ? `
+      ${
+        preheader
+          ? `
       <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">
         ${preheader}
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <!-- Email Container -->
       <div class="email-container" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(120, 80, 40, 0.08), 0 2px 4px -1px rgba(120, 80, 40, 0.04);">
@@ -206,23 +213,31 @@ export function generateBaseEmailHtml(options: BaseEmailTemplateOptions): string
         <div class="email-content" style="padding: 32px 24px;">
           ${bodyContent}
 
-          ${ctaButton ? `
+          ${
+            ctaButton
+              ? `
           <!-- Call to Action Button -->
           <div style="margin-top: 32px; text-align: center;">
             <a href="${ctaButton.url}" class="button-primary" style="display: inline-block; padding: 14px 32px; background-color: #f59e0b; color: #0f0c0a; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 1px 3px 0 rgba(120, 80, 40, 0.15);">
               ${ctaButton.text}
             </a>
           </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
 
         <!-- Footer -->
         <div class="email-footer" style="background-color: #f5f0eb; padding: 24px; text-align: center; border-top: 1px solid #e8e0d8;">
-          ${footerNote ? `
+          ${
+            footerNote
+              ? `
           <p style="margin: 0 0 16px 0; font-size: 14px; color: #78716c; font-weight: 500;">
             ${footerNote}
           </p>
-          ` : ''}
+          `
+              : ''
+          }
 
           <p style="margin: 0 0 12px 0; font-size: 14px; color: #78716c;">
             <a href="${baseUrl}/dashboard" style="color: #b45309; text-decoration: none; font-weight: 500;">
@@ -281,7 +296,10 @@ export function createDetailRow(label: string, value: string): string {
 /**
  * Helper function to create a status badge (translucent style matching dashboard)
  */
-export function createStatusBadge(text: string, color: 'success' | 'warning' | 'info' | 'default' = 'default'): string {
+export function createStatusBadge(
+  text: string,
+  color: 'success' | 'warning' | 'info' | 'default' = 'default'
+): string {
   const colorMap = {
     success: { bg: '#dcfce7', text: '#15803d' },
     warning: { bg: '#fef3c7', text: '#b45309' },
