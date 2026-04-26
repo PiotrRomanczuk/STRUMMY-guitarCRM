@@ -2,7 +2,7 @@
  * Admin Email Report Server Actions Tests
  *
  * Tests the admin email report functionality:
- * - sendAdminSongReport - Send song database statistics via email
+ * - sendAdminSongReport - Send morning briefing digest via email
  *
  * @see app/actions/email/send-admin-report.ts
  */
@@ -11,11 +11,11 @@
 
 import { sendAdminSongReport } from '../send-admin-report';
 
-// Mock song analytics
-const mockGetSongDatabaseStatistics = jest.fn();
+// Mock daily briefing analytics
+const mockGetDailyBriefingStats = jest.fn();
 
 jest.mock('@/lib/services/song-analytics', () => ({
-  getSongDatabaseStatistics: () => mockGetSongDatabaseStatistics(),
+  getDailyBriefingStats: () => mockGetDailyBriefingStats(),
 }));
 
 // Mock email template
@@ -35,6 +35,17 @@ jest.mock('@/lib/email/smtp-client', () => ({
   },
 }));
 
+const mockBriefingStats = {
+  songs: {
+    totalSongs: 47,
+    coverage: { chords: 68, youtube: 59, ultimateGuitar: 52, galleryImages: 40 },
+    counts: { withChords: 32, withYoutube: 28, withUltimateGuitar: 24, withGalleryImages: 19 },
+    missing: { chords: [], youtube: [], ultimateGuitar: [], galleryImages: [] },
+  },
+  students: { total: 12, newThisWeek: 2 },
+  lessons: { today: 1, thisWeek: 3, upcoming: 5 },
+};
+
 describe('sendAdminSongReport', () => {
   const originalEnv = process.env.GMAIL_USER;
 
@@ -47,31 +58,22 @@ describe('sendAdminSongReport', () => {
     process.env.GMAIL_USER = originalEnv;
   });
 
-  it('should successfully send admin report email', async () => {
-    const mockStats = {
-      totalSongs: 100,
-      songsByDifficulty: { easy: 30, medium: 50, hard: 20 },
-      averageStudentsPerSong: 3.5,
-      topSongs: [
-        { id: '1', title: 'Wonderwall', artist: 'Oasis', studentCount: 10 },
-      ],
-    };
-
-    mockGetSongDatabaseStatistics.mockResolvedValue(mockStats);
-    mockGenerateAdminSongReportHtml.mockReturnValue('<html>Report</html>');
+  it('should successfully send morning briefing email', async () => {
+    mockGetDailyBriefingStats.mockResolvedValue(mockBriefingStats);
+    mockGenerateAdminSongReportHtml.mockReturnValue('<html>Briefing</html>');
     mockSendMail.mockResolvedValue({ messageId: 'msg-123' });
 
     const result = await sendAdminSongReport();
 
     expect(result.success).toBe(true);
     expect(result.messageId).toBe('msg-123');
-    expect(mockGetSongDatabaseStatistics).toHaveBeenCalled();
-    expect(mockGenerateAdminSongReportHtml).toHaveBeenCalledWith(mockStats);
+    expect(mockGetDailyBriefingStats).toHaveBeenCalled();
+    expect(mockGenerateAdminSongReportHtml).toHaveBeenCalledWith(mockBriefingStats);
     expect(mockSendMail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'admin@example.com',
-        subject: expect.stringContaining('Song Database Report'),
-        html: '<html>Report</html>',
+        subject: expect.stringContaining('Morning Briefing'),
+        html: '<html>Briefing</html>',
       })
     );
   });
@@ -79,10 +81,8 @@ describe('sendAdminSongReport', () => {
   it('should handle missing GMAIL_USER env variable', async () => {
     delete process.env.GMAIL_USER;
 
-    mockGetSongDatabaseStatistics.mockResolvedValue({
-      totalSongs: 100,
-    });
-    mockGenerateAdminSongReportHtml.mockReturnValue('<html>Report</html>');
+    mockGetDailyBriefingStats.mockResolvedValue(mockBriefingStats);
+    mockGenerateAdminSongReportHtml.mockReturnValue('<html>Briefing</html>');
 
     const result = await sendAdminSongReport();
 
@@ -92,7 +92,7 @@ describe('sendAdminSongReport', () => {
   });
 
   it('should handle stats fetch failure', async () => {
-    mockGetSongDatabaseStatistics.mockRejectedValue(new Error('Database connection failed'));
+    mockGetDailyBriefingStats.mockRejectedValue(new Error('Database connection failed'));
 
     const result = await sendAdminSongReport();
 
@@ -102,10 +102,8 @@ describe('sendAdminSongReport', () => {
   });
 
   it('should handle email send failure', async () => {
-    mockGetSongDatabaseStatistics.mockResolvedValue({
-      totalSongs: 100,
-    });
-    mockGenerateAdminSongReportHtml.mockReturnValue('<html>Report</html>');
+    mockGetDailyBriefingStats.mockResolvedValue(mockBriefingStats);
+    mockGenerateAdminSongReportHtml.mockReturnValue('<html>Briefing</html>');
     mockSendMail.mockRejectedValue(new Error('SMTP connection failed'));
 
     const result = await sendAdminSongReport();
@@ -115,7 +113,7 @@ describe('sendAdminSongReport', () => {
   });
 
   it('should handle unknown error types', async () => {
-    mockGetSongDatabaseStatistics.mockRejectedValue('String error');
+    mockGetDailyBriefingStats.mockRejectedValue('String error');
 
     const result = await sendAdminSongReport();
 
@@ -123,18 +121,16 @@ describe('sendAdminSongReport', () => {
     expect(result.error).toBe('Unknown error');
   });
 
-  it('should use current date in subject line', async () => {
-    mockGetSongDatabaseStatistics.mockResolvedValue({
-      totalSongs: 50,
-    });
-    mockGenerateAdminSongReportHtml.mockReturnValue('<html>Report</html>');
+  it('should include weekday and date in subject line', async () => {
+    mockGetDailyBriefingStats.mockResolvedValue(mockBriefingStats);
+    mockGenerateAdminSongReportHtml.mockReturnValue('<html>Briefing</html>');
     mockSendMail.mockResolvedValue({ messageId: 'msg-456' });
 
     await sendAdminSongReport();
 
     expect(mockSendMail).toHaveBeenCalledWith(
       expect.objectContaining({
-        subject: expect.stringMatching(/Song Database Report - \d{1,2}[./]\d{1,2}[./]\d{4}/),
+        subject: expect.stringMatching(/Morning Briefing — \w+, \d+ \w+/),
       })
     );
   });

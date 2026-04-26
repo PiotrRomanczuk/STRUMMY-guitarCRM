@@ -79,7 +79,11 @@ export async function getSongDatabaseStatistics(): Promise<SongDatabaseStats> {
 
   // Map to simple objects for the report
   // title is NOT NULL in DB; narrow select infers string | null
-  const mapToSummary = (s: { id: string; title: string | null; author: string | null }): SongSummary => ({
+  const mapToSummary = (s: {
+    id: string;
+    title: string | null;
+    author: string | null;
+  }): SongSummary => ({
     id: s.id,
     title: s.title ?? '',
     author: s.author,
@@ -104,6 +108,68 @@ export async function getSongDatabaseStatistics(): Promise<SongDatabaseStats> {
       youtube: missingYoutube.map(mapToSummary),
       ultimateGuitar: missingUltimateGuitar.map(mapToSummary),
       galleryImages: missingGalleryImages.map(mapToSummary),
+    },
+  };
+}
+
+// --- Daily Briefing Stats ---
+
+export interface DailyBriefingStats {
+  songs: SongDatabaseStats;
+  students: {
+    total: number;
+    newThisWeek: number;
+  };
+  lessons: {
+    today: number;
+    thisWeek: number;
+    upcoming: number;
+  };
+}
+
+export async function getDailyBriefingStats(): Promise<DailyBriefingStats> {
+  const supabase = createAdminClient();
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+  const nextWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 8);
+
+  const [songs, studentsRes, lessonsRes] = await Promise.all([
+    getSongDatabaseStatistics(),
+    supabase
+      .from('profiles')
+      .select('id, created_at')
+      .eq('is_student', true)
+      .is('deletion_requested_at', null),
+    supabase
+      .from('lessons')
+      .select('id, scheduled_at')
+      .is('deleted_at', null)
+      .gte('scheduled_at', weekAgo.toISOString())
+      .lt('scheduled_at', nextWeek.toISOString()),
+  ]);
+
+  if (studentsRes.error) logger.error('Error fetching students for briefing:', studentsRes.error);
+  if (lessonsRes.error) logger.error('Error fetching lessons for briefing:', lessonsRes.error);
+
+  const students = studentsRes.data ?? [];
+  const lessonDates = (lessonsRes.data ?? []).map((l) => l.scheduled_at);
+  const todayIso = todayStart.toISOString();
+  const tomorrowIso = tomorrow.toISOString();
+  const weekAgoIso = weekAgo.toISOString();
+
+  return {
+    songs,
+    students: {
+      total: students.length,
+      newThisWeek: students.filter((s) => s.created_at >= weekAgoIso).length,
+    },
+    lessons: {
+      today: lessonDates.filter((d) => d >= todayIso && d < tomorrowIso).length,
+      thisWeek: lessonDates.filter((d) => d >= weekAgoIso && d < todayIso).length,
+      upcoming: lessonDates.filter((d) => d >= tomorrowIso).length,
     },
   };
 }
@@ -155,19 +221,34 @@ export async function getChordCoverageStats(): Promise<ChordCoverageStats> {
     const hasChords = song.chords && song.chords.trim() !== '';
     if (!hasChords) {
       tiers.missingChords.count++;
-      tiers.missingChords.songs.push({ id: song.id, title: song.title, author: song.author, chordCount: 0 });
+      tiers.missingChords.songs.push({
+        id: song.id,
+        title: song.title,
+        author: song.author,
+        chordCount: 0,
+      });
       continue;
     }
 
     const parsed = parseChordsColumn(song.chords);
     if (parsed.length === 0) {
       tiers.unparseable.count++;
-      tiers.unparseable.songs.push({ id: song.id, title: song.title, author: song.author, chordCount: 0 });
+      tiers.unparseable.songs.push({
+        id: song.id,
+        title: song.title,
+        author: song.author,
+        chordCount: 0,
+      });
       continue;
     }
 
     const hasKey = song.key && song.key.trim() !== '';
-    const entry: ChordCoverageSong = { id: song.id, title: song.title, author: song.author, chordCount: parsed.length };
+    const entry: ChordCoverageSong = {
+      id: song.id,
+      title: song.title,
+      author: song.author,
+      chordCount: parsed.length,
+    };
 
     if (!hasKey) {
       tiers.missingKey.count++;
