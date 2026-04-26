@@ -11,6 +11,8 @@ exports[`base-template snapshot tests should match snapshot for full email 1`] =
       <meta name="color-scheme" content="light dark">
       <meta name="supported-color-schemes" content="light dark">
       <title>Test Notification</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap" rel="stylesheet">
       <!--[if mso]>
       <noscript>
         <xml>
@@ -21,6 +23,8 @@ exports[`base-template snapshot tests should match snapshot for full email 1`] =
       </noscript>
       <![endif]-->
       <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap');
+
         /* Dark mode support */
         @media (prefers-color-scheme: dark) {
           .email-container {
@@ -221,6 +225,8 @@ exports[`base-template snapshot tests should match snapshot for minimal email 1`
       <meta name="color-scheme" content="light dark">
       <meta name="supported-color-schemes" content="light dark">
       <title>Simple Notification</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap" rel="stylesheet">
       <!--[if mso]>
       <noscript>
         <xml>
@@ -231,6 +237,8 @@ exports[`base-template snapshot tests should match snapshot for minimal email 1`
       </noscript>
       <![endif]-->
       <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&display=swap');
+
         /* Dark mode support */
         @media (prefers-color-scheme: dark) {
           .email-container {
