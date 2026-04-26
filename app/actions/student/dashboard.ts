@@ -2,10 +2,58 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
-import { fetchRepertoireForDashboard } from './dashboard.repertoire';
 
-export type { DashboardRepertoireItem, StudentDashboardData } from './dashboard.types';
-import type { StudentDashboardData } from './dashboard.types';
+export type RepertoireItem = {
+  id: string;
+  song_id: string;
+  title: string;
+  artist: string;
+  current_status: string;
+  self_rating: number | null;
+  priority: string;
+  last_practiced_at: string | null;
+  total_practice_minutes: number;
+};
+
+export type StudentDashboardData = {
+  studentName: string | null;
+  nextLesson: {
+    id: string;
+    title: string | null;
+    scheduled_at: string;
+  } | null;
+  lastLesson: {
+    id: string;
+    title: string | null;
+    scheduled_at: string;
+    notes: string | null;
+  } | null;
+  assignments: {
+    id: string;
+    title: string;
+    due_date: string | null;
+    status: 'not_started' | 'in_progress' | 'completed' | 'overdue' | 'cancelled';
+    description: string | null;
+  }[];
+  recentSongs: {
+    id: string;
+    title: string;
+    artist: string;
+    last_played: string;
+  }[];
+  repertoire: RepertoireItem[];
+  allSongs: {
+    id: string;
+    title: string;
+    artist: string;
+  }[];
+  stats: {
+    totalSongs: number;
+    completedLessons: number;
+    activeAssignments: number;
+    practiceHours: number;
+  };
+};
 
 export async function getStudentDashboardData(): Promise<StudentDashboardData> {
   const { user } = await getUserWithRolesSSR();
@@ -89,13 +137,12 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     )
     .eq('lesson_songs.lessons.student_id', user.id);
 
-  // 4. Fetch Repertoire + Stats
-  const { repertoire, totalSongs, practiceHours } = await fetchRepertoireForDashboard(
-    supabase,
-    user.id
-  );
+  // 4. Fetch Stats
+  const { count: totalSongs } = await supabase
+    .from('songs')
+    .select('lesson_songs!inner(lessons!inner(student_id))', { count: 'exact', head: true })
+    .eq('lesson_songs.lessons.student_id', user.id);
 
-  // 5. Completed lessons count
   const { count: completedLessons } = await supabase
     .from('lessons')
     .select('*', { count: 'exact', head: true })
@@ -118,7 +165,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
     nextLesson: nextLessonData,
     lastLesson: lastLessonData,
     assignments: assignmentsData || [],
-    repertoire,
+    repertoire: [], // TODO: populate from student_repertoire in next iteration
     recentSongs:
       recentLessonSongs
         ?.filter((ls) => ls.songs !== null)
@@ -139,7 +186,7 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
         artist: song.author || 'Unknown Artist',
       })) || [],
     stats: {
-      totalSongs,
+      totalSongs: totalSongs || 0,
       completedLessons: completedLessons || 0,
       activeAssignments: assignmentsData?.length || 0,
       practiceHours: Math.round(totalPracticeMinutes / 60),

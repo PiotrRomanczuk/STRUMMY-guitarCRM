@@ -226,18 +226,6 @@ async function cleanupOrphanProfiles(
 
   if (!orphan || orphan.id === userId) return;
 
-  // Transfer ALL FK references via unified SQL function
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rpcFn = supabaseAdmin.rpc as (...args: unknown[]) => ReturnType<typeof supabaseAdmin.rpc>;
-  const { error: rpcError } = await rpcFn('transfer_shadow_profile_references', {
-    p_old_id: orphan.id,
-    p_new_id: userId,
-  });
-
-  if (rpcError) {
-    logger.error('FK transfer failed during orphan cleanup:', rpcError);
-  }
-
   // Rename orphan email to free constraint
   const tempEmail = `${studentEmail}_migrated_${Date.now()}`;
   await supabaseAdmin.from('profiles').update({ email: tempEmail }).eq('id', orphan.id);
@@ -258,6 +246,18 @@ async function cleanupOrphanProfiles(
   );
 
   if (error) throw new Error(`Failed to create profile after cleanup: ${error.message}`);
+
+  // Migrate related data
+  await supabaseAdmin.from('lessons').update({ student_id: userId }).eq('student_id', orphan.id);
+  await supabaseAdmin.from('lessons').update({ teacher_id: userId }).eq('teacher_id', orphan.id);
+  await supabaseAdmin
+    .from('assignments')
+    .update({ student_id: userId })
+    .eq('student_id', orphan.id);
+  await supabaseAdmin
+    .from('assignments')
+    .update({ teacher_id: userId })
+    .eq('teacher_id', orphan.id);
 
   // Delete orphan
   await supabaseAdmin.from('profiles').delete().eq('id', orphan.id);

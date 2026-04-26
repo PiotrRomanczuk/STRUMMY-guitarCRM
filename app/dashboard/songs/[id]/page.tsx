@@ -30,18 +30,18 @@ export default async function SongPage({ params, searchParams }: SongPageProps) 
     redirect('/sign-in');
   }
 
+  // If user is a student and NOT an admin/teacher, show the student view
+  if (isStudent && !isAdmin && !isTeacher) {
+    return <StudentSongDetailPageClient />;
+  }
+
   const { id } = await params;
   // Ensure searchParams are awaited to satisfy the interface, even if unused
   await searchParams;
 
-  // v2 handles all roles — SongDetailPageV2 uses useAuth() for role-based rendering
+  // v2 UI: client-side detail with tabs
   if (uiVersion === 'v2') {
     return <SongDetailPageV2 />;
-  }
-
-  // v1 fallback: students get the v1 student view
-  if (isStudent && !isAdmin && !isTeacher) {
-    return <StudentSongDetailPageClient />;
   }
 
   // Fetch students if user is teacher or admin

@@ -157,6 +157,19 @@ export default async function LessonDetailPage({ params }: LessonDetailPageProps
   const canEdit = isAdmin || (isTeacher && lesson.teacher_id === user.id);
   const canDelete = isAdmin || (isTeacher && lesson.teacher_id === user.id);
 
+  const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v2') {
+    return (
+      <LessonDetailV2
+        lesson={lesson}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        onDelete={handleDeleteLesson.bind(null, id)}
+      />
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">

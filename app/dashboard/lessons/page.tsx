@@ -72,6 +72,49 @@ export default async function LessonsPage(props: Props) {
     return <StudentLessonsPageClient />;
   }
 
+  const uiVersion = await getUIVersion();
+
+  if (uiVersion === 'v2') {
+    const supabase = await createClient();
+    const role = isAdmin ? 'admin' : isTeacher ? 'teacher' : 'student';
+
+    const currentYear =
+      Number(searchParams.year) || new Date().getFullYear();
+    const yearStart = `${currentYear}-01-01T00:00:00`;
+    const yearEnd = `${currentYear + 1}-01-01T00:00:00`;
+
+    let lessonQuery = supabase.from('lessons').select(`
+      *,
+      profile:profiles!lessons_student_id_fkey(id, full_name, email),
+      teacher_profile:profiles!lessons_teacher_id_fkey(id, full_name, email),
+      lesson_songs(song:songs(title)),
+      assignments(title)
+    `);
+
+    if (isTeacher && !isAdmin) {
+      lessonQuery = lessonQuery.eq('teacher_id', user.id);
+    }
+
+    lessonQuery = lessonQuery
+      .gte('scheduled_at', yearStart)
+      .lt('scheduled_at', yearEnd)
+      .order('scheduled_at', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    const { data: rawLessons } = await lessonQuery;
+    const lessons = (rawLessons || []).map((lesson) =>
+      transformLessonData(lesson as LessonWithProfiles & { scheduled_at?: string })
+    ) as LessonWithProfiles[];
+
+    return (
+      <LessonListV2
+        initialLessons={lessons}
+        role={role}
+        currentYear={currentYear}
+      />
+    );
+  }
+
   return (
     <div className="py-4 sm:py-6 lg:py-8 max-w-7xl mx-auto">
       <LessonList searchParams={searchParams} />

@@ -51,11 +51,9 @@ jest.mock('@/lib/supabase/server', () => ({
 describe('getStudentDashboardData', () => {
   const studentId = '123e4567-e89b-12d3-a456-426614174000';
   const _now = new Date().toISOString();
-  let repertoireCallCount = 0;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    repertoireCallCount = 0;
   });
 
   it('should return dashboard data for authenticated student', async () => {
@@ -72,10 +70,9 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () =>
-                Promise.resolve({
-                  data: { full_name: 'John Doe' },
-                }),
+              single: () => Promise.resolve({
+                data: { full_name: 'John Doe' },
+              }),
             }),
           }),
         };
@@ -88,29 +85,27 @@ describe('getStudentDashboardData', () => {
               gte: () => ({
                 order: () => ({
                   limit: () => ({
-                    maybeSingle: () =>
-                      Promise.resolve({
-                        data: {
-                          id: 'next-lesson-id',
-                          title: 'Guitar Basics',
-                          scheduled_at: '2026-02-10T10:00:00Z',
-                        },
-                      }),
+                    maybeSingle: () => Promise.resolve({
+                      data: {
+                        id: 'next-lesson-id',
+                        title: 'Guitar Basics',
+                        scheduled_at: '2026-02-10T10:00:00Z',
+                      },
+                    }),
                   }),
                 }),
               }),
               lt: () => ({
                 order: () => ({
                   limit: () => ({
-                    maybeSingle: () =>
-                      Promise.resolve({
-                        data: {
-                          id: 'last-lesson-id',
-                          title: 'Scales Practice',
-                          scheduled_at: '2026-01-25T10:00:00Z',
-                          notes: 'Great progress!',
-                        },
-                      }),
+                    maybeSingle: () => Promise.resolve({
+                      data: {
+                        id: 'last-lesson-id',
+                        title: 'Scales Practice',
+                        scheduled_at: '2026-01-25T10:00:00Z',
+                        notes: 'Great progress!',
+                      },
+                    }),
                   }),
                 }),
               }),
@@ -127,18 +122,17 @@ describe('getStudentDashboardData', () => {
                 return {
                   in: () => ({
                     order: () => ({
-                      limit: () =>
-                        Promise.resolve({
-                          data: [
-                            {
-                              id: 'assignment-1',
-                              title: 'Practice C Major Scale',
-                              due_date: '2026-02-05',
-                              status: 'not_started',
-                              description: 'Practice for 15 minutes daily',
-                            },
-                          ],
-                        }),
+                      limit: () => Promise.resolve({
+                        data: [
+                          {
+                            id: 'assignment-1',
+                            title: 'Practice C Major Scale',
+                            due_date: '2026-02-05',
+                            status: 'not_started',
+                            description: 'Practice for 15 minutes daily',
+                          },
+                        ],
+                      }),
                     }),
                   }),
                 };
@@ -154,20 +148,19 @@ describe('getStudentDashboardData', () => {
           select: () => ({
             eq: () => ({
               order: () => ({
-                limit: () =>
-                  Promise.resolve({
-                    data: [
-                      {
-                        updated_at: '2026-01-30T10:00:00Z',
-                        songs: {
-                          id: 'song-1',
-                          title: 'Wonderwall',
-                          author: 'Oasis',
-                          created_at: '2026-01-01',
-                        },
+                limit: () => Promise.resolve({
+                  data: [
+                    {
+                      updated_at: '2026-01-30T10:00:00Z',
+                      songs: {
+                        id: 'song-1',
+                        title: 'Wonderwall',
+                        author: 'Oasis',
+                        created_at: '2026-01-01',
                       },
-                    ],
-                  }),
+                    },
+                  ],
+                }),
               }),
             }),
           }),
@@ -183,70 +176,14 @@ describe('getStudentDashboardData', () => {
               };
             }
             return {
-              eq: () =>
-                Promise.resolve({
-                  data: [
-                    { id: 'song-1', title: 'Wonderwall', author: 'Oasis' },
-                    { id: 'song-2', title: 'Blackbird', author: 'The Beatles' },
-                  ],
-                }),
+              eq: () => Promise.resolve({
+                data: [
+                  { id: 'song-1', title: 'Wonderwall', author: 'Oasis' },
+                  { id: 'song-2', title: 'Blackbird', author: 'The Beatles' },
+                ],
+              }),
             };
           },
-        };
-      }
-
-      if (table === 'student_repertoire') {
-        repertoireCallCount++;
-        if (repertoireCallCount === 1) {
-          // First call: repertoire items query (select complex, eq, eq, order, order, limit)
-          return {
-            select: () => ({
-              eq: () => ({
-                eq: () => ({
-                  order: () => ({
-                    order: () => ({
-                      limit: () =>
-                        Promise.resolve({
-                          data: [
-                            {
-                              id: 'rep-1',
-                              song_id: 'song-1',
-                              current_status: 'started',
-                              priority: 'high',
-                              last_practiced_at: '2026-01-30T10:00:00Z',
-                              total_practice_minutes: 90,
-                              self_rating: 3,
-                              song: { id: 'song-1', title: 'Wonderwall', author: 'Oasis' },
-                            },
-                          ],
-                        }),
-                    }),
-                  }),
-                }),
-              }),
-            }),
-          };
-        }
-        if (repertoireCallCount === 2) {
-          // Second call: count query (select with count option)
-          return {
-            select: () => ({
-              eq: () => ({
-                eq: () => Promise.resolve({ count: 3 }),
-              }),
-            }),
-          };
-        }
-        // Third call: practice sum query
-        return {
-          select: () => ({
-            eq: () => ({
-              eq: () =>
-                Promise.resolve({
-                  data: [{ total_practice_minutes: 90 }],
-                }),
-            }),
-          }),
         };
       }
 
@@ -274,20 +211,8 @@ describe('getStudentDashboardData', () => {
     expect(result.assignments).toHaveLength(1);
     expect(result.recentSongs).toHaveLength(1);
     expect(result.allSongs).toHaveLength(2);
-    expect(result.repertoire).toHaveLength(1);
-    expect(result.repertoire[0]).toEqual({
-      id: 'rep-1',
-      song_id: 'song-1',
-      song_title: 'Wonderwall',
-      song_author: 'Oasis',
-      current_status: 'started',
-      priority: 'high',
-      last_practiced_at: '2026-01-30T10:00:00Z',
-      total_practice_minutes: 90,
-      self_rating: 3,
-    });
     expect(result.stats).toEqual({
-      totalSongs: 3,
+      totalSongs: 5,
       completedLessons: expect.any(Number),
       activeAssignments: 1,
       practiceHours: 0,
@@ -322,10 +247,9 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () =>
-                Promise.resolve({
-                  data: { full_name: null },
-                }),
+              single: () => Promise.resolve({
+                data: { full_name: null },
+              }),
             }),
           }),
         };
@@ -353,10 +277,9 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () =>
-                Promise.resolve({
-                  data: { full_name: 'New Student' },
-                }),
+              single: () => Promise.resolve({
+                data: { full_name: 'New Student' },
+              }),
             }),
           }),
         };
@@ -456,10 +379,9 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () =>
-                Promise.resolve({
-                  data: { full_name: 'Student' },
-                }),
+              single: () => Promise.resolve({
+                data: { full_name: 'Student' },
+              }),
             }),
           }),
         };
@@ -506,9 +428,7 @@ describe('getStudentDashboardData', () => {
 
     expect(result.recentSongs).toEqual([]);
     expect(result.allSongs).toEqual([]);
-    // totalSongs now comes from student_repertoire, not songs table
     expect(result.stats.totalSongs).toBe(0);
-    expect(result.repertoire).toEqual([]);
   });
 
   it('should filter out null songs from recent songs', async () => {
@@ -525,10 +445,9 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () =>
-                Promise.resolve({
-                  data: { full_name: 'Student' },
-                }),
+              single: () => Promise.resolve({
+                data: { full_name: 'Student' },
+              }),
             }),
           }),
         };
@@ -543,23 +462,22 @@ describe('getStudentDashboardData', () => {
               ...chain,
               order: () => ({
                 ...chain,
-                limit: () =>
-                  Promise.resolve({
-                    data: [
-                      {
-                        updated_at: '2026-01-30',
-                        songs: {
-                          id: 'song-1',
-                          title: 'Song Title',
-                          author: 'Artist',
-                        },
+                limit: () => Promise.resolve({
+                  data: [
+                    {
+                      updated_at: '2026-01-30',
+                      songs: {
+                        id: 'song-1',
+                        title: 'Song Title',
+                        author: 'Artist',
                       },
-                      {
-                        updated_at: '2026-01-29',
-                        songs: null, // Null song should be filtered out
-                      },
-                    ],
-                  }),
+                    },
+                    {
+                      updated_at: '2026-01-29',
+                      songs: null, // Null song should be filtered out
+                    },
+                  ],
+                }),
               }),
             }),
           }),
@@ -589,10 +507,9 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () =>
-                Promise.resolve({
-                  data: { full_name: 'Student' },
-                }),
+              single: () => Promise.resolve({
+                data: { full_name: 'Student' },
+              }),
             }),
           }),
         };
@@ -610,10 +527,11 @@ describe('getStudentDashboardData', () => {
             }
             return {
               ...chain,
-              eq: () =>
-                Promise.resolve({
-                  data: [{ id: 'song-1', title: 'Mystery Song', author: null }],
-                }),
+              eq: () => Promise.resolve({
+                data: [
+                  { id: 'song-1', title: 'Mystery Song', author: null },
+                ],
+              }),
             };
           },
         };
