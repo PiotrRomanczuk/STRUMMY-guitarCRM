@@ -10,6 +10,7 @@ import { LyricsViewer } from './LyricsViewer';
 import { VideoPlayer } from './VideoPlayer';
 import { RelatedLessons } from './SongDetail.RelatedLessons';
 import { SongDetailRelatedStudents } from './SongDetail.RelatedStudents';
+import ProductionTab from '@/components/songs/production/ProductionTab';
 import type { SongDetailV2Props } from './SongDetail';
 
 export default function SongDetailDesktop({ song, isTeacher, onDelete }: SongDetailV2Props) {
@@ -149,6 +150,15 @@ export default function SongDetailDesktop({ song, isTeacher, onDelete }: SongDet
           <SongDetailRelatedStudents songId={song.id} />
         </div>
       </div>
+
+      {isTeacher && (
+        <div className="space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Content production
+          </h2>
+          <ProductionTab songId={song.id} />
+        </div>
+      )}
     </div>
   );
 }

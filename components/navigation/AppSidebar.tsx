@@ -18,6 +18,7 @@ import {
   Grid3X3,
   GraduationCap,
   Zap,
+  Clapperboard,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -72,6 +73,12 @@ export function AppSidebar({ isAdmin, isTeacher, isStudent }: AppSidebarProps) {
             path: '/dashboard/assignments',
           },
           { id: 'calendar', label: 'Calendar', icon: Calendar, path: '/dashboard/calendar' },
+          {
+            id: 'content',
+            label: 'Content',
+            icon: Clapperboard,
+            path: '/dashboard/content/calendar',
+          },
           { id: 'users', label: 'Users', icon: Users, path: '/dashboard/users' },
           { id: 'skills', label: 'Skills', icon: Zap, path: '/dashboard/skills' },
           { id: 'theory', label: 'Theory', icon: GraduationCap, path: '/dashboard/theory' },

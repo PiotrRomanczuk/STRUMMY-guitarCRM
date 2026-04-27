@@ -108,3 +108,6 @@ landing.html
 # Playwright MCP
 .playwright-mcp/
 .env*.local
+
+# Content plan source data (personal)
+data/JustMeAndGuitar_*.xlsx

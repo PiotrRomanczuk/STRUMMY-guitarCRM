@@ -5,6 +5,7 @@ const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500MB
 
 export const MicTypeEnum = z.enum(['iphone', 'external']);
 export const VideoTypeEnum = z.enum(['tutorial', 'short']);
+export const ProductionStatusEnum = z.enum(['idea', 'recording', 'edited', 'ready']);
 
 export const SongVideoSchema = z.object({
   id: z.string().uuid(),
@@ -25,6 +26,7 @@ export const SongVideoSchema = z.object({
   mic_type: MicTypeEnum.nullable(),
   is_audio_mixed: z.boolean(),
   is_video_edited: z.boolean(),
+  production_status: ProductionStatusEnum,
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
 });
@@ -52,6 +54,7 @@ export const UpdateSongVideoInputSchema = z.object({
   mic_type: MicTypeEnum.nullable().optional(),
   is_audio_mixed: z.boolean().optional(),
   is_video_edited: z.boolean().optional(),
+  production_status: ProductionStatusEnum.optional(),
 });
 
 export const UploadUrlRequestSchema = z.object({
