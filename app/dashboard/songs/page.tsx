@@ -29,37 +29,40 @@ export default async function SongsPage(props: Props) {
     const supabase = await createClient();
     const isTeacherOrAdmin = isAdmin || isTeacher;
 
-    // Scope songs: teachers see songs from their lessons, students see songs from their lessons
-    const lessonFilter = isTeacherOrAdmin
-      ? supabase
-          .from('lesson_songs')
-          .select('song_id, lessons!inner(teacher_id)')
-          .eq('lessons.teacher_id', user.id)
-      : supabase
-          .from('lesson_songs')
-          .select('song_id, lessons!inner(student_id)')
-          .eq('lessons.student_id', user.id);
+    const SONG_COLUMNS =
+      'id, title, author, level, key, chords, category, tempo, release_year, capo_fret, strumming_pattern, youtube_url, spotify_link_url, ultimate_guitar_link, cover_image_url, gallery_images, lyrics_with_chords, recording_queued_at, recorded_at, created_at, updated_at';
 
-    const { data: lessonSongLinks } = await lessonFilter;
-    const scopedSongIds = [...new Set((lessonSongLinks ?? []).map((r) => r.song_id))];
+    let songs: unknown[] = [];
 
-    const { data: songs } =
-      scopedSongIds.length > 0
-        ? await supabase
-            .from('songs')
-            .select(
-              'id, title, author, level, key, chords, category, tempo, release_year, capo_fret, strumming_pattern, youtube_url, spotify_link_url, ultimate_guitar_link, cover_image_url, gallery_images, lyrics_with_chords, created_at, updated_at'
-            )
-            .in('id', scopedSongIds)
-            .order('created_at', { ascending: false })
-        : { data: [] };
+    if (isTeacherOrAdmin) {
+      // Teachers/admins see the full library (RLS already gates this).
+      const { data } = await supabase
+        .from('songs')
+        .select(SONG_COLUMNS)
+        .is('deleted_at', null)
+        .or('is_draft.is.null,is_draft.eq.false')
+        .order('created_at', { ascending: false });
+      songs = data ?? [];
+    } else {
+      // Students: only songs from their own lessons.
+      const { data: lessonSongLinks } = await supabase
+        .from('lesson_songs')
+        .select('song_id, lessons!inner(student_id)')
+        .eq('lessons.student_id', user.id);
+      const scopedSongIds = [...new Set((lessonSongLinks ?? []).map((r) => r.song_id))];
 
-    return (
-      <SongListPageV2
-        initialSongs={(songs || []) as SongWithStatus[]}
-        isTeacher={isTeacherOrAdmin}
-      />
-    );
+      if (scopedSongIds.length > 0) {
+        const { data } = await supabase
+          .from('songs')
+          .select(SONG_COLUMNS)
+          .in('id', scopedSongIds)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false });
+        songs = data ?? [];
+      }
+    }
+
+    return <SongListPageV2 initialSongs={songs as SongWithStatus[]} isTeacher={isTeacherOrAdmin} />;
   }
 
   // v1 fallback: students get the v1 student view
