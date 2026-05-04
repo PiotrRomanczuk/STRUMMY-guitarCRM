@@ -18,7 +18,9 @@ export async function updateLessonSongStatus(lessonSongId: string, status: strin
   // Validate status against the correct enum
   const parsed = SongStatusEnum.safeParse(status);
   if (!parsed.success) {
-    throw new Error(`Invalid song status: ${status}. Must be one of: ${SongStatusEnum.options.join(', ')}`);
+    throw new Error(
+      `Invalid song status: ${status}. Must be one of: ${SongStatusEnum.options.join(', ')}`
+    );
   }
 
   const supabase = await createClient();
@@ -116,7 +118,7 @@ export async function quickAssignSongToLesson(
   if (!parsed.success) {
     return {
       success: false,
-      error: `Invalid status: ${initialStatus}. Must be one of: ${SongStatusEnum.options.join(', ')}`
+      error: `Invalid status: ${initialStatus}. Must be one of: ${SongStatusEnum.options.join(', ')}`,
     };
   }
 
@@ -144,18 +146,16 @@ export async function quickAssignSongToLesson(
   const isUpdate = !!existing;
 
   // UPSERT: Insert if new, update if exists
-  const { error } = await supabase
-    .from('lesson_songs')
-    .upsert(
-      {
-        lesson_id: lessonId,
-        song_id: songId,
-        status: parsed.data,
-      },
-      {
-        onConflict: 'lesson_id,song_id',
-      }
-    );
+  const { error } = await supabase.from('lesson_songs').upsert(
+    {
+      lesson_id: lessonId,
+      song_id: songId,
+      status: parsed.data,
+    },
+    {
+      onConflict: 'lesson_id,song_id',
+    }
+  );
 
   if (error) {
     logger.error('Error assigning song to lesson:', error);
@@ -217,9 +217,7 @@ export interface BulkDeleteResult {
 /**
  * Bulk soft-delete songs using the soft_delete_song_with_cascade RPC
  */
-export async function bulkSoftDeleteSongs(
-  songIds: string[]
-): Promise<BulkDeleteResult> {
+export async function bulkSoftDeleteSongs(songIds: string[]): Promise<BulkDeleteResult> {
   const { isAdmin, isTeacher, user, isDevelopment } = await getUserWithRolesSSR();
   assertNotTestAccount(isDevelopment);
 
@@ -265,4 +263,96 @@ export async function bulkSoftDeleteSongs(
     deletedCount,
     errors,
   };
+}
+
+export type RecordingState = 'idle' | 'queued' | 'recorded';
+
+export interface RecordingStateResult {
+  success: boolean;
+  state: RecordingState;
+  recordingQueuedAt: string | null;
+  recordedAt: string | null;
+  error?: string;
+}
+
+const IDLE_RESULT = (error: string): RecordingStateResult => ({
+  success: false,
+  state: 'idle',
+  recordingQueuedAt: null,
+  recordedAt: null,
+  error,
+});
+
+export async function setSongRecordingState(
+  songId: string,
+  next: RecordingState
+): Promise<RecordingStateResult> {
+  const { isAdmin, isTeacher, isDevelopment } = await getUserWithRolesSSR();
+  assertNotTestAccount(isDevelopment);
+
+  if (!isAdmin && !isTeacher) {
+    return IDLE_RESULT('Unauthorized');
+  }
+
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+
+  const update =
+    next === 'idle'
+      ? { recording_queued_at: null, recorded_at: null }
+      : next === 'queued'
+        ? { recording_queued_at: now, recorded_at: null }
+        : { recording_queued_at: null, recorded_at: now };
+
+  const { error } = await supabase.from('songs').update(update).eq('id', songId);
+
+  if (error) {
+    logger.error('Failed to update song recording state:', error);
+    return IDLE_RESULT(error.message);
+  }
+
+  revalidatePath('/dashboard/songs');
+
+  return {
+    success: true,
+    state: next,
+    recordingQueuedAt: update.recording_queued_at,
+    recordedAt: update.recorded_at,
+  };
+}
+
+/**
+ * Cycles through idle → queued → recorded → idle. Used by the song-row button.
+ */
+export async function cycleSongRecordingState(songId: string): Promise<RecordingStateResult> {
+  const { isAdmin, isTeacher, isDevelopment } = await getUserWithRolesSSR();
+  assertNotTestAccount(isDevelopment);
+
+  if (!isAdmin && !isTeacher) {
+    return IDLE_RESULT('Unauthorized');
+  }
+
+  const supabase = await createClient();
+
+  const { data: existing, error: fetchError } = await supabase
+    .from('songs')
+    .select('recording_queued_at, recorded_at')
+    .eq('id', songId)
+    .single();
+
+  if (fetchError || !existing) {
+    logger.error('Failed to fetch song for recording-state cycle:', fetchError);
+    return IDLE_RESULT('Song not found');
+  }
+
+  const current: RecordingState = existing.recorded_at
+    ? 'recorded'
+    : existing.recording_queued_at
+      ? 'queued'
+      : 'idle';
+
+  const nextState: RecordingState =
+    current === 'idle' ? 'queued' : current === 'queued' ? 'recorded' : 'idle';
+
+  return setSongRecordingState(songId, nextState);
 }

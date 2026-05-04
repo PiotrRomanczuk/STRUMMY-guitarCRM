@@ -43,23 +43,32 @@ export default async function SongList({ searchParams }: SongListProps) {
   const supabase = await createClient();
   const params = parseListParams(searchParams);
 
-  // Lightweight query for dropdown options (all songs, 2 columns only)
-  const { data: dropdownData } = await supabase.from('songs').select('category, author');
-  const categories = [...new Set((dropdownData || []).map((s) => s.category).filter(Boolean))] as string[];
+  // Lightweight query for dropdown options (all non-deleted songs, 2 columns only)
+  const { data: dropdownData } = await supabase
+    .from('songs')
+    .select('category, author')
+    .is('deleted_at', null);
+  const categories = [
+    ...new Set((dropdownData || []).map((s) => s.category).filter(Boolean)),
+  ] as string[];
   categories.sort();
-  const authors = [...new Set((dropdownData || []).map((s) => s.author).filter(Boolean))] as string[];
+  const authors = [
+    ...new Set((dropdownData || []).map((s) => s.author).filter(Boolean)),
+  ] as string[];
   authors.sort();
 
   // Build main query
   let songQuery = params.studentId
     ? supabase
         .from('songs')
-        .select(
-          `${SONG_LIST_COLUMNS}, lesson_songs!inner(id, status, lessons!inner(student_id))`,
-          { count: 'exact' }
-        )
+        .select(`${SONG_LIST_COLUMNS}, lesson_songs!inner(id, status, lessons!inner(student_id))`, {
+          count: 'exact',
+        })
         .eq('lesson_songs.lessons.student_id', params.studentId)
     : supabase.from('songs').select(SONG_LIST_COLUMNS, { count: 'exact' });
+
+  // Always exclude soft-deleted songs from the list and count
+  songQuery = songQuery.is('deleted_at', null);
 
   if (params.search) {
     // Escape PostgREST special characters to prevent filter injection
