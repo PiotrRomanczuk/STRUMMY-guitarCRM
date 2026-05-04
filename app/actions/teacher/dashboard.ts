@@ -83,7 +83,12 @@ interface LessonRow {
   profiles?: { full_name: string } | null;
 }
 
-const VALID_ASSIGNMENT_STATUSES: AssignmentStatus[] = ['pending', 'submitted', 'overdue', 'completed'];
+const VALID_ASSIGNMENT_STATUSES: AssignmentStatus[] = [
+  'pending',
+  'submitted',
+  'overdue',
+  'completed',
+];
 
 const DIFFICULTY_MAP: Record<string, 'Easy' | 'Medium' | 'Hard'> = {
   beginner: 'Easy',
@@ -121,9 +126,10 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
 
   // Fetch only students taught by this teacher
   const studentIds = await getTeacherStudentIds(supabase, user.id);
-  const { data: studentProfiles } = studentIds.length > 0
-    ? await supabase.from('profiles').select('id, full_name, avatar_url').in('id', studentIds)
-    : { data: [] };
+  const { data: studentProfiles } =
+    studentIds.length > 0
+      ? await supabase.from('profiles').select('id, full_name, avatar_url').in('id', studentIds)
+      : { data: [] };
 
   // Fetch stats for each student
   const students = await Promise.all(
@@ -189,14 +195,15 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
 
   const teacherSongIds = [...new Set((lessonSongLinks ?? []).map((r) => r.song_id))];
 
-  const { data: songRows } = teacherSongIds.length > 0
-    ? await supabase
-        .from('songs')
-        .select('id, title, author, level')
-        .in('id', teacherSongIds)
-        .order('created_at', { ascending: false })
-        .limit(10)
-    : { data: [] };
+  const { data: songRows } =
+    teacherSongIds.length > 0
+      ? await supabase
+          .from('songs')
+          .select('id, title, author, level')
+          .in('id', teacherSongIds)
+          .order('created_at', { ascending: false })
+          .limit(10)
+      : { data: [] };
 
   const songs: TeacherDashboardData['songs'] = (songRows || []).map((song) => ({
     id: song.id,
@@ -214,20 +221,24 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     .order('due_date', { ascending: true })
     .limit(10);
 
-  const assignments: TeacherDashboardData['assignments'] = (assignmentRows || []).map((asgn: AssignmentRow) => {
-    const lowered = asgn.status.toLowerCase();
-    const status: AssignmentStatus = VALID_ASSIGNMENT_STATUSES.includes(lowered as AssignmentStatus)
-      ? (lowered as AssignmentStatus)
-      : 'pending';
-    return {
-      id: asgn.id,
-      title: asgn.title,
-      studentName: asgn.profiles?.full_name || 'Unknown',
-      dueDate: asgn.due_date,
-      status,
-      songTitle: asgn.songs?.title,
-    };
-  });
+  const assignments: TeacherDashboardData['assignments'] = (assignmentRows || []).map(
+    (asgn: AssignmentRow) => {
+      const lowered = asgn.status.toLowerCase();
+      const status: AssignmentStatus = VALID_ASSIGNMENT_STATUSES.includes(
+        lowered as AssignmentStatus
+      )
+        ? (lowered as AssignmentStatus)
+        : 'pending';
+      return {
+        id: asgn.id,
+        title: asgn.title,
+        studentName: asgn.profiles?.full_name || 'Unknown',
+        dueDate: asgn.due_date,
+        status,
+        songTitle: asgn.songs?.title,
+      };
+    }
+  );
 
   // Agenda: Combining today's lessons and pending assignments
   const today = new Date();
@@ -248,17 +259,18 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
       title: `Lesson with ${l.profiles?.full_name}`,
       time: new Date(l.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       studentName: l.profiles?.full_name,
-      status: new Date(l.scheduled_at) < new Date() ? 'completed' as const : 'upcoming' as const,
+      status:
+        new Date(l.scheduled_at) < new Date() ? ('completed' as const) : ('upcoming' as const),
     })),
     ...assignments
-      .filter(a => new Date(a.dueDate) <= tomorrow)
-      .map(a => ({
+      .filter((a) => new Date(a.dueDate) <= tomorrow)
+      .map((a) => ({
         id: a.id,
         type: 'assignment' as const,
         title: a.title,
         studentName: a.studentName,
-        status: a.status === 'overdue' ? 'overdue' as const : 'upcoming' as const,
-      }))
+        status: a.status === 'overdue' ? ('overdue' as const) : ('upcoming' as const),
+      })),
   ];
 
   // Activities: populating some real-ish activities based on data
@@ -274,11 +286,15 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
       type: 'assignment_submitted' as const,
       message: `Assignment "${a.title}" for ${a.profiles?.full_name}`,
       time: new Date(a.created_at || a.due_date).toLocaleTimeString(),
-    }))
+    })),
   ].sort((a, b) => b.time.localeCompare(a.time));
 
   // Real stats from Supabase
-  const songsCount = teacherSongIds.length;
+  const { count: songsCount } = await supabase
+    .from('songs')
+    .select('*', { count: 'exact', head: true })
+    .is('deleted_at', null)
+    .or('is_draft.is.null,is_draft.eq.false');
 
   const { count: lessonsThisWeekCount } = await supabase
     .from('lessons')

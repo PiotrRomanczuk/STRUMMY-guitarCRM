@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
- 
+
 /**
  * Teacher Dashboard Server Actions Tests
  *
@@ -113,12 +113,17 @@ describe('getTeacherDashboardData', () => {
       if (table === 'profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({
-              data: [
-                { id: 'student-1', full_name: 'John Doe', avatar_url: 'https://example.com/avatar1.jpg' },
-                { id: 'student-2', full_name: 'Jane Smith', avatar_url: null },
-              ],
-            }),
+            in: () =>
+              Promise.resolve({
+                data: [
+                  {
+                    id: 'student-1',
+                    full_name: 'John Doe',
+                    avatar_url: 'https://example.com/avatar1.jpg',
+                  },
+                  { id: 'student-2', full_name: 'Jane Smith', avatar_url: null },
+                ],
+              }),
           }),
         };
       }
@@ -146,9 +151,7 @@ describe('getTeacherDashboardData', () => {
               return chainable({ count: 12 });
             }
             return chainable({
-              data: [
-                { id: 's1', title: 'Test Song', author: 'Test Artist', level: 'beginner' },
-              ],
+              data: [{ id: 's1', title: 'Test Song', author: 'Test Artist', level: 'beginner' }],
             });
           },
         };
@@ -267,9 +270,10 @@ describe('getTeacherDashboardData', () => {
       if (table === 'profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({
-              data: [{ id: 'student-1', full_name: 'New Student', avatar_url: null }],
-            }),
+            in: () =>
+              Promise.resolve({
+                data: [{ id: 'student-1', full_name: 'New Student', avatar_url: null }],
+              }),
           }),
         };
       }
@@ -312,9 +316,10 @@ describe('getTeacherDashboardData', () => {
       if (table === 'profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({
-              data: [{ id: 'student-1', full_name: null, avatar_url: null }],
-            }),
+            in: () =>
+              Promise.resolve({
+                data: [{ id: 'student-1', full_name: null, avatar_url: null }],
+              }),
           }),
         };
       }
@@ -393,13 +398,14 @@ describe('getTeacherDashboardData', () => {
       if (table === 'profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({
-              data: [
-                { id: 'student-1', full_name: 'Student 1', avatar_url: null },
-                { id: 'student-2', full_name: 'Student 2', avatar_url: null },
-                { id: 'student-3', full_name: 'Student 3', avatar_url: null },
-              ],
-            }),
+            in: () =>
+              Promise.resolve({
+                data: [
+                  { id: 'student-1', full_name: 'Student 1', avatar_url: null },
+                  { id: 'student-2', full_name: 'Student 2', avatar_url: null },
+                  { id: 'student-3', full_name: 'Student 3', avatar_url: null },
+                ],
+              }),
           }),
         };
       }
@@ -416,13 +422,20 @@ describe('getTeacherDashboardData', () => {
       }
 
       if (table === 'lesson_songs') {
-        // Return 25 unique song IDs to match expected songsInLibrary count
+        // Return 25 unique song IDs (used elsewhere — songsInLibrary now comes from songs.count)
         const songLinks = Array.from({ length: 25 }, (_, i) => ({ song_id: `song-${i}` }));
         return chainable({ data: songLinks });
       }
 
       if (table === 'songs') {
-        return chainable({ data: [] });
+        return {
+          select: (_fields: string, options: any) => {
+            if (options?.count === 'exact') {
+              return chainable({ count: 25 });
+            }
+            return chainable({ data: [] });
+          },
+        };
       }
 
       if (table === 'assignments') {
@@ -471,13 +484,14 @@ describe('getTeacherDashboardData', () => {
       if (table === 'profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({
-              data: [
-                { id: 'beginner', full_name: 'Beginner Student', avatar_url: null },
-                { id: 'intermediate', full_name: 'Intermediate Student', avatar_url: null },
-                { id: 'advanced', full_name: 'Advanced Student', avatar_url: null },
-              ],
-            }),
+            in: () =>
+              Promise.resolve({
+                data: [
+                  { id: 'beginner', full_name: 'Beginner Student', avatar_url: null },
+                  { id: 'intermediate', full_name: 'Intermediate Student', avatar_url: null },
+                  { id: 'advanced', full_name: 'Advanced Student', avatar_url: null },
+                ],
+              }),
           }),
         };
       }
@@ -528,20 +542,24 @@ describe('getTeacherDashboardData', () => {
 
       if (table === 'lesson_songs') {
         return chainable({
-          data: [
-            { song_id: 's1' },
-            { song_id: 's2' },
-          ],
+          data: [{ song_id: 's1' }, { song_id: 's2' }],
         });
       }
 
       if (table === 'songs') {
-        return chainable({
-          data: [
-            { id: 's1', title: 'Wonderwall', author: 'Oasis', level: 'beginner' },
-            { id: 's2', title: 'Stairway', author: 'Led Zeppelin', level: 'advanced' },
-          ],
-        });
+        return {
+          select: (_fields: string, options: any) => {
+            if (options?.count === 'exact') {
+              return chainable({ count: 2 });
+            }
+            return chainable({
+              data: [
+                { id: 's1', title: 'Wonderwall', author: 'Oasis', level: 'beginner' },
+                { id: 's2', title: 'Stairway', author: 'Led Zeppelin', level: 'advanced' },
+              ],
+            });
+          },
+        };
       }
 
       return chainable({ data: [], count: 0 });
