@@ -1325,12 +1325,12 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "song_videos_song_id_fkey";
-            columns: ["song_id"];
+            foreignKeyName: 'song_videos_song_id_fkey';
+            columns: ['song_id'];
             isOneToOne: false;
-            referencedRelation: "songs";
-            referencedColumns: ["id"];
-          }
+            referencedRelation: 'songs';
+            referencedColumns: ['id'];
+          },
         ];
       };
       songs: {
@@ -1349,6 +1349,8 @@ export type Database = {
           key: Database['public']['Enums']['music_key'] | null;
           level: Database['public']['Enums']['difficulty_level'] | null;
           lyrics_with_chords: string | null;
+          recorded_at: string | null;
+          recording_queued_at: string | null;
           release_year: number | null;
           search_vector: unknown;
           short_title: string | null;
@@ -1377,6 +1379,8 @@ export type Database = {
           key?: Database['public']['Enums']['music_key'] | null;
           level?: Database['public']['Enums']['difficulty_level'] | null;
           lyrics_with_chords?: string | null;
+          recorded_at?: string | null;
+          recording_queued_at?: string | null;
           release_year?: number | null;
           search_vector?: unknown;
           short_title?: string | null;
@@ -1405,6 +1409,8 @@ export type Database = {
           key?: Database['public']['Enums']['music_key'] | null;
           level?: Database['public']['Enums']['difficulty_level'] | null;
           lyrics_with_chords?: string | null;
+          recorded_at?: string | null;
+          recording_queued_at?: string | null;
           release_year?: number | null;
           search_vector?: unknown;
           short_title?: string | null;
@@ -2065,74 +2071,74 @@ export type Database = {
     Enums: {
       ai_context_type: 'general' | 'student' | 'lesson' | 'song' | 'assignment' | 'practice';
       ai_generation_type:
-      | 'lesson_notes'
-      | 'assignment'
-      | 'email_draft'
-      | 'post_lesson_summary'
-      | 'student_progress'
-      | 'admin_insights'
-      | 'chat';
+        | 'lesson_notes'
+        | 'assignment'
+        | 'email_draft'
+        | 'post_lesson_summary'
+        | 'student_progress'
+        | 'admin_insights'
+        | 'chat';
       ai_message_role: 'system' | 'user' | 'assistant';
       ai_prompt_category:
-      | 'email'
-      | 'lesson_notes'
-      | 'practice_plan'
-      | 'progress_report'
-      | 'feedback'
-      | 'reminder'
-      | 'custom';
+        | 'email'
+        | 'lesson_notes'
+        | 'practice_plan'
+        | 'progress_report'
+        | 'feedback'
+        | 'reminder'
+        | 'custom';
       assignment_status:
-      | 'not_started'
-      | 'pending'
-      | 'in_progress'
-      | 'completed'
-      | 'overdue'
-      | 'cancelled';
+        | 'not_started'
+        | 'pending'
+        | 'in_progress'
+        | 'completed'
+        | 'overdue'
+        | 'cancelled';
       audit_action:
-      | 'created'
-      | 'updated'
-      | 'deleted'
-      | 'status_changed'
-      | 'rescheduled'
-      | 'cancelled'
-      | 'completed'
-      | 'role_changed';
+        | 'created'
+        | 'updated'
+        | 'deleted'
+        | 'status_changed'
+        | 'rescheduled'
+        | 'cancelled'
+        | 'completed'
+        | 'role_changed';
       audit_entity: 'profile' | 'lesson' | 'assignment' | 'song' | 'song_progress';
       difficulty_level: 'beginner' | 'intermediate' | 'advanced';
       lesson_song_status: 'to_learn' | 'started' | 'remembered' | 'with_author' | 'mastered';
       lesson_status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED';
       music_key:
-      | 'C'
-      | 'C#'
-      | 'Db'
-      | 'D'
-      | 'D#'
-      | 'Eb'
-      | 'E'
-      | 'F'
-      | 'F#'
-      | 'Gb'
-      | 'G'
-      | 'G#'
-      | 'Ab'
-      | 'A'
-      | 'A#'
-      | 'Bb'
-      | 'B'
-      | 'Cm'
-      | 'C#m'
-      | 'Dm'
-      | 'D#m'
-      | 'Ebm'
-      | 'Em'
-      | 'Fm'
-      | 'F#m'
-      | 'Gm'
-      | 'G#m'
-      | 'Am'
-      | 'A#m'
-      | 'Bbm'
-      | 'Bm';
+        | 'C'
+        | 'C#'
+        | 'Db'
+        | 'D'
+        | 'D#'
+        | 'Eb'
+        | 'E'
+        | 'F'
+        | 'F#'
+        | 'Gb'
+        | 'G'
+        | 'G#'
+        | 'Ab'
+        | 'A'
+        | 'A#'
+        | 'Bb'
+        | 'B'
+        | 'Cm'
+        | 'C#m'
+        | 'Dm'
+        | 'D#m'
+        | 'Ebm'
+        | 'Em'
+        | 'Fm'
+        | 'F#m'
+        | 'Gm'
+        | 'G#m'
+        | 'Am'
+        | 'A#m'
+        | 'Bbm'
+        | 'Bm';
       spotify_match_status: 'pending' | 'approved' | 'rejected' | 'auto_applied';
       student_pipeline_status: 'lead' | 'trial' | 'active' | 'inactive' | 'churned';
       user_role: 'admin' | 'teacher' | 'student';
@@ -2150,114 +2156,114 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
-  : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R;
     }
-  ? R
-  : never
+    ? R
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-  ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
-    Row: infer R;
-  }
-  ? R
-  : never
-  : never;
+    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
+      }
+      ? R
+      : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema['Tables']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
-    Insert: infer I;
-  }
-  ? I
-  : never
+      Insert: infer I;
+    }
+    ? I
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
-    Insert: infer I;
-  }
-  ? I
-  : never
-  : never;
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
+      }
+      ? I
+      : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema['Tables']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
-    Update: infer U;
-  }
-  ? U
-  : never
+      Update: infer U;
+    }
+    ? U
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
-    Update: infer U;
-  }
-  ? U
-  : never
-  : never;
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
+      }
+      ? U
+      : never
+    : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema['Enums']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-  ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
-  : never;
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema['CompositeTypes']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
-  : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-  ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
-  : never;
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never;
 
 export const Constants = {
   graphql_public: {
