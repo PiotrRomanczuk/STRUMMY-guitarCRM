@@ -2,9 +2,21 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Calendar, CheckCircle2, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface IntegrationsSectionProps {
   isGoogleConnected: boolean;
@@ -12,11 +24,29 @@ interface IntegrationsSectionProps {
 
 export function IntegrationsSection({ isGoogleConnected }: IntegrationsSectionProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   const handleConnect = () => {
-    setLoading(true);
+    setIsConnecting(true);
     router.push('/api/auth/google');
+  };
+
+  const handleDisconnect = async () => {
+    setIsDisconnecting(true);
+    try {
+      const response = await fetch('/api/google/disconnect', { method: 'POST' });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to disconnect Google Calendar');
+      }
+      toast.success('Google Calendar disconnected');
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to disconnect');
+    } finally {
+      setIsDisconnecting(false);
+    }
   };
 
   return (
@@ -55,12 +85,30 @@ export function IntegrationsSection({ isGoogleConnected }: IntegrationsSectionPr
             </div>
 
             {isGoogleConnected ? (
-              <Button variant="outline" disabled className="w-full sm:w-auto">
-                Connected
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" disabled={isDisconnecting} className="w-full sm:w-auto">
+                    {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Disconnect Google Calendar?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Strummy will stop syncing lessons to and from your Google Calendar. Existing
+                      lessons stay in Strummy, but new calendar changes won&apos;t flow through. You
+                      can reconnect at any time.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDisconnect}>Disconnect</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             ) : (
-              <Button onClick={handleConnect} disabled={loading} className="w-full sm:w-auto">
-                {loading ? 'Connecting...' : 'Connect Google Calendar'}
+              <Button onClick={handleConnect} disabled={isConnecting} className="w-full sm:w-auto">
+                {isConnecting ? 'Connecting...' : 'Connect Google Calendar'}
               </Button>
             )}
           </div>
