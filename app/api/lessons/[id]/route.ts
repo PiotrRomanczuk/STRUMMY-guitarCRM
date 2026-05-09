@@ -7,10 +7,14 @@ import { logger } from '@/lib/logger';
 
 /**
  * GET /api/lessons/[id]
- * Get a single lesson
+ * Get a single lesson.
+ *
+ * Visibility (admin / teacher of this lesson / student in this lesson) is
+ * enforced by RLS — see ADR-0001. If RLS hides the row, `maybeSingle()`
+ * returns null and we respond 404, indistinguishable from a real not-found.
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  return withApiAuth(request, async ({ user, roles }) => {
+  return withApiAuth(request, async () => {
     try {
       const { id } = await params;
       const supabase = await createClient();
@@ -21,38 +25,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           'id, teacher_id, student_id, status, date, time, lesson_teacher_number, scheduled_at, notes, created_at, updated_at'
         )
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         logger.error('Error fetching lesson:', error);
-        if (error.code === 'PGRST116') {
-          return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
-        }
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
       if (!lesson) {
         return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
-      }
-
-      // Role-based access check
-      if (!roles.isAdmin) {
-        if (roles.isTeacher) {
-          const { data: teacherLesson } = await supabase
-            .from('lessons')
-            .select('id')
-            .eq('id', id)
-            .eq('teacher_id', user.id)
-            .single();
-
-          if (!teacherLesson) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-          }
-        } else {
-          if (lesson.student_id !== user.id) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-          }
-        }
       }
 
       return NextResponse.json(lesson);

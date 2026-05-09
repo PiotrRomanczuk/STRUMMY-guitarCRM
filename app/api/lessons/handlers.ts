@@ -39,10 +39,6 @@ export interface UserProfile {
   isStudent: boolean | null;
 }
 
-export function canViewAll(profile: UserProfile | null): boolean {
-  return !!profile?.isAdmin;
-}
-
 function validateSortField(sort?: string): 'created_at' | 'date' | 'lesson_number' {
   const allowed = ['created_at', 'date', 'lesson_number'] as const;
   return (allowed as readonly string[]).includes(sort || '')
@@ -56,65 +52,12 @@ type SupabaseClient = Awaited<
 >;
 
 /**
- * Get teacher's student IDs from active (non-deleted) lessons only
+ * Apply user-supplied filters to a lessons query.
+ *
+ * Visibility (admin sees all / teacher sees their students / student sees self)
+ * is enforced by Postgres RLS, not by app code — see ADR-0001. This function
+ * therefore only applies *additional* filters the caller asks for.
  */
-async function getTeacherStudentIds(
-  supabase: SupabaseClient,
-  teacherId: string
-): Promise<string[]> {
-  const { data } = await supabase
-    .from('lessons')
-    .select('student_id')
-    .eq('teacher_id', teacherId)
-    .is('deleted_at', null);
-
-  const studentIds = data?.map((l) => l.student_id) || [];
-  const uniqueStudentIds = Array.from(new Set(studentIds));
-  return uniqueStudentIds;
-}
-
-/**
- * Apply role-based filtering to lessons query
- */
-async function applyRoleBasedFiltering(
-  supabase: SupabaseClient,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dbQuery: any,
-  user: { id: string },
-  profile: UserProfile,
-  params: LessonQueryParams
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<{ query: any } | { lessons: []; count: number; status: number }> {
-  if (!profile) {
-    logger.error('applyRoleBasedFiltering called with null profile');
-    return { lessons: [], count: 0, status: 500 };
-  }
-
-  if (canViewAll(profile)) {
-    // Admin sees all lessons
-    return { query: applyLessonFilters(dbQuery, params) };
-  }
-
-  if (profile.isTeacher) {
-    // Teacher sees only their students' lessons
-    const studentIds = await getTeacherStudentIds(supabase, user.id);
-    if (studentIds.length === 0) {
-      return { lessons: [], count: 0, status: 200 };
-    }
-    const filteredQuery = dbQuery.in('student_id', studentIds);
-    return {
-      query: applyLessonFilters(filteredQuery, {
-        filter: params.filter,
-        studentId: params.studentId,
-      }),
-    };
-  }
-
-  // Student sees only their own lessons
-  const studentQuery = dbQuery.eq('student_id', user.id);
-  return { query: applyLessonFilters(studentQuery, { filter: params.filter }) };
-}
-
 function applyLessonFilters(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   query: any,
@@ -154,7 +97,6 @@ function applySortAndPaginationWithGuards(
   return applySortAndPaginationBase(query, sort, sortOrder, page, limit);
 }
 
-// Complexity is slightly over due to role-based filtering logic
 export async function getLessonsHandler(
   supabase: SupabaseClient,
   user: { id: string } | null,
@@ -185,8 +127,10 @@ export async function getLessonsHandler(
   } = query;
 
   const sortField = validateSortField(sort);
-  const baseQuery = supabase.from('lessons').select(
-    `
+  const baseQuery = supabase
+    .from('lessons')
+    .select(
+      `
       *,
       profile:profiles!lessons_student_id_fkey(id, full_name, email),
       teacher_profile:profiles!lessons_teacher_id_fkey(id, full_name, email),
@@ -195,24 +139,20 @@ export async function getLessonsHandler(
       ),
       assignments(title)
     `,
-    { count: 'exact' }
-  ).is('deleted_at', null);
+      { count: 'exact' }
+    )
+    .is('deleted_at', null);
 
-  // Apply role-based filtering
-  const filteringResult = await applyRoleBasedFiltering(supabase, baseQuery, user, profile, {
-    userId,
-    studentId,
-    filter,
-  });
+  // Visibility (admin/teacher/student) is enforced by RLS — see ADR-0001.
+  const filteredQuery = applyLessonFilters(baseQuery, { userId, studentId, filter });
 
-  // Check if early return (teacher with no students)
-  if ('lessons' in filteringResult) {
-    return filteringResult;
-  }
-
-  const filteredQuery = filteringResult.query;
-
-  const finalQuery = applySortAndPaginationWithGuards(filteredQuery, sortField, sortOrder, page, limit);
+  const finalQuery = applySortAndPaginationWithGuards(
+    filteredQuery,
+    sortField,
+    sortOrder,
+    page,
+    limit
+  );
 
   // If finalQuery is already an executed result, handle it directly
   if (finalQuery && 'data' in finalQuery && 'error' in finalQuery) {
@@ -344,17 +284,32 @@ export async function updateLessonHandler(
 
     //  Build update object with only defined, allowed fields
     // Filter to prevent Supabase JSONB operator errors
-    const allowedUpdateFields = ['student_id', 'teacher_id', 'title', 'notes', 'scheduled_at', 'status'];
+    const allowedUpdateFields = [
+      'student_id',
+      'teacher_id',
+      'title',
+      'notes',
+      'scheduled_at',
+      'status',
+    ];
     const updateData = Object.keys(dbData)
-      .filter(key => allowedUpdateFields.includes(key) && dbData[key] !== undefined)
-      .reduce((obj, key) => {
-        obj[key] = dbData[key];
-        return obj;
-      }, {} as Record<string, unknown>);
+      .filter((key) => allowedUpdateFields.includes(key) && dbData[key] !== undefined)
+      .reduce(
+        (obj, key) => {
+          obj[key] = dbData[key];
+          return obj;
+        },
+        {} as Record<string, unknown>
+      );
 
     let data;
     if (Object.keys(updateData).length > 0) {
-      const result = await supabase.from('lessons').update(updateData).eq('id', id).select().single();
+      const result = await supabase
+        .from('lessons')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
 
       if (result.error) {
         if (result.error.code === 'PGRST116') {
