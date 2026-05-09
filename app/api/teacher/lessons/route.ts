@@ -1,28 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { getLessonsHandler, createLessonHandler } from '../../lessons/handlers';
 import { logger } from '@/lib/logger';
-
-/**
- * Helper to get user profile with roles from profiles table boolean flags
- */
-async function getUserProfile(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('is_admin, is_teacher, is_student')
-    .eq('id', userId)
-    .single();
-
-  if (error || !profile) {
-    return null;
-  }
-
-  return {
-    isAdmin: profile.is_admin ?? false,
-    isTeacher: profile.is_teacher ?? false,
-    isStudent: profile.is_student ?? false,
-  };
-}
 
 /**
  * Extract query parameters from request
@@ -44,47 +24,34 @@ function extractQueryParams(searchParams: URLSearchParams) {
  * List lessons filtered to teacher's students only
  */
 export async function GET(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  return withApiAuth(
+    request,
+    async ({ user, roles }) => {
+      try {
+        const supabase = await createClient();
+        const { searchParams } = new URL(request.url);
+        const queryParams = extractQueryParams(searchParams);
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+        const result = await getLessonsHandler(supabase, user, roles, queryParams);
 
-    const profile = await getUserProfile(supabase, user.id);
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
+        if (result.error) {
+          return NextResponse.json({ error: result.error }, { status: result.status });
+        }
 
-    // Teacher-only check
-    if (!profile.isTeacher) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const queryParams = extractQueryParams(searchParams);
-
-    // Teachers see only their students' lessons
-    const result = await getLessonsHandler(supabase, user, profile, queryParams);
-
-    if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
-    }
-
-    return NextResponse.json(
-      {
-        lessons: result.lessons || [],
-        count: result.count || 0,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    logger.error('Error in teacher lessons API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+        return NextResponse.json(
+          {
+            lessons: result.lessons || [],
+            count: result.count || 0,
+          },
+          { status: 200 }
+        );
+      } catch (error) {
+        logger.error('Error in teacher lessons API:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      }
+    },
+    { requiredRole: 'teacher' }
+  );
 }
 
 /**
@@ -92,43 +59,31 @@ export async function GET(request: NextRequest) {
  * Create a new lesson for teacher's students only
  */
 export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  return withApiAuth(
+    request,
+    async ({ user, roles }) => {
+      try {
+        const supabase = await createClient();
+        const body = await request.json();
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+        // Force teacher_id to be current user for teacher role
+        const lessonData = {
+          ...body,
+          teacher_id: user.id,
+        };
 
-    const profile = await getUserProfile(supabase, user.id);
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
+        const result = await createLessonHandler(supabase, user, roles, lessonData);
 
-    // Teacher-only check
-    if (!profile.isTeacher) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+        if (result.error) {
+          return NextResponse.json({ error: result.error }, { status: result.status });
+        }
 
-    const body = await request.json();
-
-    // Force teacher_id to be current user for teacher role
-    const lessonData = {
-      ...body,
-      teacher_id: user.id,
-    };
-
-    const result = await createLessonHandler(supabase, user, profile, lessonData);
-
-    if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
-    }
-
-    return NextResponse.json(result.lesson, { status: result.status });
-  } catch (error) {
-    logger.error('Error in teacher lesson creation API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+        return NextResponse.json(result.lesson, { status: result.status });
+      } catch (error) {
+        logger.error('Error in teacher lesson creation API:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      }
+    },
+    { requiredRole: 'teacher' }
+  );
 }
