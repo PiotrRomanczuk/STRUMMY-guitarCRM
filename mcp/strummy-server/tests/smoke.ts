@@ -11,6 +11,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { getOverview, lessonTrends } from '../src/tools/insights.js';
 import { getLesson, getUpcomingLessons, listLessons } from '../src/tools/lessons.js';
 import { getPracticeLog, getPracticeSummary } from '../src/tools/practice.js';
 import { findSongs, getSong, songOfTheWeek } from '../src/tools/songs.js';
@@ -179,6 +180,22 @@ if (students.length === 0) {
     ])
   );
 }
+
+// ---- Group 5: Insights -----------------------------------------------------
+
+const overview = await getOverview({ since_days: 30 });
+checks.push(
+  check('strummy_get_overview', overview, [
+    'window_days',
+    'students',
+    'lessons_in_window',
+    'catalog',
+    'repertoire',
+  ])
+);
+
+const trends = await lessonTrends({ months: 6 });
+checks.push(check('strummy_lesson_trends', trends, ['months_window', 'months']));
 
 let pass = 0;
 let fail = 0;
