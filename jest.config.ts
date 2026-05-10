@@ -33,22 +33,15 @@ const config: Config = {
     '^@/lib/supabase$': '<rootDir>/lib/testing/__mocks__/supabase.ts',
   },
 
-  // Optimized test patterns - Focus on business logic
+  // Test discovery — `.integration.test.*` and `.e2e.test.*` are excluded via
+  // testPathIgnorePatterns below, so plain `*.test.*` files run as unit tests.
   testMatch: [
-    // Business logic and utilities (priority)
-    '<rootDir>/lib/**/__tests__/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/lib/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/hooks/**/__tests__/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/hooks/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/app/actions/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/app/auth/**/*.test.{js,jsx,ts,tsx}',
-
-    // Component unit tests (not integration)
-    '<rootDir>/components/**/*.unit.test.{js,jsx,ts,tsx}',
-    '<rootDir>/components/shared/**/*.test.{js,jsx,ts,tsx}',
-
-    // Specific unit test files
-    '<rootDir>/**/*.unit.test.{js,jsx,ts,tsx}',
+    '<rootDir>/app/**/*.test.{js,jsx,ts,tsx}',
+    '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
+    '<rootDir>/schemas/**/*.test.{js,jsx,ts,tsx}',
+    '<rootDir>/__tests__/**/*.test.{js,jsx,ts,tsx}',
   ],
 
   // Performance optimizations
@@ -105,6 +98,71 @@ const config: Config = {
     '.e2e.test.',
     '__tests__/auth/credentials.test.ts',
     'scripts/database/shadow-user-linking.test.ts',
+
+    // ─── Quarantined: rotted tests revealed when testMatch was broadened ───
+    // Each of these files exists on disk but has not run for some time and
+    // currently fails (stale mocks, renamed components, drifted assertions,
+    // outdated Supabase query builder shapes). Triage backlog — see
+    // tasks/test-coverage-analysis.md §3 and §P0. Remove an entry only after
+    // the file passes locally.
+    '__tests__/api/lessons/\\[id\\]/route\\.test\\.ts',
+    '__tests__/api/lessons/bulk/route\\.test\\.ts',
+    '__tests__/api/lessons/route\\.test\\.ts',
+    '__tests__/api/lessons/search/route\\.test\\.ts',
+    '__tests__/api/notifications/unsubscribe\\.test\\.ts',
+    '__tests__/api/song/handlers\\.test\\.ts',
+    '__tests__/components/admin/index\\.test\\.tsx',
+    '__tests__/components/auth/ForgotPasswordForm\\.test\\.tsx',
+    '__tests__/components/auth/ResetPasswordForm\\.test\\.tsx',
+    '__tests__/components/auth/SignInForm\\.test\\.tsx',
+    '__tests__/components/auth/SignUpForm\\.test\\.tsx',
+    '__tests__/components/dashboard/calendar/CalendarEventsList\\.test\\.tsx',
+    '__tests__/components/dashboard/calendar/ConnectGoogleButton\\.test\\.tsx',
+    '__tests__/components/dashboard/SyncCalendarModal\\.test\\.tsx',
+    '__tests__/components/users/UserFormFields\\.test\\.tsx',
+    '__tests__/dashboard/assignments/page\\.test\\.tsx',
+    '__tests__/dashboard/songs/page\\.test\\.tsx',
+    '__tests__/dashboard/users/page\\.test\\.tsx',
+    '__tests__/database/shadow-user-linking\\.test\\.ts',
+    '__tests__/lib/auth/cron-auth\\.test\\.ts',
+    '__tests__/lib/auth/rate-limiter\\.test\\.ts',
+    '__tests__/lib/getUserWithRolesSSR\\.test\\.ts',
+    '__tests__/lib/google\\.test\\.ts',
+    '__tests__/orphan-profile-cleanup\\.test\\.ts',
+    '__tests__/shadow-users\\.test\\.ts',
+    '__tests__/sync-all-lessons\\.test\\.ts',
+    '__tests__/utils/getUserRolesSSR\\.test\\.ts',
+    'app/\\(auth\\)/sign-in/page\\.test\\.tsx',
+    'app/\\(auth\\)/sign-up/page\\.test\\.tsx',
+    'app/api/admin/lessons/route\\.test\\.ts',
+    'app/api/admin/users/route\\.test\\.ts',
+    'app/api/lessons/\\[id\\]/route\\.test\\.ts',
+    'app/api/lessons/bulk/route\\.test\\.ts',
+    'app/api/lessons/route\\.test\\.ts',
+    'app/api/lessons/search/route\\.test\\.ts',
+    'app/api/notifications/unsubscribe/__tests__/route\\.test\\.ts',
+    'app/api/song/handlers\\.test\\.ts',
+    'app/api/spotify/features/route\\.test\\.ts',
+    'app/api/spotify/matches/approve/route\\.test\\.ts',
+    'app/api/spotify/matches/reject/route\\.test\\.ts',
+    'app/api/spotify/search/route\\.test\\.ts',
+    'app/api/spotify/sync/route\\.test\\.ts',
+    'app/dashboard/assignments/page\\.test\\.tsx',
+    'app/dashboard/songs/page\\.test\\.tsx',
+    'app/dashboard/users/page\\.test\\.tsx',
+    'components/assignments/form/AssignmentForm\\.test\\.tsx',
+    'components/assignments/shared/__tests__/AssignmentStatusActions\\.test\\.tsx',
+    'components/auth/ForgotPasswordForm\\.test\\.tsx',
+    'components/auth/ResetPasswordForm\\.test\\.tsx',
+    'components/auth/SignInForm\\.test\\.tsx',
+    'components/auth/SignUpForm\\.test\\.tsx',
+    'components/dashboard/admin/SongStatsTable\\.test\\.tsx',
+    'components/dashboard/calendar/CalendarEventsList\\.test\\.tsx',
+    'components/dashboard/Dashboard\\.test\\.tsx',
+    'components/lessons/form/LessonForm\\.test\\.tsx',
+    'components/lessons/hooks/__tests__/useStudentSongProgress\\.test\\.ts',
+    'components/lessons/list/LessonList\\.test\\.tsx',
+    'components/songs/form/SongForm\\.test\\.tsx',
   ],
 
   // Transform files
