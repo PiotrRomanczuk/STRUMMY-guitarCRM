@@ -12,6 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { getLesson, getUpcomingLessons, listLessons } from '../src/tools/lessons.js';
+import { findSongs, getSong, songOfTheWeek } from '../src/tools/songs.js';
 import {
   getRepertoire,
   getStudent,
@@ -119,6 +120,31 @@ if (recentLessons.length === 0) {
   const lesson = await getLesson({ id: lessonId });
   checks.push(check('strummy_get_lesson', lesson, ['lesson', 'songs', 'song_count']));
 }
+
+// ---- Group 3: Songs catalog ------------------------------------------------
+
+const songs = await findSongs({
+  level: 'beginner',
+  recorded_only: false,
+  include_drafts: false,
+  limit: 5,
+});
+checks.push(check('strummy_find_songs', songs, ['filters', 'count', 'songs']));
+
+const songsText = textOf(songs);
+const foundSongs = (JSON.parse(songsText) as { songs: Array<{ id: string }> }).songs;
+
+if (foundSongs.length === 0) {
+  console.log('⚠ No beginner songs found. Skipping strummy_get_song.');
+} else {
+  const song = await getSong({ id: foundSongs[0]!.id });
+  checks.push(
+    check('strummy_get_song', song, ['song', 'chords_array', 'videos', 'students_learning_count'])
+  );
+}
+
+const sotw = await songOfTheWeek({ include_history: true, limit: 3 });
+checks.push(check('strummy_song_of_the_week', sotw, ['today', 'current', 'history']));
 
 let pass = 0;
 let fail = 0;

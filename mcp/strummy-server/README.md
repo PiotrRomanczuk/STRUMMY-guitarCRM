@@ -2,7 +2,7 @@
 
 Local MCP server exposing Strummy domain operations to MCP clients (Claude Code, Claude Desktop, Cursor, etc.).
 
-**Scope (v2):** Groups 1–2 — Students and Lessons. Read-only.
+**Scope (v3):** Groups 1–3 — Students, Lessons, and Songs catalog. Read-only.
 
 ## Why this exists
 
@@ -13,6 +13,8 @@ Lets agents reach for _domain_ operations instead of writing SQL or reading the 
 - "Who's gone quiet lately?" → `strummy_list_students` + filter by `last_completed_lesson`
 - "What's on this week?" → `strummy_get_upcoming_lessons`
 - "What did I cover with Marek last lesson?" → `strummy_list_lessons` → `strummy_get_lesson`
+- "Find me a beginner song with D, G, and Em" → `strummy_find_songs({ level: 'beginner', contains_chords: ['D','G','Em'] })`
+- "What's the song of the week?" → `strummy_song_of_the_week`
 
 ## Tools
 
@@ -32,6 +34,14 @@ Lets agents reach for _domain_ operations instead of writing SQL or reading the 
 | `strummy_get_lesson`           | A single lesson with detail + lesson_songs joined to song catalog.        |
 | `strummy_list_lessons`         | Lesson summaries (no notes body); filter by student/teacher/status/range. |
 | `strummy_get_upcoming_lessons` | SCHEDULED lessons in the next N days (default 7), with student summaries. |
+
+### Group 3 — Songs catalog
+
+| Tool                       | Purpose                                                                                  |
+| -------------------------- | ---------------------------------------------------------------------------------------- |
+| `strummy_find_songs`       | Search the catalog by query / level / key / category / contains_chords. Excludes drafts. |
+| `strummy_get_song`         | Full song detail + parsed chord array + attached videos + students-learning count.       |
+| `strummy_song_of_the_week` | Current song of the week (today within active range), optionally with recent history.    |
 
 ## Architecture
 
@@ -102,10 +112,11 @@ npm run build       # compile to dist/
 ## Roadmap
 
 - **v1:** Group 1 — Students, read-only. ✅
-- **v2 (current):** Group 2 — Lessons, read-only. ✅
-- **v3:** Groups 3–4 — Songs catalog, Practice & feedback.
-- **v4:** Group 5 — Insights (cohort, weekly, teacher performance).
-- **v5:** Group 6 — Generative tools wrapping skills (lesson plans, snapshots).
-- **v6:** Writes (assign_song, update_repertoire_status, add_lesson_note) — only after the reads have shaken out.
+- **v2:** Group 2 — Lessons, read-only. ✅
+- **v3 (current):** Group 3 — Songs catalog, read-only. ✅
+- **v4:** Group 4 — Practice & feedback.
+- **v5:** Group 5 — Insights (cohort, weekly, teacher performance).
+- **v6:** Group 6 — Generative tools wrapping skills (lesson plans, snapshots).
+- **v7:** Writes (assign_song, update_repertoire_status, add_lesson_note) — only after the reads have shaken out.
 
 See the design discussion in the PR for full v2+ tool sketch.

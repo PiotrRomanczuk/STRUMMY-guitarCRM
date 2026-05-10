@@ -10,6 +10,14 @@ import {
   listLessonsInput,
 } from './tools/lessons.js';
 import {
+  findSongs,
+  findSongsInput,
+  getSong,
+  getSongInput,
+  songOfTheWeek,
+  songOfTheWeekInput,
+} from './tools/songs.js';
+import {
   getRepertoire,
   getRepertoireInput,
   getStudent,
@@ -132,6 +140,54 @@ server.registerTool(
     inputSchema: getUpcomingLessonsInput.shape,
   },
   async (input) => getUpcomingLessons(getUpcomingLessonsInput.parse(input))
+);
+
+// ----------------------------------------------------------------------------
+// Group 3 — Songs catalog
+// ----------------------------------------------------------------------------
+
+server.registerTool(
+  'strummy_find_songs',
+  {
+    title: 'Search the song catalog',
+    description: [
+      'Search the song catalog. Filter by free-text query (matches title or',
+      'author), level (beginner/intermediate/advanced), key, category, or by',
+      'chords the song contains. Pass contains_chords=["D","G","Em"] to find',
+      'songs that include all those chords. By default excludes drafts and',
+      'returns up to 20 songs. Pass recorded_only=true for songs with a recording.',
+    ].join(' '),
+    inputSchema: findSongsInput.shape,
+  },
+  async (input) => findSongs(findSongsInput.parse(input))
+);
+
+server.registerTool(
+  'strummy_get_song',
+  {
+    title: 'Get a song with detail and learning stats',
+    description: [
+      'Fetch a single song by id. Returns the full catalog row, a parsed chords',
+      'array (split from the chords text), all attached song_videos, and a count',
+      'of how many students currently have this song active in their repertoire.',
+    ].join(' '),
+    inputSchema: getSongInput.shape,
+  },
+  async (input) => getSong(getSongInput.parse(input))
+);
+
+server.registerTool(
+  'strummy_song_of_the_week',
+  {
+    title: 'Get the current song of the week',
+    description: [
+      "Returns the currently active song-of-the-week (today's date falls within",
+      'active_from/active_until and is_active=true). Pass include_history=true to',
+      'also get the most recent past picks.',
+    ].join(' '),
+    inputSchema: songOfTheWeekInput.shape,
+  },
+  async (input) => songOfTheWeek(songOfTheWeekInput.parse(input))
 );
 
 // ----------------------------------------------------------------------------
