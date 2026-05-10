@@ -8,6 +8,7 @@ import {
   CreateRepertoireInputSchema,
   UpdateRepertoireInputSchema,
   ReorderRepertoireInputSchema,
+  type ReorderRepertoireInput,
 } from '@/schemas/StudentRepertoireSchema';
 import type { StudentRepertoireWithSong } from '@/types/StudentRepertoire';
 import { createLogger } from '@/lib/logger';

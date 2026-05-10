@@ -195,3 +195,26 @@ export function prepareLessonForDb(lessonData: Partial<LessonInput>) {
 
   return dbData;
 }
+
+/**
+ * Past-date policy (see tasks/unbreakable-core.md → create-lesson:past-date-policy):
+ *
+ *   Backfilling is ALLOWED. A lesson with `scheduled_at` in the past is
+ *   accepted by create/update (no 400) and flagged via `isBackfilledLesson()`
+ *   so list views can label or filter it. Keeps "log what happened yesterday"
+ *   open while making the flag explicit so the dashboard's "upcoming lesson"
+ *   widgets can exclude it.
+ *
+ * @param lesson Lesson row with at least `{ scheduled_at }`.
+ * @param now    Optional reference instant; defaults to `new Date()` so the
+ *               helper is deterministic when called from tests.
+ */
+export function isBackfilledLesson(
+  lesson: { scheduled_at?: string | null } | null | undefined,
+  now: Date = new Date()
+): boolean {
+  if (!lesson?.scheduled_at) return false;
+  const scheduled = new Date(lesson.scheduled_at);
+  if (Number.isNaN(scheduled.getTime())) return false;
+  return scheduled.getTime() < now.getTime();
+}
