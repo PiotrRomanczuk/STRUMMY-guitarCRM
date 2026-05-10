@@ -45,7 +45,7 @@ export type StudentDashboardData = {
     id: string;
     title: string;
     due_date: string | null;
-    status: 'pending' | 'completed' | 'overdue';
+    status: 'not_started' | 'in_progress' | 'completed' | 'overdue' | 'cancelled';
     description: string | null;
   }[];
   recentSongs: {
