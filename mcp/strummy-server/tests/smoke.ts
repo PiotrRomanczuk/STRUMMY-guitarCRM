@@ -12,6 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { getLesson, getUpcomingLessons, listLessons } from '../src/tools/lessons.js';
+import { getPracticeLog, getPracticeSummary } from '../src/tools/practice.js';
 import { findSongs, getSong, songOfTheWeek } from '../src/tools/songs.js';
 import {
   getRepertoire,
@@ -145,6 +146,39 @@ if (foundSongs.length === 0) {
 
 const sotw = await songOfTheWeek({ include_history: true, limit: 3 });
 checks.push(check('strummy_song_of_the_week', sotw, ['today', 'current', 'history']));
+
+// ---- Group 4: Practice & feedback ------------------------------------------
+
+if (students.length === 0) {
+  console.log('⚠ No active students in DB. Skipping practice tools.');
+} else {
+  const sid = students[0]!.id;
+  const [log, summary] = await Promise.all([
+    getPracticeLog({ student_id: sid, since_days: 90, limit: 20 }),
+    getPracticeSummary({ student_id: sid, since_days: 90, top_n: 5 }),
+  ]);
+  checks.push(
+    check('strummy_get_practice_log', log, [
+      'student_id',
+      'window_days',
+      'session_count',
+      'total_minutes',
+      'sessions',
+    ])
+  );
+  checks.push(
+    check('strummy_get_practice_summary', summary, [
+      'student_id',
+      'window_days',
+      'session_count',
+      'total_minutes',
+      'distinct_days',
+      'distinct_songs',
+      'avg_minutes_per_session',
+      'top_songs',
+    ])
+  );
+}
 
 let pass = 0;
 let fail = 0;

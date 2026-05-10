@@ -10,6 +10,12 @@ import {
   listLessonsInput,
 } from './tools/lessons.js';
 import {
+  getPracticeLog,
+  getPracticeLogInput,
+  getPracticeSummary,
+  getPracticeSummaryInput,
+} from './tools/practice.js';
+import {
   findSongs,
   findSongsInput,
   getSong,
@@ -188,6 +194,39 @@ server.registerTool(
     inputSchema: songOfTheWeekInput.shape,
   },
   async (input) => songOfTheWeek(songOfTheWeekInput.parse(input))
+);
+
+// ----------------------------------------------------------------------------
+// Group 4 — Practice & feedback
+// ----------------------------------------------------------------------------
+
+server.registerTool(
+  'strummy_get_practice_log',
+  {
+    title: "Get a student's practice sessions",
+    description: [
+      'Fetch practice sessions for a student over a recent window (default 30 days),',
+      'each joined to song title/author. Optionally filter to a single song.',
+      'Returns sessions plus total minutes across the window.',
+    ].join(' '),
+    inputSchema: getPracticeLogInput.shape,
+  },
+  async (input) => getPracticeLog(getPracticeLogInput.parse(input))
+);
+
+server.registerTool(
+  'strummy_get_practice_summary',
+  {
+    title: "Get a student's practice summary",
+    description: [
+      'Aggregate stats over a window (default 30 days): total minutes, session count,',
+      'distinct days practiced, distinct songs, average minutes per session, and the',
+      'top N songs by minutes (default 5). Useful for "how much has X practiced this',
+      'month?" and "what have they focused on?".',
+    ].join(' '),
+    inputSchema: getPracticeSummaryInput.shape,
+  },
+  async (input) => getPracticeSummary(getPracticeSummaryInput.parse(input))
 );
 
 // ----------------------------------------------------------------------------
