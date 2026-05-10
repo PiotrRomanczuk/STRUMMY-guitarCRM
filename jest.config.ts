@@ -6,6 +6,14 @@ const createJestConfig = nextJest({
   dir: './',
 });
 
+// When running inside a worktree (cwd at .claude/worktrees/<name>/), ignore the
+// OTHER worktrees but allow the current one. When running from main, ignore all
+// worktrees. A blanket `/.claude/` ignore breaks worktree test runs entirely.
+const worktreeMatch = process.cwd().match(/\.claude\/worktrees\/([^/]+)/);
+const worktreeIgnorePattern = worktreeMatch
+  ? `/\\.claude/worktrees/(?!${worktreeMatch[1]}/)`
+  : '/\\.claude/worktrees/';
+
 // Add any custom config to be passed to Jest
 const config: Config = {
   coverageProvider: 'v8',
@@ -87,12 +95,12 @@ const config: Config = {
     },
   },
 
-  // Ignore patterns - Exclude integration tests and agent worktrees
+  // Ignore patterns - Exclude integration tests and sibling worktrees
   testPathIgnorePatterns: [
     '/node_modules/',
     '/.next/',
     '/cypress/',
-    '/.claude/',
+    worktreeIgnorePattern,
     '.integration.test.',
     '.e2e.test.',
     '__tests__/auth/credentials.test.ts',
