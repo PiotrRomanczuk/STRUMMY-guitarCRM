@@ -237,8 +237,17 @@ export async function createLessonHandler(
       return { error: error.message, status: 500 };
     }
 
+    // Atomic create-with-songs: if song attach fails, delete the just-created
+    // lesson so the caller never sees a phantom lesson with zero songs.
     if (song_ids && song_ids.length > 0) {
-      await addSongsToLesson(supabase, data.id, song_ids);
+      try {
+        await addSongsToLesson(supabase, data.id, song_ids);
+      } catch (songErr) {
+        await supabase.from('lessons').delete().eq('id', data.id);
+        logger.error('Lesson rolled back after song-attach failure:', songErr);
+        const message = songErr instanceof Error ? songErr.message : 'Song attach failed';
+        return { error: `Lesson creation failed: ${message}`, status: 500 };
+      }
     }
 
     // Sync to Google Calendar (non-blocking, errors are logged)

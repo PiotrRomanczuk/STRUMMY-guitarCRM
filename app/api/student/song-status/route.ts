@@ -72,12 +72,16 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update song status' }, { status: 500 });
     }
 
-    // If this is a new record (no current status), manually log the initial status
-    if (!currentRecord) {
+    // Log a history row on initial insert AND on every status change. Skip
+    // when the status is unchanged (re-saving the same status is a no-op for
+    // history). The unbreakable spec requires that every transition is
+    // recorded; previously this only fired on the initial insert.
+    const previousStatus = currentRecord?.status ?? null;
+    if (previousStatus !== status) {
       await supabase.from('song_status_history').insert({
         student_id: user.id,
         song_id: songId,
-        previous_status: null,
+        previous_status: previousStatus,
         new_status: status,
         notes: notes || null,
       });
