@@ -14,7 +14,13 @@ export type {
   StudentDashboardData,
   StudentChartDay,
 } from './dashboard.types';
-import type { StudentDashboardData } from './dashboard.types';
+import type { DashboardRepertoireItem, StudentDashboardData } from './dashboard.types';
+
+/**
+ * @deprecated Use `DashboardRepertoireItem` instead. Kept as an alias for
+ * downstream consumers that still import `RepertoireItem` from this module.
+ */
+export type RepertoireItem = DashboardRepertoireItem;
 
 interface PracticeSessionRow {
   created_at: string;

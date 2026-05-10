@@ -211,8 +211,11 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     .order('due_date', { ascending: true })
     .limit(10);
 
+  // Cast via `unknown` because Supabase's generated type infers
+  // joined `songs(title)` / `profiles(full_name)` as arrays even though
+  // they are single rows at runtime (FK cardinality unknown at query time).
   const displayAssignments: TeacherDashboardData['assignments'] = (
-    (assignmentRows ?? []) as AssignmentRow[]
+    (assignmentRows ?? []) as unknown as AssignmentRow[]
   ).map((asgn) => {
     const lowered = asgn.status.toLowerCase();
     const status: AssignmentStatus = VALID_ASSIGNMENT_STATUSES.includes(lowered as AssignmentStatus)
@@ -312,7 +315,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
       message: `Lesson with ${profileNameById.get(l.student_id) ?? 'Student'} scheduled`,
       time: new Date(l.scheduled_at).toLocaleTimeString(),
     })),
-    ...((assignmentRows ?? []) as AssignmentRow[]).slice(0, 2).map((a) => ({
+    ...((assignmentRows ?? []) as unknown as AssignmentRow[]).slice(0, 2).map((a) => ({
       id: `act-a-${a.id}`,
       type: 'assignment_submitted' as const,
       message: `Assignment "${a.title}" for ${a.profiles?.full_name ?? 'Student'}`,
