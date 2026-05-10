@@ -10,6 +10,12 @@ import {
   listLessonsInput,
 } from './tools/lessons.js';
 import {
+  getOverview,
+  getOverviewInput,
+  lessonTrends,
+  lessonTrendsInput,
+} from './tools/insights.js';
+import {
   getPracticeLog,
   getPracticeLogInput,
   getPracticeSummary,
@@ -227,6 +233,39 @@ server.registerTool(
     inputSchema: getPracticeSummaryInput.shape,
   },
   async (input) => getPracticeSummary(getPracticeSummaryInput.parse(input))
+);
+
+// ----------------------------------------------------------------------------
+// Group 5 — Insights (agent-friendly summaries)
+// ----------------------------------------------------------------------------
+
+server.registerTool(
+  'strummy_get_overview',
+  {
+    title: 'Get a top-line overview',
+    description: [
+      'Top-line counts for a recent window (default 30 days): students by status,',
+      'lessons by status, published songs, repertoire mastery rate. Cheap to call —',
+      'all counts run in parallel via head:true queries.',
+    ].join(' '),
+    inputSchema: getOverviewInput.shape,
+  },
+  async (input) => getOverview(getOverviewInput.parse(input))
+);
+
+server.registerTool(
+  'strummy_lesson_trends',
+  {
+    title: 'Get monthly lesson trends',
+    description: [
+      'Lesson counts bucketed by month for the last N months (default 6, max 24).',
+      'Each bucket reports completed / scheduled / cancelled / total. Useful for',
+      '"are lessons trending up?" or "did anything weird happen in March?".',
+      "Months with no lessons are still emitted with zeros so the timeline isn't ragged.",
+    ].join(' '),
+    inputSchema: lessonTrendsInput.shape,
+  },
+  async (input) => lessonTrends(lessonTrendsInput.parse(input))
 );
 
 // ----------------------------------------------------------------------------

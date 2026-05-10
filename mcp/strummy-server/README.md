@@ -2,7 +2,7 @@
 
 Local MCP server exposing Strummy domain operations to MCP clients (Claude Code, Claude Desktop, Cursor, etc.).
 
-**Scope (v4):** Groups 1–4 — Students, Lessons, Songs catalog, Practice & feedback. Read-only.
+**Scope (v5):** Groups 1–5 — Students, Lessons, Songs catalog, Practice & feedback, Insights. Read-only.
 
 ## Why this exists
 
@@ -17,6 +17,8 @@ Lets agents reach for _domain_ operations instead of writing SQL or reading the 
 - "What's the song of the week?" → `strummy_song_of_the_week`
 - "How much has Marek practiced this month?" → `strummy_get_practice_summary({ student_id, since_days: 30 })`
 - "What did Emma practice yesterday?" → `strummy_get_practice_log({ student_id, since_days: 1 })`
+- "Give me a top-line view of the studio" → `strummy_get_overview`
+- "Are lessons trending up over the last 6 months?" → `strummy_lesson_trends({ months: 6 })`
 
 ## Tools
 
@@ -51,6 +53,15 @@ Lets agents reach for _domain_ operations instead of writing SQL or reading the 
 | ------------------------------ | ------------------------------------------------------------------------------------- |
 | `strummy_get_practice_log`     | Practice sessions for a student over a window (default 30d), joined to song titles.   |
 | `strummy_get_practice_summary` | Aggregates: total minutes, sessions, distinct days/songs, avg per session, top songs. |
+
+### Group 5 — Insights (agent-friendly summaries)
+
+| Tool                    | Purpose                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------ |
+| `strummy_get_overview`  | Top-line counts in a window: students by status, lessons by status, songs, mastery.  |
+| `strummy_lesson_trends` | Lessons bucketed by month for the last N months (default 6). Empty months filled in. |
+
+These are intentionally simpler than the in-app analytics dashboards (`weekly-insights`, `cohort-analytics`, `teacher-performance`). They run as direct queries to keep the MCP decoupled from `lib/services/*` — for richer analytics, use the dashboard.
 
 ## Architecture
 
@@ -123,8 +134,8 @@ npm run build       # compile to dist/
 - **v1:** Group 1 — Students, read-only. ✅
 - **v2:** Group 2 — Lessons, read-only. ✅
 - **v3:** Group 3 — Songs catalog, read-only. ✅
-- **v4 (current):** Group 4 — Practice & feedback, read-only. ✅
-- **v5:** Group 5 — Insights (cohort, weekly, teacher performance).
+- **v4:** Group 4 — Practice & feedback, read-only. ✅
+- **v5 (current):** Group 5 — Insights (overview + lesson trends), read-only. ✅
 - **v6:** Group 6 — Generative tools wrapping skills (lesson plans, snapshots).
 - **v7:** Writes (assign_song, update_repertoire_status, add_lesson_note) — only after the reads have shaken out.
 
