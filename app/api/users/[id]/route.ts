@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { maskShadowEmail } from '@/lib/auth/shadow-email';
 
 const UpdateUserSchema = z.object({
   full_name: z.string().optional(),
@@ -28,7 +29,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, full_name, first_name, last_name, phone, notes, is_admin, is_teacher, is_student, is_shadow, is_active, is_parent, parent_id, student_status, created_at, updated_at')
+      .select(
+        'id, email, full_name, first_name, last_name, phone, notes, is_admin, is_teacher, is_student, is_shadow, is_active, is_parent, parent_id, student_status, created_at, updated_at'
+      )
       .eq('id', id)
       .single();
 
@@ -36,7 +39,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return Response.json(data, { status: 200 });
+    return Response.json({ ...data, email: maskShadowEmail(data.email) }, { status: 200 });
   } catch (error) {
     logger.error('Error fetching user:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
@@ -62,7 +65,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       const parsed = JSON.parse(text);
       const result = UpdateUserSchema.safeParse(parsed);
       if (!result.success) {
-        return Response.json({ error: 'Invalid request body', details: result.error.issues }, { status: 400 });
+        return Response.json(
+          { error: 'Invalid request body', details: result.error.issues },
+          { status: 400 }
+        );
       }
       body = result.data;
     } catch (e) {

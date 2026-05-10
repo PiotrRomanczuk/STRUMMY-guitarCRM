@@ -1,13 +1,16 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { maskShadowEmail } from '@/lib/auth/shadow-email';
 
 export async function GET() {
   try {
     const supabase = await createClient();
 
     // Require authenticated user
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -23,10 +26,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Fetch all profiles with explicit column selection
     const { data: profiles, error } = await supabase
       .from('profiles')
-      .select('id, email, full_name, is_admin, is_teacher, is_student, is_shadow, is_active, student_status, created_at, updated_at')
+      .select(
+        'id, email, full_name, is_admin, is_teacher, is_student, is_shadow, is_active, student_status, created_at, updated_at'
+      )
       .order('full_name', { ascending: true });
 
     if (error) {
@@ -34,7 +38,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch profiles' }, { status: 500 });
     }
 
-    return NextResponse.json(profiles || []);
+    const masked = (profiles ?? []).map((p) => ({
+      ...p,
+      email: maskShadowEmail(p.email),
+    }));
+
+    return NextResponse.json(masked);
   } catch (error) {
     logger.error('Error in profiles API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
