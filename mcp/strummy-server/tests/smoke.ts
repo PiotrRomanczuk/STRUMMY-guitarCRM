@@ -70,8 +70,8 @@ const listText = textOf(list);
 const students = (JSON.parse(listText) as { students: Array<{ id: string }> }).students;
 
 if (students.length === 0) {
-  console.log('⚠ No active students in local DB. Skipping per-student tools.');
-  console.log('  Run `npm run seed` from the parent project to seed test data.');
+  console.log('⚠ No active students in DB. Skipping per-student tools.');
+  console.log('  If running against local Supabase, run `npm run seed` in the parent project.');
 } else {
   const first = students[0]!;
   const [student, activity, rep] = await Promise.all([

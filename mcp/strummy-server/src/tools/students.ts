@@ -72,12 +72,7 @@ export async function getStudent(input: z.infer<typeof getStudentInput>) {
 
   const sb = getSupabase();
 
-  let query = sb
-    .from('profiles')
-    .select(PROFILE_COLUMNS)
-    .eq('is_student', true)
-    .is('deleted_at', null)
-    .limit(1);
+  let query = sb.from('profiles').select(PROFILE_COLUMNS).eq('is_student', true).limit(1);
 
   if (input.id) query = query.eq('id', input.id);
   else if (input.email) query = query.eq('email', input.email);
@@ -140,7 +135,6 @@ export async function listStudents(input: z.infer<typeof listStudentsInput>) {
     .from('profiles')
     .select(PROFILE_COLUMNS)
     .eq('is_student', true)
-    .is('deleted_at', null)
     .order('status_changed_at', { ascending: false, nullsFirst: false })
     .limit(input.limit);
 
@@ -164,7 +158,7 @@ export async function getStudentActivity(input: z.infer<typeof getStudentActivit
   const [lessons, practice] = await Promise.all([
     sb
       .from('lessons')
-      .select('id, scheduled_at, status, notes, deleted_at')
+      .select('id, scheduled_at, status, notes')
       .eq('student_id', input.student_id)
       .gte('scheduled_at', since)
       .is('deleted_at', null)
@@ -172,10 +166,10 @@ export async function getStudentActivity(input: z.infer<typeof getStudentActivit
       .limit(input.limit),
     sb
       .from('practice_sessions')
-      .select('id, started_at, duration_minutes, song_id, notes')
+      .select('id, created_at, duration_minutes, song_id, notes')
       .eq('student_id', input.student_id)
-      .gte('started_at', since)
-      .order('started_at', { ascending: false })
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
       .limit(input.limit),
   ]);
 
