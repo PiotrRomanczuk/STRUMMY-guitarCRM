@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
- 
+
 /**
  * Teacher Dashboard Server Actions Tests
  *
@@ -113,12 +113,17 @@ describe('getTeacherDashboardData', () => {
       if (table === 'profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({
-              data: [
-                { id: 'student-1', full_name: 'John Doe', avatar_url: 'https://example.com/avatar1.jpg' },
-                { id: 'student-2', full_name: 'Jane Smith', avatar_url: null },
-              ],
-            }),
+            in: () =>
+              Promise.resolve({
+                data: [
+                  {
+                    id: 'student-1',
+                    full_name: 'John Doe',
+                    avatar_url: 'https://example.com/avatar1.jpg',
+                  },
+                  { id: 'student-2', full_name: 'Jane Smith', avatar_url: null },
+                ],
+              }),
           }),
         };
       }
@@ -146,9 +151,7 @@ describe('getTeacherDashboardData', () => {
               return chainable({ count: 12 });
             }
             return chainable({
-              data: [
-                { id: 's1', title: 'Test Song', author: 'Test Artist', level: 'beginner' },
-              ],
+              data: [{ id: 's1', title: 'Test Song', author: 'Test Artist', level: 'beginner' }],
             });
           },
         };
@@ -180,11 +183,17 @@ describe('getTeacherDashboardData', () => {
     expect(result).toHaveProperty('stats');
 
     expect(result.students).toHaveLength(2);
+    // With the batched lessons mock returning empty data, each student gets
+    // 0 past lessons → Beginner level. lastLessonAt/nextLessonAt are null.
     expect(result.students[0]).toEqual({
       id: 'student-1',
       name: 'John Doe',
-      level: 'Intermediate',
-      lessonsCompleted: 5,
+      level: 'Beginner',
+      lessonsCompleted: 0,
+      lastLessonAt: null,
+      nextLessonAt: null,
+      overdueAssignmentCount: 0,
+      repertoireCount: 0,
       nextLesson: expect.any(String),
       avatar: 'https://example.com/avatar1.jpg',
     });
@@ -267,9 +276,10 @@ describe('getTeacherDashboardData', () => {
       if (table === 'profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({
-              data: [{ id: 'student-1', full_name: 'New Student', avatar_url: null }],
-            }),
+            in: () =>
+              Promise.resolve({
+                data: [{ id: 'student-1', full_name: 'New Student', avatar_url: null }],
+              }),
           }),
         };
       }
@@ -312,9 +322,10 @@ describe('getTeacherDashboardData', () => {
       if (table === 'profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({
-              data: [{ id: 'student-1', full_name: null, avatar_url: null }],
-            }),
+            in: () =>
+              Promise.resolve({
+                data: [{ id: 'student-1', full_name: null, avatar_url: null }],
+              }),
           }),
         };
       }
@@ -371,7 +382,7 @@ describe('getTeacherDashboardData', () => {
     expect(result.chartData).toHaveLength(7);
     expect(result.chartData[0]).toHaveProperty('name');
     expect(result.chartData[0]).toHaveProperty('lessons');
-    expect(result.chartData[0]).toHaveProperty('assignments');
+    expect(result.chartData[0]).toHaveProperty('assignmentsCreated');
 
     // Songs are fetched from DB (empty in this mock)
     expect(result.songs).toEqual([]);
@@ -393,26 +404,29 @@ describe('getTeacherDashboardData', () => {
       if (table === 'profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({
-              data: [
-                { id: 'student-1', full_name: 'Student 1', avatar_url: null },
-                { id: 'student-2', full_name: 'Student 2', avatar_url: null },
-                { id: 'student-3', full_name: 'Student 3', avatar_url: null },
-              ],
-            }),
+            in: () =>
+              Promise.resolve({
+                data: [
+                  { id: 'student-1', full_name: 'Student 1', avatar_url: null },
+                  { id: 'student-2', full_name: 'Student 2', avatar_url: null },
+                  { id: 'student-3', full_name: 'Student 3', avatar_url: null },
+                ],
+              }),
           }),
         };
       }
 
       if (table === 'lessons') {
-        return {
-          select: (fields: string, options: any) => {
-            if (options?.count === 'exact') {
-              return chainable({ count: 7 });
-            }
-            return chainable({ data: null });
-          },
-        };
+        // New batched approach: return 7 rows for the week range query.
+        // This same mock also responds to the per-student batch query, but
+        // those rows are ignored for the lessonsThisWeek count which is
+        // simply weekLessons.length from the week range query.
+        const weekLessonRows = Array.from({ length: 7 }, (_, i) => ({
+          id: `wl-${i}`,
+          student_id: 'student-1',
+          scheduled_at: new Date().toISOString(),
+        }));
+        return chainable({ data: weekLessonRows });
       }
 
       if (table === 'lesson_songs') {
@@ -462,37 +476,43 @@ describe('getTeacherDashboardData', () => {
 
     mockGetTeacherStudentIds.mockResolvedValue(['beginner', 'intermediate', 'advanced']);
 
-    // Return three students; each will get the same lesson count from our mock
-    // We test the boundary logic by checking specific counts
-    const studentCounts = [0, 5, 20];
-    let studentIndex = 0;
+    // New batched approach: single lessons query returns rows for all students.
+    // beginner = 0 past lessons → Beginner
+    // intermediate = 5 past lessons → Intermediate (boundary)
+    // advanced = 20 past lessons → Advanced (boundary)
+    const now = new Date();
+    const past = (id: string, n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `lesson-${id}-${i}`,
+        student_id: id,
+        scheduled_at: new Date(now.getTime() - (i + 1) * 24 * 60 * 60 * 1000).toISOString(),
+      }));
+
+    const allLessonRows = [
+      ...past('beginner', 0),
+      ...past('intermediate', 5),
+      ...past('advanced', 20),
+    ];
 
     mockFrom.mockImplementation((table: string) => {
       if (table === 'profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({
-              data: [
-                { id: 'beginner', full_name: 'Beginner Student', avatar_url: null },
-                { id: 'intermediate', full_name: 'Intermediate Student', avatar_url: null },
-                { id: 'advanced', full_name: 'Advanced Student', avatar_url: null },
-              ],
-            }),
+            in: () =>
+              Promise.resolve({
+                data: [
+                  { id: 'beginner', full_name: 'Beginner Student', avatar_url: null },
+                  { id: 'intermediate', full_name: 'Intermediate Student', avatar_url: null },
+                  { id: 'advanced', full_name: 'Advanced Student', avatar_url: null },
+                ],
+              }),
           }),
         };
       }
 
       if (table === 'lessons') {
-        return {
-          select: (fields: string, options: any) => {
-            if (options?.count === 'exact') {
-              const count = studentCounts[studentIndex] ?? 0;
-              studentIndex++;
-              return chainable({ count });
-            }
-            return chainable({ data: null });
-          },
-        };
+        // Batch query: return all rows; the action filters in JS per student
+        return chainable({ data: allLessonRows });
       }
 
       return chainable({ data: [], count: 0 });
@@ -528,10 +548,7 @@ describe('getTeacherDashboardData', () => {
 
       if (table === 'lesson_songs') {
         return chainable({
-          data: [
-            { song_id: 's1' },
-            { song_id: 's2' },
-          ],
+          data: [{ song_id: 's1' }, { song_id: 's2' }],
         });
       }
 

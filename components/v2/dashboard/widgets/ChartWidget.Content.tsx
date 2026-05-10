@@ -9,14 +9,14 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import type { ChartDataPoint } from '@/types/teacher-dashboard-v2';
 
-interface ChartDataPoint {
-  name: string;
-  lessons: number;
-  assignments: number;
+interface ChartContentProps {
+  data: ChartDataPoint[];
+  showAssignments: boolean;
 }
 
-export function ChartContent({ data }: { data: ChartDataPoint[] }) {
+export function ChartContent({ data, showAssignments }: ChartContentProps) {
   return (
     <>
       <div
@@ -38,7 +38,7 @@ export function ChartContent({ data }: { data: ChartDataPoint[] }) {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
             <XAxis
-              dataKey="name"
+              dataKey="day"
               stroke="hsl(var(--muted-foreground))"
               fontSize={11}
               tickLine={false}
@@ -66,14 +66,16 @@ export function ChartContent({ data }: { data: ChartDataPoint[] }) {
               fillOpacity={1}
               fill="url(#v2ColorLessons)"
             />
-            <Area
-              type="monotone"
-              dataKey="assignments"
-              stroke="#f2b127"
-              strokeWidth={2}
-              fillOpacity={1}
-              fill="url(#v2ColorAssignments)"
-            />
+            {showAssignments && (
+              <Area
+                type="monotone"
+                dataKey="assignmentsCreated"
+                stroke="#f2b127"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#v2ColorAssignments)"
+              />
+            )}
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -83,10 +85,12 @@ export function ChartContent({ data }: { data: ChartDataPoint[] }) {
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#ffd183' }} />
           <span className="text-xs text-muted-foreground">Lessons</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f2b127' }} />
-          <span className="text-xs text-muted-foreground">Assignments</span>
-        </div>
+        {showAssignments && (
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f2b127' }} />
+            <span className="text-xs text-muted-foreground">Assignments created</span>
+          </div>
+        )}
       </div>
     </>
   );
