@@ -1,21 +1,28 @@
-import { Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { Music } from 'lucide-react';
 
 export function SkillsManager() {
   return (
-    <div className="max-w-4xl mx-auto px-6 lg:px-8 py-8">
-      <h1 className="text-2xl lg:text-3xl font-bold mb-2">Skills Manager</h1>
-      <p className="text-sm text-muted-foreground mb-8">
-        Track and manage student skill progression
+    <div className="mx-auto max-w-4xl px-6 py-8 lg:px-8">
+      <h1 className="mb-2 text-2xl font-bold lg:text-3xl">Skills</h1>
+      <p className="mb-8 text-sm text-muted-foreground">
+        Drills students can practice on their own.
       </p>
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
-          <Sparkles className="h-6 w-6 text-muted-foreground" />
+
+      <Link
+        href="/dashboard/skills/chord-quiz"
+        className="group flex items-start gap-4 rounded-2xl border bg-card p-5 transition hover:border-primary/40 hover:shadow-sm"
+      >
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Music className="h-6 w-6" />
         </div>
-        <h3 className="text-base font-semibold mb-1">Coming soon</h3>
-        <p className="text-sm text-muted-foreground max-w-xs">
-          Skills management functionality is under development.
-        </p>
-      </div>
+        <div>
+          <h2 className="text-base font-semibold group-hover:text-primary">Chord Quiz</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Identify chords from their diagrams. 10 questions per round.
+          </p>
+        </div>
+      </Link>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { NextLessonCard } from '@/components/dashboard/student/NextLessonCard';
 import { LastLessonCard } from '@/components/dashboard/student/LastLessonCard';
 import { ProgressChart } from '@/components/dashboard/student/ProgressChart';
 import { PracticeTimerCard } from '@/components/dashboard/student/PracticeTimerCard';
+import { ChordQuizCard } from '@/components/dashboard/student/ChordQuizCard';
 import { PracticeToday } from '@/components/dashboard/student/PracticeToday';
 import type { PracticeTodaySong } from '@/components/dashboard/student/PracticeToday';
 import { SongOfTheWeekCard } from '@/components/song-of-the-week';
@@ -164,6 +165,7 @@ export function StudentDashboardClient({
         </div>
         <div className="space-y-6 sm:space-y-8">
           <PracticeTimerCard songs={data.allSongs} />
+          <ChordQuizCard />
           <RecentActivity activities={activities} />
           <AssignmentList assignments={assignments} />
         </div>
