@@ -195,4 +195,28 @@ describe('lesson notes — unbreakable scenarios', () => {
       expect(payload).toHaveProperty('notes', '');
     });
   });
+
+  describe('create-lesson:update-doesnt-reattach-songs', () => {
+    it('updating only notes never touches lesson_songs (no re-insert of existing links)', async () => {
+      const qb = createMockQueryBuilder({ ...baseLesson, notes: 'New' });
+      qb.single.mockResolvedValueOnce({
+        data: { ...baseLesson, notes: 'New' },
+        error: null,
+      });
+      const fromSpy = jest.fn(() => qb);
+      const supabase = { from: fromSpy };
+
+      await updateLessonHandler(
+        supabase as never,
+        teacherCtx.user,
+        teacherCtx.profileMapped,
+        MOCK_DATA_IDS.lesson,
+        { notes: 'New' }
+      );
+
+      // Only the lessons table should be touched.
+      const tables = fromSpy.mock.calls.map((c) => c[0]);
+      expect(tables).not.toContain('lesson_songs');
+    });
+  });
 });
