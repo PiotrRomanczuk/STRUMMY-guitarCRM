@@ -60,6 +60,23 @@ export const UpdateRepertoireInputSchema = z.object({
   priority: RepertoirePriorityEnum.optional(),
 });
 
+/**
+ * Bulk reorder input. Each entry pairs an existing repertoire row id with
+ * its new sort_order. Validated independently — the action confirms
+ * ownership before issuing the updates.
+ */
+export const ReorderRepertoireInputSchema = z
+  .array(
+    z.object({
+      id: z.string().uuid(),
+      sort_order: z.number().int().min(0),
+    })
+  )
+  .min(1, 'At least one item is required')
+  .max(500, 'Cannot reorder more than 500 items at once');
+
+export type ReorderRepertoireInput = z.infer<typeof ReorderRepertoireInputSchema>;
+
 export type StudentRepertoireType = z.infer<typeof StudentRepertoireSchema>;
 export type CreateRepertoireInput = z.infer<typeof CreateRepertoireInputSchema>;
 export type UpdateRepertoireInput = z.infer<typeof UpdateRepertoireInputSchema>;

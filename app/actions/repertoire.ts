@@ -7,6 +7,7 @@ import { guardTestAccountMutation } from '@/lib/auth/test-account-guard';
 import {
   CreateRepertoireInputSchema,
   UpdateRepertoireInputSchema,
+  ReorderRepertoireInputSchema,
 } from '@/schemas/StudentRepertoireSchema';
 import type { StudentRepertoireWithSong } from '@/types/StudentRepertoire';
 import { createLogger } from '@/lib/logger';
@@ -184,10 +185,7 @@ export async function removeFromRepertoireAction(
     .eq('id', repertoireId)
     .single();
 
-  const { error } = await supabase
-    .from('student_repertoire')
-    .delete()
-    .eq('id', repertoireId);
+  const { error } = await supabase.from('student_repertoire').delete().eq('id', repertoireId);
 
   if (error) {
     log.error('Failed to remove from repertoire', { repertoireId, error });
@@ -268,7 +266,19 @@ export async function addSongToNextLessonAction(
 export async function searchSongsForRepertoireAction(
   query: string,
   studentId: string
-): Promise<{ data: Array<{ id: string; title: string; author: string; level: string | null; key: string | null; cover_image_url: string | null }> } | { error: string }> {
+): Promise<
+  | {
+      data: Array<{
+        id: string;
+        title: string;
+        author: string;
+        level: string | null;
+        key: string | null;
+        cover_image_url: string | null;
+      }>;
+    }
+  | { error: string }
+> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -356,4 +366,78 @@ export async function getStudentSongProgressAction(
   }
 
   return { progressMap };
+}
+
+/**
+ * Bulk update sort_order for a set of repertoire rows owned by the caller's
+ * student. RLS is the authorisation backbone: a student attempting to reorder
+ * another student's rows triggers an RLS rejection that bubbles up as
+ * `{ error }`. The action also requires every input id to exist and belong to
+ * the same student before it issues the updates, so the operation is atomic
+ * from the user's perspective (either all rows are reordered or none are).
+ *
+ * @see tasks/unbreakable-core.md → repertoire:sort-order-persists
+ */
+export async function reorderRepertoireAction(
+  items: ReorderRepertoireInput
+): Promise<{ success: true; updated: number } | { error: string }> {
+  const { isDevelopment } = await getUserWithRolesSSR();
+  const guard = guardTestAccountMutation(isDevelopment);
+  if (guard) return { error: guard.error };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { error: 'Unauthorized' };
+  }
+
+  const parsed = ReorderRepertoireInputSchema.safeParse(items);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
+  // Pre-flight: confirm every id resolves to a row whose student_id matches.
+  // RLS would also catch this, but doing it up-front means a single rejected
+  // id aborts the whole operation cleanly without leaving the rest applied.
+  const ids = parsed.data.map((i) => i.id);
+  const { data: rows, error: lookupError } = await supabase
+    .from('student_repertoire')
+    .select('id, student_id')
+    .in('id', ids);
+
+  if (lookupError) {
+    log.error('Failed to look up repertoire rows for reorder', { error: lookupError });
+    return { error: lookupError.message };
+  }
+  if (!rows || rows.length !== ids.length) {
+    return { error: 'One or more repertoire entries not found' };
+  }
+  const studentIds = new Set(rows.map((r) => r.student_id));
+  if (studentIds.size !== 1) {
+    return { error: 'Reorder must target a single student' };
+  }
+
+  // Issue the updates. Sequential rather than Promise.all so a per-row RLS
+  // rejection halts the rest with a clean error message.
+  let updated = 0;
+  for (const item of parsed.data) {
+    const { error } = await supabase
+      .from('student_repertoire')
+      .update({ sort_order: item.sort_order })
+      .eq('id', item.id);
+    if (error) {
+      log.error('Failed to update sort_order', { id: item.id, error });
+      return { error: error.message };
+    }
+    updated += 1;
+  }
+
+  const targetStudent = [...studentIds][0];
+  revalidatePath(`/dashboard/users/${targetStudent}`);
+  revalidatePath('/dashboard/repertoire');
+  return { success: true, updated };
 }
