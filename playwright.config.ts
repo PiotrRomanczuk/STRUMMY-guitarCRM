@@ -2,7 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 import { execSync } from 'child_process';
 import * as dotenv from 'dotenv';
 
-// Load test environment variables from .env.local
+// Load test environment variables. tests/.env.e2e first so CI can rely on
+// committed defaults; .env.local second so a developer's local overrides win.
+dotenv.config({ path: 'tests/.env.e2e' });
 dotenv.config({ path: '.env.local' });
 
 // Check if local Supabase is running on port 54321
@@ -61,6 +63,9 @@ Object.entries(testCredentials).forEach(([key, value]) => {
 export default defineConfig({
   testDir: './tests',
   testMatch: /.*\.spec\.ts/,
+
+  // Global setup - idempotent seeding of admin/teacher/student accounts.
+  globalSetup: './tests/global-setup.ts',
 
   // Global teardown - cleanup test data after all tests
   globalTeardown: './tests/global-teardown.ts',

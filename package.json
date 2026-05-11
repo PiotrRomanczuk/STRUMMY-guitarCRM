@@ -72,7 +72,9 @@
     "test:pw:tablet": "playwright test --project=\"iPad Pro\" --project=\"iPad (gen 7)\"",
     "test:pw:devices": "playwright test --project=\"iPhone 12\" --project=\"iPad Pro\" --project=\"Desktop Chrome\"",
     "test:cleanup": "npx tsx scripts/cleanup-test-data.ts",
-    "check:unbreakable": "node scripts/testing/check-unbreakable.cjs"
+    "check:unbreakable": "node scripts/testing/check-unbreakable.cjs",
+    "test:pw:e2e:precheck": "./scripts/testing/e2e-precheck.sh",
+    "test:pw:e2e:full": "./scripts/testing/e2e-precheck.sh && playwright test"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.37",
