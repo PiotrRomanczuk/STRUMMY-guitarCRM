@@ -13,6 +13,12 @@ concurrency:
 
 env:
   NODE_VERSION: '20'
+  # Vercel CLI uses these to identify the project on `vercel pull/build/deploy`.
+  # Without them it falls back to directory-name autodetect, which rejects the
+  # uppercase repo name (STRUMMY-guitarCRM) after the rename — breaks the
+  # deploy-preview job. See issue #325. Matches the pattern in deploy.yml.
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'mock-key' }}
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'mock-key' }}
