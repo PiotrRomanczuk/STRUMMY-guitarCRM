@@ -6,9 +6,13 @@ import { fail, ok } from '../format.js';
 // Schemas
 // ----------------------------------------------------------------------------
 
-const STUDENT_STATUS = z.enum(['active', 'archived', 'lead', 'trial', 'churned', 'all']);
+// Mirrors prod's student_status enum exactly (plus 'all' as MCP-only sugar to
+// skip filtering). Earlier versions included lead/trial/churned which don't
+// exist on the live DB and would fail at query time. See issue #322.
+const STUDENT_STATUS = z.enum(['active', 'archived', 'all']);
 
-const SONG_STATUS = z.enum(['to_learn', 'in_progress', 'review', 'mastered', 'paused']);
+// Mirrors prod's song_progress_status enum exactly.
+const SONG_STATUS = z.enum(['to_learn', 'started', 'remembered', 'with_author', 'mastered']);
 
 const REPERTOIRE_PRIORITY = z.enum(['high', 'normal', 'low', 'archived']);
 

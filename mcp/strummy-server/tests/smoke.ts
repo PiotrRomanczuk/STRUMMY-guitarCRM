@@ -75,6 +75,12 @@ const checks: Check[] = [];
 const list = await listStudents({ status: 'active', limit: 5 });
 checks.push(check('strummy_list_students', list, ['count', 'students']));
 
+// Exercise a non-default enum value too — guards against the kind of drift
+// that originally caused issue #322 (enum value referenced in code didn't
+// exist in the DB; smoke only ran the default and never noticed).
+const archived = await listStudents({ status: 'archived', limit: 3 });
+checks.push(check('strummy_list_students(archived)', archived, ['count', 'students']));
+
 const listText = textOf(list);
 const students = (JSON.parse(listText) as { students: Array<{ id: string }> }).students;
 
