@@ -20,7 +20,23 @@ type SupabaseServerClient = SupabaseClient<Database>;
 /**
  * Helper to get or create user profile
  */
-async function getOrCreateProfile(supabase: SupabaseServerClient, userId: string, email: string) {
+type ProfileResult =
+  | {
+      ok: true;
+      profile: {
+        isAdmin: boolean;
+        isTeacher: boolean;
+        isStudent: boolean;
+        isDevelopment: boolean;
+      };
+    }
+  | { ok: false; status: number; error: string };
+
+async function getOrCreateProfile(
+  supabase: SupabaseServerClient,
+  userId: string,
+  email: string
+): Promise<ProfileResult> {
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('is_admin, is_teacher, is_student, is_development')
@@ -42,29 +58,40 @@ async function getOrCreateProfile(supabase: SupabaseServerClient, userId: string
       .single();
 
     if (createError) {
-      logger.error('Error creating profile:', createError);
-      return null;
+      logger.error('[API/Songs] Error creating profile', { userId, error: createError });
+      return { ok: false, status: 500, error: 'Error creating user profile' };
     }
 
     return {
-      isAdmin: newProfile.is_admin,
-      isTeacher: newProfile.is_teacher,
-      isStudent: newProfile.is_student,
-      isDevelopment: newProfile.is_development ?? false,
+      ok: true,
+      profile: {
+        isAdmin: newProfile.is_admin,
+        isTeacher: newProfile.is_teacher,
+        isStudent: newProfile.is_student,
+        isDevelopment: newProfile.is_development ?? false,
+      },
     };
   }
 
   if (profileError) {
-    logger.error('Error fetching profile:', profileError);
-    // Return a default profile for now to unblock testing
-    return { isAdmin: false, isTeacher: false, isStudent: true, isDevelopment: false };
+    // Surface DB errors instead of silently demoting admins to students
+    // (was: returned hardcoded {isStudent: true} → intermittent 403s).
+    logger.error('[API/Songs] Error fetching profile', {
+      userId,
+      code: profileError.code,
+      message: profileError.message,
+    });
+    return { ok: false, status: 500, error: 'Failed to load user profile' };
   }
 
   return {
-    isAdmin: profile.is_admin,
-    isTeacher: profile.is_teacher,
-    isStudent: profile.is_student,
-    isDevelopment: profile.is_development ?? false,
+    ok: true,
+    profile: {
+      isAdmin: profile.is_admin,
+      isTeacher: profile.is_teacher,
+      isStudent: profile.is_student,
+      isDevelopment: profile.is_development ?? false,
+    },
   };
 }
 
@@ -114,10 +141,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const profile = await getOrCreateProfile(supabase, user.id, user.email || '');
-    if (!profile) {
-      return NextResponse.json({ error: 'Error creating user profile' }, { status: 500 });
+    const profileResult = await getOrCreateProfile(supabase, user.id, user.email || '');
+    if (!profileResult.ok) {
+      return NextResponse.json({ error: profileResult.error }, { status: profileResult.status });
     }
+    const profile = profileResult.profile;
 
     const { searchParams } = new URL(request.url);
     const queryParams = parseQueryParams(searchParams);
@@ -222,11 +250,12 @@ export async function POST(request: NextRequest) {
       }
 
       user = cookieUser;
-      profile = await getOrCreateProfile(supabase, user.id, user.email || '');
+      const profileResult = await getOrCreateProfile(supabase, user.id, user.email || '');
 
-      if (!profile) {
-        return NextResponse.json({ error: 'Error creating user profile' }, { status: 500 });
+      if (!profileResult.ok) {
+        return NextResponse.json({ error: profileResult.error }, { status: profileResult.status });
       }
+      profile = profileResult.profile;
     }
 
     if (profile.isDevelopment) {
@@ -295,10 +324,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const profile = await getOrCreateProfile(supabase, user.id, user.email || '');
-    if (!profile) {
-      return NextResponse.json({ error: 'Error creating user profile' }, { status: 500 });
+    const profileResult = await getOrCreateProfile(supabase, user.id, user.email || '');
+    if (!profileResult.ok) {
+      return NextResponse.json({ error: profileResult.error }, { status: profileResult.status });
     }
+    const profile = profileResult.profile;
 
     if (profile.isDevelopment) {
       return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
@@ -356,11 +386,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const profile = await getOrCreateProfile(supabase, user.id, user.email || '');
+    const profileResult = await getOrCreateProfile(supabase, user.id, user.email || '');
 
-    if (!profile) {
-      return NextResponse.json({ error: 'Error creating user profile' }, { status: 500 });
+    if (!profileResult.ok) {
+      return NextResponse.json({ error: profileResult.error }, { status: profileResult.status });
     }
+    const profile = profileResult.profile;
 
     if (profile.isDevelopment) {
       return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
