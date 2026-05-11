@@ -49,7 +49,9 @@ function MobileMenu({
         ) : user ? (
           <>
             <div className="flex flex-col py-2 px-2">
-              <div className="text-sm font-medium text-primary-foreground/90 break-all">{user.email}</div>
+              <div className="text-sm font-medium text-primary-foreground/90 break-all">
+                {user.email}
+              </div>
               <RoleDisplay roles={roles} />
             </div>
             <button
@@ -119,7 +121,9 @@ function DesktopAuthControls({
       ) : user ? (
         <>
           <div className="hidden sm:flex flex-col items-end">
-            <div className="text-xs sm:text-sm font-medium text-primary-foreground/90 truncate">{user.email}</div>
+            <div className="text-xs sm:text-sm font-medium text-primary-foreground/90 truncate">
+              {user.email}
+            </div>
             <RoleDisplay roles={roles} />
           </div>
           <button
@@ -211,39 +215,34 @@ export default function Header({
   const [isTeacher, setIsTeacher] = useState(initialIsTeacher);
   const [isStudent, setIsStudent] = useState(initialIsStudent);
 
-  // Poll for auth state changes when user logs in
+  // Sync Header state with auth events.
+  //
+  // Roles come from SSR props (resolved server-side via RLS-aware queries) and
+  // are intentionally NOT refetched here — the prior implementation queried a
+  // non-existent `user_roles` table and called router.refresh() on every
+  // TOKEN_REFRESHED event (~hourly), causing periodic full-page refreshes.
+  //
+  // On SIGNED_IN/USER_UPDATED we update the local user object so the email
+  // and signed-in UI render immediately; SSR re-hydration on the next
+  // navigation keeps role flags consistent. On SIGNED_OUT we clear local
+  // state and call router.refresh() so protected server components re-render
+  // with the logged-out session.
   useEffect(() => {
     const supabase = createClient();
 
-    // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-        // User signed in or session updated, refresh their roles
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         if (session?.user) {
           setUser({ id: session.user.id, email: session.user.email });
-
-          // Fetch updated roles
-          const { data: roles } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id);
-
-          if (roles) {
-            setIsAdmin(roles.some((r) => r.role === 'admin'));
-            setIsTeacher(roles.some((r) => r.role === 'teacher'));
-            setIsStudent(roles.some((r) => r.role === 'student'));
-          }
-
-          // Refresh the page to get updated server state
-          router.refresh();
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setIsAdmin(false);
         setIsTeacher(false);
         setIsStudent(false);
+        router.refresh();
       }
     });
 
@@ -253,7 +252,11 @@ export default function Header({
   }, [router]);
 
   // Hide header on dashboard routes where Sidebar is used
-  if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/student') || pathname?.startsWith('/teacher')) {
+  if (
+    pathname?.startsWith('/dashboard') ||
+    pathname?.startsWith('/student') ||
+    pathname?.startsWith('/teacher')
+  ) {
     return null;
   }
 
