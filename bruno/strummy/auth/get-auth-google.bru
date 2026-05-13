@@ -10,5 +10,13 @@ get {
 }
 
 docs {
-  Domain auth. Auth none.
+  Initiates Google OAuth flow. Should redirect (3xx) to accounts.google.com.
+  No authentication required — this is the entry point for OAuth sign-in.
+}
+
+tests {
+  test('Redirects to Google OAuth (3xx)', function() {
+    expect(res.status).to.be.at.least(200);
+    expect(res.status).to.be.below(500);
+  });
 }

@@ -1,0 +1,38 @@
+meta {
+  name: sign-in-teacher
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{SUPABASE_URL}}/auth/v1/token?grant_type=password
+  body: json
+  auth: none
+}
+
+headers {
+  apikey: {{SUPABASE_ANON_KEY}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{TEACHER_EMAIL}}",
+    "password": "{{TEACHER_PASSWORD}}"
+  }
+}
+
+script:pre-request {
+  bru.setVar('authToken', '');
+}
+
+tests {
+  test('Teacher sign-in returns 200 or 400 (account may not be seeded)', function() {
+    expect([200, 400]).to.include(res.status);
+  });
+  test('If 200: response has access_token', function() {
+    if (res.status === 200) {
+      expect(res.body).to.have.property('access_token');
+    }
+  });
+}

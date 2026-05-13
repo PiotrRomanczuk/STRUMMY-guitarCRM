@@ -1,0 +1,21 @@
+meta {
+  name: get-oauth2-callback-error
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/oauth2/callback?error=access_denied
+  auth: inherit
+}
+
+docs {
+  When Google returns ?error=..., the route should redirect to /dashboard?error=google_auth_error.
+  Not 5xx — any redirect or error response is acceptable.
+}
+
+tests {
+  test('Google error param handled (not 5xx)', function() {
+    expect(res.status).to.be.below(500);
+  });
+}

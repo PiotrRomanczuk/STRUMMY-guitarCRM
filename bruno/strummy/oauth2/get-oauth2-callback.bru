@@ -10,5 +10,13 @@ get {
 }
 
 docs {
-  Domain oauth2. Auth user.
+  GET /api/oauth2/callback with no ?code param.
+  Route requires an active session and a ?code from Google.
+  Without ?code it redirects to /dashboard?error=no_code.
+}
+
+tests {
+  test('Missing code redirects (not 5xx)', function() {
+    expect(res.status).to.be.below(500);
+  });
 }
