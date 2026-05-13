@@ -1,37 +1,33 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { computeChordAnalysis } from '@/lib/services/chord-analytics';
 import { logger } from '@/lib/logger';
 
-export async function GET() {
-  try {
-    const { user, isAdmin, isTeacher } = await getUserWithRolesSSR();
+export async function GET(request: Request) {
+  return withApiAuth(request, async ({ roles }) => {
+    try {
+      if (!roles.isAdmin && !roles.isTeacher) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const adminClient = createAdminClient();
+
+      const { data: songs, error } = await adminClient
+        .from('songs')
+        .select('id, title, author, key, chords')
+        .is('deleted_at', null);
+
+      if (error) {
+        logger.error('[ChordAnalysis] Query error:', error);
+        return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
+      }
+
+      const result = computeChordAnalysis(songs ?? []);
+      return NextResponse.json(result);
+    } catch (error) {
+      logger.error('[ChordAnalysis] Error:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    if (!isAdmin && !isTeacher) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const adminClient = createAdminClient();
-
-    const { data: songs, error } = await adminClient
-      .from('songs')
-      .select('id, title, author, key, chords')
-      .is('deleted_at', null);
-
-    if (error) {
-      logger.error('[ChordAnalysis] Query error:', error);
-      return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
-    }
-
-    const result = computeChordAnalysis(songs ?? []);
-    return NextResponse.json(result);
-  } catch (error) {
-    logger.error('[ChordAnalysis] Error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }

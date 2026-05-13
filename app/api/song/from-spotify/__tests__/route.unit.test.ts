@@ -3,11 +3,10 @@
  */
 
 import { POST } from '../route';
-import { authenticateRequest } from '@/lib/auth/api-auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getTrack, getAudioFeatures } from '@/lib/spotify';
+import type { AuthedProfile } from '@/lib/auth/loadAuthedProfile';
 
-jest.mock('@/lib/auth/api-auth');
 jest.mock('@/lib/supabase/admin');
 jest.mock('@/lib/spotify');
 jest.mock('@/lib/logger', () => ({
@@ -18,6 +17,28 @@ jest.mock('@/lib/logger', () => ({
     debug: jest.fn(),
   },
 }));
+
+// ---------------------------------------------------------------------------
+// withApiAuth mock — controls what authed profile the handler receives
+// ---------------------------------------------------------------------------
+
+let _authedProfile: AuthedProfile | null = null;
+
+jest.mock('@/lib/auth/withApiAuth', () => ({
+  withApiAuth: jest.fn(
+    async (_req: Request, handler: (authed: AuthedProfile, req: Request) => Promise<Response>) => {
+      if (!_authedProfile) {
+        const { NextResponse } = await import('next/server');
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      return handler(_authedProfile, _req);
+    }
+  ),
+}));
+
+function mockAuthAs(profile: AuthedProfile | null) {
+  _authedProfile = profile;
+}
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -50,6 +71,24 @@ const MOCK_FEATURES = {
   duration_ms: 258000,
 };
 
+const TEACHER_PROFILE: AuthedProfile = {
+  user: { id: TEACHER_ID, email: 'teacher@test.com' } as AuthedProfile['user'],
+  roles: { isAdmin: false, isTeacher: true, isStudent: false },
+  flags: { isParent: false, isDevelopment: false },
+};
+
+const ADMIN_PROFILE: AuthedProfile = {
+  user: { id: ADMIN_ID, email: 'admin@test.com' } as AuthedProfile['user'],
+  roles: { isAdmin: true, isTeacher: false, isStudent: false },
+  flags: { isParent: false, isDevelopment: false },
+};
+
+const STUDENT_PROFILE: AuthedProfile = {
+  user: { id: STUDENT_ID, email: 'student@test.com' } as AuthedProfile['user'],
+  roles: { isAdmin: false, isTeacher: false, isStudent: true },
+  flags: { isParent: false, isDevelopment: false },
+};
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -66,62 +105,26 @@ function makeRequest(body: Record<string, unknown>, apiKey?: string): Request {
   });
 }
 
-function mockAuth(userId: string) {
-  (authenticateRequest as jest.Mock).mockResolvedValue({
-    user: { id: userId, email: 'test@test.com' },
-    status: 200,
-  });
-}
-
-function mockUnauthenticated() {
-  (authenticateRequest as jest.Mock).mockResolvedValue({
-    user: null,
-    error: 'Invalid API key',
-    status: 401,
-  });
-}
-
 /**
- * Mock the admin client with profile lookup and optional song insert.
+ * Mock the admin client for song insert only.
+ * withApiAuth now handles auth — createAdminClient is only used for DB insert.
  */
-function mockAdminClient(
-  profile: {
-    is_admin: boolean;
-    is_teacher: boolean;
-    is_development?: boolean;
-  } | null,
-  insertResult?: { data?: unknown; error?: { code?: string; message: string } | null }
-) {
-  let callCount = 0;
+function mockAdminClientInsert(insertResult?: {
+  data?: unknown;
+  error?: { code?: string; message: string } | null;
+}) {
   const mock = {
-    from: jest.fn().mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) {
-        // Profile lookup
-        return {
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({
-                data: profile,
-                error: profile ? null : { code: 'PGRST116', message: 'not found' },
-              }),
-            }),
-          }),
-        };
-      }
-      // Song insert
-      return {
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue(
-              insertResult ?? {
-                data: { id: 'new-song-id', title: 'Wonderwall' },
-                error: null,
-              }
-            ),
-          }),
+    from: jest.fn().mockReturnValue({
+      insert: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue(
+            insertResult ?? {
+              data: { id: 'new-song-id', title: 'Wonderwall' },
+              error: null,
+            }
+          ),
         }),
-      };
+      }),
     }),
   };
   (createAdminClient as jest.Mock).mockReturnValue(mock);
@@ -135,17 +138,14 @@ function mockAdminClient(
 describe('POST /api/song/from-spotify', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAuthAs(null);
   });
 
   // ---- Auth ----
 
   describe('authentication', () => {
-    it('returns 401 when no auth header and no cookie session', async () => {
-      (authenticateRequest as jest.Mock).mockResolvedValue({
-        user: null,
-        error: 'Unauthorized - no valid session or API key',
-        status: 401,
-      });
+    it('returns 401 when not authenticated', async () => {
+      mockAuthAs(null);
 
       const req = makeRequest({ spotify_url: SPOTIFY_URL });
       const res = await POST(req);
@@ -154,39 +154,19 @@ describe('POST /api/song/from-spotify', () => {
     });
 
     it('returns 401 for invalid API key', async () => {
-      mockUnauthenticated();
+      mockAuthAs(null);
 
       const req = makeRequest({ spotify_url: SPOTIFY_URL }, 'gcrm_invalid_key');
       const res = await POST(req);
 
       expect(res.status).toBe(401);
       const body = await res.json();
-      expect(body.error).toContain('Invalid API key');
-    });
-
-    it('returns 401 for malformed Authorization header', async () => {
-      (authenticateRequest as jest.Mock).mockResolvedValue({
-        user: null,
-        error: 'Invalid Authorization header format. Use: Bearer <token>',
-        status: 401,
-      });
-
-      const req = new Request('http://localhost:3000/api/song/from-spotify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'NotBearer gcrm_key',
-        },
-        body: JSON.stringify({ spotify_url: SPOTIFY_URL }),
-      });
-
-      const res = await POST(req);
-      expect(res.status).toBe(401);
+      expect(body.error).toBe('Unauthorized');
     });
 
     it('returns 403 when authenticated user is a student (not teacher/admin)', async () => {
-      mockAuth(STUDENT_ID);
-      mockAdminClient({ is_admin: false, is_teacher: false });
+      mockAuthAs(STUDENT_PROFILE);
+      mockAdminClientInsert();
 
       const req = makeRequest({ spotify_url: SPOTIFY_URL }, 'gcrm_valid_key');
       const res = await POST(req);
@@ -196,19 +176,9 @@ describe('POST /api/song/from-spotify', () => {
       expect(body.error).toContain('Only teachers and admins');
     });
 
-    it('returns 404 when user profile does not exist', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient(null);
-
-      const req = makeRequest({ spotify_url: SPOTIFY_URL }, 'gcrm_valid_key');
-      const res = await POST(req);
-
-      expect(res.status).toBe(404);
-    });
-
     it('allows admin users', async () => {
-      mockAuth(ADMIN_ID);
-      mockAdminClient({ is_admin: true, is_teacher: false });
+      mockAuthAs(ADMIN_PROFILE);
+      mockAdminClientInsert();
       (getTrack as jest.Mock).mockResolvedValue(MOCK_TRACK);
       (getAudioFeatures as jest.Mock).mockResolvedValue(MOCK_FEATURES);
 
@@ -219,8 +189,8 @@ describe('POST /api/song/from-spotify', () => {
     });
 
     it('allows teacher users', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient({ is_admin: false, is_teacher: true });
+      mockAuthAs(TEACHER_PROFILE);
+      mockAdminClientInsert();
       (getTrack as jest.Mock).mockResolvedValue(MOCK_TRACK);
       (getAudioFeatures as jest.Mock).mockResolvedValue(MOCK_FEATURES);
 
@@ -235,8 +205,8 @@ describe('POST /api/song/from-spotify', () => {
 
   describe('input validation', () => {
     it('returns 400 for missing spotify_url', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient({ is_admin: false, is_teacher: true });
+      mockAuthAs(TEACHER_PROFILE);
+      mockAdminClientInsert();
 
       const req = makeRequest({}, 'gcrm_valid_key');
       const res = await POST(req);
@@ -247,8 +217,8 @@ describe('POST /api/song/from-spotify', () => {
     });
 
     it('returns 400 for empty spotify_url', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient({ is_admin: false, is_teacher: true });
+      mockAuthAs(TEACHER_PROFILE);
+      mockAdminClientInsert();
 
       const req = makeRequest({ spotify_url: '' }, 'gcrm_valid_key');
       const res = await POST(req);
@@ -257,8 +227,8 @@ describe('POST /api/song/from-spotify', () => {
     });
 
     it('returns 400 for invalid Spotify URL', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient({ is_admin: false, is_teacher: true });
+      mockAuthAs(TEACHER_PROFILE);
+      mockAdminClientInsert();
 
       const req = makeRequest({ spotify_url: 'https://example.com/not-spotify' }, 'gcrm_valid_key');
       const res = await POST(req);
@@ -269,8 +239,8 @@ describe('POST /api/song/from-spotify', () => {
     });
 
     it('returns 400 for invalid JSON body', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient({ is_admin: false, is_teacher: true });
+      mockAuthAs(TEACHER_PROFILE);
+      mockAdminClientInsert();
 
       const req = new Request('http://localhost:3000/api/song/from-spotify', {
         method: 'POST',
@@ -292,8 +262,8 @@ describe('POST /api/song/from-spotify', () => {
 
   describe('Spotify API failures', () => {
     it('returns 502 when Spotify track fetch fails', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient({ is_admin: false, is_teacher: true });
+      mockAuthAs(TEACHER_PROFILE);
+      mockAdminClientInsert();
       (getTrack as jest.Mock).mockRejectedValue(new Error('Spotify API error'));
 
       const req = makeRequest({ spotify_url: SPOTIFY_URL }, 'gcrm_valid_key');
@@ -305,8 +275,8 @@ describe('POST /api/song/from-spotify', () => {
     });
 
     it('succeeds without audio features (graceful degradation)', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient({ is_admin: false, is_teacher: true });
+      mockAuthAs(TEACHER_PROFILE);
+      mockAdminClientInsert({ data: { id: 'new-song-id', title: 'Wonderwall' }, error: null });
       (getTrack as jest.Mock).mockResolvedValue(MOCK_TRACK);
       (getAudioFeatures as jest.Mock).mockRejectedValue(new Error('Features unavailable'));
 
@@ -324,11 +294,8 @@ describe('POST /api/song/from-spotify', () => {
 
   describe('database errors', () => {
     it('returns 409 for duplicate song', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient(
-        { is_admin: false, is_teacher: true },
-        { data: null, error: { code: '23505', message: 'duplicate key' } }
-      );
+      mockAuthAs(TEACHER_PROFILE);
+      mockAdminClientInsert({ data: null, error: { code: '23505', message: 'duplicate key' } });
       (getTrack as jest.Mock).mockResolvedValue(MOCK_TRACK);
       (getAudioFeatures as jest.Mock).mockResolvedValue(MOCK_FEATURES);
 
@@ -341,11 +308,8 @@ describe('POST /api/song/from-spotify', () => {
     });
 
     it('returns 500 for generic DB error', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient(
-        { is_admin: false, is_teacher: true },
-        { data: null, error: { code: '42000', message: 'something broke' } }
-      );
+      mockAuthAs(TEACHER_PROFILE);
+      mockAdminClientInsert({ data: null, error: { code: '42000', message: 'something broke' } });
       (getTrack as jest.Mock).mockResolvedValue(MOCK_TRACK);
       (getAudioFeatures as jest.Mock).mockResolvedValue(MOCK_FEATURES);
 
@@ -360,7 +324,7 @@ describe('POST /api/song/from-spotify', () => {
 
   describe('happy path', () => {
     it('creates a draft song from Spotify URL with all metadata', async () => {
-      mockAuth(TEACHER_ID);
+      mockAuthAs(TEACHER_PROFILE);
       const createdSong = {
         id: 'new-song-id',
         title: 'Wonderwall',
@@ -373,7 +337,7 @@ describe('POST /api/song/from-spotify', () => {
         spotify_link_url: 'https://open.spotify.com/track/3n3Ppam7vgaVa1iaRUc9Lp',
         cover_image_url: 'https://i.scdn.co/image/cover.jpg',
       };
-      mockAdminClient({ is_admin: false, is_teacher: true }, { data: createdSong, error: null });
+      mockAdminClientInsert({ data: createdSong, error: null });
       (getTrack as jest.Mock).mockResolvedValue(MOCK_TRACK);
       (getAudioFeatures as jest.Mock).mockResolvedValue(MOCK_FEATURES);
 
@@ -389,7 +353,7 @@ describe('POST /api/song/from-spotify', () => {
     });
 
     it('passes the correct draft data to supabase insert', async () => {
-      mockAuth(TEACHER_ID);
+      mockAuthAs(TEACHER_PROFILE);
       (getTrack as jest.Mock).mockResolvedValue(MOCK_TRACK);
       (getAudioFeatures as jest.Mock).mockResolvedValue(MOCK_FEATURES);
 
@@ -402,24 +366,8 @@ describe('POST /api/song/from-spotify', () => {
         }),
       });
 
-      let callCount = 0;
       const adminMock = {
-        from: jest.fn().mockImplementation(() => {
-          callCount++;
-          if (callCount === 1) {
-            return {
-              select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockReturnValue({
-                  single: jest.fn().mockResolvedValue({
-                    data: { is_admin: false, is_teacher: true, is_development: false },
-                    error: null,
-                  }),
-                }),
-              }),
-            };
-          }
-          return { insert: insertFn };
-        }),
+        from: jest.fn().mockReturnValue({ insert: insertFn }),
       };
       (createAdminClient as jest.Mock).mockReturnValue(adminMock);
 
@@ -439,8 +387,8 @@ describe('POST /api/song/from-spotify', () => {
     });
 
     it('accepts spotify: URI format', async () => {
-      mockAuth(TEACHER_ID);
-      mockAdminClient({ is_admin: false, is_teacher: true });
+      mockAuthAs(TEACHER_PROFILE);
+      mockAdminClientInsert();
       (getTrack as jest.Mock).mockResolvedValue(MOCK_TRACK);
       (getAudioFeatures as jest.Mock).mockResolvedValue(MOCK_FEATURES);
 
