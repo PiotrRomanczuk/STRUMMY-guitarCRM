@@ -10,6 +10,7 @@ import {
   updateSongHandler,
   deleteSongHandler,
 } from './handlers';
+import { createListResponse } from '@/lib/api/response';
 import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
 import { authenticateRequest } from '@/lib/auth/api-auth';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -156,18 +157,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    const totalPages = Math.ceil((result.count || 0) / queryParams.limit);
-
     return NextResponse.json(
-      {
-        songs: result.songs,
-        pagination: {
-          page: queryParams.page,
-          limit: queryParams.limit,
-          total: result.count || 0,
-          totalPages,
-        },
-      },
+      createListResponse('songs', result.songs, {
+        total: result.count ?? 0,
+        page: queryParams.page,
+        limit: queryParams.limit,
+      }),
       { status: 200 }
     );
   } catch (error) {

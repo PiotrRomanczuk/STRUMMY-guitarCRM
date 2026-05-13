@@ -4,6 +4,7 @@ import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { getLessonsHandler, createLessonHandler } from './handlers';
 import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
 import { logger } from '@/lib/logger';
+import { createListResponse } from '@/lib/api/response';
 
 /**
  * Extract query parameters from request
@@ -37,10 +38,16 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: result.error }, { status: result.status });
       }
 
+      const lessons = result.lessons ?? [];
+      const count = result.count ?? 0;
       return NextResponse.json(
         {
-          lessons: result.lessons || [],
-          count: result.count || 0,
+          ...createListResponse('lessons', lessons, {
+            total: count,
+            page: queryParams.page,
+            limit: queryParams.limit,
+          }),
+          count, // legacy field — drop when frontend migrates to pagination.total
         },
         { status: 200 }
       );
