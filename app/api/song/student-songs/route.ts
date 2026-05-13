@@ -38,13 +38,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Map student_repertoire to SongWithStatus
-    const mapped: SongWithLessons[] = data.map(
-      (sr: { songs: SongWithLessons; current_status: string }) => ({
-        ...sr.songs,
-        status: sr.current_status,
-      })
-    );
+    // Map student_repertoire to SongWithStatus.
+    // Supabase types the FK join as any[] but many-to-one returns a single object at runtime.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mapped: SongWithLessons[] = (data as any[]).map((sr) => ({
+      ...(Array.isArray(sr.songs) ? sr.songs[0] : sr.songs),
+      status: sr.current_status,
+    }));
 
     // Optionally filter by level
     const filtered = level ? mapped.filter((song) => song.level === level) : mapped;
