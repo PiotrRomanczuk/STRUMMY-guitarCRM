@@ -1,10 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import {
-  getWeeklyInsightsData,
-  getLastWeekDateRange,
-} from '@/lib/services/weekly-insights';
+import { getWeeklyInsightsData, getLastWeekDateRange } from '@/lib/services/weekly-insights';
 import { generateWeeklyInsightsHtml } from '@/lib/email/templates/weekly-insights';
 import transporter from '@/lib/email/smtp-client';
 import { logger } from '@/lib/logger';
@@ -26,11 +23,11 @@ export async function sendWeeklyInsights(): Promise<SendWeeklyInsightsResult> {
   try {
     const supabase = await createClient();
 
-    // Get all teachers and admins
+    // Get all teachers and admins (schema uses boolean role flags, not a `role` column).
     const { data: teachers, error: teachersError } = await supabase
       .from('profiles')
       .select('id, full_name, email')
-      .in('role', ['teacher', 'admin'])
+      .or('is_teacher.eq.true,is_admin.eq.true')
       .eq('is_active', true);
 
     if (teachersError) {
@@ -48,7 +45,6 @@ export async function sendWeeklyInsights(): Promise<SendWeeklyInsightsResult> {
     // Send email to each teacher
     for (const teacher of teachers) {
       try {
-
         // Get weekly insights data for this teacher
         const insightsData = await getWeeklyInsightsData(teacher.id, start, end);
 
