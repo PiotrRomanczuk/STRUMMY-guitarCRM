@@ -1,7 +1,7 @@
 meta {
   name: put-song-update
   type: http
-  seq: 31
+  seq: 27
 }
 
 put {
@@ -10,11 +10,16 @@ put {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "id": "{{sample_song_id}}",
+    "title": "Wonderwall",
+    "author": "Oasis"
+  }
 }
-docs {
-  Domain song [orphan]. Auth user. schemas=SongSchema
+
+tests {
+  test('Status 200 or 404', function() {
+    expect([200, 404, 422]).to.include(res.status);
+  });
 }

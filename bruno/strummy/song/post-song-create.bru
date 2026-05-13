@@ -1,7 +1,7 @@
 meta {
   name: post-song-create
   type: http
-  seq: 14
+  seq: 13
 }
 
 post {
@@ -10,11 +10,17 @@ post {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "title": "Bruno Create Endpoint Test",
+    "author": "Bruno Tester",
+    "level": "beginner",
+    "key": "G"
+  }
 }
-docs {
-  Domain song [orphan]. Auth user. schemas=SongSchema
+
+tests {
+  test('Status 200 or 201', function() {
+    expect([200, 201]).to.include(res.status);
+  });
 }

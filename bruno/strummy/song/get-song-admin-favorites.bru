@@ -1,7 +1,7 @@
 meta {
   name: get-song-admin-favorites
   type: http
-  seq: 10
+  seq: 2
 }
 
 get {
@@ -9,6 +9,8 @@ get {
   auth: inherit
 }
 
-docs {
-  Domain song [orphan]. Auth user, role:admin.
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
 }

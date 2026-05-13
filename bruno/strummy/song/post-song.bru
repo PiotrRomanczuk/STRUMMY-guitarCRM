@@ -10,11 +10,24 @@ post {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "title": "Bruno Test Song",
+    "author": "Bruno Tester",
+    "level": "beginner",
+    "key": "C"
+  }
 }
-docs {
-  Domain song. Auth user, admin-client, role:admin+teacher+student.
+
+tests {
+  test('Status 201', function() {
+    expect(res.status).to.equal(201);
+  });
+  test('Response has id', function() {
+    expect(res.body).to.have.property('id');
+    bru.setVar('created_song_id', res.body.id);
+  });
+  test('Title matches', function() {
+    expect(res.body.title).to.equal('Bruno Test Song');
+  });
 }

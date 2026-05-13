@@ -1,7 +1,7 @@
 meta {
   name: get-song-stats-advanced
   type: http
-  seq: 26
+  seq: 18
 }
 
 get {
@@ -9,6 +9,8 @@ get {
   auth: inherit
 }
 
-docs {
-  Domain song. Auth admin-client, role:admin+teacher.
+tests {
+  test('Status 200 or 403', function() {
+    expect([200, 403]).to.include(res.status);
+  });
 }

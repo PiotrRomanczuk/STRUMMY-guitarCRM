@@ -1,7 +1,7 @@
 meta {
   name: get-song-favorites
   type: http
-  seq: 16
+  seq: 5
 }
 
 get {
@@ -9,6 +9,11 @@ get {
   auth: inherit
 }
 
-docs {
-  Domain song [orphan]. Auth user. schemas=UserFavoriteSchema
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response is an array', function() {
+    expect(res.body).to.be.an('array');
+  });
 }

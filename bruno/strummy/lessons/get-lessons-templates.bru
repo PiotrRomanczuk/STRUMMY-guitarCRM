@@ -1,7 +1,7 @@
 meta {
   name: get-lessons-templates
   type: http
-  seq: 24
+  seq: 9
 }
 
 get {
@@ -9,6 +9,12 @@ get {
   auth: inherit
 }
 
-docs {
-  Domain lessons [orphan]. Auth user.
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response has templates array', function() {
+    expect(res.body).to.have.property('templates');
+    expect(res.body.templates).to.be.an('array');
+  });
 }

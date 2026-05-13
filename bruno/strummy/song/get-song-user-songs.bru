@@ -1,7 +1,7 @@
 meta {
   name: get-song-user-songs
   type: http
-  seq: 32
+  seq: 23
 }
 
 get {
@@ -9,6 +9,11 @@ get {
   auth: inherit
 }
 
-docs {
-  Domain song [orphan]. Auth user.
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response is an array', function() {
+    expect(res.body).to.be.an('array');
+  });
 }

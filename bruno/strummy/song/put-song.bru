@@ -1,7 +1,7 @@
 meta {
   name: put-song
   type: http
-  seq: 23
+  seq: 26
 }
 
 put {
@@ -10,11 +10,18 @@ put {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "id": "{{sample_song_id}}",
+    "title": "Wonderwall (Updated)",
+    "author": "Oasis",
+    "level": "beginner",
+    "key": "Em"
+  }
 }
-docs {
-  Domain song. Auth user, admin-client, role:admin+teacher+student.
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
 }

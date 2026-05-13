@@ -1,7 +1,7 @@
 meta {
   name: get-song-user-test-song
   type: http
-  seq: 33
+  seq: 24
 }
 
 get {
@@ -9,6 +9,8 @@ get {
   auth: inherit
 }
 
-docs {
-  Domain song [orphan]. Auth user.
+tests {
+  test('Status 200 or 404', function() {
+    expect([200, 404]).to.include(res.status);
+  });
 }

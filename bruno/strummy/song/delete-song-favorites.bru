@@ -1,14 +1,16 @@
 meta {
   name: delete-song-favorites
   type: http
-  seq: 18
+  seq: 97
 }
 
 delete {
-  url: {{baseUrl}}/api/song/favorites
+  url: {{baseUrl}}/api/song/favorites?song_id={{sample_song_id}}
   auth: inherit
 }
 
-docs {
-  Domain song [orphan]. Auth user. schemas=UserFavoriteSchema
+tests {
+  test('Status 200 or 404', function() {
+    expect([200, 404]).to.include(res.status);
+  });
 }

@@ -1,14 +1,24 @@
 meta {
   name: get-lessons-search
   type: http
-  seq: 15
+  seq: 7
 }
 
 get {
-  url: {{baseUrl}}/api/lessons/search
+  url: {{baseUrl}}/api/lessons/search?q=practice
   auth: inherit
 }
 
-docs {
-  Domain lessons. Auth user.
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response has lessons array', function() {
+    expect(res.body).to.have.property('lessons');
+    expect(res.body.lessons).to.be.an('array');
+  });
+  test('Response has pagination', function() {
+    expect(res.body).to.have.property('pagination');
+    expect(res.body.pagination).to.have.property('total');
+  });
 }

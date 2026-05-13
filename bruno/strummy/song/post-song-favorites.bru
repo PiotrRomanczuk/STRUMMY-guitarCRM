@@ -1,7 +1,7 @@
 meta {
   name: post-song-favorites
   type: http
-  seq: 17
+  seq: 15
 }
 
 post {
@@ -10,11 +10,14 @@ post {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "song_id": "{{sample_song_id}}"
+  }
 }
-docs {
-  Domain song [orphan]. Auth user. schemas=UserFavoriteSchema
+
+tests {
+  test('Status 200 or 201 or 409', function() {
+    expect([200, 201, 409]).to.include(res.status);
+  });
 }

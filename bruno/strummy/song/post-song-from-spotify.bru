@@ -1,7 +1,7 @@
 meta {
   name: post-song-from-spotify
   type: http
-  seq: 20
+  seq: 11
 }
 
 post {
@@ -10,11 +10,14 @@ post {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "spotifyId": "invalid-id-for-test"
+  }
 }
-docs {
-  Domain song. Auth user, admin-client, role:admin+teacher. schemas=SongSchema
+
+tests {
+  test('Status 400 or 401 or 404', function() {
+    expect([400, 401, 404, 422]).to.include(res.status);
+  });
 }

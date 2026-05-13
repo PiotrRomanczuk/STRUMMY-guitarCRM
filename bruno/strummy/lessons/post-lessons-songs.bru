@@ -1,7 +1,7 @@
 meta {
   name: post-lessons-songs
   type: http
-  seq: 20
+  seq: 17
 }
 
 post {
@@ -10,11 +10,16 @@ post {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "lesson_id": "{{sample_lesson_id}}",
+    "song_id": "{{sample_song_id}}",
+    "status": "in_progress"
+  }
 }
-docs {
-  Domain lessons [orphan]. Auth user.
+
+tests {
+  test('Status 200 or 201 or 409', function() {
+    expect([200, 201, 409]).to.include(res.status);
+  });
 }

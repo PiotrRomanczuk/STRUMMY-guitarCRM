@@ -10,11 +10,21 @@ post {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "songs": [
+      {
+        "title": "Bulk Song 1",
+        "author": "Tester",
+        "level": "beginner",
+        "key": "C"
+      }
+    ]
+  }
 }
-docs {
-  Domain song [orphan]. Auth user. schemas=SongSchema
+
+tests {
+  test('Status 200 or 201', function() {
+    expect([200, 201]).to.include(res.status);
+  });
 }

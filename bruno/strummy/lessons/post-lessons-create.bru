@@ -1,7 +1,7 @@
 meta {
   name: post-lessons-create
   type: http
-  seq: 9
+  seq: 16
 }
 
 post {
@@ -10,11 +10,17 @@ post {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "teacher_id": "{{sample_teacher_id}}",
+    "student_id": "{{sample_student_id}}",
+    "scheduled_at": "2026-08-01T10:00:00.000Z",
+    "status": "SCHEDULED"
+  }
 }
-docs {
-  Domain lessons. Auth user.
+
+tests {
+  test('Status 200 or 201', function() {
+    expect([200, 201]).to.include(res.status);
+  });
 }

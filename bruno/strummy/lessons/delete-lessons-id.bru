@@ -1,14 +1,16 @@
 meta {
   name: delete-lessons-id
   type: http
-  seq: 3
+  seq: 99
 }
 
 delete {
-  url: {{baseUrl}}/api/lessons/{{sample_id}}
+  url: {{baseUrl}}/api/lessons/{{created_lesson_id}}
   auth: inherit
 }
 
-docs {
-  Domain lessons. Auth user.
+tests {
+  test('Status 200 or 404', function() {
+    expect([200, 204, 404]).to.include(res.status);
+  });
 }

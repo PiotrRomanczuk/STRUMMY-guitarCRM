@@ -5,10 +5,24 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/song/{{sample_id}}
+  url: {{baseUrl}}/api/song/{{sample_song_id}}
   auth: inherit
 }
 
 docs {
   Domain song. Auth user.
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response has song id', function() {
+    expect(res.body).to.have.property('id');
+    expect(res.body.id).to.equal(bru.getEnvVar('sample_song_id'));
+  });
+  test('Response has title', function() {
+    expect(res.body).to.have.property('title');
+    expect(res.body.title).to.be.a('string');
+  });
 }

@@ -1,7 +1,7 @@
 meta {
   name: get-lessons-stats-advanced
   type: http
-  seq: 21
+  seq: 10
 }
 
 get {
@@ -9,6 +9,8 @@ get {
   auth: inherit
 }
 
-docs {
-  Domain lessons. Auth user, admin-client.
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
 }

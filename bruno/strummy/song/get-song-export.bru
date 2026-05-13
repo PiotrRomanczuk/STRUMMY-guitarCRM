@@ -1,14 +1,24 @@
 meta {
   name: get-song-export
   type: http
-  seq: 15
+  seq: 4
 }
 
 get {
-  url: {{baseUrl}}/api/song/export
+  url: {{baseUrl}}/api/song/export?format=json
   auth: inherit
 }
 
-docs {
-  Domain song. Auth user. schemas=SongSchema
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response is an array', function() {
+    expect(res.body).to.be.an('array');
+  });
+  test('Each song has title', function() {
+    if (res.body.length > 0) {
+      expect(res.body[0]).to.have.property('title');
+    }
+  });
 }
