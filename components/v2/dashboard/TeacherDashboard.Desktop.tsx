@@ -87,7 +87,7 @@ export default function TeacherDashboardDesktop({
         data={data.chartData.map((d) => ({
           day: d.name,
           lessons: d.lessons,
-          assignmentsCreated: d.assignments,
+          assignmentsCreated: d.assignmentsCreated,
         }))}
       />
     </div>

@@ -2,30 +2,31 @@
 
 import { Users } from 'lucide-react';
 import Link from 'next/link';
-
-interface StudentSummary {
-  id: string;
-  name: string;
-  level: string;
-  lessonsCompleted: number;
-  nextLesson: string;
-}
+import { formatDistanceToNow } from 'date-fns';
+import type { StudentV2 } from '@/types/teacher-dashboard-v2';
 
 interface StudentsWidgetProps {
-  students: StudentSummary[];
+  students: StudentV2[];
 }
 
 export function StudentsWidget({ students }: StudentsWidgetProps) {
+  const sorted = [...students].sort((a, b) => b.overdueAssignmentCount - a.overdueAssignmentCount);
+
   return (
     <section className="bg-card border border-border rounded-[14px] overflow-hidden">
       <div className="px-6 pt-5 pb-1 flex items-center justify-between">
         <div>
-          <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-[.14em] font-medium">Studio</div>
+          <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-[.14em] font-medium">
+            Studio
+          </div>
           <div className="font-serif text-lg font-normal tracking-[-0.01em] mt-0.5">
             {students.length} active {students.length === 1 ? 'student' : 'students'}
           </div>
         </div>
-        <Link href="/dashboard/users" className="text-muted-foreground text-xs hover:text-foreground transition-colors">
+        <Link
+          href="/dashboard/users"
+          className="text-muted-foreground text-xs hover:text-foreground transition-colors"
+        >
           View all &rarr;
         </Link>
       </div>
@@ -40,9 +41,19 @@ export function StudentsWidget({ students }: StudentsWidgetProps) {
         </div>
       ) : (
         <div className="px-6 pb-5">
-          {students.slice(0, 6).map((student, i) => {
-            const initials = student.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
-            const isToday = student.nextLesson.toLowerCase().includes('today');
+          {sorted.slice(0, 6).map((student) => {
+            const initials = student.name
+              .split(' ')
+              .map((w) => w[0])
+              .join('')
+              .slice(0, 2)
+              .toUpperCase();
+            const lastLesson = student.lastLessonAt
+              ? formatDistanceToNow(new Date(student.lastLessonAt), { addSuffix: true })
+              : null;
+            const nextLesson = student.nextLessonAt
+              ? formatDistanceToNow(new Date(student.nextLessonAt), { addSuffix: true })
+              : null;
 
             return (
               <Link
@@ -56,17 +67,25 @@ export function StudentsWidget({ students }: StudentsWidgetProps) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[13px] font-medium truncate">{student.name}</span>
+                    {student.overdueAssignmentCount > 0 && (
+                      <span className="text-[10px] font-medium text-destructive bg-destructive/10 rounded px-1 py-0.5 shrink-0">
+                        {student.overdueAssignmentCount} overdue
+                      </span>
+                    )}
                   </div>
                   <div className="font-mono text-[11px] text-muted-foreground mt-0.5">
-                    {student.lessonsCompleted} lessons · {student.level}
+                    <span>{student.level}</span>
+                    {' · '}
+                    <span>{student.repertoireCount} songs</span>
                   </div>
                 </div>
-                <div className="font-mono text-[11px] text-right shrink-0">
-                  {isToday ? (
-                    <span className="text-primary font-medium">{student.nextLesson}</span>
-                  ) : (
-                    <span className="text-muted-foreground">{student.nextLesson}</span>
-                  )}
+                <div className="font-mono text-[11px] text-right shrink-0 space-y-0.5">
+                  <div className="text-muted-foreground">
+                    {lastLesson ? lastLesson : 'No lessons yet'}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {nextLesson ? nextLesson : 'None scheduled'}
+                  </div>
                 </div>
               </Link>
             );

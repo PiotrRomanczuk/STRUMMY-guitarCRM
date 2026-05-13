@@ -10,7 +10,11 @@ export type TeacherDashboardData = {
     name: string;
     level: 'Beginner' | 'Intermediate' | 'Advanced';
     lessonsCompleted: number;
+    lastLessonAt: string | null;
+    nextLessonAt: string | null;
     nextLesson: string;
+    overdueAssignmentCount: number;
+    repertoireCount: number;
     avatar?: string;
   }[];
   activities: {
@@ -22,7 +26,7 @@ export type TeacherDashboardData = {
   chartData: {
     name: string;
     lessons: number;
-    assignments: number;
+    assignmentsCreated: number;
   }[];
   songs: {
     id: string;
@@ -131,38 +135,49 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
       ? await supabase.from('profiles').select('id, full_name, avatar_url').in('id', studentIds)
       : { data: [] };
 
-  // Fetch stats for each student
-  const students = await Promise.all(
-    studentProfiles?.map(async (profile) => {
-      const { count: lessonsCompleted } = await supabase
-        .from('lessons')
-        .select('*', { count: 'exact', head: true })
-        .eq('student_id', profile.id)
-        .lt('scheduled_at', new Date().toISOString());
+  // Batch-fetch all lessons for all students in one query
+  const now = new Date().toISOString();
+  const { data: allStudentLessons } =
+    studentIds.length > 0
+      ? await supabase
+          .from('lessons')
+          .select('student_id, scheduled_at')
+          .in('student_id', studentIds)
+          .order('scheduled_at', { ascending: true })
+      : { data: [] };
 
-      const { data: nextLesson } = await supabase
-        .from('lessons')
-        .select('scheduled_at')
-        .eq('student_id', profile.id)
-        .gt('scheduled_at', new Date().toISOString())
-        .order('scheduled_at', { ascending: true })
-        .limit(1)
-        .single();
+  const { data: allRepertoire } =
+    studentIds.length > 0
+      ? await supabase.from('student_repertoire').select('student_id').in('student_id', studentIds)
+      : { data: [] };
 
-      const completedCount = lessonsCompleted || 0;
+  const lessonRows = Array.isArray(allStudentLessons) ? allStudentLessons : [];
+  const repertoireRows = Array.isArray(allRepertoire) ? allRepertoire : [];
 
-      return {
-        id: profile.id,
-        name: profile.full_name || 'Unknown',
-        level: getLevelFromLessonCount(completedCount),
-        lessonsCompleted: completedCount,
-        nextLesson: nextLesson
-          ? new Date(nextLesson.scheduled_at).toLocaleDateString()
-          : 'No upcoming lessons',
-        avatar: profile.avatar_url,
-      };
-    }) || []
-  );
+  const students = (studentProfiles ?? []).map((profile) => {
+    const profileLessons = lessonRows.filter((l) => l.student_id === profile.id);
+    const pastLessons = profileLessons.filter((l) => l.scheduled_at < now);
+    const futureLessons = profileLessons.filter((l) => l.scheduled_at >= now);
+    const completedCount = pastLessons.length;
+    const lastLesson = pastLessons[pastLessons.length - 1] ?? null;
+    const nextLesson = futureLessons[0] ?? null;
+    const repertoireCount = repertoireRows.filter((r) => r.student_id === profile.id).length;
+
+    return {
+      id: profile.id,
+      name: profile.full_name || 'Unknown',
+      level: getLevelFromLessonCount(completedCount),
+      lessonsCompleted: completedCount,
+      lastLessonAt: lastLesson?.scheduled_at ?? null,
+      nextLessonAt: nextLesson?.scheduled_at ?? null,
+      nextLesson: nextLesson
+        ? new Date(nextLesson.scheduled_at).toLocaleDateString()
+        : 'No upcoming lessons',
+      overdueAssignmentCount: 0,
+      repertoireCount,
+      avatar: profile.avatar_url ?? undefined,
+    };
+  });
 
   // Activities moved to bottom
 
@@ -184,7 +199,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
   const chartData: TeacherDashboardData['chartData'] = DAY_NAMES.map((name, index) => ({
     name,
     lessons: lessonsByDay.get(index) || 0,
-    assignments: 0,
+    assignmentsCreated: 0,
   }));
 
   // Songs: only songs used in this teacher's lessons (via lesson_songs)
@@ -296,11 +311,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     .is('deleted_at', null)
     .or('is_draft.is.null,is_draft.eq.false');
 
-  const { count: lessonsThisWeekCount } = await supabase
-    .from('lessons')
-    .select('*', { count: 'exact', head: true })
-    .gte('scheduled_at', weekStart)
-    .lt('scheduled_at', weekEnd);
+  // lessonsThisWeek derived from already-fetched weekLessons — no extra query needed
 
   const { count: pendingAssignmentsCount } = await supabase
     .from('assignments')
@@ -333,19 +344,10 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
       continue;
     }
 
-    // Check for no recent lesson
-    const { data: lastLesson } = await supabase
-      .from('lessons')
-      .select('scheduled_at')
-      .eq('student_id', student.id)
-      .lt('scheduled_at', new Date().toISOString())
-      .order('scheduled_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (lastLesson) {
+    // Check for no recent lesson — use already-computed lastLessonAt (no extra DB query)
+    if (student.lastLessonAt) {
       const daysSince = Math.floor(
-        (Date.now() - new Date(lastLesson.scheduled_at).getTime()) / (1000 * 60 * 60 * 24)
+        (Date.now() - new Date(student.lastLessonAt).getTime()) / (1000 * 60 * 60 * 24)
       );
       if (daysSince >= 14) {
         needsAttention.push({
@@ -380,7 +382,7 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     stats: {
       totalStudents: students.length,
       songsInLibrary: songsCount || 0,
-      lessonsThisWeek: lessonsThisWeekCount || 0,
+      lessonsThisWeek: weekLessonsList.length,
       pendingAssignments: pendingAssignmentsCount || 0,
     },
     needsAttention,
