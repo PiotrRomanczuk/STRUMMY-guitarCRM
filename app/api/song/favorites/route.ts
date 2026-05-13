@@ -4,6 +4,7 @@ import { UserFavoriteInputSchema } from '@/schemas/UserFavoriteSchema';
 import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
 import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { logger } from '@/lib/logger';
+import { createListResponse } from '@/lib/api/response';
 
 export async function GET(req: NextRequest) {
   return withApiAuth(req, async ({ user, roles }) => {
@@ -38,9 +39,10 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
+      const items = favorites ?? [];
       return NextResponse.json({
-        favorites: favorites || [],
-        total: favorites?.length || 0,
+        ...createListResponse('favorites', items, { total: items.length }),
+        total: items.length,
       });
     } catch (error) {
       logger.error('Error in favorites API:', error);
