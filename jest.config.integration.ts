@@ -21,11 +21,9 @@ const config: Config = {
     '^@/lib/supabase$': '<rootDir>/lib/testing/__mocks__/supabase.ts',
   },
 
-  testMatch: [
-    '<rootDir>/**/*.integration.test.{ts,tsx}',
-  ],
+  testMatch: ['<rootDir>/**/*.integration.test.{ts,tsx}'],
 
-  testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/.claude/worktrees/'],
 
   maxWorkers: '50%',
   cache: true,

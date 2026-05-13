@@ -1,70 +1,52 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { SongInputSchema } from '@/schemas/SongSchema';
-import { NextRequest, NextResponse } from 'next/server';
 import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
-	try {
-		const supabase = await createClient();
-		const body = await request.json();
+  return withApiAuth(request, async ({ roles, flags }) => {
+    try {
+      const supabase = await createClient();
+      const body = await request.json();
 
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
+      if (flags.isDevelopment) {
+        return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
+      }
 
-		if (!user) {
-			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-		}
+      if (!roles.isAdmin && !roles.isTeacher) {
+        return NextResponse.json(
+          { error: 'You are not authorized to create songs' },
+          { status: 403 }
+        );
+      }
 
-		// Check if user has permission to create songs
-		const { data: profile } = await supabase
-			.from('profiles')
-			.select('is_admin, is_teacher, is_development')
-			.eq('id', user.id)
-			.single();
+      // Validate input data using the schema
+      const parseResult = SongInputSchema.safeParse(body);
 
-		if (profile?.is_development) {
-			return NextResponse.json(
-				{ error: TEST_ACCOUNT_MUTATION_ERROR },
-				{ status: 403 }
-			);
-		}
+      if (!parseResult.success) {
+        return NextResponse.json(
+          { error: 'Invalid song data', details: parseResult.error },
+          { status: 400 }
+        );
+      }
 
-		if (!profile || (!profile.is_admin && !profile.is_teacher)) {
-			return NextResponse.json(
-				{ error: 'You are not authorized to create songs' },
-				{ status: 403 }
-			);
-		}
+      const { data: song, error } = await supabase
+        .from('songs')
+        .insert(parseResult.data)
+        .select()
+        .single();
 
-		// Validate input data using the schema
-		const parseResult = SongInputSchema.safeParse(body);
+      if (error) {
+        logger.error('Error creating song:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
 
-		if (!parseResult.success) {
-			return NextResponse.json(
-				{ error: 'Invalid song data', details: parseResult.error },
-				{ status: 400 }
-			);
-		}
-
-		const { data: song, error } = await supabase
-			.from('songs')
-			.insert(parseResult.data)
-			.select()
-			.single();
-
-		if (error) {
-			logger.error('Error creating song:', error);
-			return NextResponse.json({ error: error.message }, { status: 500 });
-		}
-
-		return NextResponse.json(song);
-	} catch (error) {
-		logger.error('Error in song creation API:', error);
-		return NextResponse.json(
-			{ error: 'Internal server error' },
-			{ status: 500 }
-		);
-	}
+      return NextResponse.json(song);
+    } catch (error) {
+      logger.error('Error in song creation API:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+  });
 }
