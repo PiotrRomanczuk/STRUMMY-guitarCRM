@@ -16,8 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           `
         *,
         song:songs(title, author, level, key, ultimate_guitar_link),
-        lesson:lessons(title, date, status),
-        student:profiles!lesson_songs_student_id_fkey(email, firstName, lastName)
+        lesson:lessons(title, scheduled_at, status)
       `
         )
         .eq('id', id)
@@ -55,11 +54,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
 
       // Validate the update data
-      const { song_status } = body;
+      const { song_status, status } = body;
+      const newStatus = status || song_status;
 
-      if (song_status) {
+      if (newStatus) {
         try {
-          SongStatusEnum.parse(song_status);
+          SongStatusEnum.parse(newStatus);
         } catch (validationError) {
           return NextResponse.json(
             { error: 'Invalid song status', details: validationError },
@@ -71,7 +71,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       const { data: lessonSong, error } = await supabase
         .from('lesson_songs')
         .update({
-          song_status: song_status,
+          status: newStatus,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -79,7 +79,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           `
         *,
         song:songs(title, author, level, key),
-        lesson:lessons(title, date, status)
+        lesson:lessons(title, scheduled_at, status)
       `
         )
         .single();

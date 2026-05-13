@@ -22,15 +22,15 @@ export async function GET(request: Request) {
       userId = user.id;
     }
 
-    const parseResult = querySchema.safeParse({ userId, level });
+    const parseResult = querySchema.safeParse({ userId, level: level ?? undefined });
     if (!parseResult.success) {
       return NextResponse.json({ error: 'Invalid query params' }, { status: 400 });
     }
 
-    // Fetch assigned songs for student
+    // Fetch assigned songs for student via student_repertoire (lesson_songs has no student_id)
     const { data, error } = await supabase
-      .from('lesson_songs')
-      .select('*,songs(*)')
+      .from('student_repertoire')
+      .select('current_status,songs(*)')
       .eq('student_id', userId)
       .order('created_at', { ascending: false });
 
@@ -38,11 +38,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Map lesson_songs to SongWithStatus
+    // Map student_repertoire to SongWithStatus
     const mapped: SongWithLessons[] = data.map(
-      (ls: { songs: SongWithLessons; status: string }) => ({
-        ...ls.songs,
-        status: ls.status,
+      (sr: { songs: SongWithLessons; current_status: string }) => ({
+        ...sr.songs,
+        status: sr.current_status,
       })
     );
 

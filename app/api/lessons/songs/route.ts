@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
           `
         *,
         song:songs(title, author, level, key),
-        lesson:lessons(title, date, status)
+        lesson:lessons(title, scheduled_at, status)
       `
         )
         .eq('lesson_id', lessonId);

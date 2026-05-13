@@ -19,20 +19,17 @@ export async function GET(request: NextRequest) {
       const includeProfiles = searchParams.get('includeProfiles') === 'true';
 
       // Build query
-      let query = supabase.from('lessons').select(`
-        *,
-        ${
-          includeProfiles
-            ? 'profile:profiles!lessons_student_id_fkey(email, firstName, lastName),'
-            : ''
-        }
-        ${
-          includeProfiles
-            ? 'teacher_profile:profiles!lessons_teacher_id_fkey(email, firstName, lastName),'
-            : ''
-        }
-        ${includeSongs ? 'lesson_songs(song_id, status, songs(title, author, level, key))' : ''}
-      `);
+      const selectParts = ['*'];
+      if (includeProfiles) {
+        selectParts.push('profile:profiles!lessons_student_id_fkey(email, first_name, last_name)');
+        selectParts.push(
+          'teacher_profile:profiles!lessons_teacher_id_fkey(email, first_name, last_name)'
+        );
+      }
+      if (includeSongs) {
+        selectParts.push('lesson_songs(song_id, status, songs(title, author, level, key))');
+      }
+      let query = supabase.from('lessons').select(selectParts.join(', '));
 
       if (userId) {
         query = query.or(`student_id.eq.${userId},teacher_id.eq.${userId}`);
@@ -48,11 +45,11 @@ export async function GET(request: NextRequest) {
       }
 
       if (dateFrom) {
-        query = query.gte('date', dateFrom);
+        query = query.gte('scheduled_at', dateFrom);
       }
 
       if (dateTo) {
-        query = query.lte('date', dateTo);
+        query = query.lte('scheduled_at', dateTo);
       }
 
       query = query.order('created_at', { ascending: false });
@@ -129,8 +126,8 @@ export async function GET(request: NextRequest) {
                 `"${lesson.title || ''}"`,
                 lesson.student_id,
                 lesson.teacher_id,
-                lesson.date || '',
-                lesson.time || '',
+                lesson.scheduled_at || '',
+                '',
                 lesson.status,
                 `"${lesson.notes || ''}"`,
                 lesson.created_at,
@@ -140,10 +137,10 @@ export async function GET(request: NextRequest) {
               if (includeProfiles) {
                 row.push(
                   `"${lesson.profile?.email || ''}"`,
-                  `"${lesson.profile?.firstName || ''} ${lesson.profile?.lastName || ''}"`,
+                  `"${lesson.profile?.first_name || ''} ${lesson.profile?.last_name || ''}"`,
                   `"${lesson.teacher_profile?.email || ''}"`,
-                  `"${lesson.teacher_profile?.firstName || ''} ${
-                    lesson.teacher_profile?.lastName || ''
+                  `"${lesson.teacher_profile?.first_name || ''} ${
+                    lesson.teacher_profile?.last_name || ''
                   }"`
                 );
               }

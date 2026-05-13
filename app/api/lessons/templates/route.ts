@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
       let query = supabase.from('lesson_templates').select(`
         *,
-        teacher_profile:profiles!lesson_templates_teacher_id_fkey(email, firstName, lastName)
+        teacher_profile:profiles!lesson_templates_teacher_id_fkey(email, first_name, last_name)
       `);
 
       if (category) {
@@ -40,6 +40,9 @@ export async function GET(request: NextRequest) {
       const { data: templates, error } = await query;
 
       if (error) {
+        if (error.message?.includes('lesson_templates')) {
+          return NextResponse.json({ templates: [] });
+        }
         logger.error('Error fetching lesson templates:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }

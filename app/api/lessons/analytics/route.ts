@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       // Build base query for lessons
       let baseQuery = supabase
         .from('lessons')
-        .select('id, status, date, time, teacher_id, student_id');
+        .select('id, status, scheduled_at, teacher_id, student_id');
 
       // Role-based filtering: teachers see only their own, students see only their own
       if (roles.isAdmin) {
@@ -43,11 +43,11 @@ export async function GET(request: NextRequest) {
       }
 
       if (dateFrom) {
-        baseQuery = baseQuery.gte('date', dateFrom);
+        baseQuery = baseQuery.gte('scheduled_at', dateFrom);
       }
 
       if (dateTo) {
-        baseQuery = baseQuery.lte('date', dateTo);
+        baseQuery = baseQuery.lte('scheduled_at', dateTo);
       }
 
       // Get lesson completion rates
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
         .select(`
         status,
         songs(level, key),
-        lesson:lessons(date, status)
+        lesson:lessons(scheduled_at, status)
       `);
 
       let progressAnalytics = {
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
       const { data: teacherMetrics, error: teacherError } = await supabase.from('lessons').select(`
         teacher_id,
         status,
-        profile:profiles!lessons_teacher_id_fkey(email, firstName, lastName)
+        profile:profiles!lessons_teacher_id_fkey(email, first_name, last_name)
       `);
 
       let teacherPerformance: {
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
           totalLessons: number;
           completedLessons: number;
           completionRate: number;
-          teacher: { email?: string; firstName?: string; lastName?: string };
+          teacher: { email?: string; first_name?: string; last_name?: string };
         };
       } = {};
       if (!teacherError && teacherMetrics) {
@@ -146,15 +146,15 @@ export async function GET(request: NextRequest) {
                 completionRate: number;
                 teacher: {
                   email?: string;
-                  firstName?: string;
-                  lastName?: string;
+                  first_name?: string;
+                  last_name?: string;
                 };
               };
             },
             lesson: {
               teacher_id: string;
               status: string;
-              profile: { email?: string; firstName?: string; lastName?: string };
+              profile: { email?: string; first_name?: string; last_name?: string };
             }
           ) => {
             const tid = lesson.teacher_id;
@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
       // Get time-based analytics
       const { data: timeAnalytics, error: timeError } = await supabase
         .from('lessons')
-        .select('date, status, time');
+        .select('scheduled_at, status');
 
       const timeBasedAnalytics = {
         peakHours: {} as { [key: string]: number },
@@ -190,17 +190,17 @@ export async function GET(request: NextRequest) {
 
       if (!timeError && timeAnalytics) {
         // Analyze peak hours
-        timeAnalytics.forEach((lesson: { time?: string }) => {
-          if (lesson.time) {
-            const hour = lesson.time.split(':')[0];
+        timeAnalytics.forEach((lesson: { scheduled_at?: string }) => {
+          if (lesson.scheduled_at) {
+            const hour = new Date(lesson.scheduled_at).getHours().toString().padStart(2, '0');
             timeBasedAnalytics.peakHours[hour] = (timeBasedAnalytics.peakHours[hour] || 0) + 1;
           }
         });
 
         // Analyze weekly distribution
-        timeAnalytics.forEach((lesson: { date?: string }) => {
-          if (lesson.date) {
-            const dayOfWeek = new Date(lesson.date).getDay();
+        timeAnalytics.forEach((lesson: { scheduled_at?: string }) => {
+          if (lesson.scheduled_at) {
+            const dayOfWeek = new Date(lesson.scheduled_at).getDay();
             const dayNames = [
               'Sunday',
               'Monday',
