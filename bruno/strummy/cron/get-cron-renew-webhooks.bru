@@ -1,0 +1,17 @@
+meta {
+  name: get-cron-renew-webhooks
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/cron/renew-webhooks
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{CRON_SECRET}}
+}
+docs {
+  Domain cron. Auth cron-secret.
+}

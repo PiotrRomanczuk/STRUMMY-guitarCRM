@@ -1,0 +1,14 @@
+meta {
+  name: get-spotify-track-from-url
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{baseUrl}}/api/spotify/track-from-url
+  auth: inherit
+}
+
+docs {
+  Domain spotify [orphan]. Auth user.
+}

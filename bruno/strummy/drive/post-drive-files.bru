@@ -1,0 +1,20 @@
+meta {
+  name: post-drive-files
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/drive/files
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain drive. Auth user. schemas=DriveFileSchema
+}

@@ -28,6 +28,10 @@ interface StatusUpdateResult {
  * Called by daily cron job at 2 AM UTC
  */
 export async function updateStudentActivityStatus(): Promise<StatusUpdateResult> {
+  logger.info('updateStudentActivityStatus: start', {
+    cutoffDays: INACTIVITY_DAYS,
+  });
+
   const supabase = await createClient();
   const now = new Date();
   const cutoffDate = new Date(now);
@@ -38,22 +42,35 @@ export async function updateStudentActivityStatus(): Promise<StatusUpdateResult>
     activatedCount: 0,
     deactivatedCount: 0,
     activated: [],
-    deactivated: []
+    deactivated: [],
   };
 
-  // Get all students with 'active' or 'archived' status
+  // Get all students with 'active' or 'archived' status.
+  // Note: profiles has no deleted_at column on prod (see #328) — the previous
+  // .is('deleted_at', null) filter caused this query to throw silently and
+  // the cron stopped flipping student_status months ago. Other tables that
+  // do have deleted_at (lessons below) keep the filter.
   const { data: students, error: studentsError } = await supabase
     .from('profiles')
     .select('id, email, full_name, student_status')
     .eq('is_student', true)
-    .in('student_status', ['active', 'archived'])
-    .is('deleted_at', null);
+    .in('student_status', ['active', 'archived']);
 
   if (studentsError) {
+    logger.error('updateStudentActivityStatus: failed to fetch students', studentsError, {
+      code: studentsError.code,
+      details: studentsError.details,
+      hint: studentsError.hint,
+    });
     throw new Error(`Failed to fetch students: ${studentsError.message}`);
   }
 
   if (!students || students.length === 0) {
+    logger.info('updateStudentActivityStatus: done', {
+      processed: 0,
+      activated: 0,
+      deactivated: 0,
+    });
     return result;
   }
 
@@ -103,18 +120,15 @@ export async function updateStudentActivityStatus(): Promise<StatusUpdateResult>
 
     // Update if status changed
     if (newStatus !== student.student_status) {
-      await updateStudentStatus(
-        supabase,
-        student.id,
-        student.student_status,
-        newStatus,
-        { hasRecentLesson, hasFutureLesson }
-      );
+      await updateStudentStatus(supabase, student.id, student.student_status, newStatus, {
+        hasRecentLesson,
+        hasFutureLesson,
+      });
 
       const studentInfo = {
         id: student.id,
         email: student.email,
-        full_name: student.full_name
+        full_name: student.full_name,
       };
 
       if (newStatus === 'active') {
@@ -126,6 +140,12 @@ export async function updateStudentActivityStatus(): Promise<StatusUpdateResult>
       }
     }
   }
+
+  logger.info('updateStudentActivityStatus: done', {
+    processed: result.processed,
+    activated: result.activatedCount,
+    deactivated: result.deactivatedCount,
+  });
 
   return result;
 }
@@ -146,7 +166,7 @@ async function updateStudentStatus(
     .update({
       student_status: newStatus,
       status_changed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq('id', studentId);
 
@@ -156,18 +176,17 @@ async function updateStudentStatus(
   }
 
   // Log to user_history
-  const { error: historyError } = await supabase
-    .from('user_history')
-    .insert({
-      user_id: studentId,
-      changed_by: null, // System-initiated change
-      change_type: 'status_changed',
-      previous_data: { student_status: previousStatus },
-      new_data: { student_status: newStatus },
-      notes: `Automatic status update: ${previousStatus} → ${newStatus}. ` +
-        `Recent lesson (28d): ${context.hasRecentLesson}. ` +
-        `Future lesson scheduled: ${context.hasFutureLesson}.`
-    });
+  const { error: historyError } = await supabase.from('user_history').insert({
+    user_id: studentId,
+    changed_by: null, // System-initiated change
+    change_type: 'status_changed',
+    previous_data: { student_status: previousStatus },
+    new_data: { student_status: newStatus },
+    notes:
+      `Automatic status update: ${previousStatus} → ${newStatus}. ` +
+      `Recent lesson (28d): ${context.hasRecentLesson}. ` +
+      `Future lesson scheduled: ${context.hasFutureLesson}.`,
+  });
 
   if (historyError) {
     logger.error(`Failed to log history for student ${studentId}:`, historyError);

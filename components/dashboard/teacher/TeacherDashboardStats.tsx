@@ -43,7 +43,11 @@ export function TeacherDashboardStats({ stats }: TeacherDashboardStatsProps) {
     {
       icon: Users,
       value: stats.myStudents.toString(),
-      label: 'Active Students',
+      // Note: this counts students the teacher has ever had a lesson with
+      // (from the teacher_students view), not students currently active per
+      // student_status. Label kept honest. See #327. The companion
+      // 'Needs Attention' widget surfaces who's gone quiet.
+      label: 'Students Taught',
       colorClass: 'text-blue-500',
     },
     {

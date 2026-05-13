@@ -1,0 +1,17 @@
+meta {
+  name: get-cron-update-student-status
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/cron/update-student-status
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{CRON_SECRET}}
+}
+docs {
+  Domain cron. Auth cron-secret.
+}

@@ -1,0 +1,23 @@
+meta {
+  name: patch-song-id-videos-videoid
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/song/{{sample_song_id}}/videos/{{sample_videoId}}
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+tests {
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
+  });
+}

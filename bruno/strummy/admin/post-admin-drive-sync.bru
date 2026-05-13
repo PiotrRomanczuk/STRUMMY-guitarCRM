@@ -1,0 +1,20 @@
+meta {
+  name: post-admin-drive-sync
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/admin/drive-sync
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain admin. Auth user, admin-client.
+}

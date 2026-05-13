@@ -1,0 +1,19 @@
+meta {
+  name: get-song-from-spotify-debug
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/song/from-spotify/debug?url=https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh
+  auth: inherit
+}
+
+tests {
+  test('Status 200 or 400 or 403', function() {
+    expect([200, 400, 403]).to.include(res.status);
+  });
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+  });
+}

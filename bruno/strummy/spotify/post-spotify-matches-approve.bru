@@ -1,0 +1,20 @@
+meta {
+  name: post-spotify-matches-approve
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/spotify/matches/approve
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain spotify. Auth user.
+}

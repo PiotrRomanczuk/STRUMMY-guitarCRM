@@ -1,0 +1,16 @@
+meta {
+  name: get-song-stats-chords
+  type: http
+  seq: 19
+}
+
+get {
+  url: {{baseUrl}}/api/song/stats/chords
+  auth: inherit
+}
+
+tests {
+  test('Status 200 or 403', function() {
+    expect([200, 403]).to.include(res.status);
+  });
+}

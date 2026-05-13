@@ -1,0 +1,20 @@
+meta {
+  name: post-student-lessons
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/student/lessons
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain student [orphan]. Auth user.
+}

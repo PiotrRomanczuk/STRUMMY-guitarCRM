@@ -248,9 +248,7 @@ describe('Lesson CRUD integration', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        const statusError = result.error.issues.find(
-          (i) => i.path.includes('status')
-        );
+        const statusError = result.error.issues.find((i) => i.path.includes('status'));
         expect(statusError).toBeDefined();
       }
     });
@@ -318,12 +316,7 @@ describe('Lesson CRUD integration', () => {
     it('T12: unauthenticated returns 401', async () => {
       const supabase = { from: jest.fn() };
 
-      const result = await deleteLessonHandler(
-        supabase as never,
-        null,
-        null,
-        MOCK_DATA_IDS.lesson
-      );
+      const result = await deleteLessonHandler(supabase as never, null, null, MOCK_DATA_IDS.lesson);
 
       expect(result.status).toBe(401);
     });
@@ -333,12 +326,10 @@ describe('Lesson CRUD integration', () => {
   /* A4 — Access Control                                      */
   /* ======================================================== */
   describe('GET /api/lessons (access control)', () => {
-    it('T13: teacher scoped to own lessons via student lookup', async () => {
-      const teacherStudentIds = [studentCtx.userId];
-      // First from('lessons') → getTeacherStudentIds
-      const lessonsQb = createMockQueryBuilder(
-        teacherStudentIds.map((id) => ({ student_id: id }))
-      );
+    it('T13: teacher relies on RLS for visibility (no app-side student_id filter)', async () => {
+      // Visibility is enforced by RLS — see ADR-0001. The handler should not
+      // pre-filter `student_id IN (...)` based on a teacher_students lookup.
+      const lessonsQb = createMockQueryBuilder([SAMPLE_LESSON]);
 
       const supabase = { from: jest.fn(() => lessonsQb) };
 
@@ -350,8 +341,12 @@ describe('Lesson CRUD integration', () => {
       );
 
       expect(result.status).toBe(200);
-      // Teacher filtering calls .in('student_id', [...])
-      expect(lessonsQb.in).toHaveBeenCalled();
+      // Only one query: the lessons select. No teacher_students lookup.
+      expect(supabase.from).toHaveBeenCalledTimes(1);
+      // No app-side `.in('student_id', ...)` clause.
+      const inCalls = lessonsQb.in.mock.calls;
+      const studentIdFilter = inCalls.find((call: unknown[]) => call[0] === 'student_id');
+      expect(studentIdFilter).toBeUndefined();
     });
 
     it('T14: admin sees all lessons (no teacher_id filter)', async () => {
@@ -369,9 +364,7 @@ describe('Lesson CRUD integration', () => {
       expect(result.status).toBe(200);
       // Admin path doesn't call .in() for student_id scoping
       const inCalls = qb.in.mock.calls;
-      const studentIdFilter = inCalls.find(
-        (call: unknown[]) => call[0] === 'student_id'
-      );
+      const studentIdFilter = inCalls.find((call: unknown[]) => call[0] === 'student_id');
       expect(studentIdFilter).toBeUndefined();
     });
 
@@ -486,15 +479,15 @@ describe('Lesson CRUD integration', () => {
       qb.single.mockResolvedValueOnce({ data: lessonWithJoins, error: null });
 
       const mockSupabase = {
-        auth: { getUser: jest.fn().mockResolvedValue({ data: { user: teacherCtx.user }, error: null }) },
+        auth: {
+          getUser: jest.fn().mockResolvedValue({ data: { user: teacherCtx.user }, error: null }),
+        },
         from: jest.fn(() => qb),
       };
       (createClient as jest.Mock).mockResolvedValue(mockSupabase);
 
       // Dynamic import to get the server action after mocks are set up
-      const { sendLessonSummaryEmail } = await import(
-        '@/app/dashboard/lessons/actions'
-      );
+      const { sendLessonSummaryEmail } = await import('@/app/dashboard/lessons/actions');
 
       const result = await sendLessonSummaryEmail(MOCK_DATA_IDS.lesson);
 
@@ -514,14 +507,14 @@ describe('Lesson CRUD integration', () => {
       qb.single.mockResolvedValueOnce({ data: null, error: null });
 
       const mockSupabase = {
-        auth: { getUser: jest.fn().mockResolvedValue({ data: { user: teacherCtx.user }, error: null }) },
+        auth: {
+          getUser: jest.fn().mockResolvedValue({ data: { user: teacherCtx.user }, error: null }),
+        },
         from: jest.fn(() => qb),
       };
       (createClient as jest.Mock).mockResolvedValue(mockSupabase);
 
-      const { sendLessonSummaryEmail } = await import(
-        '@/app/dashboard/lessons/actions'
-      );
+      const { sendLessonSummaryEmail } = await import('@/app/dashboard/lessons/actions');
 
       const result = await sendLessonSummaryEmail(MOCK_DATA_IDS.lesson);
 

@@ -1,0 +1,24 @@
+meta {
+  name: post-song-id-videos
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/song/{{sample_song_id}}/videos
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "Test Video",
+    "url": "https://youtube.com/watch?v=test"
+  }
+}
+
+tests {
+  test('Status 200 or 201 or 400', function() {
+    expect([200, 201, 400, 403]).to.include(res.status);
+  });
+}

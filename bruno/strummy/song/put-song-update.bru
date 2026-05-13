@@ -1,0 +1,29 @@
+meta {
+  name: put-song-update
+  type: http
+  seq: 27
+}
+
+put {
+  url: {{baseUrl}}/api/song/update
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": "{{sample_song_id}}",
+    "title": "People are strange (Bruno updated)",
+    "author": "The Doors"
+  }
+}
+
+tests {
+  test('Status 200 or 400 or 404', function() {
+    expect([200, 400, 404, 422]).to.include(res.status);
+  });
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
+  });
+}

@@ -1,0 +1,34 @@
+meta {
+  name: get-song
+  type: http
+  seq: 21
+}
+
+get {
+  url: {{baseUrl}}/api/song
+  auth: inherit
+}
+
+docs {
+  Domain song. Auth user, admin-client, role:admin+teacher+student.
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response has songs array', function() {
+    expect(res.body).to.have.property('songs');
+    expect(res.body.songs).to.be.an('array');
+  });
+  test('Each song has required fields', function() {
+    const songs = res.body.songs;
+    if (songs.length > 0) {
+      expect(songs[0]).to.have.property('id');
+      expect(songs[0]).to.have.property('title');
+    }
+  });
+  test('Response has pagination', function() {
+    expect(res.body).to.have.property('pagination');
+  });
+}

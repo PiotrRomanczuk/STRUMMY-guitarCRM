@@ -1,0 +1,16 @@
+meta {
+  name: delete-song
+  type: http
+  seq: 99
+}
+
+delete {
+  url: {{baseUrl}}/api/song?id={{created_song_id}}
+  auth: inherit
+}
+
+tests {
+  test('Status 200 or 404', function() {
+    expect([200, 404]).to.include(res.status);
+  });
+}

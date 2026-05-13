@@ -1,0 +1,30 @@
+meta {
+  name: post-song-bulk
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/song/bulk
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "songs": [
+      {
+        "title": "Bulk Song 1",
+        "author": "Tester",
+        "level": "beginner",
+        "key": "C"
+      }
+    ]
+  }
+}
+
+tests {
+  test('Status 200 or 201', function() {
+    expect([200, 201]).to.include(res.status);
+  });
+}

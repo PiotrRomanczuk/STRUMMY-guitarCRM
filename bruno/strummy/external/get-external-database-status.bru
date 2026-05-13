@@ -1,0 +1,17 @@
+meta {
+  name: get-external-database-status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/external/database/status
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+docs {
+  Domain external [orphan]. Auth api-key, role:admin.
+}

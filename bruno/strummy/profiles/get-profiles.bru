@@ -1,0 +1,14 @@
+meta {
+  name: get-profiles
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/profiles
+  auth: inherit
+}
+
+docs {
+  Domain profiles. Auth user.
+}

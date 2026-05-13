@@ -1,0 +1,23 @@
+meta {
+  name: delete-lessons-bulk
+  type: http
+  seq: 98
+}
+
+delete {
+  url: {{baseUrl}}/api/lessons/bulk
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "lessonIds": []
+  }
+}
+
+tests {
+  test('Status 400 for empty ids', function() {
+    expect([400, 422]).to.include(res.status);
+  });
+}

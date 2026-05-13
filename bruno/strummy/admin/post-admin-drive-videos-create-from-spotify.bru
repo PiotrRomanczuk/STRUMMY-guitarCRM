@@ -1,0 +1,20 @@
+meta {
+  name: post-admin-drive-videos-create-from-spotify
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/admin/drive-videos/create-from-spotify
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain admin. Auth user, admin-client.
+}

@@ -25,31 +25,20 @@ interface ActionResult<T = void> {
 export async function getUserNotificationPreferences(
   userId: string
 ): Promise<ActionResult<NotificationPreference[]>> {
-  const supabase = await createClient();
-
-  // Get current authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Resolve user + roles via the shared auth seam (memoized per request)
+  const { user, isAdmin } = await getUserWithRolesSSR();
 
   if (!user) {
     return { success: false, error: 'Unauthorized' };
   }
 
-  // RLS check: Users can only access their own preferences
-  // Admins can access any user's preferences (handled by RLS policy)
-  if (user.id !== userId) {
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || profile.role !== 'admin') {
-      return { success: false, error: 'Unauthorized: Cannot access other users preferences' };
-    }
+  // RLS check: Users can only access their own preferences.
+  // Admins may access any user's preferences (RLS policy permits this).
+  if (user.id !== userId && !isAdmin) {
+    return { success: false, error: 'Unauthorized: Cannot access other users preferences' };
   }
+
+  const supabase = await createClient();
 
   // Fetch preferences with RLS enforcement
   const { data, error } = await supabase

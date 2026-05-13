@@ -1,0 +1,27 @@
+meta {
+  name: put-lessons-id
+  type: http
+  seq: 14
+}
+
+put {
+  url: {{baseUrl}}/api/lessons/{{sample_lesson_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "status": "SCHEDULED",
+    "notes": "Bruno updated notes"
+  }
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response has id', function() {
+    expect(res.body).to.have.property('id');
+  });
+}

@@ -1,0 +1,20 @@
+meta {
+  name: post-lessons-templates
+  type: http
+  seq: 25
+}
+
+post {
+  url: {{baseUrl}}/api/lessons/templates
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain lessons [orphan]. Auth user.
+}

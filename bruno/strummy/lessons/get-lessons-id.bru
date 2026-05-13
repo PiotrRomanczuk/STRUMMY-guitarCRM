@@ -1,0 +1,23 @@
+meta {
+  name: get-lessons-id
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/lessons/{{sample_lesson_id}}
+  auth: inherit
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response has lesson id', function() {
+    expect(res.body).to.have.property('id');
+    expect(res.body.id).to.equal(bru.getEnvVar('sample_lesson_id'));
+  });
+  test('Response has status', function() {
+    expect(res.body).to.have.property('status');
+  });
+}

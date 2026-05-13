@@ -1,0 +1,31 @@
+meta {
+  name: post-lessons
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/lessons
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "teacher_id": "{{sample_teacher_id}}",
+    "student_id": "{{sample_student_id}}",
+    "scheduled_at": "2026-06-01T10:00:00.000Z",
+    "status": "SCHEDULED",
+    "notes": "Bruno test lesson"
+  }
+}
+
+tests {
+  test('Status 201', function() {
+    expect(res.status).to.equal(201);
+  });
+  test('Response has id', function() {
+    expect(res.body).to.have.property('id');
+    bru.setVar('created_lesson_id', res.body.id);
+  });
+}

@@ -1,0 +1,20 @@
+meta {
+  name: post-repertoire-bulk
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/repertoire/bulk
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain repertoire [orphan]. Auth user. schemas=StudentRepertoireSchema
+}

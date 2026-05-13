@@ -1,0 +1,2501 @@
+{
+  "generatedAt": "2026-05-13T11:29:54.815Z",
+  "routes": [
+    {
+      "file": "app/api/admin/drive-sync/route.ts",
+      "domain": "admin",
+      "path": "/api/admin/drive-sync",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 253,
+      "callers": 4,
+      "orphan": false
+    },
+    {
+      "file": "app/api/admin/drive-videos/create-from-spotify/route.ts",
+      "domain": "admin",
+      "path": "/api/admin/drive-videos/create-from-spotify",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 230,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/admin/drive-videos/route.ts",
+      "domain": "admin",
+      "path": "/api/admin/drive-videos",
+      "methods": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "SongVideoSchema"
+      ],
+      "lines": 131,
+      "callers": 4,
+      "orphan": false
+    },
+    {
+      "file": "app/api/admin/lessons/route.ts",
+      "domain": "admin",
+      "path": "/api/admin/lessons",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 83,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/admin/link-shadow-user/route.ts",
+      "domain": "admin",
+      "path": "/api/admin/link-shadow-user",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 99,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/admin/notification-analytics/route.ts",
+      "domain": "admin",
+      "path": "/api/admin/notification-analytics",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 101,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/admin/set-passwords/route.ts",
+      "domain": "admin",
+      "path": "/api/admin/set-passwords",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": true,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 83,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/admin/spotify-enrich/route.ts",
+      "domain": "admin",
+      "path": "/api/admin/spotify-enrich",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin"
+        ]
+      },
+      "schemas": [],
+      "lines": 34,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/admin/users/route.ts",
+      "domain": "admin",
+      "path": "/api/admin/users",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin"
+        ]
+      },
+      "schemas": [],
+      "lines": 47,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/ai/debug/route.ts",
+      "domain": "ai",
+      "path": "/api/ai/debug",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 97,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/api-keys/[id]/route.ts",
+      "domain": "api-keys",
+      "path": "/api/api-keys/:id",
+      "methods": [
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 55,
+      "callers": 5,
+      "orphan": false
+    },
+    {
+      "file": "app/api/api-keys/route.ts",
+      "domain": "api-keys",
+      "path": "/api/api-keys",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 117,
+      "callers": 5,
+      "orphan": false
+    },
+    {
+      "file": "app/api/assignments/[id]/route.ts",
+      "domain": "assignments",
+      "path": "/api/assignments/:id",
+      "methods": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "AssignmentSchema"
+      ],
+      "lines": 93,
+      "callers": 23,
+      "orphan": false
+    },
+    {
+      "file": "app/api/assignments/route.ts",
+      "domain": "assignments",
+      "path": "/api/assignments",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "AssignmentSchema"
+      ],
+      "lines": 94,
+      "callers": 22,
+      "orphan": false
+    },
+    {
+      "file": "app/api/auth/google/route.ts",
+      "domain": "auth",
+      "path": "/api/auth/google",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 10,
+      "callers": 5,
+      "orphan": false
+    },
+    {
+      "file": "app/api/calendar-sync/route.ts",
+      "domain": "calendar-sync",
+      "path": "/api/calendar-sync",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 281,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/calendar/sync/stream/route.ts",
+      "domain": "calendar",
+      "path": "/api/calendar/sync/stream",
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 251,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cohorts/analytics/route.ts",
+      "domain": "cohorts",
+      "path": "/api/cohorts/analytics",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher"
+        ]
+      },
+      "schemas": [],
+      "lines": 123,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/admin-monitoring/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/admin-monitoring",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 88,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/assignment-due-reminders/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/assignment-due-reminders",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 149,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/assignment-overdue-check/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/assignment-overdue-check",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 157,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/cleanup-auth-events/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/cleanup-auth-events",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 75,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/daily-report/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/daily-report",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 26,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/dispatcher/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/dispatcher",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 178,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/cron/drive-video-scan/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/drive-video-scan",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 122,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/lesson-reminders/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/lesson-reminders",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 152,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/process-notification-queue/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/process-notification-queue",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 74,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/renew-webhooks/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/renew-webhooks",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 55,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/update-student-status/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/update-student-status",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 43,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/weekly-digest/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/weekly-digest",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 173,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/cron/weekly-insights/route.ts",
+      "domain": "cron",
+      "path": "/api/cron/weekly-insights",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": true,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 44,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/dashboard/stats/route.ts",
+      "domain": "dashboard",
+      "path": "/api/dashboard/stats",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 191,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/database/status/route.ts",
+      "domain": "database",
+      "path": "/api/database/status",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 179,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/drive/files/[fileId]/route.ts",
+      "domain": "drive",
+      "path": "/api/drive/files/:fileId",
+      "methods": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "DriveFileSchema"
+      ],
+      "lines": 180,
+      "callers": 6,
+      "orphan": false
+    },
+    {
+      "file": "app/api/drive/files/[fileId]/stream/route.ts",
+      "domain": "drive",
+      "path": "/api/drive/files/:fileId/stream",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 57,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/drive/files/route.ts",
+      "domain": "drive",
+      "path": "/api/drive/files",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "DriveFileSchema"
+      ],
+      "lines": 202,
+      "callers": 6,
+      "orphan": false
+    },
+    {
+      "file": "app/api/drive/files/upload-url/route.ts",
+      "domain": "drive",
+      "path": "/api/drive/files/upload-url",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "DriveFileSchema"
+      ],
+      "lines": 101,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/exports/student/[id]/route.ts",
+      "domain": "exports",
+      "path": "/api/exports/student/:id",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher",
+          "student"
+        ]
+      },
+      "schemas": [],
+      "lines": 347,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/external/database/status/route.ts",
+      "domain": "external",
+      "path": "/api/external/database/status",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": true,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin"
+        ]
+      },
+      "schemas": [],
+      "lines": 152,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/external/songs/[id]/route.ts",
+      "domain": "external",
+      "path": "/api/external/songs/:id",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": true,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 183,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/external/songs/route.ts",
+      "domain": "external",
+      "path": "/api/external/songs",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": true,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 165,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/health/route.ts",
+      "domain": "health",
+      "path": "/api/health",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 88,
+      "callers": 6,
+      "orphan": false
+    },
+    {
+      "file": "app/api/lessons/[id]/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/:id",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 104,
+      "callers": 35,
+      "orphan": false
+    },
+    {
+      "file": "app/api/lessons/[id]/songs/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/:id/songs",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 63,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/lessons/analytics/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/analytics",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 262,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/lessons/bulk/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/bulk",
+      "methods": [
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 377,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/lessons/create/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/create",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 108,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/lessons/export/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/export",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 188,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/lessons/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 80,
+      "callers": 34,
+      "orphan": false
+    },
+    {
+      "file": "app/api/lessons/schedule/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/schedule",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 204,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/lessons/search/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/search",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 140,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/lessons/songs/[id]/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/songs/:id",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 179,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/lessons/songs/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/songs",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 158,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/lessons/stats/advanced/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/stats/advanced",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 255,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/lessons/stats/daily/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/stats/daily",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 66,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/lessons/stats/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/stats",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 134,
+      "callers": 5,
+      "orphan": false
+    },
+    {
+      "file": "app/api/lessons/templates/route.ts",
+      "domain": "lessons",
+      "path": "/api/lessons/templates",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 133,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/notifications/dashboard/route.ts",
+      "domain": "notifications",
+      "path": "/api/notifications/dashboard",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 163,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/notifications/unsubscribe/route.ts",
+      "domain": "notifications",
+      "path": "/api/notifications/unsubscribe",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 108,
+      "callers": 3,
+      "orphan": false
+    },
+    {
+      "file": "app/api/oauth2/callback/route.ts",
+      "domain": "oauth2",
+      "path": "/api/oauth2/callback",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 56,
+      "callers": 6,
+      "orphan": false
+    },
+    {
+      "file": "app/api/profiles/route.ts",
+      "domain": "profiles",
+      "path": "/api/profiles",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 43,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/repertoire/bulk/route.ts",
+      "domain": "repertoire",
+      "path": "/api/repertoire/bulk",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "StudentRepertoireSchema"
+      ],
+      "lines": 147,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/[id]/assignments/route.ts",
+      "domain": "song",
+      "path": "/api/song/:id/assignments",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 60,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/[id]/lessons/route.ts",
+      "domain": "song",
+      "path": "/api/song/:id/lessons",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 78,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/[id]/route.ts",
+      "domain": "song",
+      "path": "/api/song/:id",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 45,
+      "callers": 41,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/[id]/videos/[videoId]/route.ts",
+      "domain": "song",
+      "path": "/api/song/:id/videos/:videoId",
+      "methods": [
+        "PATCH",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "SongVideoSchema"
+      ],
+      "lines": 129,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/[id]/videos/[videoId]/stream/route.ts",
+      "domain": "song",
+      "path": "/api/song/:id/videos/:videoId/stream",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 44,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/[id]/videos/route.ts",
+      "domain": "song",
+      "path": "/api/song/:id/videos",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "SongVideoSchema"
+      ],
+      "lines": 141,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/[id]/videos/upload-url/route.ts",
+      "domain": "song",
+      "path": "/api/song/:id/videos/upload-url",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "SongVideoSchema"
+      ],
+      "lines": 67,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/admin-favorites/route.ts",
+      "domain": "song",
+      "path": "/api/song/admin-favorites",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin"
+        ]
+      },
+      "schemas": [],
+      "lines": 49,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/admin-songs/route.ts",
+      "domain": "song",
+      "path": "/api/song/admin-songs",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 51,
+      "callers": 4,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/bulk/route.ts",
+      "domain": "song",
+      "path": "/api/song/bulk",
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "SongSchema"
+      ],
+      "lines": 223,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/create/route.ts",
+      "domain": "song",
+      "path": "/api/song/create",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "SongSchema"
+      ],
+      "lines": 71,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/export/route.ts",
+      "domain": "song",
+      "path": "/api/song/export",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "SongSchema"
+      ],
+      "lines": 135,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/favorites/route.ts",
+      "domain": "song",
+      "path": "/api/song/favorites",
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "UserFavoriteSchema"
+      ],
+      "lines": 199,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/from-spotify/debug/route.ts",
+      "domain": "song",
+      "path": "/api/song/from-spotify/debug",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 201,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/from-spotify/route.ts",
+      "domain": "song",
+      "path": "/api/song/from-spotify",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher"
+        ]
+      },
+      "schemas": [
+        "SongSchema"
+      ],
+      "lines": 138,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/route.ts",
+      "domain": "song",
+      "path": "/api/song",
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher",
+          "student"
+        ]
+      },
+      "schemas": [],
+      "lines": 418,
+      "callers": 41,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/search/route.ts",
+      "domain": "song",
+      "path": "/api/song/search",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "CommonSchema"
+      ],
+      "lines": 119,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/stats/advanced/route.ts",
+      "domain": "song",
+      "path": "/api/song/stats/advanced",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher"
+        ]
+      },
+      "schemas": [],
+      "lines": 62,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/stats/chords/route.ts",
+      "domain": "song",
+      "path": "/api/song/stats/chords",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher"
+        ]
+      },
+      "schemas": [],
+      "lines": 38,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/stats/engagement/route.ts",
+      "domain": "song",
+      "path": "/api/song/stats/engagement",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher"
+        ]
+      },
+      "schemas": [],
+      "lines": 23,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/stats/route.ts",
+      "domain": "song",
+      "path": "/api/song/stats",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin"
+        ]
+      },
+      "schemas": [],
+      "lines": 120,
+      "callers": 6,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/student-songs/route.ts",
+      "domain": "song",
+      "path": "/api/song/student-songs",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "SongSchema"
+      ],
+      "lines": 86,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/song/update/route.ts",
+      "domain": "song",
+      "path": "/api/song/update",
+      "methods": [
+        "PUT"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "SongSchema"
+      ],
+      "lines": 81,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/user-songs/route.ts",
+      "domain": "song",
+      "path": "/api/song/user-songs",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 171,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/song/user-test-song/route.ts",
+      "domain": "song",
+      "path": "/api/song/user-test-song",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 81,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/spotify/authorize/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/authorize",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 53,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/callback/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/callback",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 78,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/spotify/features/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/features",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 52,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/matches/[songId]/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/matches/:songId",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 44,
+      "callers": 6,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/matches/action/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/matches/action",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 202,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/matches/approve/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/matches/approve",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 131,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/matches/count/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/matches/count",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 44,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/spotify/matches/reject/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/matches/reject",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 77,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/matches/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/matches",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 80,
+      "callers": 6,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/now-playing/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/now-playing",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 37,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/search/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/search",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 73,
+      "callers": 6,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/send-to-strummy/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/send-to-strummy",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher"
+        ]
+      },
+      "schemas": [
+        "SongSchema"
+      ],
+      "lines": 138,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/spotify/sync/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/sync",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 240,
+      "callers": 3,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/sync/stream/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/sync/stream",
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 354,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/spotify/track-from-url/route.ts",
+      "domain": "spotify",
+      "path": "/api/spotify/track-from-url",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 83,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/stats/weekly/route.ts",
+      "domain": "stats",
+      "path": "/api/stats/weekly",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 56,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/student/lessons/route.ts",
+      "domain": "student",
+      "path": "/api/student/lessons",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 64,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/student/song-status-history/route.ts",
+      "domain": "student",
+      "path": "/api/student/song-status-history",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 141,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/student/song-status/route.ts",
+      "domain": "student",
+      "path": "/api/student/song-status",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 146,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/students/health/route.ts",
+      "domain": "students",
+      "path": "/api/students/health",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 133,
+      "callers": 7,
+      "orphan": false
+    },
+    {
+      "file": "app/api/students/needs-attention/route.ts",
+      "domain": "students",
+      "path": "/api/students/needs-attention",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 122,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/students/pipeline/route.ts",
+      "domain": "students",
+      "path": "/api/students/pipeline",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 175,
+      "callers": 2,
+      "orphan": false
+    },
+    {
+      "file": "app/api/teacher/lessons/route.ts",
+      "domain": "teacher",
+      "path": "/api/teacher/lessons",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 90,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/teacher/students/route.ts",
+      "domain": "teacher",
+      "path": "/api/teacher/students",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 73,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/teachers/performance/route.ts",
+      "domain": "teachers",
+      "path": "/api/teachers/performance",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher"
+        ]
+      },
+      "schemas": [],
+      "lines": 110,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/users/[id]/route.ts",
+      "domain": "users",
+      "path": "/api/users/:id",
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher",
+          "student"
+        ]
+      },
+      "schemas": [],
+      "lines": 155,
+      "callers": 14,
+      "orphan": false
+    },
+    {
+      "file": "app/api/users/profile/route.ts",
+      "domain": "users",
+      "path": "/api/users/profile",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [
+        "shared/phone"
+      ],
+      "lines": 93,
+      "callers": 1,
+      "orphan": false
+    },
+    {
+      "file": "app/api/users/route.ts",
+      "domain": "users",
+      "path": "/api/users",
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin",
+          "teacher",
+          "student"
+        ]
+      },
+      "schemas": [],
+      "lines": 412,
+      "callers": 14,
+      "orphan": false
+    },
+    {
+      "file": "app/api/webhooks/google-calendar/route.ts",
+      "domain": "webhooks",
+      "path": "/api/webhooks/google-calendar",
+      "methods": [
+        "POST"
+      ],
+      "auth": {
+        "requiresUser": false,
+        "requiresAdminClient": true,
+        "requiresCronSecret": false,
+        "requiresApiKey": false,
+        "requiresServiceRole": false,
+        "roleChecks": []
+      },
+      "schemas": [],
+      "lines": 73,
+      "callers": 5,
+      "orphan": false
+    },
+    {
+      "file": "app/api/widget/admin/route.ts",
+      "domain": "widget",
+      "path": "/api/widget/admin",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": true,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "admin"
+        ]
+      },
+      "schemas": [],
+      "lines": 179,
+      "callers": 0,
+      "orphan": true
+    },
+    {
+      "file": "app/api/widget/dashboard/route.ts",
+      "domain": "widget",
+      "path": "/api/widget/dashboard",
+      "methods": [
+        "GET"
+      ],
+      "auth": {
+        "requiresUser": true,
+        "requiresAdminClient": false,
+        "requiresCronSecret": false,
+        "requiresApiKey": true,
+        "requiresServiceRole": false,
+        "roleChecks": [
+          "teacher",
+          "student"
+        ]
+      },
+      "schemas": [],
+      "lines": 137,
+      "callers": 0,
+      "orphan": true
+    }
+  ]
+}

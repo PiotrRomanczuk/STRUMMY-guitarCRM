@@ -1,0 +1,16 @@
+meta {
+  name: get-song-stats-engagement
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{baseUrl}}/api/song/stats/engagement
+  auth: inherit
+}
+
+tests {
+  test('Status 200 or 403', function() {
+    expect([200, 403]).to.include(res.status);
+  });
+}

@@ -1,0 +1,17 @@
+meta {
+  name: get-cron-weekly-insights
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/cron/weekly-insights
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{CRON_SECRET}}
+}
+docs {
+  Domain cron. Auth cron-secret.
+}

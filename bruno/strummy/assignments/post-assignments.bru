@@ -1,0 +1,20 @@
+meta {
+  name: post-assignments
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/assignments
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain assignments. Auth user. schemas=AssignmentSchema
+}

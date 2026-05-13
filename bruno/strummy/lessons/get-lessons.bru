@@ -1,0 +1,25 @@
+meta {
+  name: get-lessons
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/lessons
+  auth: inherit
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response has lessons array', function() {
+    expect(res.body).to.have.property('lessons');
+    expect(res.body.lessons).to.be.an('array');
+  });
+  test('Each lesson has id', function() {
+    if (res.body.lessons.length > 0) {
+      expect(res.body.lessons[0]).to.have.property('id');
+    }
+  });
+}

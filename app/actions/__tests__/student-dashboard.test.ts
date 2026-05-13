@@ -25,6 +25,8 @@ const createDefaultChain = (): any => ({
   lt: () => createDefaultChain(),
   lte: () => createDefaultChain(),
   in: () => createDefaultChain(),
+  not: () => createDefaultChain(),
+  is: () => createDefaultChain(),
   order: () => createDefaultChain(),
   limit: () => createDefaultChain(),
   single: () => Promise.resolve({ data: null }),
@@ -70,47 +72,67 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () => Promise.resolve({
-                data: { full_name: 'John Doe' },
-              }),
+              single: () =>
+                Promise.resolve({
+                  data: { full_name: 'John Doe' },
+                }),
             }),
           }),
         };
       }
 
       if (table === 'lessons') {
+        // Build a chain that returns rich data for the next/last lesson queries
+        // (which terminate in .maybeSingle()) and falls through to the default
+        // empty-data chain for everything else (count queries, week-range,
+        // batched student queries, etc.).
         return {
-          select: (_fields: string) => ({
-            eq: () => ({
-              gte: () => ({
-                order: () => ({
-                  limit: () => ({
-                    maybeSingle: () => Promise.resolve({
-                      data: {
-                        id: 'next-lesson-id',
-                        title: 'Guitar Basics',
-                        scheduled_at: '2026-02-10T10:00:00Z',
-                      },
+          select: (_fields: string) => {
+            const fallback = createDefaultChain();
+            return {
+              ...fallback,
+              eq: () => ({
+                ...fallback,
+                gte: () => ({
+                  ...fallback,
+                  // For week-range chart queries, .gte().lt() returns rows.
+                  lt: () => createDefaultChain(),
+                  order: () => ({
+                    ...fallback,
+                    limit: () => ({
+                      ...fallback,
+                      maybeSingle: () =>
+                        Promise.resolve({
+                          data: {
+                            id: 'next-lesson-id',
+                            title: 'Guitar Basics',
+                            scheduled_at: '2026-02-10T10:00:00Z',
+                          },
+                        }),
+                    }),
+                  }),
+                }),
+                lt: () => ({
+                  ...fallback,
+                  order: () => ({
+                    ...fallback,
+                    limit: () => ({
+                      ...fallback,
+                      maybeSingle: () =>
+                        Promise.resolve({
+                          data: {
+                            id: 'last-lesson-id',
+                            title: 'Scales Practice',
+                            scheduled_at: '2026-01-25T10:00:00Z',
+                            notes: 'Great progress!',
+                          },
+                        }),
                     }),
                   }),
                 }),
               }),
-              lt: () => ({
-                order: () => ({
-                  limit: () => ({
-                    maybeSingle: () => Promise.resolve({
-                      data: {
-                        id: 'last-lesson-id',
-                        title: 'Scales Practice',
-                        scheduled_at: '2026-01-25T10:00:00Z',
-                        notes: 'Great progress!',
-                      },
-                    }),
-                  }),
-                }),
-              }),
-            }),
-          }),
+            };
+          },
         };
       }
 
@@ -122,17 +144,18 @@ describe('getStudentDashboardData', () => {
                 return {
                   in: () => ({
                     order: () => ({
-                      limit: () => Promise.resolve({
-                        data: [
-                          {
-                            id: 'assignment-1',
-                            title: 'Practice C Major Scale',
-                            due_date: '2026-02-05',
-                            status: 'not_started',
-                            description: 'Practice for 15 minutes daily',
-                          },
-                        ],
-                      }),
+                      limit: () =>
+                        Promise.resolve({
+                          data: [
+                            {
+                              id: 'assignment-1',
+                              title: 'Practice C Major Scale',
+                              due_date: '2026-02-05',
+                              status: 'not_started',
+                              description: 'Practice for 15 minutes daily',
+                            },
+                          ],
+                        }),
                     }),
                   }),
                 };
@@ -148,19 +171,20 @@ describe('getStudentDashboardData', () => {
           select: () => ({
             eq: () => ({
               order: () => ({
-                limit: () => Promise.resolve({
-                  data: [
-                    {
-                      updated_at: '2026-01-30T10:00:00Z',
-                      songs: {
-                        id: 'song-1',
-                        title: 'Wonderwall',
-                        author: 'Oasis',
-                        created_at: '2026-01-01',
+                limit: () =>
+                  Promise.resolve({
+                    data: [
+                      {
+                        updated_at: '2026-01-30T10:00:00Z',
+                        songs: {
+                          id: 'song-1',
+                          title: 'Wonderwall',
+                          author: 'Oasis',
+                          created_at: '2026-01-01',
+                        },
                       },
-                    },
-                  ],
-                }),
+                    ],
+                  }),
               }),
             }),
           }),
@@ -176,22 +200,20 @@ describe('getStudentDashboardData', () => {
               };
             }
             return {
-              eq: () => Promise.resolve({
-                data: [
-                  { id: 'song-1', title: 'Wonderwall', author: 'Oasis' },
-                  { id: 'song-2', title: 'Blackbird', author: 'The Beatles' },
-                ],
-              }),
+              eq: () =>
+                Promise.resolve({
+                  data: [
+                    { id: 'song-1', title: 'Wonderwall', author: 'Oasis' },
+                    { id: 'song-2', title: 'Blackbird', author: 'The Beatles' },
+                  ],
+                }),
             };
           },
         };
       }
 
-      return {
-        select: () => ({
-          eq: () => Promise.resolve({ data: null }),
-        }),
-      };
+      // Default: full chain for any unspecified table (student_repertoire, practice_sessions, etc.)
+      return createDefaultTableMock();
     });
 
     const result = await getStudentDashboardData();
@@ -212,7 +234,9 @@ describe('getStudentDashboardData', () => {
     expect(result.recentSongs).toHaveLength(1);
     expect(result.allSongs).toHaveLength(2);
     expect(result.stats).toEqual({
-      totalSongs: 5,
+      // totalSongs now comes from student_repertoire count via
+      // fetchRepertoireForDashboard (default mock returns count: 0).
+      totalSongs: 0,
       completedLessons: expect.any(Number),
       activeAssignments: 1,
       practiceHours: 0,
@@ -247,9 +271,10 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () => Promise.resolve({
-                data: { full_name: null },
-              }),
+              single: () =>
+                Promise.resolve({
+                  data: { full_name: null },
+                }),
             }),
           }),
         };
@@ -277,46 +302,16 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () => Promise.resolve({
-                data: { full_name: 'New Student' },
-              }),
+              single: () =>
+                Promise.resolve({
+                  data: { full_name: 'New Student' },
+                }),
             }),
           }),
         };
       }
 
-      if (table === 'lessons') {
-        return {
-          select: (fields: string, options?: any) => {
-            if (options?.count === 'exact') {
-              return {
-                eq: () => ({
-                  lt: () => Promise.resolve({ count: 0 }),
-                }),
-              };
-            }
-            return {
-              eq: () => ({
-                gte: () => ({
-                  order: () => ({
-                    limit: () => ({
-                      maybeSingle: () => Promise.resolve({ data: null }),
-                    }),
-                  }),
-                }),
-                lt: () => ({
-                  order: () => ({
-                    limit: () => ({
-                      maybeSingle: () => Promise.resolve({ data: null }),
-                    }),
-                  }),
-                }),
-              }),
-            };
-          },
-        };
-      }
-
+      // lessons: return null data for all queries → nextLesson/lastLesson/count all zero/null
       return createDefaultTableMock();
     });
 
@@ -379,9 +374,10 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () => Promise.resolve({
-                data: { full_name: 'Student' },
-              }),
+              single: () =>
+                Promise.resolve({
+                  data: { full_name: 'Student' },
+                }),
             }),
           }),
         };
@@ -445,9 +441,10 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () => Promise.resolve({
-                data: { full_name: 'Student' },
-              }),
+              single: () =>
+                Promise.resolve({
+                  data: { full_name: 'Student' },
+                }),
             }),
           }),
         };
@@ -462,22 +459,23 @@ describe('getStudentDashboardData', () => {
               ...chain,
               order: () => ({
                 ...chain,
-                limit: () => Promise.resolve({
-                  data: [
-                    {
-                      updated_at: '2026-01-30',
-                      songs: {
-                        id: 'song-1',
-                        title: 'Song Title',
-                        author: 'Artist',
+                limit: () =>
+                  Promise.resolve({
+                    data: [
+                      {
+                        updated_at: '2026-01-30',
+                        songs: {
+                          id: 'song-1',
+                          title: 'Song Title',
+                          author: 'Artist',
+                        },
                       },
-                    },
-                    {
-                      updated_at: '2026-01-29',
-                      songs: null, // Null song should be filtered out
-                    },
-                  ],
-                }),
+                      {
+                        updated_at: '2026-01-29',
+                        songs: null, // Null song should be filtered out
+                      },
+                    ],
+                  }),
               }),
             }),
           }),
@@ -507,9 +505,10 @@ describe('getStudentDashboardData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: () => Promise.resolve({
-                data: { full_name: 'Student' },
-              }),
+              single: () =>
+                Promise.resolve({
+                  data: { full_name: 'Student' },
+                }),
             }),
           }),
         };
@@ -527,11 +526,10 @@ describe('getStudentDashboardData', () => {
             }
             return {
               ...chain,
-              eq: () => Promise.resolve({
-                data: [
-                  { id: 'song-1', title: 'Mystery Song', author: null },
-                ],
-              }),
+              eq: () =>
+                Promise.resolve({
+                  data: [{ id: 'song-1', title: 'Mystery Song', author: null }],
+                }),
             };
           },
         };

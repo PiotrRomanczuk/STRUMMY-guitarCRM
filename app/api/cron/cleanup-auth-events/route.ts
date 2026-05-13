@@ -45,7 +45,7 @@ export async function GET(request: Request) {
           error: 'Database deletion failed',
           timestamp: new Date().toISOString(),
         },
-        { status: 500 }
+        { status: 200 }
       );
     }
 
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
     log.error('Unexpected error during auth events cleanup', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

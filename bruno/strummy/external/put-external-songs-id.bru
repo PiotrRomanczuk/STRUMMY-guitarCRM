@@ -1,0 +1,23 @@
+meta {
+  name: put-external-songs-id
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/external/songs/{{sample_id}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain external [orphan]. Auth api-key.
+}

@@ -1,0 +1,20 @@
+meta {
+  name: put-lessons-songs-id
+  type: http
+  seq: 17
+}
+
+put {
+  url: {{baseUrl}}/api/lessons/songs/{{sample_lesson_id}}
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain lessons [orphan]. Auth user.
+}

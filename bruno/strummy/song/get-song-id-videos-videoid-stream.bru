@@ -1,0 +1,17 @@
+meta {
+  name: get-song-id-videos-videoid-stream
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/song/{{sample_song_id}}/videos/{{sample_videoId}}/stream
+  auth: inherit
+}
+
+tests {
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
+  });
+}

@@ -1,0 +1,14 @@
+meta {
+  name: get-admin-users
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/admin/users
+  auth: inherit
+}
+
+docs {
+  Domain admin [orphan]. Auth user, role:admin.
+}

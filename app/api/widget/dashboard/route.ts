@@ -49,15 +49,15 @@ export async function GET(request: NextRequest) {
         .select(
           `
           id,
-          date,
+          scheduled_at,
           notes,
           student:profiles!lessons_student_id_fkey(full_name)
         `
         )
         .eq('teacher_id', userId)
-        .gte('date', today)
-        .lte('date', nextWeek)
-        .order('date', { ascending: true })
+        .gte('scheduled_at', today)
+        .lte('scheduled_at', nextWeek)
+        .order('scheduled_at', { ascending: true })
         .limit(5);
       lessons = data || [];
     } else if (isStudent) {
@@ -67,15 +67,15 @@ export async function GET(request: NextRequest) {
         .select(
           `
           id,
-          date,
+          scheduled_at,
           notes,
           teacher:profiles!lessons_teacher_id_fkey(full_name)
         `
         )
         .eq('student_id', userId)
-        .gte('date', today)
-        .lte('date', nextWeek)
-        .order('date', { ascending: true })
+        .gte('scheduled_at', today)
+        .lte('scheduled_at', nextWeek)
+        .order('scheduled_at', { ascending: true })
         .limit(5);
       lessons = data || [];
     }
@@ -108,14 +108,14 @@ export async function GET(request: NextRequest) {
       },
       lessons: (lessons as Record<string, unknown>[]).map((lesson) => ({
         id: lesson.id,
-        date: lesson.date,
+        date: lesson.scheduled_at,
         notes: lesson.notes,
         with:
           isTeacher && lesson.student
             ? (lesson.student as { full_name: string }).full_name
             : isStudent && lesson.teacher
-            ? (lesson.teacher as { full_name: string }).full_name
-            : null,
+              ? (lesson.teacher as { full_name: string }).full_name
+              : null,
       })),
       assignments: (assignments as Record<string, unknown>[]).map((assignment) => ({
         id: assignment.id,

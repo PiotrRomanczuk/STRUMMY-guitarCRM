@@ -14,7 +14,6 @@ const TEST_ACCOUNT_MUTATION_ERROR = 'This action is not available on test accoun
  * 8 tests total (under the 10-test project limit).
  */
 test.describe('Demo Account Mutation Guards', { tag: ['@demo', '@security'] }, () => {
-
   // ── Test 1: Read-only browsing (Mobile) ────────────────────────────
   test('demo user can browse all pages without errors', async ({ page, loginAs }) => {
     test.setTimeout(120_000);
@@ -24,28 +23,42 @@ test.describe('Demo Account Mutation Guards', { tag: ['@demo', '@security'] }, (
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
     // Dashboard greeting is "Good morning/afternoon/evening, Sarah"
-    const heading = page.locator('h1, h2').filter({ hasText: /good\s|welcome|dashboard/i }).first();
+    const heading = page
+      .locator('h1, h2')
+      .filter({ hasText: /good\s|welcome|dashboard/i })
+      .first();
     await expect(heading).toBeVisible({ timeout: 15_000 });
 
     // Songs list — mobile uses card layout, desktop uses table
     await page.goto('/dashboard/songs');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1, h2').filter({ hasText: /songs/i }).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('h1, h2').filter({ hasText: /songs/i }).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Lessons list
     await page.goto('/dashboard/lessons');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('h1, h2').filter({ hasText: /lessons/i }).first()).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page
+        .locator('h1, h2')
+        .filter({ hasText: /lessons/i })
+        .first()
+    ).toBeVisible({ timeout: 15_000 });
 
     // Assignments — page shows filter tabs directly (no heading on mobile)
     await page.goto('/dashboard/assignments');
     await page.waitForLoadState('networkidle');
-    await expect(page.getByText(/all|overdue|in progress/i).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/all|overdue|in progress/i).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     // AI page
     await page.goto('/dashboard/ai');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('[data-testid="ai-assistant-input"]')).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('[data-testid="ai-assistant-input"]')).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   // ── Test 2: Song creation blocked (Mobile) ─────────────────────────
@@ -97,7 +110,7 @@ test.describe('Demo Account Mutation Guards', { tag: ['@demo', '@security'] }, (
 
     // Directly call the lesson create API with auth cookies
     const baseUrl = page.url().split('/dashboard')[0];
-    const response = await page.request.fetch(`${baseUrl}/api/lessons/create`, {
+    const response = await page.request.fetch(`${baseUrl}/api/lessons`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       data: JSON.stringify({
@@ -176,7 +189,7 @@ test.describe('Demo Account Mutation Guards', { tag: ['@demo', '@security'] }, (
     await page.waitForLoadState('networkidle');
 
     const endpoints = [
-      { method: 'POST', path: '/api/lessons/create' },
+      { method: 'POST', path: '/api/lessons' },
       { method: 'POST', path: '/api/assignments' },
       { method: 'POST', path: '/api/api-keys' },
       { method: 'POST', path: '/api/drive/files' },
@@ -184,14 +197,11 @@ test.describe('Demo Account Mutation Guards', { tag: ['@demo', '@security'] }, (
     ];
 
     for (const { method, path } of endpoints) {
-      const response = await page.request.fetch(
-        `${page.url().split('/dashboard')[0]}${path}`,
-        {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          data: JSON.stringify({}),
-        }
-      );
+      const response = await page.request.fetch(`${page.url().split('/dashboard')[0]}${path}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        data: JSON.stringify({}),
+      });
 
       expect(response.status(), `${method} ${path} should return 403`).toBe(403);
 
@@ -205,7 +215,10 @@ test.describe('Demo Account Mutation Guards', { tag: ['@demo', '@security'] }, (
   // ── Test 7: AI conversation mutations blocked (Desktop only) ────────
   test('demo user cannot send AI messages', async ({ page, loginAs, browserName }) => {
     // Skip on mobile — bottom nav overlaps the chat input fixed footer
-    test.skip(!!page.viewportSize() && page.viewportSize()!.width < 768, 'Mobile nav overlaps AI chat input');
+    test.skip(
+      !!page.viewportSize() && page.viewportSize()!.width < 768,
+      'Mobile nav overlaps AI chat input'
+    );
     test.slow(); // AI page may be slow to load
     await loginAs('demo');
 
@@ -227,8 +240,12 @@ test.describe('Demo Account Mutation Guards', { tag: ['@demo', '@security'] }, (
     // createConversation() is called first and returns error
     // The error surfaces as a system message in chat or a toast
     await expect(
-      page.getByText(TEST_ACCOUNT_MUTATION_ERROR).first()
-        .or(page.locator('[data-testid="ai-messages"]').locator(`text=${TEST_ACCOUNT_MUTATION_ERROR}`))
+      page
+        .getByText(TEST_ACCOUNT_MUTATION_ERROR)
+        .first()
+        .or(
+          page.locator('[data-testid="ai-messages"]').locator(`text=${TEST_ACCOUNT_MUTATION_ERROR}`)
+        )
         .or(page.locator('[data-sonner-toast]').filter({ hasText: /test accounts/ }))
     ).toBeVisible({ timeout: 15_000 });
   });

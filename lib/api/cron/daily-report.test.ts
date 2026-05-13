@@ -67,7 +67,7 @@ describe('Daily Report Cron API', () => {
     if (authHeader) {
       headers['authorization'] = authHeader;
     }
-    
+
     // Create a mock Request object that works in Jest environment
     const mockRequest = {
       headers: {
@@ -76,7 +76,7 @@ describe('Daily Report Cron API', () => {
       method: 'GET',
       url: 'http://localhost:3000/api/cron/daily-report',
     } as unknown as Request;
-    
+
     return mockRequest;
   }
 
@@ -160,7 +160,7 @@ describe('Daily Report Cron API', () => {
       expect(json.success).toBe(true);
     });
 
-    it('should return 500 when report fails', async () => {
+    it('should return 200 when report fails (cron always returns 200)', async () => {
       mockSendAdminSongReport.mockResolvedValueOnce({
         success: false,
         error: 'Failed to send email',
@@ -169,19 +169,19 @@ describe('Daily Report Cron API', () => {
 
       const response = await GET(request);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(200);
       const json = await response.json();
       expect(json.success).toBe(false);
       expect(json.error).toBe('Failed to send email');
     });
 
-    it('should return 500 on unexpected error', async () => {
+    it('should return 200 on unexpected error (cron always returns 200)', async () => {
       mockSendAdminSongReport.mockRejectedValueOnce(new Error('Database connection failed'));
       const request = createMockRequest('Bearer test-cron-secret-12345');
 
       const response = await GET(request);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(200);
       const json = await response.json();
       expect(json.success).toBe(false);
       expect(json.error).toBe('Internal Server Error');

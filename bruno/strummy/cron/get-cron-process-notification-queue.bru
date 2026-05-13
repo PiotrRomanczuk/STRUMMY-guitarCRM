@@ -1,0 +1,17 @@
+meta {
+  name: get-cron-process-notification-queue
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/cron/process-notification-queue
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{CRON_SECRET}}
+}
+docs {
+  Domain cron. Auth cron-secret.
+}

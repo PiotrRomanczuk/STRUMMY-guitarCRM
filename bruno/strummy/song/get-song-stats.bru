@@ -1,0 +1,27 @@
+meta {
+  name: get-song-stats
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{baseUrl}}/api/song/stats
+  auth: inherit
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Has totalSongs', function() {
+    expect(res.body).to.have.property('totalSongs');
+    expect(res.body.totalSongs).to.be.a('number');
+  });
+  test('Has levelStats', function() {
+    expect(res.body).to.have.property('levelStats');
+  });
+  test('Has topAuthorsList', function() {
+    expect(res.body).to.have.property('topAuthorsList');
+    expect(res.body.topAuthorsList).to.be.an('array');
+  });
+}

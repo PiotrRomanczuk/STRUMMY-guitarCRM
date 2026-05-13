@@ -1,0 +1,14 @@
+meta {
+  name: get-users
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/users
+  auth: inherit
+}
+
+docs {
+  Domain users. Auth user, admin-client, role:admin+teacher+student.
+}

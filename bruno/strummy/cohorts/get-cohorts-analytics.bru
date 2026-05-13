@@ -1,0 +1,14 @@
+meta {
+  name: get-cohorts-analytics
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/cohorts/analytics
+  auth: inherit
+}
+
+docs {
+  Domain cohorts. Auth user, role:admin+teacher.
+}

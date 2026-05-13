@@ -183,11 +183,17 @@ describe('getTeacherDashboardData', () => {
     expect(result).toHaveProperty('stats');
 
     expect(result.students).toHaveLength(2);
+    // With the batched lessons mock returning empty data, each student gets
+    // 0 past lessons → Beginner level. lastLessonAt/nextLessonAt are null.
     expect(result.students[0]).toEqual({
       id: 'student-1',
       name: 'John Doe',
-      level: 'Intermediate',
-      lessonsCompleted: 5,
+      level: 'Beginner',
+      lessonsCompleted: 0,
+      lastLessonAt: null,
+      nextLessonAt: null,
+      overdueAssignmentCount: 0,
+      repertoireCount: 0,
       nextLesson: expect.any(String),
       avatar: 'https://example.com/avatar1.jpg',
     });
@@ -376,7 +382,7 @@ describe('getTeacherDashboardData', () => {
     expect(result.chartData).toHaveLength(7);
     expect(result.chartData[0]).toHaveProperty('name');
     expect(result.chartData[0]).toHaveProperty('lessons');
-    expect(result.chartData[0]).toHaveProperty('assignments');
+    expect(result.chartData[0]).toHaveProperty('assignmentsCreated');
 
     // Songs are fetched from DB (empty in this mock)
     expect(result.songs).toEqual([]);
@@ -411,14 +417,16 @@ describe('getTeacherDashboardData', () => {
       }
 
       if (table === 'lessons') {
-        return {
-          select: (fields: string, options: any) => {
-            if (options?.count === 'exact') {
-              return chainable({ count: 7 });
-            }
-            return chainable({ data: null });
-          },
-        };
+        // New batched approach: return 7 rows for the week range query.
+        // This same mock also responds to the per-student batch query, but
+        // those rows are ignored for the lessonsThisWeek count which is
+        // simply weekLessons.length from the week range query.
+        const weekLessonRows = Array.from({ length: 7 }, (_, i) => ({
+          id: `wl-${i}`,
+          student_id: 'student-1',
+          scheduled_at: new Date().toISOString(),
+        }));
+        return chainable({ data: weekLessonRows });
       }
 
       if (table === 'lesson_songs') {
@@ -475,10 +483,23 @@ describe('getTeacherDashboardData', () => {
 
     mockGetTeacherStudentIds.mockResolvedValue(['beginner', 'intermediate', 'advanced']);
 
-    // Return three students; each will get the same lesson count from our mock
-    // We test the boundary logic by checking specific counts
-    const studentCounts = [0, 5, 20];
-    let studentIndex = 0;
+    // New batched approach: single lessons query returns rows for all students.
+    // beginner = 0 past lessons → Beginner
+    // intermediate = 5 past lessons → Intermediate (boundary)
+    // advanced = 20 past lessons → Advanced (boundary)
+    const now = new Date();
+    const past = (id: string, n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `lesson-${id}-${i}`,
+        student_id: id,
+        scheduled_at: new Date(now.getTime() - (i + 1) * 24 * 60 * 60 * 1000).toISOString(),
+      }));
+
+    const allLessonRows = [
+      ...past('beginner', 0),
+      ...past('intermediate', 5),
+      ...past('advanced', 20),
+    ];
 
     mockFrom.mockImplementation((table: string) => {
       if (table === 'profiles') {
@@ -497,16 +518,8 @@ describe('getTeacherDashboardData', () => {
       }
 
       if (table === 'lessons') {
-        return {
-          select: (fields: string, options: any) => {
-            if (options?.count === 'exact') {
-              const count = studentCounts[studentIndex] ?? 0;
-              studentIndex++;
-              return chainable({ count });
-            }
-            return chainable({ data: null });
-          },
-        };
+        // Batch query: return all rows; the action filters in JS per student
+        return chainable({ data: allLessonRows });
       }
 
       return chainable({ data: [], count: 0 });

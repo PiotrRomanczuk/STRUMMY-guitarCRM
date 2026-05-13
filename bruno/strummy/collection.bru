@@ -1,0 +1,28 @@
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+auth {
+  mode: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+script:pre-request {
+  // The runner is expected to pre-provision a JWT via:
+  //   --env-var authToken=<jwt>
+  // (See scripts/ci/run-bruno.sh which fetches one with curl and injects.)
+  // If no token is provided, requests proceed unauthenticated — auth-gated
+  // endpoints will return 401, which is the correct gate behaviour.
+  const token = bru.getEnvVar('authToken') || bru.getVar('authToken') || '';
+  bru.setVar('authToken', token);
+}
+
+tests {
+  test('Response is not 5xx', function() {
+    expect(res.status, `5xx from ${req.url}`).to.be.below(500);
+  });
+}

@@ -1,0 +1,14 @@
+meta {
+  name: get-student-lessons
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/student/lessons
+  auth: inherit
+}
+
+docs {
+  Domain student [orphan]. Auth user.
+}

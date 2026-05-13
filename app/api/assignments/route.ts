@@ -1,31 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { AssignmentInputSchema } from '@/schemas/AssignmentSchema';
 import { getAssignmentsHandler, createAssignmentHandler } from './handlers';
 import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
 import { logger } from '@/lib/logger';
-
-/**
- * Helper to get user profile with roles
- */
-async function getUserProfile(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('is_admin, is_teacher, is_student, is_development')
-    .eq('id', userId)
-    .single();
-
-  if (error || !profile) {
-    return null;
-  }
-
-  return {
-    isAdmin: profile.is_admin,
-    isTeacher: profile.is_teacher,
-    isStudent: profile.is_student,
-    isDevelopment: profile.is_development ?? false,
-  };
-}
+import { createListResponse } from '@/lib/api/response';
 
 /**
  * Extract query parameters from request
@@ -50,101 +30,74 @@ function extractQueryParams(searchParams: URLSearchParams) {
 /**
  * GET /api/assignments
  * List assignments with role-based filtering
- *
- * Query params:
- * - teacher_id, student_id, lesson_id, status, search, due_date_from, due_date_to
- * - sortField, sortDirection
  */
 export async function GET(request: NextRequest) {
-  try {
-    const supabase = await createClient();
+  return withApiAuth(request, async ({ user, roles }) => {
+    try {
+      const supabase = createAdminClient();
+      const { searchParams } = new URL(request.url);
+      const queryParams = extractQueryParams(searchParams);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      const result = await getAssignmentsHandler(supabase, user.id, roles, queryParams);
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      if (result.error) {
+        return NextResponse.json({ error: result.error }, { status: result.status });
+      }
+
+      const assignments = result.assignments ?? [];
+      const { page, limit } = queryParams;
+      return NextResponse.json(
+        createListResponse('assignments', assignments, {
+          total: assignments.length,
+          page,
+          limit,
+        }),
+        { status: 200 }
+      );
+    } catch (error) {
+      logger.error('Error in GET /api/assignments:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    const profile = await getUserProfile(supabase, user.id);
-
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const queryParams = extractQueryParams(searchParams);
-
-    const result = await getAssignmentsHandler(supabase, user.id, profile, queryParams);
-
-    if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
-    }
-
-    return NextResponse.json({
-      assignments: result.assignments,
-    }, { status: 200 });
-  } catch (error) {
-    logger.error('Error in GET /api/assignments:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }
 
 /**
  * POST /api/assignments
  * Create a new assignment
  *
- * Request body: AssignmentInput (title, description, due_date, teacher_id, student_id, lesson_id, status)
- *
  * Role-based access:
  * - Admin: Can create any assignment
  * - Teacher: Can create assignments for their students (teacher_id must match user)
  */
 export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient();
+  return withApiAuth(request, async ({ user, roles, flags }) => {
+    try {
+      if (flags.isDevelopment) {
+        return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
+      }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      const supabase = createAdminClient();
+      const body = await request.json();
+      const input = AssignmentInputSchema.parse(body);
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const result = await createAssignmentHandler(supabase, user.id, roles, input);
+
+      if (result.error) {
+        return NextResponse.json({ error: result.error }, { status: result.status });
+      }
+
+      return NextResponse.json(result.assignment, { status: result.status });
+    } catch (error) {
+      logger.error('Error in POST /api/assignments:', error);
+
+      if (error instanceof Error && error.name === 'ZodError') {
+        return NextResponse.json(
+          { error: 'Invalid request data', details: error.message },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    const profile = await getUserProfile(supabase, user.id);
-
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    if (profile.isDevelopment) {
-      return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
-    }
-
-    // Parse and validate input
-    const body = await request.json();
-    const input = AssignmentInputSchema.parse(body);
-
-    const result = await createAssignmentHandler(supabase, user.id, profile, input);
-
-    if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
-    }
-
-    return NextResponse.json(result.assignment, { status: result.status });
-  } catch (error) {
-    logger.error('Error in POST /api/assignments:', error);
-
-    // Handle validation errors
-    if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error.message },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }

@@ -1,54 +1,22 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { getLessonsHandler } from '../../lessons/handlers';
 import { logger } from '@/lib/logger';
-
-/**
- * Helper to get user profile with roles
- */
-async function getUserProfile(
-	supabase: Awaited<ReturnType<typeof createClient>>,
-	userId: string
-) {
-	const { data: profile, error } = await supabase
-		.from('profiles')
-		.select('is_admin, is_teacher, is_student')
-		.eq('id', userId)
-		.single();
-
-	if (error || !profile) {
-		return null;
-	}
-
-	// Map snake_case DB columns to camelCase for TypeScript
-	return {
-		isAdmin: profile.is_admin,
-		isTeacher: profile.is_teacher,
-		isStudent: profile.is_student,
-	};
-}
 
 /**
  * Extract query parameters from request
  */
 function extractQueryParams(searchParams: URLSearchParams) {
-	return {
-		userId: searchParams.get('userId') || undefined,
-		studentId: searchParams.get('studentId') || undefined,
-		filter: searchParams.get('filter') || undefined,
-		sort: searchParams.get('sort') as
-			| 'created_at'
-			| 'date'
-			| 'lesson_number'
-			| undefined,
-		sortOrder: searchParams.get('sortOrder') as 'asc' | 'desc' | undefined,
-		page: searchParams.get('page')
-			? parseInt(searchParams.get('page')!)
-			: undefined,
-		limit: searchParams.get('limit')
-			? parseInt(searchParams.get('limit')!)
-			: undefined,
-	};
+  return {
+    userId: searchParams.get('userId') || undefined,
+    studentId: searchParams.get('studentId') || undefined,
+    filter: searchParams.get('filter') || undefined,
+    sort: searchParams.get('sort') as 'created_at' | 'date' | 'lesson_number' | undefined,
+    sortOrder: searchParams.get('sortOrder') as 'asc' | 'desc' | undefined,
+    page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined,
+    limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
+  };
 }
 
 /**
@@ -56,58 +24,34 @@ function extractQueryParams(searchParams: URLSearchParams) {
  * List lessons for student (read-only, only their own lessons)
  */
 export async function GET(request: NextRequest) {
-	try {
-		const supabase = await createClient();
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
+  return withApiAuth(
+    request,
+    async ({ user, roles }) => {
+      try {
+        const supabase = await createClient();
+        const { searchParams } = new URL(request.url);
+        const queryParams = extractQueryParams(searchParams);
 
-		if (!user) {
-			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-		}
+        const result = await getLessonsHandler(supabase, user, roles, queryParams);
 
-		const profile = await getUserProfile(supabase, user.id);
-		if (!profile) {
-			return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-		}
+        if (result.error) {
+          return NextResponse.json({ error: result.error }, { status: result.status });
+        }
 
-		// Student-only check
-		if (!profile.isStudent) {
-			return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-		}
-
-		const { searchParams } = new URL(request.url);
-		const queryParams = extractQueryParams(searchParams);
-
-		// Students see only their own lessons
-		const result = await getLessonsHandler(
-			supabase,
-			user,
-			profile,
-			queryParams
-		);
-
-		if (result.error) {
-			return NextResponse.json(
-				{ error: result.error },
-				{ status: result.status }
-			);
-		}
-
-		return NextResponse.json(
-			{
-				lessons: result.lessons || [],
-				count: result.count || 0,
-			},
-			{ status: 200 }
-		);
-	} catch (error) {
-		logger.error('Error in student lessons API:', error);
-		return NextResponse.json(
-			{ error: 'Internal server error' },
-			{ status: 500 }
-		);
-	}
+        return NextResponse.json(
+          {
+            lessons: result.lessons || [],
+            count: result.count || 0,
+          },
+          { status: 200 }
+        );
+      } catch (error) {
+        logger.error('Error in student lessons API:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      }
+    },
+    { requiredRole: 'student' }
+  );
 }
 
 /**
@@ -115,8 +59,5 @@ export async function GET(request: NextRequest) {
  * Students cannot create lessons - read-only access
  */
 export async function POST() {
-	return NextResponse.json(
-		{ error: 'Students cannot create lessons' },
-		{ status: 403 }
-	);
+  return NextResponse.json({ error: 'Students cannot create lessons' }, { status: 403 });
 }

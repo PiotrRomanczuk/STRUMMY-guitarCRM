@@ -1,0 +1,19 @@
+meta {
+  name: get-song-student-songs
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{baseUrl}}/api/song/student-songs?userId={{sample_student_id}}
+  auth: inherit
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response is an array', function() {
+    expect(res.body).to.be.an('array');
+  });
+}

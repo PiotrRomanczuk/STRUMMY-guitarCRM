@@ -1,0 +1,14 @@
+meta {
+  name: get-student-song-status-history
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/student/song-status-history
+  auth: inherit
+}
+
+docs {
+  Domain student [orphan]. Auth user.
+}

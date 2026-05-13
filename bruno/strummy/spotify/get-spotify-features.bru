@@ -1,0 +1,14 @@
+meta {
+  name: get-spotify-features
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/spotify/features
+  auth: inherit
+}
+
+docs {
+  Domain spotify. Auth user.
+}

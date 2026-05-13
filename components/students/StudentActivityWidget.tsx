@@ -35,7 +35,7 @@ export function StudentActivityWidget() {
     totalActive: 0,
     totalInactive: 0,
     atRisk: 0,
-    recentlyReactivated: 0
+    recentlyReactivated: 0,
   });
   const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,23 +57,24 @@ export function StudentActivityWidget() {
 
       if (!students) return;
 
-      const activeCount = students.filter(s => s.student_status === 'active').length;
-      const inactiveCount = students.filter(s => s.student_status === 'inactive').length;
+      const activeCount = students.filter((s) => s.student_status === 'active').length;
+      const inactiveCount = students.filter((s) => s.student_status === 'archived').length;
 
       // Get recently reactivated (status changed in last 7 days to 'active')
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const reactivatedCount = students.filter(s =>
-        s.student_status === 'active' &&
-        s.status_changed_at &&
-        new Date(s.status_changed_at) >= sevenDaysAgo
+      const reactivatedCount = students.filter(
+        (s) =>
+          s.student_status === 'active' &&
+          s.status_changed_at &&
+          new Date(s.status_changed_at) >= sevenDaysAgo
       ).length;
 
       // Get at-risk students (active but approaching 28 days)
       const atRiskData: AtRiskStudent[] = [];
 
-      for (const student of students.filter(s => s.student_status === 'active')) {
+      for (const student of students.filter((s) => s.student_status === 'active')) {
         const { data: lastLesson } = await supabase
           .from('lessons')
           .select('scheduled_at')
@@ -107,7 +108,7 @@ export function StudentActivityWidget() {
               full_name: student.full_name,
               days_since_last_lesson: daysSince,
               last_completed_lesson: lastLesson.scheduled_at,
-              has_future_lesson: !!futureLesson
+              has_future_lesson: !!futureLesson,
             });
           }
         }
@@ -120,7 +121,7 @@ export function StudentActivityWidget() {
         totalActive: activeCount,
         totalInactive: inactiveCount,
         atRisk: atRiskData.length,
-        recentlyReactivated: reactivatedCount
+        recentlyReactivated: reactivatedCount,
       });
 
       setAtRiskStudents(atRiskData);
@@ -148,9 +149,7 @@ export function StudentActivityWidget() {
     <Card>
       <CardHeader>
         <CardTitle>Student Activity</CardTitle>
-        <CardDescription>
-          Engagement tracking based on lesson completion
-        </CardDescription>
+        <CardDescription>Engagement tracking based on lesson completion</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Metrics Grid */}
@@ -191,9 +190,7 @@ export function StudentActivityWidget() {
                   className="flex items-center justify-between rounded-lg border p-3 text-sm"
                 >
                   <div className="flex-1">
-                    <div className="font-medium">
-                      {student.full_name || student.email}
-                    </div>
+                    <div className="font-medium">{student.full_name || student.email}</div>
                     {student.last_completed_lesson && (
                       <div className="text-xs text-muted-foreground">
                         Last lesson: {new Date(student.last_completed_lesson).toLocaleDateString()}
@@ -225,7 +222,15 @@ export function StudentActivityWidget() {
   );
 }
 
-function MetricCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
+function MetricCard({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+}) {
   return (
     <div className="rounded-lg border p-3">
       <div className="flex items-center justify-between">

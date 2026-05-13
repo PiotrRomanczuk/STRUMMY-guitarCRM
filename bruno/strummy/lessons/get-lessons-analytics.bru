@@ -1,0 +1,19 @@
+meta {
+  name: get-lessons-analytics
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/lessons/analytics
+  auth: inherit
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Has overview', function() {
+    expect(res.body).to.have.property('overview');
+  });
+}

@@ -1,0 +1,14 @@
+meta {
+  name: get-drive-files-fileid
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/drive/files/{{sample_fileId}}
+  auth: inherit
+}
+
+docs {
+  Domain drive. Auth user. schemas=DriveFileSchema
+}
