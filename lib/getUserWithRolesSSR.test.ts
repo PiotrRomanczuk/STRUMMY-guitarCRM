@@ -1,59 +1,44 @@
 /**
  * Tests for getUserWithRolesSSR
- * Using development credentials from development_credentials.txt
  */
 
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@/lib/supabase/server';
+import { loadAuthedProfile } from '@/lib/auth/loadAuthedProfile';
 
-// Mock dependencies
-jest.mock('next/headers');
-jest.mock('@supabase/ssr');
+jest.mock('@/lib/supabase/server');
+jest.mock('@/lib/auth/loadAuthedProfile');
+
+const mockSupabase = {
+  auth: {
+    getUser: jest.fn(),
+  },
+};
+
+const baseEmpty = {
+  user: null,
+  isAdmin: false,
+  isTeacher: false,
+  isStudent: false,
+  isParent: false,
+  isDevelopment: false,
+};
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  (createClient as jest.Mock).mockResolvedValue(mockSupabase);
+});
 
 describe('getUserWithRolesSSR', () => {
-  const mockCookieStore = {
-    getAll: jest.fn(),
-    set: jest.fn(),
-    get: jest.fn(),
-  };
-
-  const mockSupabaseClient = {
-    auth: {
-      getUser: jest.fn(),
-    },
-    from: jest.fn(),
-  };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    (cookies as jest.Mock).mockResolvedValue(mockCookieStore);
-    (createServerClient as jest.Mock).mockReturnValue(mockSupabaseClient);
-  });
-
   describe('Admin User', () => {
     it('returns user with admin and teacher roles from profile', async () => {
-      const mockUser = {
-        id: 'admin-user-id',
-        email: 'p.romanczuk@gmail.com',
-        aud: 'authenticated',
-        role: 'authenticated',
-      };
+      const mockUser = { id: 'admin-user-id', email: 'p.romanczuk@gmail.com' };
 
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null,
-      });
-
-      mockSupabaseClient.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: { is_admin: true, is_teacher: true, is_student: false, is_parent: false, is_development: false },
-              error: null,
-            }),
-          }),
-        }),
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null });
+      (loadAuthedProfile as jest.Mock).mockResolvedValue({
+        user: mockUser,
+        roles: { isAdmin: true, isTeacher: true, isStudent: false },
+        flags: { isParent: false, isDevelopment: false },
       });
 
       const result = await getUserWithRolesSSR();
@@ -71,27 +56,13 @@ describe('getUserWithRolesSSR', () => {
 
   describe('Teacher User', () => {
     it('returns user with teacher role only from profile', async () => {
-      const mockUser = {
-        id: 'teacher-user-id',
-        email: 'teacher@example.com',
-        aud: 'authenticated',
-        role: 'authenticated',
-      };
+      const mockUser = { id: 'teacher-user-id', email: 'teacher@example.com' };
 
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null,
-      });
-
-      mockSupabaseClient.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: { is_admin: false, is_teacher: true, is_student: false, is_parent: false, is_development: false },
-              error: null,
-            }),
-          }),
-        }),
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null });
+      (loadAuthedProfile as jest.Mock).mockResolvedValue({
+        user: mockUser,
+        roles: { isAdmin: false, isTeacher: true, isStudent: false },
+        flags: { isParent: false, isDevelopment: false },
       });
 
       const result = await getUserWithRolesSSR();
@@ -109,27 +80,13 @@ describe('getUserWithRolesSSR', () => {
 
   describe('Student User', () => {
     it('returns user with student role only from profile', async () => {
-      const mockUser = {
-        id: 'student-user-id',
-        email: 'student@example.com',
-        aud: 'authenticated',
-        role: 'authenticated',
-      };
+      const mockUser = { id: 'student-user-id', email: 'student@example.com' };
 
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null,
-      });
-
-      mockSupabaseClient.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: { is_admin: false, is_teacher: false, is_student: true, is_parent: false, is_development: false },
-              error: null,
-            }),
-          }),
-        }),
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null });
+      (loadAuthedProfile as jest.Mock).mockResolvedValue({
+        user: mockUser,
+        roles: { isAdmin: false, isTeacher: false, isStudent: true },
+        flags: { isParent: false, isDevelopment: false },
       });
 
       const result = await getUserWithRolesSSR();
@@ -147,155 +104,37 @@ describe('getUserWithRolesSSR', () => {
 
   describe('No User', () => {
     it('returns all roles false when no user is authenticated', async () => {
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
 
       const result = await getUserWithRolesSSR();
 
-      expect(result).toEqual({
-        user: null,
-        isAdmin: false,
-        isTeacher: false,
-        isStudent: false,
-        isParent: false,
-        isDevelopment: false,
-      });
+      expect(result).toEqual(baseEmpty);
     });
   });
 
-  describe('User with No Roles', () => {
-    it('returns user with all roles false', async () => {
-      const mockUser = {
-        id: 'no-roles-user-id',
-        email: 'user@example.com',
-        aud: 'authenticated',
-        role: 'authenticated',
-      };
+  describe('User with No Profile', () => {
+    it('returns user with all roles false when loadAuthedProfile returns null', async () => {
+      const mockUser = { id: 'no-roles-user-id', email: 'user@example.com' };
 
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null,
-      });
-
-      mockSupabaseClient.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: null, // No roles found
-              error: null,
-            }),
-          }),
-        }),
-      });
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: mockUser }, error: null });
+      (loadAuthedProfile as jest.Mock).mockResolvedValue(null);
 
       const result = await getUserWithRolesSSR();
 
-      expect(result).toEqual({
-        user: mockUser,
-        isAdmin: false,
-        isTeacher: false,
-        isStudent: false,
-        isParent: false,
-        isDevelopment: false,
-      });
-    });
-  });
-
-  describe('Database Error', () => {
-    it('returns user with all roles false on error', async () => {
-      const mockUser = {
-        id: 'error-user-id',
-        email: 'error@example.com',
-        aud: 'authenticated',
-        role: 'authenticated',
-      };
-
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null,
-      });
-
-      mockSupabaseClient.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'Database error' },
-            }),
-          }),
-        }),
-      });
-
-      const result = await getUserWithRolesSSR();
-
-      expect(result).toEqual({
-        user: mockUser,
-        isAdmin: false,
-        isTeacher: false,
-        isStudent: false,
-        isParent: false,
-        isDevelopment: false,
-      });
-    });
-  });
-
-  describe('Database Error', () => {
-    it('handles profile fetch error gracefully', async () => {
-      const mockUser = {
-        id: 'user-id',
-        email: 'user@example.com',
-        aud: 'authenticated',
-        role: 'authenticated',
-      };
-
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null,
-      });
-
-      mockSupabaseClient.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            single: jest.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST500', message: 'Database error' },
-            }),
-          }),
-        }),
-      });
-
-      const result = await getUserWithRolesSSR();
-
-      expect(result).toEqual({
-        user: mockUser,
-        isAdmin: false,
-        isTeacher: false,
-        isStudent: false,
-        isParent: false,
-        isDevelopment: false,
-      });
+      expect(result).toEqual({ ...baseEmpty, user: mockUser });
     });
   });
 
   describe('Authentication Error', () => {
     it('returns null user when auth fails', async () => {
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
+      mockSupabase.auth.getUser.mockResolvedValue({
         data: { user: null },
         error: { message: 'Auth error' },
       });
 
       const result = await getUserWithRolesSSR();
 
-      expect(result).toEqual({
-        user: null,
-        isAdmin: false,
-        isTeacher: false,
-        isStudent: false,
-        isParent: false,
-        isDevelopment: false,
-      });
+      expect(result).toEqual(baseEmpty);
     });
   });
 });

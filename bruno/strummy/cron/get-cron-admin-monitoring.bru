@@ -1,0 +1,17 @@
+meta {
+  name: get-cron-admin-monitoring
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/cron/admin-monitoring
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{CRON_SECRET}}
+}
+docs {
+  Domain cron. Auth cron-secret.
+}

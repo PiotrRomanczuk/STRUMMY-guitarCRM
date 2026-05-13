@@ -1,0 +1,20 @@
+meta {
+  name: post-admin-link-shadow-user
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/admin/link-shadow-user
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain admin. Auth user, admin-client.
+}

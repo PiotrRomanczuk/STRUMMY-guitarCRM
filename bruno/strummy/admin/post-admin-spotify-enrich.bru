@@ -1,0 +1,20 @@
+meta {
+  name: post-admin-spotify-enrich
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/admin/spotify-enrich
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain admin. Auth admin-client, role:admin.
+}

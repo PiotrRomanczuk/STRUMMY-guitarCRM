@@ -1,0 +1,17 @@
+meta {
+  name: get-widget-admin
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/widget/admin
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+docs {
+  Domain widget [orphan]. Auth user, api-key, role:admin.
+}

@@ -1,0 +1,16 @@
+meta {
+  name: get-lessons-stats-daily
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/lessons/stats/daily
+  auth: inherit
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+}

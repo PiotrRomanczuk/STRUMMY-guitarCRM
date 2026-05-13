@@ -1,0 +1,23 @@
+meta {
+  name: post-song-from-spotify
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/song/from-spotify
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "spotifyId": "invalid-id-for-test"
+  }
+}
+
+tests {
+  test('Status 400 or 401 or 404', function() {
+    expect([400, 401, 404, 422]).to.include(res.status);
+  });
+}

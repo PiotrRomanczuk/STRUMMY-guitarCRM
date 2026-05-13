@@ -72,7 +72,11 @@
     "test:pw:mobile": "playwright test --project=\"iPhone 12\" --project=\"iPhone 15 Pro Max\"",
     "test:pw:tablet": "playwright test --project=\"iPad Pro\" --project=\"iPad (gen 7)\"",
     "test:pw:devices": "playwright test --project=\"iPhone 12\" --project=\"iPad Pro\" --project=\"Desktop Chrome\"",
-    "test:cleanup": "npx tsx scripts/cleanup-test-data.ts"
+    "test:cleanup": "npx tsx scripts/cleanup-test-data.ts",
+    "audit:routes": "npx tsx scripts/audit/inventory-routes.ts",
+    "audit:callgraph": "npx tsx scripts/audit/callgraph.ts",
+    "audit:bruno": "npx tsx scripts/audit/generate-bruno.ts",
+    "test:bruno": "bash scripts/ci/run-bruno.sh"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.37",
@@ -152,6 +156,7 @@
     "@types/nodemailer": "^7.0.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@usebruno/cli": "^3.3.0",
     "dotenv": "^17.3.1",
     "eslint": "^10",
     "eslint-config-next": "16.1.6",

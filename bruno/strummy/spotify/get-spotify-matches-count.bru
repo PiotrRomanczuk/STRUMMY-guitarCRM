@@ -1,0 +1,14 @@
+meta {
+  name: get-spotify-matches-count
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/spotify/matches/count
+  auth: inherit
+}
+
+docs {
+  Domain spotify [orphan]. Auth user.
+}

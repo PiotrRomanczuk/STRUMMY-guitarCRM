@@ -21,3 +21,6 @@
 [2026-03-21 11:10:05] ❌ ./scripts/ci/quality-check.sh | Duration: 111s
 [2026-03-21 11:12:16] ✅ ./scripts/ci/quality-check.sh | Duration: 114s
 [2026-04-26 14:01:24] ❌ ./scripts/ci/quality-check.sh | Duration: 163s
+[2026-05-13 21:49:54] ❌ ./scripts/ci/quality-check.sh | Duration: 232s
+[2026-05-13 21:51:36] ✅ ./scripts/ci/quality-check.sh | Duration: 157s
+[2026-05-13 22:56:49] ✅ ./scripts/ci/quality-check.sh | Duration: 319s

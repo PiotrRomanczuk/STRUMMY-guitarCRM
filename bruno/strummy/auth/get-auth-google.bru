@@ -1,0 +1,14 @@
+meta {
+  name: get-auth-google
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/auth/google
+  auth: inherit
+}
+
+docs {
+  Domain auth. Auth none.
+}

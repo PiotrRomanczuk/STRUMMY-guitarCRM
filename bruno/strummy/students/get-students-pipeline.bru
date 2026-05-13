@@ -1,0 +1,14 @@
+meta {
+  name: get-students-pipeline
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/students/pipeline
+  auth: inherit
+}
+
+docs {
+  Domain students. Auth user.
+}

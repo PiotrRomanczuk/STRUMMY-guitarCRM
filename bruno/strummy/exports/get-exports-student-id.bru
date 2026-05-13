@@ -1,0 +1,14 @@
+meta {
+  name: get-exports-student-id
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/exports/student/{{sample_id}}
+  auth: inherit
+}
+
+docs {
+  Domain exports. Auth user, role:admin+teacher+student.
+}

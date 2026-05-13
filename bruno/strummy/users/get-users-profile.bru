@@ -1,0 +1,14 @@
+meta {
+  name: get-users-profile
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/users/profile
+  auth: inherit
+}
+
+docs {
+  Domain users. Auth user. schemas=shared/phone
+}

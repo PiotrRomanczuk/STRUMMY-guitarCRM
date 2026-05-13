@@ -1,0 +1,14 @@
+meta {
+  name: get-admin-drive-sync
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/admin/drive-sync
+  auth: inherit
+}
+
+docs {
+  Domain admin. Auth user, admin-client.
+}

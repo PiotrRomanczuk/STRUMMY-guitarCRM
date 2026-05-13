@@ -1,0 +1,17 @@
+meta {
+  name: get-cron-lesson-reminders
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/cron/lesson-reminders
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{CRON_SECRET}}
+}
+docs {
+  Domain cron. Auth admin-client, cron-secret.
+}

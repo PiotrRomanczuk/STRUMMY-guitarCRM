@@ -1,0 +1,14 @@
+meta {
+  name: get-spotify-authorize
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/spotify/authorize
+  auth: inherit
+}
+
+docs {
+  Domain spotify. Auth user, admin-client.
+}

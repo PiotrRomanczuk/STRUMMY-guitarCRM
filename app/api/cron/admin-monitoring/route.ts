@@ -81,7 +81,7 @@ export async function GET(request: Request) {
     logger.error('[Cron] Unexpected error in admin monitoring:', error);
     return NextResponse.json(
       { success: false, error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

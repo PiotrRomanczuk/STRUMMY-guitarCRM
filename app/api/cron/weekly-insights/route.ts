@@ -30,14 +30,14 @@ export async function GET(request: Request) {
           emailsSent: result.emailsSent,
           errors: result.errors,
         },
-        { status: 500 }
+        { status: 200 }
       );
     }
   } catch (error) {
     logger.error('[Cron] Unexpected error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

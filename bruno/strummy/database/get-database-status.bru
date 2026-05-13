@@ -1,0 +1,14 @@
+meta {
+  name: get-database-status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/database/status
+  auth: inherit
+}
+
+docs {
+  Domain database. Auth user.
+}

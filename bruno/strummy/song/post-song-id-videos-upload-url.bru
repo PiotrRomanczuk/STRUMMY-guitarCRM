@@ -1,0 +1,23 @@
+meta {
+  name: post-song-id-videos-upload-url
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/song/{{sample_song_id}}/videos/upload-url
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+tests {
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
+  });
+}

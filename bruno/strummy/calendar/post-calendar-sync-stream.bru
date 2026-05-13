@@ -1,0 +1,20 @@
+meta {
+  name: post-calendar-sync-stream
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/calendar/sync/stream
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain calendar. Auth user, admin-client.
+}

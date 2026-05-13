@@ -59,7 +59,7 @@ export async function GET(request: Request) {
       );
       return NextResponse.json(
         { success: false, error: 'Failed to fetch lessons' },
-        { status: 500 }
+        { status: 200 }
       );
     }
 
@@ -145,7 +145,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       { success: false, error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

@@ -1,0 +1,20 @@
+meta {
+  name: post-webhooks-google-calendar
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/webhooks/google-calendar
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain webhooks. Auth admin-client.
+}

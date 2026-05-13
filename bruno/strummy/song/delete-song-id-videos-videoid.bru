@@ -1,0 +1,17 @@
+meta {
+  name: delete-song-id-videos-videoid
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/song/{{sample_song_id}}/videos/{{sample_videoId}}
+  auth: inherit
+}
+
+tests {
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
+  });
+}

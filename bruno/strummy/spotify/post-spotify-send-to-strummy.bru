@@ -1,0 +1,20 @@
+meta {
+  name: post-spotify-send-to-strummy
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/spotify/send-to-strummy
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain spotify [orphan]. Auth user, admin-client, role:admin+teacher. schemas=SongSchema
+}

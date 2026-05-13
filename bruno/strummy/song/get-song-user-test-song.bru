@@ -1,0 +1,16 @@
+meta {
+  name: get-song-user-test-song
+  type: http
+  seq: 24
+}
+
+get {
+  url: {{baseUrl}}/api/song/user-test-song
+  auth: inherit
+}
+
+tests {
+  test('Status 200 or 404', function() {
+    expect([200, 404]).to.include(res.status);
+  });
+}

@@ -1,0 +1,20 @@
+meta {
+  name: post-spotify-sync
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/spotify/sync
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain spotify. Auth user.
+}

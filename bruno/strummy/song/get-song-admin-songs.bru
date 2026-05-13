@@ -1,0 +1,25 @@
+meta {
+  name: get-song-admin-songs
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/song/admin-songs
+  auth: inherit
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response is an array', function() {
+    expect(res.body).to.be.an('array');
+  });
+  test('Each song has id and title', function() {
+    if (res.body.length > 0) {
+      expect(res.body[0]).to.have.property('id');
+      expect(res.body[0]).to.have.property('title');
+    }
+  });
+}

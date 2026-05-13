@@ -1,0 +1,20 @@
+meta {
+  name: put-lessons-bulk
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{baseUrl}}/api/lessons/bulk
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain lessons. Auth user.
+}

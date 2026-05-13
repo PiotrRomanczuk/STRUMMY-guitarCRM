@@ -1,0 +1,17 @@
+meta {
+  name: get-widget-dashboard
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/widget/dashboard
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+docs {
+  Domain widget [orphan]. Auth user, api-key, role:teacher+student.
+}

@@ -1,0 +1,14 @@
+meta {
+  name: delete-drive-files-fileid
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/drive/files/{{sample_fileId}}
+  auth: inherit
+}
+
+docs {
+  Domain drive. Auth user. schemas=DriveFileSchema
+}

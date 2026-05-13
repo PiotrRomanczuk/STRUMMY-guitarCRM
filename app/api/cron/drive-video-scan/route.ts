@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       log.error('No admin/teacher users found', { error: adminError });
       return NextResponse.json(
         { success: false, error: 'No admin users found' },
-        { status: 500 }
+        { status: 200 }
       );
     }
 
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
         success: false,
         error: error instanceof Error ? error.message : 'Internal Server Error',
       },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

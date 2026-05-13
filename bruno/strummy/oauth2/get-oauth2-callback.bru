@@ -1,0 +1,14 @@
+meta {
+  name: get-oauth2-callback
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/oauth2/callback
+  auth: inherit
+}
+
+docs {
+  Domain oauth2. Auth user.
+}

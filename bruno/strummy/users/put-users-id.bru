@@ -1,0 +1,20 @@
+meta {
+  name: put-users-id
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/users/{{sample_id}}
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain users. Auth user, role:admin+teacher+student.
+}

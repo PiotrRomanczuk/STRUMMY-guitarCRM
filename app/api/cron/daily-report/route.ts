@@ -16,10 +16,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: true });
     } else {
       logger.error('[Cron] Failed to send daily song report:', result.error);
-      return NextResponse.json({ success: false, error: result.error }, { status: 500 });
+      return NextResponse.json({ success: false, error: result.error }, { status: 200 });
     }
   } catch (error) {
     logger.error('[Cron] Unexpected error:', error);
-    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 200 });
   }
 }

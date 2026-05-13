@@ -1,0 +1,17 @@
+meta {
+  name: get-cron-assignment-overdue-check
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/cron/assignment-overdue-check
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{CRON_SECRET}}
+}
+docs {
+  Domain cron. Auth admin-client, cron-secret.
+}

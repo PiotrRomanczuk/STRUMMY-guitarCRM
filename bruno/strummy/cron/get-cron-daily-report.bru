@@ -1,0 +1,17 @@
+meta {
+  name: get-cron-daily-report
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/cron/daily-report
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{CRON_SECRET}}
+}
+docs {
+  Domain cron. Auth cron-secret.
+}

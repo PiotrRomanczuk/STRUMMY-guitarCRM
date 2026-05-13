@@ -1,0 +1,14 @@
+meta {
+  name: delete-assignments-id
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/assignments/{{sample_id}}
+  auth: inherit
+}
+
+docs {
+  Domain assignments. Auth user. schemas=AssignmentSchema
+}

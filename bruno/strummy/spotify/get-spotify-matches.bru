@@ -1,0 +1,14 @@
+meta {
+  name: get-spotify-matches
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/spotify/matches
+  auth: inherit
+}
+
+docs {
+  Domain spotify. Auth user.
+}

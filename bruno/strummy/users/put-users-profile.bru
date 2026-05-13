@@ -1,0 +1,20 @@
+meta {
+  name: put-users-profile
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/users/profile
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain users. Auth user. schemas=shared/phone
+}

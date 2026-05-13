@@ -1,0 +1,17 @@
+meta {
+  name: get-external-songs
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/external/songs
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+docs {
+  Domain external [orphan]. Auth admin-client, api-key.
+}

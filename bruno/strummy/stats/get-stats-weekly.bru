@@ -1,0 +1,14 @@
+meta {
+  name: get-stats-weekly
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/stats/weekly
+  auth: inherit
+}
+
+docs {
+  Domain stats. Auth user.
+}

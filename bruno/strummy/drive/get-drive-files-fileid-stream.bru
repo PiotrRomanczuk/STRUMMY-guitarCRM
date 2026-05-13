@@ -1,0 +1,14 @@
+meta {
+  name: get-drive-files-fileid-stream
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/drive/files/{{sample_fileId}}/stream
+  auth: inherit
+}
+
+docs {
+  Domain drive [orphan]. Auth user.
+}

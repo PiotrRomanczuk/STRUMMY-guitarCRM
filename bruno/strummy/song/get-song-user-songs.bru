@@ -1,0 +1,20 @@
+meta {
+  name: get-song-user-songs
+  type: http
+  seq: 23
+}
+
+get {
+  url: {{baseUrl}}/api/song/user-songs
+  auth: inherit
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response has songs array', function() {
+    expect(res.body).to.have.property('songs');
+    expect(res.body.songs).to.be.an('array');
+  });
+}

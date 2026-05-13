@@ -1,0 +1,14 @@
+meta {
+  name: delete-lessons-songs-id
+  type: http
+  seq: 18
+}
+
+delete {
+  url: {{baseUrl}}/api/lessons/songs/{{sample_lesson_id}}
+  auth: inherit
+}
+
+docs {
+  Domain lessons [orphan]. Auth user.
+}

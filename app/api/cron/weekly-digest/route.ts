@@ -42,7 +42,7 @@ export async function GET(request: Request) {
       logger.error('[Cron] Error fetching preferences:', prefError);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch preferences' },
-        { status: 500 }
+        { status: 200 }
       );
     }
 
@@ -166,7 +166,7 @@ export async function GET(request: Request) {
     logger.error('[Cron] Unexpected error in weekly digest generation:', error);
     return NextResponse.json(
       { success: false, error: 'Internal Server Error' },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

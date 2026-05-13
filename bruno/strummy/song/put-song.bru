@@ -1,0 +1,26 @@
+meta {
+  name: put-song
+  type: http
+  seq: 26
+}
+
+put {
+  url: {{baseUrl}}/api/song?id={{sample_song_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "Wonderwall (Updated)",
+    "author": "Oasis",
+    "level": "beginner",
+    "key": "Em"
+  }
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+}

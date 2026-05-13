@@ -1,0 +1,25 @@
+meta {
+  name: post-lessons-songs
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/lessons/songs
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "lesson_id": "{{sample_lesson_id}}",
+    "song_id": "{{sample_song_id}}",
+    "status": "in_progress"
+  }
+}
+
+tests {
+  test('Status 200 or 201 or 409', function() {
+    expect([200, 201, 409]).to.include(res.status);
+  });
+}

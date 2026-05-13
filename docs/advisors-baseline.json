@@ -1,0 +1,36 @@
+{
+  "capturedAt": "2026-05-13",
+  "capturedVia": "mcp__supabase__get_advisors",
+  "note": "Baseline counts. Re-snapshot in Phase 2 to confirm no new ERROR-level lints introduced. Full raw responses are too large to commit; rerun via Supabase MCP to inspect details.",
+  "security": {
+    "total": 68,
+    "byLevel": { "ERROR": 1, "WARN": 67 },
+    "topLints": {
+      "anon_security_definer_function_executable": 21,
+      "authenticated_security_definer_function_executable": 21,
+      "function_search_path_mutable": 18,
+      "materialized_view_in_api": 2,
+      "security_definer_view": 1,
+      "extension_in_public": 1,
+      "rls_policy_always_true": 1,
+      "public_bucket_allows_listing": 1
+    },
+    "errors": [
+      {
+        "name": "security_definer_view",
+        "detail": "View `public.teacher_students` is defined with the SECURITY DEFINER property"
+      }
+    ]
+  },
+  "performance": {
+    "total": 374,
+    "byLevel": { "WARN": 264, "INFO": 110 },
+    "topLints": {
+      "multiple_permissive_policies": 152,
+      "auth_rls_initplan": 112,
+      "unused_index": 100,
+      "unindexed_foreign_keys": 9,
+      "auth_db_connections_absolute": 1
+    }
+  }
+}

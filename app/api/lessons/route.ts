@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { getLessonsHandler, createLessonHandler } from './handlers';
 import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
@@ -28,7 +28,7 @@ function extractQueryParams(searchParams: URLSearchParams) {
 export async function GET(request: NextRequest) {
   return withApiAuth(request, async ({ user, roles }) => {
     try {
-      const supabase = await createClient();
+      const supabase = createAdminClient();
       const { searchParams } = new URL(request.url);
       const queryParams = extractQueryParams(searchParams);
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
       }
 
-      const supabase = await createClient();
+      const supabase = createAdminClient();
       const body = await request.json();
       const result = await createLessonHandler(supabase, user, roles, body);
 

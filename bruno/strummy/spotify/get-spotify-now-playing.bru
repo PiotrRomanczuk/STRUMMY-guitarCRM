@@ -1,0 +1,14 @@
+meta {
+  name: get-spotify-now-playing
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/spotify/now-playing
+  auth: inherit
+}
+
+docs {
+  Domain spotify. Auth user.
+}

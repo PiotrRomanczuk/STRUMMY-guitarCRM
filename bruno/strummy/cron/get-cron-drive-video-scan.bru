@@ -1,0 +1,17 @@
+meta {
+  name: get-cron-drive-video-scan
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/cron/drive-video-scan
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{CRON_SECRET}}
+}
+docs {
+  Domain cron. Auth admin-client, cron-secret.
+}

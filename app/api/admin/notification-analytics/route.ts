@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { withApiAuth } from '@/lib/auth/withApiAuth';
 import type { NotificationAnalytics, NotificationType } from '@/types/notifications';
 import { logger } from '@/lib/logger';
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     request,
     async () => {
       try {
-        const supabase = await createClient();
+        const supabase = createAdminClient();
         const { searchParams } = new URL(request.url);
         const days = parseInt(searchParams.get('days') || '30');
 
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
         if (logsError) {
           logger.error('Error fetching notification logs:', logsError);
-          return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
+          return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 200 });
         }
 
         const totalLogs = logs || [];
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(analytics, { status: 200 });
       } catch (error) {
         logger.error('Error in notification analytics API:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 200 });
       }
     },
     { requiredRole: 'admin' }

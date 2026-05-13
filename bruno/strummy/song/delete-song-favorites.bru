@@ -1,0 +1,20 @@
+meta {
+  name: delete-song-favorites
+  type: http
+  seq: 97
+}
+
+delete {
+  url: {{baseUrl}}/api/song/favorites?song_id={{sample_song_id}}
+  auth: inherit
+}
+
+tests {
+  test('Status 200, 400, 404 or 500', function() {
+    expect([200, 400, 404, 500]).to.include(res.status);
+  });
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
+  });
+}

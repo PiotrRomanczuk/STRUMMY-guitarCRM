@@ -1,0 +1,23 @@
+meta {
+  name: post-external-database-status
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/external/database/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{API_KEY}}
+}
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain external [orphan]. Auth api-key, role:admin.
+}

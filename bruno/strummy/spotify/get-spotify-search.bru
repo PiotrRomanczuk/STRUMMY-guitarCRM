@@ -1,0 +1,14 @@
+meta {
+  name: get-spotify-search
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/spotify/search
+  auth: inherit
+}
+
+docs {
+  Domain spotify. Auth user.
+}

@@ -1,0 +1,14 @@
+meta {
+  name: delete-admin-drive-videos
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/drive-videos
+  auth: inherit
+}
+
+docs {
+  Domain admin. Auth user. schemas=SongVideoSchema
+}

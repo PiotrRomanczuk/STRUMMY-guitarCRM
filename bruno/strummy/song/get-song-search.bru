@@ -1,0 +1,27 @@
+meta {
+  name: get-song-search
+  type: http
+  seq: 25
+}
+
+get {
+  url: {{baseUrl}}/api/song/search?q=wonderwall
+  auth: inherit
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response has songs array', function() {
+    expect(res.body).to.have.property('songs');
+    expect(res.body.songs).to.be.an('array');
+  });
+  test('Response has pagination', function() {
+    expect(res.body).to.have.property('pagination');
+    expect(res.body.pagination).to.have.property('total');
+  });
+  test('filters.search echoes query', function() {
+    expect(res.body.filters.search).to.equal('wonderwall');
+  });
+}

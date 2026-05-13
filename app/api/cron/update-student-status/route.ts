@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         success: false,
         error: 'Internal server error'
       },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

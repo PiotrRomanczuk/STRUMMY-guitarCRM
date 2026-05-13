@@ -1,0 +1,30 @@
+meta {
+  name: get-lessons-stats
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/lessons/stats
+  auth: inherit
+}
+
+tests {
+  test('Status 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Has total', function() {
+    expect(res.body).to.have.property('total');
+    expect(res.body.total).to.be.a('number');
+  });
+  test('Has byStatus', function() {
+    expect(res.body).to.have.property('byStatus');
+  });
+  test('Has monthly', function() {
+    expect(res.body).to.have.property('monthly');
+    expect(res.body.monthly).to.be.an('array');
+  });
+  test('Has upcoming', function() {
+    expect(res.body).to.have.property('upcoming');
+  });
+}
