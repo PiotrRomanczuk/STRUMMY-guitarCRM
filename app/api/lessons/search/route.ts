@@ -1,140 +1,124 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
-import { 
-  LessonStatusEnum,
-  type LessonWithProfiles 
-} from "@/schemas";
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { LessonStatusEnum, type LessonWithProfiles } from '@/schemas';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const { searchParams } = new URL(request.url);
+  return withApiAuth(request, async ({ user, roles }) => {
+    try {
+      const supabase = await createClient();
+      const { searchParams } = new URL(request.url);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      const query = searchParams.get('q') || '';
+      const status = searchParams.get('status');
+      const studentId = searchParams.get('studentId');
+      const teacherId = searchParams.get('teacherId');
+      const dateFrom = searchParams.get('dateFrom');
+      const dateTo = searchParams.get('dateTo');
+      const sortBy = searchParams.get('sortBy') || 'created_at';
+      const sortOrder = searchParams.get('sortOrder') || 'desc';
+      const limit = parseInt(searchParams.get('limit') || '20');
+      const offset = parseInt(searchParams.get('offset') || '0');
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const query = searchParams.get("q") || "";
-    const status = searchParams.get("status");
-    const studentId = searchParams.get("studentId");
-    const teacherId = searchParams.get("teacherId");
-    const dateFrom = searchParams.get("dateFrom");
-    const dateTo = searchParams.get("dateTo");
-    const sortBy = searchParams.get("sortBy") || "created_at";
-    const sortOrder = searchParams.get("sortOrder") || "desc";
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const offset = parseInt(searchParams.get("offset") || "0");
-
-    // Get user profile for role-based filtering
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("is_admin, is_teacher, is_student")
-      .eq("id", user.id)
-      .single();
-
-    let supabaseQuery = supabase
-      .from("lessons")
-      .select(`
+      let supabaseQuery = supabase.from('lessons').select(`
         *,
         profile:profiles!lessons_student_id_fkey(email, full_name),
         teacher_profile:profiles!lessons_teacher_id_fkey(email, full_name)
       `);
 
-    // Apply role-based access control
-    if (profile?.is_admin) {
-      // Admins see all lessons
-    } else if (profile?.is_teacher) {
-      supabaseQuery = supabaseQuery.eq("teacher_id", user.id);
-    } else {
-      supabaseQuery = supabaseQuery.eq("student_id", user.id);
-    }
-
-    // Exclude soft-deleted lessons
-    supabaseQuery = supabaseQuery.is("deleted_at", null);
-
-    // Apply filters
-    if (query) {
-      supabaseQuery = supabaseQuery.or(
-        `title.ilike.%${query}%,notes.ilike.%${query}%`
-      );
-    }
-
-    if (status) {
-      try {
-        LessonStatusEnum.parse(status.toUpperCase());
-        supabaseQuery = supabaseQuery.eq("status", status.toUpperCase());
-      } catch {
-        return NextResponse.json({ error: "Invalid status filter" }, { status: 400 });
+      // Apply role-based access control
+      if (roles.isAdmin) {
+        // Admins see all lessons
+      } else if (roles.isTeacher) {
+        supabaseQuery = supabaseQuery.eq('teacher_id', user.id);
+      } else {
+        supabaseQuery = supabaseQuery.eq('student_id', user.id);
       }
-    }
 
-    if (studentId) {
-      supabaseQuery = supabaseQuery.eq("student_id", studentId);
-    }
+      // Exclude soft-deleted lessons
+      supabaseQuery = supabaseQuery.is('deleted_at', null);
 
-    if (teacherId) {
-      supabaseQuery = supabaseQuery.eq("teacher_id", teacherId);
-    }
+      // Apply filters
+      if (query) {
+        supabaseQuery = supabaseQuery.or(`title.ilike.%${query}%,notes.ilike.%${query}%`);
+      }
 
-    if (dateFrom) {
-      supabaseQuery = supabaseQuery.gte("scheduled_at", dateFrom);
-    }
-
-    if (dateTo) {
-      supabaseQuery = supabaseQuery.lte("scheduled_at", dateTo);
-    }
-
-    // Apply sorting
-    const validSortFields = ["title", "scheduled_at", "created_at", "updated_at", "lesson_number"];
-    const validSortOrders = ["asc", "desc"];
-    
-    if (validSortFields.includes(sortBy) && validSortOrders.includes(sortOrder)) {
-      supabaseQuery = supabaseQuery.order(sortBy, { ascending: sortOrder === "asc" });
-    } else {
-      supabaseQuery = supabaseQuery.order("created_at", { ascending: false });
-    }
-
-    // Apply pagination
-    supabaseQuery = supabaseQuery.range(offset, offset + limit - 1);
-
-    const { data: lessons, error, count } = await supabaseQuery;
-
-    if (error) {
-      logger.error("Error searching lessons:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // Validate the response data
-    const validatedLessons: LessonWithProfiles[] = [];
-    for (const lesson of lessons || []) {
-      try {
-        // Basic validation - we'll use a simplified schema for search results
-        if (lesson.id && lesson.student_id && lesson.teacher_id) {
-          validatedLessons.push(lesson as LessonWithProfiles);
+      if (status) {
+        try {
+          LessonStatusEnum.parse(status.toUpperCase());
+          supabaseQuery = supabaseQuery.eq('status', status.toUpperCase());
+        } catch {
+          return NextResponse.json({ error: 'Invalid status filter' }, { status: 400 });
         }
-      } catch (validationError) {
-        logger.error("Lesson validation error:", validationError);
-        // Continue with other lessons even if one fails validation
       }
-    }
 
-    return NextResponse.json({
-      lessons: validatedLessons,
-      total: count || validatedLessons.length,
-      limit,
-      offset,
-      hasMore: validatedLessons.length === limit
-    });
-  } catch (error) {
-    logger.error("Error in lesson search API:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-} 
+      if (studentId) {
+        supabaseQuery = supabaseQuery.eq('student_id', studentId);
+      }
+
+      if (teacherId) {
+        supabaseQuery = supabaseQuery.eq('teacher_id', teacherId);
+      }
+
+      if (dateFrom) {
+        supabaseQuery = supabaseQuery.gte('scheduled_at', dateFrom);
+      }
+
+      if (dateTo) {
+        supabaseQuery = supabaseQuery.lte('scheduled_at', dateTo);
+      }
+
+      // Apply sorting
+      const validSortFields = [
+        'title',
+        'scheduled_at',
+        'created_at',
+        'updated_at',
+        'lesson_number',
+      ];
+      const validSortOrders = ['asc', 'desc'];
+
+      if (validSortFields.includes(sortBy) && validSortOrders.includes(sortOrder)) {
+        supabaseQuery = supabaseQuery.order(sortBy, { ascending: sortOrder === 'asc' });
+      } else {
+        supabaseQuery = supabaseQuery.order('created_at', { ascending: false });
+      }
+
+      // Apply pagination
+      supabaseQuery = supabaseQuery.range(offset, offset + limit - 1);
+
+      const { data: lessons, error, count } = await supabaseQuery;
+
+      if (error) {
+        logger.error('Error searching lessons:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      // Validate the response data
+      const validatedLessons: LessonWithProfiles[] = [];
+      for (const lesson of lessons || []) {
+        try {
+          // Basic validation - we'll use a simplified schema for search results
+          if (lesson.id && lesson.student_id && lesson.teacher_id) {
+            validatedLessons.push(lesson as LessonWithProfiles);
+          }
+        } catch (validationError) {
+          logger.error('Lesson validation error:', validationError);
+          // Continue with other lessons even if one fails validation
+        }
+      }
+
+      return NextResponse.json({
+        lessons: validatedLessons,
+        total: count || validatedLessons.length,
+        limit,
+        offset,
+        hasMore: validatedLessons.length === limit,
+      });
+    } catch (error) {
+      logger.error('Error in lesson search API:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+  });
+}

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { authenticateRequest } from '@/lib/auth/api-auth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 
 const SCOPES = [
   'user-read-currently-playing',
@@ -13,40 +13,29 @@ const SCOPES = [
  * Redirects to Spotify OAuth login page. Admin-only.
  */
 export async function GET(request: Request) {
-  const auth = await authenticateRequest(request);
-  if (!auth.user) {
-    return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
-  }
+  return withApiAuth(request, async ({ roles }) => {
+    if (!roles.isAdmin) {
+      return NextResponse.json({ error: 'Admin role required' }, { status: 403 });
+    }
 
-  // Admin check
-  const supabase = createAdminClient();
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', auth.user.id)
-    .single();
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
 
-  if (!profile?.is_admin) {
-    return NextResponse.json({ error: 'Admin role required' }, { status: 403 });
-  }
+    if (!clientId || !redirectUri) {
+      return NextResponse.json(
+        { error: 'SPOTIFY_CLIENT_ID and SPOTIFY_REDIRECT_URI must be set' },
+        { status: 500 }
+      );
+    }
 
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      scope: SCOPES,
+      redirect_uri: redirectUri,
+      show_dialog: 'true',
+    });
 
-  if (!clientId || !redirectUri) {
-    return NextResponse.json(
-      { error: 'SPOTIFY_CLIENT_ID and SPOTIFY_REDIRECT_URI must be set' },
-      { status: 500 }
-    );
-  }
-
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: clientId,
-    scope: SCOPES,
-    redirect_uri: redirectUri,
-    show_dialog: 'true',
+    return NextResponse.redirect(`https://accounts.spotify.com/authorize?${params.toString()}`);
   });
-
-  return NextResponse.redirect(`https://accounts.spotify.com/authorize?${params.toString()}`);
 }
