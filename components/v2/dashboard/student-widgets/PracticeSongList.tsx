@@ -37,8 +37,8 @@ function toDisplayItem(r: DashboardRepertoireItem): DisplayItem {
   return {
     id: r.id,
     song_id: r.song_id,
-    title: r.title,
-    artist: r.artist ?? 'Unknown',
+    title: r.song_title,
+    artist: r.song_author ?? 'Unknown',
     current_status: r.current_status,
     self_rating: r.self_rating,
     last_practiced_at: r.last_practiced_at,

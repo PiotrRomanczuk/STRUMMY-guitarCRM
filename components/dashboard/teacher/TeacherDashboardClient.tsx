@@ -190,7 +190,13 @@ export function TeacherDashboardClient({
 
         {/* Progress Chart - Full Width */}
         <DashboardSection>
-          <ProgressChart data={data.chartData} />
+          <ProgressChart
+            data={data.chartData.map((d) => ({
+              name: d.name,
+              lessons: d.lessons,
+              assignments: d.assignmentsCreated,
+            }))}
+          />
         </DashboardSection>
 
         {/* Admin Section */}

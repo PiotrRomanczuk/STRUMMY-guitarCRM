@@ -93,21 +93,12 @@ export function StudentDashboardClient({
     studentsLearning: 12, // Mocked
   }));
 
-  const statusMap: Record<
-    string,
-    'not_started' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'
-  > = {
-    pending: 'not_started',
-    completed: 'completed',
-    overdue: 'overdue',
-  };
-
   const assignments = data.assignments.map((a) => ({
     id: a.id,
     title: a.title,
     studentName: 'You', // Mocked
     dueDate: a.due_date || 'No due date',
-    status: statusMap[a.status] ?? 'not_started',
+    status: a.status,
   }));
 
   // Defaults to 'started' since the dashboard action doesn't fetch individual song statuses
