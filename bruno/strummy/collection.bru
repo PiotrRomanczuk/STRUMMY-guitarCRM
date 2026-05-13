@@ -12,55 +12,13 @@ auth:bearer {
 }
 
 script:pre-request {
-  // Collection-level: acquire a Supabase JWT for the active persona.
-  // Personas are selected via the `persona` env var: admin | teacher | student.
-  // Tokens are cached on the Bruno env for the run.
-  const persona = bru.getEnvVar('persona') || 'admin';
-  const tokenKey = `authToken_${persona}`;
-  const expKey = `authTokenExp_${persona}`;
-
-  const cached = bru.getVar(tokenKey);
-  const exp = Number(bru.getVar(expKey) || 0);
-  const now = Math.floor(Date.now() / 1000);
-
-  if (cached && exp - 30 > now) {
-    bru.setVar('authToken', cached);
-    return;
-  }
-
-  const supabaseUrl = bru.getEnvVar('SUPABASE_URL');
-  const supabaseAnon = bru.getEnvVar('SUPABASE_ANON_KEY');
-  const email = bru.getEnvVar(`${persona.toUpperCase()}_EMAIL`);
-  const password = bru.getEnvVar(`${persona.toUpperCase()}_PASSWORD`);
-
-  if (!supabaseUrl || !supabaseAnon || !email || !password) {
-    // Graceful skip — useful for read-only smoke runs without persona credentials.
-    // Endpoints requiring auth will return 401, which is the correct gate behaviour.
-    bru.setVar('authToken', '');
-    return;
-  }
-
-  const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: supabaseAnon,
-    },
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Supabase sign-in failed for ${persona} (${res.status}): ${body}`);
-  }
-
-  const json = await res.json();
-  const accessToken = json.access_token;
-  const expiresAt = Math.floor(Date.now() / 1000) + (json.expires_in || 3600);
-
-  bru.setVar(tokenKey, accessToken);
-  bru.setVar(expKey, String(expiresAt));
-  bru.setVar('authToken', accessToken);
+  // The runner is expected to pre-provision a JWT via:
+  //   --env-var authToken=<jwt>
+  // (See scripts/ci/run-bruno.sh which fetches one with curl and injects.)
+  // If no token is provided, requests proceed unauthenticated — auth-gated
+  // endpoints will return 401, which is the correct gate behaviour.
+  const token = bru.getEnvVar('authToken') || bru.getVar('authToken') || '';
+  bru.setVar('authToken', token);
 }
 
 tests {

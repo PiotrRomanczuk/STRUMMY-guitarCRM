@@ -63,27 +63,48 @@ if [[ ! -x "$BRU_BIN" ]]; then
   exit 2
 fi
 
+# Acquire a Supabase JWT for the active persona (default: admin) so the
+# collection's bearer auth has something to inject. Skipped if any of
+# SUPABASE_URL / SUPABASE_ANON_KEY / <PERSONA>_EMAIL / <PERSONA>_PASSWORD
+# are missing.
+PERSONA="${PERSONA:-admin}"
+PERSONA_UC=$(printf '%s' "$PERSONA" | tr '[:lower:]' '[:upper:]')
+EMAIL_VAR="${PERSONA_UC}_EMAIL"
+PASS_VAR="${PERSONA_UC}_PASSWORD"
+EMAIL="${!EMAIL_VAR:-}"
+PASS="${!PASS_VAR:-}"
+AUTH_TOKEN=""
+
+if [[ -n "${SUPABASE_URL:-}" && -n "${SUPABASE_ANON_KEY:-}" && -n "$EMAIL" && -n "$PASS" ]]; then
+  AUTH_RESP=$(curl -sS -m 10 -X POST "$SUPABASE_URL/auth/v1/token?grant_type=password" \
+    -H "apikey: $SUPABASE_ANON_KEY" \
+    -H "Content-Type: application/json" \
+    -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" 2>/dev/null) || AUTH_RESP=""
+  AUTH_TOKEN=$(printf '%s' "$AUTH_RESP" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('access_token',''))" 2>/dev/null || true)
+  if [[ -n "$AUTH_TOKEN" ]]; then
+    echo "→ Auth: signed in as $PERSONA ($EMAIL)"
+  else
+    echo "→ Auth: sign-in FAILED for $PERSONA. Auth-gated endpoints will 401."
+  fi
+else
+  echo "→ Auth: no persona credentials. Auth-gated endpoints will 401."
+fi
+
 echo "→ Bruno env: $ENV_NAME"
 echo "→ Target:    bruno/strummy/$TARGET_REL"
 [[ "$GET_ONLY" -eq 1 ]] && echo "→ Mode:      GET-only (read-only smoke)"
 
 cd "$COLLECTION"
 
-EXIT=0
-if [[ "$GET_ONLY" -eq 1 ]]; then
-  # Run get-*.bru files only by passing each domain folder individually and
-  # filtering via Bruno's --filename glob.
-  "$BRU_BIN" run "$TARGET_REL" \
-    --env "$ENV_NAME" \
-    --filename "*/get-*.bru" \
-    --reporter-json "$RESULTS" \
-    || EXIT=$?
-else
-  "$BRU_BIN" run "$TARGET_REL" \
-    --env "$ENV_NAME" \
-    --reporter-json "$RESULTS" \
-    || EXIT=$?
-fi
+BRU_ARGS=(run "$TARGET_REL" -r --env "$ENV_NAME" --reporter-json "$RESULTS")
+[[ -n "$AUTH_TOKEN" ]] && BRU_ARGS+=(--env-var "authToken=$AUTH_TOKEN")
+# Forward any other relevant env vars so .bru files can interpolate them.
+for v in SUPABASE_ANON_KEY CRON_SECRET API_KEY SUPABASE_SERVICE_ROLE_KEY; do
+  val="${!v:-}"
+  [[ -n "$val" ]] && BRU_ARGS+=(--env-var "$v=$val")
+done
 
+EXIT=0
+"$BRU_BIN" "${BRU_ARGS[@]}" || EXIT=$?
 echo "→ Results: $RESULTS (bru exit $EXIT)"
 exit "$EXIT"
