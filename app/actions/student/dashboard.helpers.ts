@@ -43,12 +43,9 @@ export function computePracticeStreakDays(practicedDates: string[]): number {
   return streak;
 }
 
-/** Format a Date as YYYY-MM-DD using local timezone offset arithmetic. */
+/** Format a Date as YYYY-MM-DD in UTC (consistent with ISO-string slice(0,10)). */
 function toDateStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  return d.toISOString().slice(0, 10);
 }
 
 /**
@@ -59,7 +56,7 @@ export function getMonToSunWeekBounds(now: Date = new Date()): {
   weekStart: Date;
   weekEnd: Date;
 } {
-  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon ... 6=Sat
+  const dayOfWeek = now.getUTCDay(); // 0=Sun, 1=Mon ... 6=Sat (UTC, consistent with setUTCDate)
   const daysFromMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
   const weekStart = new Date(now);
