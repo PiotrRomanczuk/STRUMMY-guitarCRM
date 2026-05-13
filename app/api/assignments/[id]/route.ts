@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { AssignmentUpdateSchema } from '@/schemas/AssignmentSchema';
 import { getAssignmentHandler, updateAssignmentHandler, deleteAssignmentHandler } from './handlers';
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return withApiAuth(request, async ({ user, roles }) => {
     try {
       const { id } = await params;
-      const supabase = await createClient();
+      const supabase = createAdminClient();
       const result = await getAssignmentHandler(supabase, id, user.id, roles);
 
       return NextResponse.json(result.data ? result.data : { error: result.error }, {
@@ -39,7 +39,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
 
       const { id } = await params;
-      const supabase = await createClient();
+      const supabase = createAdminClient();
       const body = await request.json();
       const input = AssignmentUpdateSchema.parse({ ...body, id });
 
@@ -78,7 +78,7 @@ export async function DELETE(
       }
 
       const { id } = await params;
-      const supabase = await createClient();
+      const supabase = createAdminClient();
       const result = await deleteAssignmentHandler(supabase, id, user.id, roles);
 
       return NextResponse.json(result.data ? result.data : { error: result.error }, {

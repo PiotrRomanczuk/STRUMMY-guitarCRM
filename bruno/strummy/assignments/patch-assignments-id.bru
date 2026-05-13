@@ -1,20 +1,33 @@
 meta {
   name: patch-assignments-id
   type: http
-  seq: 2
+  seq: 4
 }
 
 patch {
-  url: {{baseUrl}}/api/assignments/{{sample_id}}
+  url: {{baseUrl}}/api/assignments/{{created_assignment_id}}
   body: json
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "status": "in_progress"
+  }
 }
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("no 5xx", function() {
+    expect(res.status).to.be.below(500);
+  });
+}
+
 docs {
   Domain assignments. Auth user. schemas=AssignmentSchema
+  PATCH accepts partial fields (AssignmentUpdateSchema)
+  Students can only update status field
+  Uses created_assignment_id set by post-assignments.bru
 }
