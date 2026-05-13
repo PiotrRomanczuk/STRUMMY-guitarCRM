@@ -194,7 +194,7 @@ export function TeacherDashboardClient({
             data={data.chartData.map((d) => ({
               name: d.name,
               lessons: d.lessons,
-              assignments: d.assignmentsCreated,
+              assignments: d.assignments,
             }))}
           />
         </DashboardSection>

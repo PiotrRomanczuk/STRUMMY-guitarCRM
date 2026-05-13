@@ -28,15 +28,15 @@ export async function GET(request: Request) {
   // 2. Get all song IDs and their status from lesson_songs for these lessons
   const { data: lessonSongs, error: lessonSongsError } = await supabase
     .from('lesson_songs')
-    .select('song_id, song_status')
+    .select('song_id, status')
     .in('lesson_id', lessonIds);
   if (lessonSongsError) {
     return NextResponse.json({ error: 'Error fetching lesson songs' }, { status: 500 });
   }
   const songIdToStatus = new Map<string, string>();
-  const songIds = lessonSongs?.map((ls: { song_id: string; song_status: string | null }) => {
-    if (ls.song_status) {
-      songIdToStatus.set(ls.song_id, ls.song_status);
+  const songIds = lessonSongs?.map((ls: { song_id: string; status: string | null }) => {
+    if (ls.status) {
+      songIdToStatus.set(ls.song_id, ls.status);
     }
     return ls.song_id;
   });

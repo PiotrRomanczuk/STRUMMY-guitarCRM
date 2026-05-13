@@ -38,7 +38,9 @@ export default function TeacherDashboardDesktop({
           </h1>
           {data.needsAttention.length > 0 && (
             <p className="text-muted-foreground text-sm mt-2 max-w-xl">
-              {data.needsAttention.length} {data.needsAttention.length === 1 ? 'student needs' : 'students need'} attention today.
+              {data.needsAttention.length}{' '}
+              {data.needsAttention.length === 1 ? 'student needs' : 'students need'} attention
+              today.
             </p>
           )}
         </div>
@@ -81,7 +83,13 @@ export default function TeacherDashboardDesktop({
       </div>
 
       {/* Chart */}
-      <ChartWidget data={data.chartData} />
+      <ChartWidget
+        data={data.chartData.map((d) => ({
+          day: d.name,
+          lessons: d.lessons,
+          assignmentsCreated: d.assignments,
+        }))}
+      />
     </div>
   );
 }

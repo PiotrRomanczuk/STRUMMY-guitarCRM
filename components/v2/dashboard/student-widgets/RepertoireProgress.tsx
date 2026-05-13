@@ -75,10 +75,10 @@ function RepertoireProgressItem({ item }: { item: DashboardRepertoireItem }) {
                 title={priority.label}
               />
             )}
-            <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
+            <p className="text-sm font-medium text-foreground truncate">{item.song_title}</p>
           </div>
           <p className="text-xs text-muted-foreground truncate">
-            {item.artist || 'Unknown Artist'}
+            {item.song_author || 'Unknown Artist'}
           </p>
         </div>
         <span
