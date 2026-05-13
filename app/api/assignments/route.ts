@@ -5,6 +5,7 @@ import { AssignmentInputSchema } from '@/schemas/AssignmentSchema';
 import { getAssignmentsHandler, createAssignmentHandler } from './handlers';
 import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
 import { logger } from '@/lib/logger';
+import { createListResponse } from '@/lib/api/response';
 
 /**
  * Extract query parameters from request
@@ -43,7 +44,16 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: result.error }, { status: result.status });
       }
 
-      return NextResponse.json({ assignments: result.assignments }, { status: 200 });
+      const assignments = result.assignments ?? [];
+      const { page, limit } = queryParams;
+      return NextResponse.json(
+        createListResponse('assignments', assignments, {
+          total: assignments.length,
+          page,
+          limit,
+        }),
+        { status: 200 }
+      );
     } catch (error) {
       logger.error('Error in GET /api/assignments:', error);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

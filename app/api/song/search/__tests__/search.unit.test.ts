@@ -10,16 +10,40 @@
 
 import { NextRequest } from 'next/server';
 import { sanitizePostgrestFilter, GET } from '@/app/api/song/search/route';
-import { authenticateRequest } from '@/lib/auth/api-auth';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
+import type { AuthedProfile } from '@/lib/auth/loadAuthedProfile';
 
-jest.mock('@/lib/auth/api-auth', () => ({
-  authenticateRequest: jest.fn(),
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn(),
 }));
 
-jest.mock('@/lib/supabase/admin', () => ({
-  createAdminClient: jest.fn(),
+// ---------------------------------------------------------------------------
+// withApiAuth mock — controls what authed profile the handler receives
+// ---------------------------------------------------------------------------
+
+let _authedProfile: AuthedProfile | null = null;
+
+jest.mock('@/lib/auth/withApiAuth', () => ({
+  withApiAuth: jest.fn(
+    async (_req: Request, handler: (authed: AuthedProfile, req: Request) => Promise<Response>) => {
+      if (!_authedProfile) {
+        const { NextResponse } = await import('next/server');
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      return handler(_authedProfile, _req);
+    }
+  ),
 }));
+
+function mockAuthAs(profile: AuthedProfile | null) {
+  _authedProfile = profile;
+}
+
+const TEACHER_PROFILE: AuthedProfile = {
+  user: { id: 'user-123', email: 'teacher@example.com' } as AuthedProfile['user'],
+  roles: { isAdmin: false, isTeacher: true, isStudent: false },
+  flags: { isParent: false, isDevelopment: false },
+};
 
 // ---------------------------------------------------------------------------
 // Pure unit tests for the sanitizer helper
@@ -79,7 +103,6 @@ describe('sanitizePostgrestFilter', () => {
 // ---------------------------------------------------------------------------
 
 describe('GET /api/song/search', () => {
-  const mockUser = { id: 'user-123', email: 'teacher@example.com' };
   const mockSongs = [
     { id: '1', title: 'Stairway to Heaven', author: 'Led Zeppelin' },
     { id: '2', title: 'Bohemian Rhapsody', author: 'Queen' },
@@ -98,6 +121,7 @@ describe('GET /api/song/search', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAuthAs(TEACHER_PROFILE);
 
     mockSupabase = {
       from: jest.fn().mockReturnThis(),
@@ -114,16 +138,11 @@ describe('GET /api/song/search', () => {
       }),
     };
 
-    (authenticateRequest as jest.Mock).mockResolvedValue({ user: mockUser, status: 200 });
-    (createAdminClient as jest.Mock).mockReturnValue(mockSupabase);
+    (createClient as jest.Mock).mockResolvedValue(mockSupabase);
   });
 
   it('returns 401 when the user is not authenticated', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValue({
-      user: null,
-      error: 'Unauthorized',
-      status: 401,
-    });
+    mockAuthAs(null);
 
     const req = new NextRequest('http://localhost/api/song/search');
     const res = await GET(req);

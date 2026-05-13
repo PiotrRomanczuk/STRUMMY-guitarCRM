@@ -1,90 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticateRequest } from '@/lib/auth/api-auth';
-import { createAdminClient } from '@/lib/supabase/admin';
 import {
   getSongsHandler,
   createSongHandler,
   updateSongHandler,
   deleteSongHandler,
 } from './handlers';
+import { createListResponse } from '@/lib/api/response';
 import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
-
-/**
- * Helper to get or create user profile using the admin client
- */
-type ProfileResult =
-  | {
-      ok: true;
-      profile: {
-        isAdmin: boolean;
-        isTeacher: boolean;
-        isStudent: boolean;
-        isDevelopment: boolean;
-      };
-    }
-  | { ok: false; status: number; error: string };
-
-async function getOrCreateProfile(
-  supabase: ReturnType<typeof createAdminClient>,
-  userId: string,
-  email: string
-): Promise<ProfileResult> {
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('is_admin, is_teacher, is_student, is_development')
-    .eq('id', userId)
-    .single();
-
-  // If no profile exists, create one with default values
-  if (profileError?.code === 'PGRST116') {
-    const { data: newProfile, error: createError } = await supabase
-      .from('profiles')
-      .insert({
-        id: userId,
-        email,
-        is_admin: false,
-        is_student: true,
-        is_teacher: false,
-      })
-      .select('is_admin, is_teacher, is_student, is_development')
-      .single();
-
-    if (createError) {
-      logger.error('[API/Songs] Error creating profile', { userId, error: createError });
-      return { ok: false, status: 500, error: 'Error creating user profile' };
-    }
-
-    return {
-      ok: true,
-      profile: {
-        isAdmin: newProfile.is_admin,
-        isTeacher: newProfile.is_teacher,
-        isStudent: newProfile.is_student,
-        isDevelopment: newProfile.is_development ?? false,
-      },
-    };
-  }
-
-  if (profileError) {
-    logger.error('[API/Songs] Error fetching profile', {
-      userId,
-      code: profileError.code,
-      message: profileError.message,
-    });
-    return { ok: false, status: 500, error: 'Failed to load user profile' };
-  }
-
-  return {
-    ok: true,
-    profile: {
-      isAdmin: profile.is_admin,
-      isTeacher: profile.is_teacher,
-      isStudent: profile.is_student,
-      isDevelopment: profile.is_development ?? false,
-    },
-  };
-}
 
 /**
  * Helper to parse and validate query parameters
@@ -107,47 +32,44 @@ function parseQueryParams(searchParams: URLSearchParams) {
  * List all songs with filtering, searching, and pagination
  */
 export async function GET(request: NextRequest) {
-  try {
-    const auth = await authenticateRequest(request);
-    if (!auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
-    }
-    const user = auth.user;
-    const supabase = createAdminClient();
+  return withApiAuth(request, async ({ user, roles, flags }) => {
+    try {
+      const supabase = createAdminClient();
+      const profile = {
+        isAdmin: roles.isAdmin,
+        isTeacher: roles.isTeacher,
+        isStudent: roles.isStudent,
+        isDevelopment: flags.isDevelopment,
+      };
 
-    const profileResult = await getOrCreateProfile(supabase, user.id, user.email || '');
-    if (!profileResult.ok) {
-      return NextResponse.json({ error: profileResult.error }, { status: profileResult.status });
-    }
-    const profile = profileResult.profile;
+      const { searchParams } = new URL(request.url);
+      const queryParams = parseQueryParams(searchParams);
 
-    const { searchParams } = new URL(request.url);
-    const queryParams = parseQueryParams(searchParams);
+      const result = await getSongsHandler(supabase, user, profile, queryParams);
 
-    const result = await getSongsHandler(supabase, user, profile, queryParams);
+      if ('error' in result) {
+        return NextResponse.json({ error: result.error }, { status: result.status });
+      }
 
-    if ('error' in result) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
-    }
+      const totalPages = Math.ceil((result.count || 0) / queryParams.limit);
 
-    const totalPages = Math.ceil((result.count || 0) / queryParams.limit);
-
-    return NextResponse.json(
-      {
-        songs: result.songs,
-        pagination: {
-          page: queryParams.page,
-          limit: queryParams.limit,
-          total: result.count || 0,
-          totalPages,
+      return NextResponse.json(
+        {
+          songs: result.songs,
+          pagination: {
+            page: queryParams.page,
+            limit: queryParams.limit,
+            total: result.count || 0,
+            totalPages,
+          },
         },
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    logger.error('GET /api/song error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+        { status: 200 }
+      );
+    } catch (error) {
+      logger.error('GET /api/song error:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+  });
 }
 
 /**
@@ -156,58 +78,44 @@ export async function GET(request: NextRequest) {
  * Supports both cookie-based session auth and API key bearer tokens.
  */
 export async function POST(request: NextRequest) {
-  try {
-    const auth = await authenticateRequest(request);
-    if (!auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
+  return withApiAuth(request, async ({ user, roles, flags }) => {
+    try {
+      const supabase = createAdminClient();
+      const profile = {
+        isAdmin: roles.isAdmin,
+        isTeacher: roles.isTeacher,
+        isStudent: roles.isStudent,
+        isDevelopment: flags.isDevelopment,
+      };
+
+      if (profile.isDevelopment) {
+        return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
+      }
+
+      const body = await request.json();
+      const result = await createSongHandler(supabase, user, profile, body);
+
+      if (result.error) {
+        return NextResponse.json({ error: result.error }, { status: result.status });
+      }
+
+      return NextResponse.json(result.song, { status: result.status });
+    } catch (error) {
+      logger.error('[API/Songs] POST /api/song error:', error);
+      return NextResponse.json(
+        {
+          error: 'Internal server error',
+          details:
+            process.env.NODE_ENV === 'development'
+              ? error instanceof Error
+                ? error.message
+                : 'Unknown error'
+              : undefined,
+        },
+        { status: 500 }
+      );
     }
-    const user = auth.user;
-    const supabase = createAdminClient();
-
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('is_admin, is_teacher, is_student, is_development')
-      .eq('id', user.id)
-      .single();
-
-    if (!profileData) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
-    }
-
-    const profile = {
-      isAdmin: profileData.is_admin,
-      isTeacher: profileData.is_teacher,
-      isStudent: profileData.is_student,
-      isDevelopment: profileData.is_development ?? false,
-    };
-
-    if (profile.isDevelopment) {
-      return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
-    }
-
-    const body = await request.json();
-    const result = await createSongHandler(supabase, user, profile, body);
-
-    if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
-    }
-
-    return NextResponse.json(result.song, { status: result.status });
-  } catch (error) {
-    logger.error('[API/Songs] POST /api/song error:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details:
-          process.env.NODE_ENV === 'development'
-            ? error instanceof Error
-              ? error.message
-              : 'Unknown error'
-            : undefined,
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 /**
@@ -215,43 +123,40 @@ export async function POST(request: NextRequest) {
  * Update a song (requires teacher or admin role)
  */
 export async function PUT(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const songId = searchParams.get('id');
+  return withApiAuth(request, async ({ user, roles, flags }) => {
+    try {
+      const { searchParams } = new URL(request.url);
+      const songId = searchParams.get('id');
 
-    if (!songId) {
-      return NextResponse.json({ error: 'Song ID is required' }, { status: 400 });
+      if (!songId) {
+        return NextResponse.json({ error: 'Song ID is required' }, { status: 400 });
+      }
+
+      const supabase = createAdminClient();
+      const profile = {
+        isAdmin: roles.isAdmin,
+        isTeacher: roles.isTeacher,
+        isStudent: roles.isStudent,
+        isDevelopment: flags.isDevelopment,
+      };
+
+      if (profile.isDevelopment) {
+        return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
+      }
+
+      const body = await request.json();
+      const result = await updateSongHandler(supabase, user, profile, songId, body);
+
+      if (result.error) {
+        return NextResponse.json({ error: result.error }, { status: result.status });
+      }
+
+      return NextResponse.json(result.song, { status: result.status });
+    } catch (error) {
+      logger.error('PUT /api/song error:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    const auth = await authenticateRequest(request);
-    if (!auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
-    }
-    const user = auth.user;
-    const supabase = createAdminClient();
-
-    const profileResult = await getOrCreateProfile(supabase, user.id, user.email || '');
-    if (!profileResult.ok) {
-      return NextResponse.json({ error: profileResult.error }, { status: profileResult.status });
-    }
-    const profile = profileResult.profile;
-
-    if (profile.isDevelopment) {
-      return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
-    }
-
-    const body = await request.json();
-    const result = await updateSongHandler(supabase, user, profile, songId, body);
-
-    if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
-    }
-
-    return NextResponse.json(result.song, { status: result.status });
-  } catch (error) {
-    logger.error('PUT /api/song error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }
 
 /**
@@ -259,46 +164,40 @@ export async function PUT(request: NextRequest) {
  * Delete a song (requires teacher or admin role)
  */
 export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const songId = searchParams.get('id');
+  return withApiAuth(request, async ({ user, roles, flags }) => {
+    try {
+      const { searchParams } = new URL(request.url);
+      const songId = searchParams.get('id');
 
-    if (!songId) {
-      return NextResponse.json({ error: 'Song ID is required' }, { status: 400 });
+      if (!songId) {
+        return NextResponse.json({ error: 'Song ID is required' }, { status: 400 });
+      }
+
+      const supabase = createAdminClient();
+      const profile = {
+        isAdmin: roles.isAdmin,
+        isTeacher: roles.isTeacher,
+        isStudent: roles.isStudent,
+        isDevelopment: flags.isDevelopment,
+      };
+
+      if (profile.isDevelopment) {
+        return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
+      }
+
+      const result = await deleteSongHandler(supabase, user, profile, songId);
+
+      if (result.error) {
+        return NextResponse.json({ error: result.error }, { status: result.status });
+      }
+
+      return NextResponse.json(
+        { success: result.success, cascadeInfo: result.cascadeInfo },
+        { status: result.status }
+      );
+    } catch (error) {
+      logger.error('DELETE /api/song error:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    const auth = await authenticateRequest(request);
-    if (!auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
-    }
-    const user = auth.user;
-    const supabase = createAdminClient();
-
-    const profileResult = await getOrCreateProfile(supabase, user.id, user.email || '');
-    if (!profileResult.ok) {
-      return NextResponse.json({ error: profileResult.error }, { status: profileResult.status });
-    }
-    const profile = profileResult.profile;
-
-    if (profile.isDevelopment) {
-      return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
-    }
-
-    const result = await deleteSongHandler(supabase, user, profile, songId);
-
-    if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
-    }
-
-    return NextResponse.json(
-      {
-        success: result.success,
-        cascadeInfo: result.cascadeInfo,
-      },
-      { status: result.status }
-    );
-  } catch (error) {
-    logger.error('DELETE /api/song error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }

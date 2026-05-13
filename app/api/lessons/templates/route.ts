@@ -1,7 +1,7 @@
-import { authenticateRequest } from '@/lib/auth/api-auth';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { logger } from '@/lib/logger';
 
 const LessonTemplateInputSchema = z.object({
@@ -14,106 +14,93 @@ const LessonTemplateInputSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  try {
-    const auth = await authenticateRequest(request);
-    if (!auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
-    }
-    const supabase = createAdminClient();
-    const { searchParams } = new URL(request.url);
+  return withApiAuth(request, async () => {
+    try {
+      const supabase = await createClient();
+      const { searchParams } = new URL(request.url);
 
-    const category = searchParams.get('category');
-    const teacherId = searchParams.get('teacherId');
+      const category = searchParams.get('category');
+      const teacherId = searchParams.get('teacherId');
 
-    let query = supabase.from('lesson_templates').select(`
+      let query = supabase.from('lesson_templates').select(`
         *,
         teacher_profile:profiles!lesson_templates_teacher_id_fkey(email, firstName, lastName)
       `);
 
-    if (category) {
-      query = query.eq('category', category);
+      if (category) {
+        query = query.eq('category', category);
+      }
+
+      if (teacherId) {
+        query = query.eq('teacher_id', teacherId);
+      }
+
+      query = query.order('created_at', { ascending: false });
+
+      const { data: templates, error } = await query;
+
+      if (error) {
+        logger.error('Error fetching lesson templates:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ templates: templates || [] });
+    } catch (error) {
+      logger.error('Error in lesson templates API:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    if (teacherId) {
-      query = query.eq('teacher_id', teacherId);
-    }
-
-    query = query.order('created_at', { ascending: false });
-
-    const { data: templates, error } = await query;
-
-    if (error) {
-      // lesson_templates table may not exist in all environments
-      logger.error('Error fetching lesson templates:', error);
-      return NextResponse.json({ templates: [] });
-    }
-
-    return NextResponse.json({ templates: templates || [] });
-  } catch (error) {
-    logger.error('Error in lesson templates API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const auth = await authenticateRequest(request);
-    if (!auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
-    }
-    const supabase = createAdminClient();
-
-    // Check if user has permission to create templates
-    // NOTE: original code queried profiles.role (deprecated string field); using is_admin/is_teacher instead
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin, is_teacher')
-      .eq('id', auth.user.id)
-      .single();
-
-    if (!profile || (!profile.is_admin && !profile.is_teacher)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    let body: unknown;
+  return withApiAuth(request, async ({ user, roles }) => {
     try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      const supabase = await createClient();
+
+      if (!roles.isAdmin && !roles.isTeacher) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
+
+      const parsed = LessonTemplateInputSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+          { status: 400 }
+        );
+      }
+
+      const { name, description, category, duration, structure, teacher_id } = parsed.data;
+
+      const { data: template, error } = await supabase
+        .from('lesson_templates')
+        .insert({
+          name,
+          description: description ?? null,
+          category,
+          duration: duration ?? 60,
+          structure: structure ?? null,
+          teacher_id,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Error creating lesson template:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json(template);
+    } catch (error) {
+      logger.error('Error in lesson template creation API:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    const parsed = LessonTemplateInputSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    const { name, description, category, duration, structure, teacher_id } = parsed.data;
-
-    const { data: template, error } = await supabase
-      .from('lesson_templates')
-      .insert({
-        name,
-        description: description ?? null,
-        category,
-        duration: duration ?? 60,
-        structure: structure ?? null,
-        teacher_id,
-        created_by: auth.user.id,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      logger.error('Error creating lesson template:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(template);
-  } catch (error) {
-    logger.error('Error in lesson template creation API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { authenticateRequest } from '@/lib/auth/api-auth';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { loadAuthedProfile } from '@/lib/auth/loadAuthedProfile';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 import type { SongStatsAdvanced } from '@/types/SongStatsAdvanced';
 import {
   computeOverview,
@@ -16,51 +15,43 @@ import {
 import { logger } from '@/lib/logger';
 
 export async function GET(request: Request) {
-  try {
-    const auth = await authenticateRequest(request);
-    if (!auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
+  return withApiAuth(request, async ({ roles }) => {
+    try {
+      if (!roles.isAdmin && !roles.isTeacher) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      const adminClient = createAdminClient();
+
+      const { data: songs, error } = await adminClient
+        .from('songs')
+        .select(
+          'title, author, level, key, tempo, category, release_year, chords, strumming_pattern, audio_files, youtube_url, spotify_link_url, created_at'
+        )
+        .is('deleted_at', null);
+
+      if (error) {
+        logger.error('[SongStatsAdvanced] Query error:', error);
+        return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
+      }
+
+      const rows = songs ?? [];
+
+      const result: SongStatsAdvanced = {
+        overview: computeOverview(rows),
+        tempo: computeTempoStats(rows),
+        keyDistribution: computeKeyDistribution(rows),
+        levelDistribution: computeLevelDistribution(rows),
+        categoryDistribution: computeCategoryDistribution(rows),
+        libraryGrowth: computeLibraryGrowth(rows),
+        sunburst: computeSunburst(rows),
+        releaseYear: computeReleaseYearStats(rows),
+      };
+
+      return NextResponse.json(result);
+    } catch (error) {
+      logger.error('[SongStatsAdvanced] Error:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    const authed = await loadAuthedProfile(auth.user);
-    if (!authed) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 403 });
-    }
-
-    if (!authed.roles.isAdmin && !authed.roles.isTeacher) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const adminClient = createAdminClient();
-
-    const { data: songs, error } = await adminClient
-      .from('songs')
-      .select(
-        'title, author, level, key, tempo, category, release_year, chords, strumming_pattern, audio_files, youtube_url, spotify_link_url, created_at'
-      )
-      .is('deleted_at', null);
-
-    if (error) {
-      logger.error('[SongStatsAdvanced] Query error:', error);
-      return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
-    }
-
-    const rows = songs ?? [];
-
-    const result: SongStatsAdvanced = {
-      overview: computeOverview(rows),
-      tempo: computeTempoStats(rows),
-      keyDistribution: computeKeyDistribution(rows),
-      levelDistribution: computeLevelDistribution(rows),
-      categoryDistribution: computeCategoryDistribution(rows),
-      libraryGrowth: computeLibraryGrowth(rows),
-      sunburst: computeSunburst(rows),
-      releaseYear: computeReleaseYearStats(rows),
-    };
-
-    return NextResponse.json(result);
-  } catch (error) {
-    logger.error('[SongStatsAdvanced] Error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }

@@ -1,12 +1,12 @@
 /**
  * Integration tests for Song Export API route.
  *
- * Tests the GET /api/song/export endpoint by mocking the Supabase client
- * returned by createClient. Covers auth, JSON export, CSV export, and
- * schema validation.
+ * Tests the GET /api/song/export endpoint by mocking authenticateRequest and
+ * createAdminClient. Covers auth, JSON export, CSV export, and schema validation.
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { authenticateRequest } from '@/lib/auth/api-auth';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 // ---------------------------------------------------------------------------
 // Mock next/server — provide both NextRequest and a constructable NextResponse
@@ -30,10 +30,7 @@ class MockNextResponse {
     return this.body;
   }
 
-  static json(
-    data: unknown,
-    init?: { status?: number; headers?: Record<string, string> }
-  ) {
+  static json(data: unknown, init?: { status?: number; headers?: Record<string, string> }) {
     return new MockNextResponse(JSON.stringify(data), init);
   }
 }
@@ -42,11 +39,13 @@ class MockNextRequest {
   url: string;
   method: string;
   nextUrl: URL;
+  headers: Headers;
 
   constructor(url: string | URL, init?: { method?: string }) {
     this.url = typeof url === 'string' ? url : url.toString();
     this.method = init?.method ?? 'GET';
     this.nextUrl = new URL(this.url);
+    this.headers = new Headers();
   }
 }
 
@@ -59,11 +58,13 @@ jest.mock('next/server', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { GET } = require('@/app/api/song/export/route');
 
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn(),
+jest.mock('@/lib/auth/api-auth', () => ({
+  authenticateRequest: jest.fn(),
 }));
 
-const mockedCreateClient = createClient as jest.MockedFunction<typeof createClient>;
+jest.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: jest.fn(),
+}));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -113,19 +114,16 @@ function buildRequest(params: Record<string, string> = {}) {
   return new MockNextRequest(url);
 }
 
-/** Build a chainable query builder for the songs table */
 function buildSongQueryBuilder(songs: typeof mockSongs = mockSongs) {
   const builder: Record<string, jest.Mock> = {};
   const chainable = ['select', 'eq', 'ilike', 'is', 'order'];
   for (const m of chainable) {
     builder[m] = jest.fn().mockReturnValue(builder);
   }
-  // Terminal: order is the last call before await
   builder.order = jest.fn().mockResolvedValue({ data: songs, error: null });
   return builder;
 }
 
-/** Build a profile query builder that resolves to a given role */
 function buildProfileQueryBuilder(role: 'admin' | 'teacher' | 'student') {
   const profile = {
     is_admin: role === 'admin',
@@ -147,20 +145,18 @@ function setupMockClient(options: {
   const profileQb = buildProfileQueryBuilder(options.role);
 
   const client = {
-    auth: {
-      getUser: jest.fn().mockResolvedValue({
-        data: { user: options.userId ? { id: options.userId } : null },
-        error: null,
-      }),
-    },
     from: jest.fn((table: string) => {
       if (table === 'profiles') return profileQb;
       return songQb;
     }),
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mockedCreateClient.mockResolvedValue(client as any);
+  (authenticateRequest as jest.Mock).mockResolvedValue(
+    options.userId
+      ? { user: { id: options.userId }, status: 200 }
+      : { user: null, error: 'Unauthorized', status: 401 }
+  );
+  (createAdminClient as jest.Mock).mockReturnValue(client);
   return { client, songQb, profileQb };
 }
 
@@ -171,9 +167,6 @@ function setupMockClient(options: {
 describe('Song Export API – Integration Tests', () => {
   afterEach(() => jest.clearAllMocks());
 
-  // =========================================================================
-  // Auth & Permissions
-  // =========================================================================
   describe('Auth & Permissions', () => {
     it('returns 401 when not authenticated', async () => {
       setupMockClient({ userId: null, role: 'student' });
@@ -193,17 +186,13 @@ describe('Song Export API – Integration Tests', () => {
         error: null,
       });
 
-      const client = {
-        auth: {
-          getUser: jest.fn().mockResolvedValue({
-            data: { user: { id: MOCK_STUDENT_ID } },
-            error: null,
-          }),
-        },
+      (authenticateRequest as jest.Mock).mockResolvedValue({
+        user: { id: MOCK_STUDENT_ID },
+        status: 200,
+      });
+      (createAdminClient as jest.Mock).mockReturnValue({
         from: jest.fn().mockReturnValue(profileQb),
-      };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mockedCreateClient.mockResolvedValue(client as any);
+      });
 
       const res = await GET(buildRequest());
       expect(res.status).toBe(403);
@@ -212,21 +201,16 @@ describe('Song Export API – Integration Tests', () => {
     it('allows teacher to export', async () => {
       setupMockClient({ userId: MOCK_TEACHER_ID, role: 'teacher' });
       const res = await GET(buildRequest());
-
       expect(res.status).toBe(200);
     });
 
     it('allows admin to export', async () => {
       setupMockClient({ userId: MOCK_TEACHER_ID, role: 'admin' });
       const res = await GET(buildRequest());
-
       expect(res.status).toBe(200);
     });
   });
 
-  // =========================================================================
-  // JSON Export
-  // =========================================================================
   describe('JSON export', () => {
     it('returns valid JSON array with song objects', async () => {
       setupMockClient({ userId: MOCK_TEACHER_ID, role: 'teacher' });
@@ -254,21 +238,16 @@ describe('Song Export API – Integration Tests', () => {
     it('applies level filter when provided', async () => {
       const { songQb } = setupMockClient({ userId: MOCK_TEACHER_ID, role: 'teacher' });
       await GET(buildRequest({ format: 'json', level: 'beginner' }));
-
       expect(songQb.eq).toHaveBeenCalledWith('level', 'beginner');
     });
 
     it('applies key filter when provided', async () => {
       const { songQb } = setupMockClient({ userId: MOCK_TEACHER_ID, role: 'teacher' });
       await GET(buildRequest({ format: 'json', key: 'Em' }));
-
       expect(songQb.eq).toHaveBeenCalledWith('key', 'Em');
     });
   });
 
-  // =========================================================================
-  // CSV Export
-  // =========================================================================
   describe('CSV export', () => {
     it('returns CSV with header row', async () => {
       setupMockClient({ userId: MOCK_TEACHER_ID, role: 'teacher' });
@@ -278,7 +257,6 @@ describe('Song Export API – Integration Tests', () => {
       const text = await res.text();
       const lines = text.split('\n');
       const headers = lines[0];
-
       expect(headers).toContain('title');
       expect(headers).toContain('author');
       expect(headers).toContain('level');
@@ -288,11 +266,9 @@ describe('Song Export API – Integration Tests', () => {
     it('returns data rows matching song count', async () => {
       setupMockClient({ userId: MOCK_TEACHER_ID, role: 'teacher' });
       const res = await GET(buildRequest({ format: 'csv' }));
-
       const text = await res.text();
       const lines = text.split('\n');
-      // header + 3 data rows
-      expect(lines).toHaveLength(4);
+      expect(lines).toHaveLength(4); // header + 3 data rows
     });
 
     it('properly escapes quotes in field values', async () => {
@@ -310,36 +286,28 @@ describe('Song Export API – Integration Tests', () => {
       ];
       setupMockClient({ userId: MOCK_TEACHER_ID, role: 'teacher', songs: songsWithQuotes });
       const res = await GET(buildRequest({ format: 'csv' }));
-
       const text = await res.text();
-      // Double-quoted escaping: "She said ""hello"""
       expect(text).toContain('""hello""');
     });
 
     it('sets Content-Disposition header with filename', async () => {
       setupMockClient({ userId: MOCK_TEACHER_ID, role: 'teacher' });
       const res = await GET(buildRequest({ format: 'csv' }));
-
       const disposition = res.headers.get('Content-Disposition');
       expect(disposition).toContain('songs.csv');
     });
   });
 
-  // =========================================================================
-  // Schema Validation
-  // =========================================================================
   describe('Schema validation', () => {
     it('returns 400 for invalid format param', async () => {
       setupMockClient({ userId: MOCK_TEACHER_ID, role: 'teacher' });
       const res = await GET(buildRequest({ format: 'xlsx' }));
-
       expect(res.status).toBe(400);
     });
 
     it('defaults to JSON when no format specified', async () => {
       setupMockClient({ userId: MOCK_TEACHER_ID, role: 'teacher' });
       const res = await GET(buildRequest());
-
       expect(res.status).toBe(200);
       const contentType = res.headers.get('Content-Type');
       expect(contentType).toContain('application/json');

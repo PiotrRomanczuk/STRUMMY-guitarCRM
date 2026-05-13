@@ -1,6 +1,6 @@
-import { authenticateRequest } from '@/lib/auth/api-auth';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('SongAssignmentsAPI');
@@ -10,21 +10,17 @@ const log = createLogger('SongAssignmentsAPI');
  * Get all assignments linked to lessons that contain this song
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  return withApiAuth(request, async () => {
+    const { id } = await params;
+    const supabase = await createClient();
 
-  try {
-    const auth = await authenticateRequest(request);
-    if (!auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
-    }
-    const supabase = createAdminClient();
-
-    // We want assignments that are linked to lessons that contain this song.
-    // We use !inner joins to filter by the song_id in the nested lesson_songs table.
-    const { data: assignments, error } = await supabase
-      .from('assignments')
-      .select(
-        `
+    try {
+      // We want assignments that are linked to lessons that contain this song.
+      // We use !inner joins to filter by the song_id in the nested lesson_songs table.
+      const { data: assignments, error } = await supabase
+        .from('assignments')
+        .select(
+          `
         id,
         title,
         status,
@@ -40,18 +36,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           )
         )
       `
-      )
-      .eq('lesson.lesson_songs.song_id', id)
-      .order('due_date', { ascending: false });
+        )
+        .eq('lesson.lesson_songs.song_id', id)
+        .order('due_date', { ascending: false });
 
-    if (error) {
-      log.error('Error fetching song assignments', { error });
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      if (error) {
+        log.error('Error fetching song assignments', { error });
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ assignments });
+    } catch (error) {
+      log.error('Unexpected error in song assignments API', { error });
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
-
-    return NextResponse.json({ assignments });
-  } catch (error) {
-    log.error('Unexpected error in song assignments API', { error });
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-  }
+  });
 }

@@ -1,6 +1,6 @@
 {
   "name": "strummy",
-  "version": "0.128.5",
+  "version": "0.129.0",
   "private": true,
   "scripts": {
     "dev": "NODE_OPTIONS='--max-http-header-size=65536' nodemon --exec next dev",
@@ -15,6 +15,7 @@
     "test:unit": "jest",
     "test:unit:watch": "jest --watch",
     "test:integration": "jest --config jest.config.integration.ts",
+    "test:rls": "jest --config jest.config.rls.ts",
     "test:all": "npm run test:unit && npm run test:integration",
     "test:ai": "npx tsx scripts/testing/test-ai.ts all",
     "test:ai:check": "npx tsx scripts/testing/test-ai.ts check",

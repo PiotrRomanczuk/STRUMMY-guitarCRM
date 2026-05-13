@@ -31,6 +31,11 @@ type ProfileRow = {
   is_development: boolean | null;
 };
 
+// Uses the service-role client so the lookup works for Bearer-authenticated
+// requests (cookie-only server client returns null because the bearer JWT
+// context never reaches it). RLS bypass is safe here — userId comes from a
+// Supabase-validated JWT in authenticateRequest, and we only read public
+// role flags that are otherwise visible to the user themselves under RLS.
 const fetchProfileRow = cache(async (userId: string): Promise<ProfileRow | null> => {
   const supabase = createAdminClient();
   const { data, error } = await supabase

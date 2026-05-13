@@ -28,6 +28,10 @@ interface StatusUpdateResult {
  * Called by daily cron job at 2 AM UTC
  */
 export async function updateStudentActivityStatus(): Promise<StatusUpdateResult> {
+  logger.info('updateStudentActivityStatus: start', {
+    cutoffDays: INACTIVITY_DAYS,
+  });
+
   const supabase = await createClient();
   const now = new Date();
   const cutoffDate = new Date(now);
@@ -53,10 +57,20 @@ export async function updateStudentActivityStatus(): Promise<StatusUpdateResult>
     .in('student_status', ['active', 'archived']);
 
   if (studentsError) {
+    logger.error('updateStudentActivityStatus: failed to fetch students', studentsError, {
+      code: studentsError.code,
+      details: studentsError.details,
+      hint: studentsError.hint,
+    });
     throw new Error(`Failed to fetch students: ${studentsError.message}`);
   }
 
   if (!students || students.length === 0) {
+    logger.info('updateStudentActivityStatus: done', {
+      processed: 0,
+      activated: 0,
+      deactivated: 0,
+    });
     return result;
   }
 
@@ -126,6 +140,12 @@ export async function updateStudentActivityStatus(): Promise<StatusUpdateResult>
       }
     }
   }
+
+  logger.info('updateStudentActivityStatus: done', {
+    processed: result.processed,
+    activated: result.activatedCount,
+    deactivated: result.deactivatedCount,
+  });
 
   return result;
 }

@@ -1,216 +1,181 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticateRequest } from '@/lib/auth/api-auth';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import {
   SongInputSchema,
   SongImportSchema,
   SongImportValidationSchema,
 } from '@/schemas/SongSchema';
 import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
-  try {
-    const auth = await authenticateRequest(request);
-    if (!auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
-    }
-    const supabase = createAdminClient();
-    const body = await request.json();
+  return withApiAuth(request, async ({ roles, flags }) => {
+    try {
+      const supabase = await createClient();
+      const body = await request.json();
 
-    // Check if user has permission
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin, is_teacher, is_development')
-      .eq('id', auth.user.id)
-      .single();
+      if (flags.isDevelopment) {
+        return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
+      }
 
-    if (profile?.is_development) {
-      return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
-    }
+      if (!roles.isAdmin && !roles.isTeacher) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
 
-    if (!profile || (!profile.is_admin && !profile.is_teacher)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+      // Check if this is a validation-only request
+      const isValidationOnly = body.validate_only === true;
 
-    // Check if this is a validation-only request
-    const isValidationOnly = body.validate_only === true;
+      // Use appropriate schema based on validation mode
+      const schema = isValidationOnly ? SongImportValidationSchema : SongImportSchema;
+      const parseResult = schema.safeParse(body);
 
-    // Use appropriate schema based on validation mode
-    const schema = isValidationOnly ? SongImportValidationSchema : SongImportSchema;
-    const parseResult = schema.safeParse(body);
+      if (!parseResult.success) {
+        return NextResponse.json(
+          { error: 'Invalid import data', details: parseResult.error },
+          { status: 400 }
+        );
+      }
 
-    if (!parseResult.success) {
-      return NextResponse.json(
-        { error: 'Invalid import data', details: parseResult.error },
-        { status: 400 }
-      );
-    }
+      const { songs, overwrite = false, validate_only = false } = parseResult.data;
 
-    const { songs, overwrite = false, validate_only = false } = parseResult.data;
+      if (validate_only) {
+        // Only validate songs without importing
+        const validationResults = songs.map((song, index) => {
+          const result = SongInputSchema.safeParse(song);
+          return {
+            index,
+            valid: result.success,
+            errors: result.success ? null : result.error.issues,
+          };
+        });
 
-    if (validate_only) {
-      // Only validate songs without importing
-      const validationResults = songs.map((song, index) => {
-        const result = SongInputSchema.safeParse(song);
-        return {
-          index,
-          valid: result.success,
-          errors: result.success ? null : result.error.issues,
-        };
-      });
+        const validCount = validationResults.filter((r) => r.valid).length;
+        const invalidCount = validationResults.filter((r) => !r.valid).length;
 
-      const validCount = validationResults.filter((r) => r.valid).length;
-      const invalidCount = validationResults.filter((r) => !r.valid).length;
+        return NextResponse.json({
+          validation_results: validationResults,
+          summary: {
+            total: songs.length,
+            valid: validCount,
+            invalid: invalidCount,
+          },
+        });
+      }
 
-      return NextResponse.json({
-        validation_results: validationResults,
-        summary: {
-          total: songs.length,
-          valid: validCount,
-          invalid: invalidCount,
-        },
-      });
-    }
+      // Import songs
+      const results = [];
+      let successCount = 0;
+      let errorCount = 0;
 
-    // Import songs
-    const results = [];
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (const song of songs) {
-      try {
-        // Check if song already exists (by title)
-        const { data: existingSong } = await supabase
-          .from('songs')
-          .select('id')
-          .eq('title', song.title)
-          .single();
-
-        if (existingSong && !overwrite) {
-          results.push({
-            title: song.title,
-            status: 'skipped',
-            reason: 'Song already exists and overwrite is false',
-          });
-          continue;
-        }
-
-        if (existingSong && overwrite) {
-          // Update existing song
-          const { data, error } = await supabase
+      for (const song of songs) {
+        try {
+          // Check if song already exists (by title)
+          const { data: existingSong } = await supabase
             .from('songs')
-            .update({
-              ...song,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', existingSong.id)
-            .select()
+            .select('id')
+            .eq('title', song.title)
             .single();
 
-          if (error) {
+          if (existingSong && !overwrite) {
             results.push({
               title: song.title,
-              status: 'error',
-              error: error.message,
+              status: 'skipped',
+              reason: 'Song already exists and overwrite is false',
             });
-            errorCount++;
-          } else {
-            results.push({
-              title: song.title,
-              status: 'updated',
-              data,
-            });
-            successCount++;
+            continue;
           }
-        } else {
-          // Insert new song
-          const { data, error } = await supabase.from('songs').insert(song).select().single();
 
-          if (error) {
-            results.push({
-              title: song.title,
-              status: 'error',
-              error: error.message,
-            });
-            errorCount++;
+          if (existingSong && overwrite) {
+            // Update existing song
+            const { data, error } = await supabase
+              .from('songs')
+              .update({
+                ...song,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', existingSong.id)
+              .select()
+              .single();
+
+            if (error) {
+              results.push({ title: song.title, status: 'error', error: error.message });
+              errorCount++;
+            } else {
+              results.push({ title: song.title, status: 'updated', data });
+              successCount++;
+            }
           } else {
-            results.push({
-              title: song.title,
-              status: 'created',
-              data,
-            });
-            successCount++;
+            // Insert new song
+            const { data, error } = await supabase.from('songs').insert(song).select().single();
+
+            if (error) {
+              results.push({ title: song.title, status: 'error', error: error.message });
+              errorCount++;
+            } else {
+              results.push({ title: song.title, status: 'created', data });
+              successCount++;
+            }
           }
+        } catch {
+          results.push({
+            title: song.title,
+            status: 'error',
+            error: 'Unexpected error during import',
+          });
+          errorCount++;
         }
-      } catch {
-        results.push({
-          title: song.title,
-          status: 'error',
-          error: 'Unexpected error during import',
-        });
-        errorCount++;
       }
-    }
 
-    return NextResponse.json({
-      results,
-      summary: {
-        total: songs.length,
-        success: successCount,
-        error: errorCount,
-      },
-    });
-  } catch (error) {
-    logger.error('Error in bulk song import API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+      return NextResponse.json({
+        results,
+        summary: {
+          total: songs.length,
+          success: successCount,
+          error: errorCount,
+        },
+      });
+    } catch (error) {
+      logger.error('Error in bulk song import API:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+  });
 }
 
 export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const songIds = searchParams.get('ids');
+  return withApiAuth(request, async ({ roles, flags }) => {
+    try {
+      const { searchParams } = new URL(request.url);
+      const songIds = searchParams.get('ids');
 
-    if (!songIds) {
-      return NextResponse.json({ error: 'Song IDs are required' }, { status: 400 });
+      if (!songIds) {
+        return NextResponse.json({ error: 'Song IDs are required' }, { status: 400 });
+      }
+
+      if (flags.isDevelopment) {
+        return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
+      }
+
+      if (!roles.isAdmin) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      const supabase = await createClient();
+      const ids = songIds.split(',');
+      const { error } = await supabase.from('songs').delete().in('id', ids);
+
+      if (error) {
+        logger.error('Error deleting songs:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        deleted_count: ids.length,
+      });
+    } catch (error) {
+      logger.error('Error in bulk song delete API:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-
-    const auth = await authenticateRequest(request);
-    if (!auth.user) {
-      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: auth.status });
-    }
-    const supabase = createAdminClient();
-
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin, is_development')
-      .eq('id', auth.user.id)
-      .single();
-
-    if (profile?.is_development) {
-      return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
-    }
-
-    if (!profile || !profile.is_admin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const ids = songIds.split(',');
-    const { error } = await supabase.from('songs').delete().in('id', ids);
-
-    if (error) {
-      logger.error('Error deleting songs:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      deleted_count: ids.length,
-    });
-  } catch (error) {
-    logger.error('Error in bulk song delete API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }
