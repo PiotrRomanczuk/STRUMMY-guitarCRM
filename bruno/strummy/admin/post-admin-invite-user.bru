@@ -1,0 +1,42 @@
+meta {
+  name: post-admin-invite-user
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/admin/invite-user
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "bruno-invite-test@example.com",
+    "fullName": "Bruno Test Student",
+    "role": "student"
+  }
+}
+
+docs {
+  POST /api/admin/invite-user — creates an auth user and sends an invite email.
+  Admin only. Idempotent: if email already exists in auth.users, skips creation.
+  Returns 201 { success, userId } or 409 if already registered.
+}
+
+tests {
+  test('Admin invite returns 201 or 409', function() {
+    expect([201, 409]).to.include(res.status);
+  });
+  test('Response has userId or error', function() {
+    if (res.status === 201) {
+      expect(res.body).to.have.property('userId');
+      expect(res.body.success).to.equal(true);
+    } else {
+      expect(res.body).to.have.property('error');
+    }
+  });
+  test('Not 5xx', function() {
+    expect(res.status).to.be.below(500);
+  });
+}

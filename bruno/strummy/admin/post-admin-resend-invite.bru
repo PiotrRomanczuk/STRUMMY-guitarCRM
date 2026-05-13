@@ -1,0 +1,44 @@
+meta {
+  name: post-admin-resend-invite
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/admin/resend-invite
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "userId": "{{sample_student_id}}"
+  }
+}
+
+docs {
+  POST /api/admin/resend-invite — resends the invite email for an existing user who
+  has not yet signed in. Requires admin or teacher role.
+
+  Expected results by user state:
+    - Shadow user           → 422 (set invite_email first)
+    - Already signed in     → 409 (no invite needed)
+    - Valid pending user     → 200 { success: true }
+    - User not found        → 404
+
+  sample_student_id in local env is a shadow user, so 422 is the expected happy path.
+}
+
+tests {
+  test('Returns valid status for user state', function() {
+    expect([200, 404, 409, 422]).to.include(res.status);
+  });
+  test('Response body has success or error', function() {
+    const hasSuccess = res.body && res.body.success === true;
+    const hasError = res.body && typeof res.body.error === 'string';
+    expect(hasSuccess || hasError).to.equal(true);
+  });
+  test('Not 5xx', function() {
+    expect(res.status).to.be.below(500);
+  });
+}
