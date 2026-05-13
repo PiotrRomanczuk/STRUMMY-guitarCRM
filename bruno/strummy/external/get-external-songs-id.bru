@@ -1,0 +1,19 @@
+meta {
+  name: get-external-songs-id
+  type: http
+  seq: 3
+  # orphan: no in-repo callers found
+}
+
+get {
+  url: {{baseUrl}}/api/external/songs/{{sample_id}}
+  auth: bearer
+}
+
+auth { mode: bearer }
+auth:bearer { token: {{API_KEY}} }
+docs {
+  Domain: external
+  Auth detected: api-key
+  Schemas: —
+}

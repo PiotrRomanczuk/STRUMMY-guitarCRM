@@ -1,0 +1,16 @@
+meta {
+  name: get-song-from-spotify-debug
+  type: http
+  seq: 19
+}
+
+get {
+  url: {{baseUrl}}/api/song/from-spotify/debug
+  auth: inherit
+}
+
+docs {
+  Domain: song
+  Auth detected: user, admin-client
+  Schemas: —
+}

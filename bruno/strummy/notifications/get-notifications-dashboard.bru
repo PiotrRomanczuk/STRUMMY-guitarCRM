@@ -1,0 +1,16 @@
+meta {
+  name: get-notifications-dashboard
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/notifications/dashboard
+  auth: inherit
+}
+
+docs {
+  Domain: notifications
+  Auth detected: user
+  Schemas: —
+}

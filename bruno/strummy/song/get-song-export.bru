@@ -1,0 +1,16 @@
+meta {
+  name: get-song-export
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/song/export
+  auth: inherit
+}
+
+docs {
+  Domain: song
+  Auth detected: user
+  Schemas: SongSchema
+}

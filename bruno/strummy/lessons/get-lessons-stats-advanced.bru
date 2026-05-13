@@ -1,0 +1,16 @@
+meta {
+  name: get-lessons-stats-advanced
+  type: http
+  seq: 21
+}
+
+get {
+  url: {{baseUrl}}/api/lessons/stats/advanced
+  auth: inherit
+}
+
+docs {
+  Domain: lessons
+  Auth detected: user, admin-client
+  Schemas: —
+}

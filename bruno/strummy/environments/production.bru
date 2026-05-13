@@ -1,0 +1,16 @@
+vars {
+  baseUrl: https://strummy.app
+  persona: admin
+  BRUNO_PROD_OK: false
+}
+
+# Production environment is GET-only. Destructive requests should refuse to run.
+# Set BRUNO_PROD_OK=true at runtime via --env-var to acknowledge.
+
+vars:secret [
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  ADMIN_EMAIL,
+  ADMIN_PASSWORD,
+  API_KEY
+]

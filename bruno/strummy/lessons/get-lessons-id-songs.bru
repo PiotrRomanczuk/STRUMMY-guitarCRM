@@ -1,0 +1,17 @@
+meta {
+  name: get-lessons-id-songs
+  type: http
+  seq: 4
+  # orphan: no in-repo callers found
+}
+
+get {
+  url: {{baseUrl}}/api/lessons/{{sample_id}}/songs
+  auth: inherit
+}
+
+docs {
+  Domain: lessons
+  Auth detected: user
+  Schemas: —
+}

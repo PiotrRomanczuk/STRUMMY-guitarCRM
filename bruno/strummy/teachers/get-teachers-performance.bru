@@ -1,0 +1,16 @@
+meta {
+  name: get-teachers-performance
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/teachers/performance
+  auth: inherit
+}
+
+docs {
+  Domain: teachers
+  Auth detected: user, role:admin+teacher
+  Schemas: —
+}

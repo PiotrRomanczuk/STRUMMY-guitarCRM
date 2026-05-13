@@ -1,0 +1,16 @@
+meta {
+  name: delete-lessons-bulk
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/api/lessons/bulk
+  auth: inherit
+}
+
+docs {
+  Domain: lessons
+  Auth detected: user
+  Schemas: —
+}

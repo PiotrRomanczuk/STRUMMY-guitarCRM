@@ -1,0 +1,16 @@
+meta {
+  name: get-song-student-songs
+  type: http
+  seq: 30
+}
+
+get {
+  url: {{baseUrl}}/api/song/student-songs
+  auth: inherit
+}
+
+docs {
+  Domain: song
+  Auth detected: user
+  Schemas: SongSchema
+}

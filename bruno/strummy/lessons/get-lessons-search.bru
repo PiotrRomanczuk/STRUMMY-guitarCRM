@@ -1,0 +1,16 @@
+meta {
+  name: get-lessons-search
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/lessons/search
+  auth: inherit
+}
+
+docs {
+  Domain: lessons
+  Auth detected: user
+  Schemas: —
+}

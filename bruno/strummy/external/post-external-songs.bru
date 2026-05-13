@@ -1,0 +1,25 @@
+meta {
+  name: post-external-songs
+  type: http
+  seq: 7
+  # orphan: no in-repo callers found
+}
+
+post {
+  url: {{baseUrl}}/api/external/songs
+  body: json
+  auth: bearer
+}
+
+auth { mode: bearer }
+auth:bearer { token: {{API_KEY}} }
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain: external
+  Auth detected: admin-client, api-key
+  Schemas: —
+}

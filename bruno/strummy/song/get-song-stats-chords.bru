@@ -1,0 +1,16 @@
+meta {
+  name: get-song-stats-chords
+  type: http
+  seq: 27
+}
+
+get {
+  url: {{baseUrl}}/api/song/stats/chords
+  auth: inherit
+}
+
+docs {
+  Domain: song
+  Auth detected: admin-client, role:admin+teacher
+  Schemas: —
+}

@@ -1,0 +1,17 @@
+meta {
+  name: get-admin-users
+  type: http
+  seq: 13
+  # orphan: no in-repo callers found
+}
+
+get {
+  url: {{baseUrl}}/api/admin/users
+  auth: inherit
+}
+
+docs {
+  Domain: admin
+  Auth detected: user, role:admin
+  Schemas: —
+}

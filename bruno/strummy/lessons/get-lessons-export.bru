@@ -1,0 +1,16 @@
+meta {
+  name: get-lessons-export
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/lessons/export
+  auth: inherit
+}
+
+docs {
+  Domain: lessons
+  Auth detected: user
+  Schemas: —
+}

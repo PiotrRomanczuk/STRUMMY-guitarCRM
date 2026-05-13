@@ -1,0 +1,23 @@
+meta {
+  name: put-lessons-songs-id
+  type: http
+  seq: 17
+  # orphan: no in-repo callers found
+}
+
+put {
+  url: {{baseUrl}}/api/lessons/songs/{{sample_id}}
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain: lessons
+  Auth detected: user
+  Schemas: —
+}

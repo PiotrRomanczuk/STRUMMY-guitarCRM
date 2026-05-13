@@ -1,0 +1,17 @@
+meta {
+  name: delete-song-id-videos-videoid
+  type: http
+  seq: 5
+  # orphan: no in-repo callers found
+}
+
+delete {
+  url: {{baseUrl}}/api/song/{{sample_id}}/videos/{{sample_videoId}}
+  auth: inherit
+}
+
+docs {
+  Domain: song
+  Auth detected: user
+  Schemas: SongVideoSchema
+}

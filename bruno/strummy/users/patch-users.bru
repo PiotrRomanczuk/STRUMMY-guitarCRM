@@ -1,0 +1,22 @@
+meta {
+  name: patch-users
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/api/users
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain: users
+  Auth detected: user, admin-client, role:admin+teacher+student
+  Schemas: —
+}

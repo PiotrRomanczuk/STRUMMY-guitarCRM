@@ -1,0 +1,16 @@
+meta {
+  name: delete-calendar-sync-stream
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/calendar/sync/stream
+  auth: inherit
+}
+
+docs {
+  Domain: calendar
+  Auth detected: user, admin-client
+  Schemas: —
+}

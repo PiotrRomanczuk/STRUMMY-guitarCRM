@@ -1,0 +1,16 @@
+meta {
+  name: get-admin-drive-videos
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/admin/drive-videos
+  auth: inherit
+}
+
+docs {
+  Domain: admin
+  Auth detected: user
+  Schemas: SongVideoSchema
+}

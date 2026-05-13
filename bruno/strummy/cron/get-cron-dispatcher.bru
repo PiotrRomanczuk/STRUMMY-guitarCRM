@@ -1,0 +1,19 @@
+meta {
+  name: get-cron-dispatcher
+  type: http
+  seq: 6
+  # orphan: no in-repo callers found
+}
+
+get {
+  url: {{baseUrl}}/api/cron/dispatcher
+  auth: bearer
+}
+
+auth { mode: bearer }
+auth:bearer { token: {{CRON_SECRET}} }
+docs {
+  Domain: cron
+  Auth detected: cron-secret
+  Schemas: —
+}

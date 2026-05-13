@@ -1,0 +1,17 @@
+meta {
+  name: get-teacher-students
+  type: http
+  seq: 3
+  # orphan: no in-repo callers found
+}
+
+get {
+  url: {{baseUrl}}/api/teacher/students
+  auth: inherit
+}
+
+docs {
+  Domain: teacher
+  Auth detected: user
+  Schemas: —
+}

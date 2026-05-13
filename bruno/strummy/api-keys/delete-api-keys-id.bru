@@ -1,0 +1,16 @@
+meta {
+  name: delete-api-keys-id
+  type: http
+  seq: 1
+}
+
+delete {
+  url: {{baseUrl}}/api/api-keys/{{sample_id}}
+  auth: inherit
+}
+
+docs {
+  Domain: api-keys
+  Auth detected: user
+  Schemas: —
+}

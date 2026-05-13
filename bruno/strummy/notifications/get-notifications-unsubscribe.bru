@@ -1,0 +1,16 @@
+meta {
+  name: get-notifications-unsubscribe
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/notifications/unsubscribe
+  auth: inherit
+}
+
+docs {
+  Domain: notifications
+  Auth detected: user
+  Schemas: —
+}

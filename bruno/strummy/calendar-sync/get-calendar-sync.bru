@@ -1,0 +1,16 @@
+meta {
+  name: get-calendar-sync
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/calendar-sync
+  auth: inherit
+}
+
+docs {
+  Domain: calendar-sync
+  Auth detected: user, admin-client
+  Schemas: —
+}

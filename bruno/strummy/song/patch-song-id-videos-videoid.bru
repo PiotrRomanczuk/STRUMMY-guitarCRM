@@ -1,0 +1,23 @@
+meta {
+  name: patch-song-id-videos-videoid
+  type: http
+  seq: 4
+  # orphan: no in-repo callers found
+}
+
+patch {
+  url: {{baseUrl}}/api/song/{{sample_id}}/videos/{{sample_videoId}}
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain: song
+  Auth detected: user
+  Schemas: SongVideoSchema
+}

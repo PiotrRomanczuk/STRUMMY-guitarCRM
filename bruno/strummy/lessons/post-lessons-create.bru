@@ -1,0 +1,22 @@
+meta {
+  name: post-lessons-create
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/lessons/create
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain: lessons
+  Auth detected: user
+  Schemas: —
+}

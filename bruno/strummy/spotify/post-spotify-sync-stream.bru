@@ -1,0 +1,22 @@
+meta {
+  name: post-spotify-sync-stream
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/spotify/sync/stream
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain: spotify
+  Auth detected: user
+  Schemas: —
+}

@@ -1,0 +1,16 @@
+meta {
+  name: get-assignments-id
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/assignments/{{sample_id}}
+  auth: inherit
+}
+
+docs {
+  Domain: assignments
+  Auth detected: user
+  Schemas: AssignmentSchema
+}

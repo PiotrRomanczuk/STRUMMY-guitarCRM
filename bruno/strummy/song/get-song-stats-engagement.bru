@@ -1,0 +1,16 @@
+meta {
+  name: get-song-stats-engagement
+  type: http
+  seq: 28
+}
+
+get {
+  url: {{baseUrl}}/api/song/stats/engagement
+  auth: inherit
+}
+
+docs {
+  Domain: song
+  Auth detected: admin-client, role:admin+teacher
+  Schemas: —
+}

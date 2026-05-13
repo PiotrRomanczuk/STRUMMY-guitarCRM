@@ -1,0 +1,18 @@
+meta {
+  name: get-cron-cleanup-auth-events
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/cron/cleanup-auth-events
+  auth: bearer
+}
+
+auth { mode: bearer }
+auth:bearer { token: {{CRON_SECRET}} }
+docs {
+  Domain: cron
+  Auth detected: admin-client, cron-secret
+  Schemas: —
+}

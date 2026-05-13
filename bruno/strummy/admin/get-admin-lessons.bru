@@ -1,0 +1,16 @@
+meta {
+  name: get-admin-lessons
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/admin/lessons
+  auth: inherit
+}
+
+docs {
+  Domain: admin
+  Auth detected: user
+  Schemas: —
+}

@@ -1,0 +1,23 @@
+meta {
+  name: post-lessons-templates
+  type: http
+  seq: 25
+  # orphan: no in-repo callers found
+}
+
+post {
+  url: {{baseUrl}}/api/lessons/templates
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain: lessons
+  Auth detected: user
+  Schemas: —
+}

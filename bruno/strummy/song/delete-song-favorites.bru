@@ -1,0 +1,17 @@
+meta {
+  name: delete-song-favorites
+  type: http
+  seq: 18
+  # orphan: no in-repo callers found
+}
+
+delete {
+  url: {{baseUrl}}/api/song/favorites
+  auth: inherit
+}
+
+docs {
+  Domain: song
+  Auth detected: user
+  Schemas: UserFavoriteSchema
+}

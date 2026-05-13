@@ -1,0 +1,16 @@
+meta {
+  name: get-lessons-stats
+  type: http
+  seq: 23
+}
+
+get {
+  url: {{baseUrl}}/api/lessons/stats
+  auth: inherit
+}
+
+docs {
+  Domain: lessons
+  Auth detected: user
+  Schemas: —
+}

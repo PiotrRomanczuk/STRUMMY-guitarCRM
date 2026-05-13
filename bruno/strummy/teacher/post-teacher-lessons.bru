@@ -1,0 +1,23 @@
+meta {
+  name: post-teacher-lessons
+  type: http
+  seq: 2
+  # orphan: no in-repo callers found
+}
+
+post {
+  url: {{baseUrl}}/api/teacher/lessons
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain: teacher
+  Auth detected: user
+  Schemas: —
+}

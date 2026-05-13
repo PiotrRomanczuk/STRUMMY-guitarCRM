@@ -1,0 +1,22 @@
+meta {
+  name: patch-assignments-id
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/assignments/{{sample_id}}
+  body: json
+  auth: inherit
+}
+
+body { json }
+
+body:json {
+  {}
+}
+docs {
+  Domain: assignments
+  Auth detected: user
+  Schemas: AssignmentSchema
+}

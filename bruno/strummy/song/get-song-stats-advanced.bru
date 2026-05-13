@@ -1,0 +1,16 @@
+meta {
+  name: get-song-stats-advanced
+  type: http
+  seq: 26
+}
+
+get {
+  url: {{baseUrl}}/api/song/stats/advanced
+  auth: inherit
+}
+
+docs {
+  Domain: song
+  Auth detected: admin-client, role:admin+teacher
+  Schemas: —
+}

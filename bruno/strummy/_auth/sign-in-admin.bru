@@ -1,0 +1,37 @@
+meta {
+  name: sign-in-admin
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{SUPABASE_URL}}/auth/v1/token?grant_type=password
+  body: json
+  auth: none
+}
+
+headers {
+  apikey: {{SUPABASE_ANON_KEY}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{ADMIN_EMAIL}}",
+    "password": "{{ADMIN_PASSWORD}}"
+  }
+}
+
+script:pre-request {
+  // Bypass the collection-level pre-request — this IS the sign-in.
+  bru.setVar('authToken', '');
+}
+
+tests {
+  test('Sign-in returns 200', function() {
+    expect(res.status).to.equal(200);
+  });
+  test('Response has access_token', function() {
+    expect(res.body).to.have.property('access_token');
+  });
+}

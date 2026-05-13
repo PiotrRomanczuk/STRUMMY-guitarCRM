@@ -1,0 +1,19 @@
+meta {
+  name: get-widget-admin
+  type: http
+  seq: 1
+  # orphan: no in-repo callers found
+}
+
+get {
+  url: {{baseUrl}}/api/widget/admin
+  auth: bearer
+}
+
+auth { mode: bearer }
+auth:bearer { token: {{API_KEY}} }
+docs {
+  Domain: widget
+  Auth detected: user, api-key, role:admin
+  Schemas: —
+}

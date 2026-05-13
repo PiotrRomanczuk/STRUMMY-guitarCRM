@@ -1,0 +1,16 @@
+meta {
+  name: get-students-health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/students/health
+  auth: inherit
+}
+
+docs {
+  Domain: students
+  Auth detected: user
+  Schemas: —
+}

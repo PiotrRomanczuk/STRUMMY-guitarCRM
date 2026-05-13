@@ -1,0 +1,18 @@
+meta {
+  name: get-cron-assignment-due-reminders
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/cron/assignment-due-reminders
+  auth: bearer
+}
+
+auth { mode: bearer }
+auth:bearer { token: {{CRON_SECRET}} }
+docs {
+  Domain: cron
+  Auth detected: admin-client, cron-secret
+  Schemas: —
+}
