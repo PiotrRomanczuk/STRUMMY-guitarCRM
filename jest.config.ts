@@ -95,6 +95,7 @@ const config: Config = {
     '/.claude/',
     '.integration.test.',
     '.e2e.test.',
+    '.rls.test.',
     '__tests__/auth/credentials.test.ts',
     'scripts/database/shadow-user-linking.test.ts',
   ],
