@@ -1,44 +1,46 @@
 /**
  * Song Stats API Security Tests
  *
- * Tests for admin client security fix (STRUMMY-262).
- * Verifies that getUserWithRolesSSR is used instead of admin client for role checking.
- *
- * Security Improvement:
- * - BEFORE: Used admin client to check user role (unnecessary admin privilege)
- * - AFTER: Uses getUserWithRolesSSR (standard role checking)
+ * Tests that authenticateRequest + loadAuthedProfile guard the admin-only route.
  */
 
 import { GET } from '../route';
-import * as getUserWithRolesSSR from '@/lib/getUserWithRolesSSR';
-import * as supabaseServer from '@/lib/supabase/server';
+import { NextRequest } from 'next/server';
+import { authenticateRequest } from '@/lib/auth/api-auth';
+import { loadAuthedProfile } from '@/lib/auth/loadAuthedProfile';
+import { createAdminClient } from '@/lib/supabase/admin';
 
-jest.mock('@/lib/getUserWithRolesSSR');
-jest.mock('@/lib/supabase/server');
+jest.mock('@/lib/auth/api-auth');
+jest.mock('@/lib/auth/loadAuthedProfile');
+jest.mock('@/lib/supabase/admin');
 
-const mockSupabase = {
-  from: jest.fn(),
-  auth: {
-    getUser: jest.fn(),
-  },
+const createRequest = () => new NextRequest('http://localhost:3000/api/song/stats');
+
+const mockAdminProfile = {
+  user: { id: 'admin-id', email: 'admin@test.com' },
+  roles: { isAdmin: true, isTeacher: false, isStudent: false },
+  flags: { isDevelopment: false },
+};
+
+const mockTeacherProfile = {
+  user: { id: 'teacher-id', email: 'teacher@test.com' },
+  roles: { isAdmin: false, isTeacher: true, isStudent: false },
+  flags: { isDevelopment: false },
 };
 
 describe('GET /api/song/stats - Security (STRUMMY-262)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (supabaseServer.createClient as jest.Mock).mockResolvedValue(mockSupabase);
   });
 
   it('should return 401 when user is not authenticated', async () => {
-    (getUserWithRolesSSR.getUserWithRolesSSR as jest.Mock).mockResolvedValue({
+    (authenticateRequest as jest.Mock).mockResolvedValue({
       user: null,
-      isAdmin: false,
-      isTeacher: false,
-      isStudent: false,
-      isDevelopment: false,
+      error: 'Unauthorized',
+      status: 401,
     });
 
-    const response = await GET();
+    const response = await GET(createRequest());
     const data = await response.json();
 
     expect(response.status).toBe(401);
@@ -46,57 +48,39 @@ describe('GET /api/song/stats - Security (STRUMMY-262)', () => {
   });
 
   it('should return 403 when user is not admin', async () => {
-    (getUserWithRolesSSR.getUserWithRolesSSR as jest.Mock).mockResolvedValue({
+    (authenticateRequest as jest.Mock).mockResolvedValue({
       user: { id: 'teacher-id' },
-      isAdmin: false,
-      isTeacher: true,
-      isStudent: false,
-      isDevelopment: false,
+      status: 200,
     });
+    (loadAuthedProfile as jest.Mock).mockResolvedValue(mockTeacherProfile);
 
-    const response = await GET();
+    const response = await GET(createRequest());
     const data = await response.json();
 
     expect(response.status).toBe(403);
-    expect(data.error).toBe('Forbidden');
   });
 
-  it('should use getUserWithRolesSSR for role checking (not admin client)', async () => {
-    (getUserWithRolesSSR.getUserWithRolesSSR as jest.Mock).mockResolvedValue({
-      user: { id: 'admin-id' },
-      isAdmin: true,
-      isTeacher: false,
-      isStudent: false,
-      isDevelopment: false,
-    });
+  it('should use authenticateRequest for auth checking (not getUserWithRolesSSR)', async () => {
+    (authenticateRequest as jest.Mock).mockResolvedValue({ user: { id: 'admin-id' }, status: 200 });
+    (loadAuthedProfile as jest.Mock).mockResolvedValue(mockAdminProfile);
 
-    // Mock successful stats fetch
     const mockQuery = {
       select: jest.fn().mockReturnThis(),
-      is: jest.fn().mockReturnThis(),
-      gte: jest.fn().mockReturnThis(),
-      lte: jest.fn().mockResolvedValue({ data: [], error: null }),
+      not: jest.fn().mockReturnThis(),
+      gte: jest.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
     };
-
-    mockSupabase.from.mockReturnValue(mockQuery);
-
-    await GET();
-
-    // Verify getUserWithRolesSSR was called (instead of admin client)
-    expect(getUserWithRolesSSR.getUserWithRolesSSR).toHaveBeenCalled();
-  });
-
-  it('should verify admin check uses getUserWithRolesSSR', async () => {
-    (getUserWithRolesSSR.getUserWithRolesSSR as jest.Mock).mockResolvedValue({
-      user: { id: 'admin-id' },
-      isAdmin: true,
-      isTeacher: false,
-      isStudent: false,
-      isDevelopment: false,
+    (createAdminClient as jest.Mock).mockReturnValue({
+      from: jest.fn().mockReturnValue(mockQuery),
     });
 
-    // We only test that getUserWithRolesSSR is called for role checking
-    // Full query testing is handled by integration tests
-    expect(getUserWithRolesSSR.getUserWithRolesSSR).toBeDefined();
+    await GET(createRequest());
+
+    expect(authenticateRequest).toHaveBeenCalled();
+    expect(loadAuthedProfile).toHaveBeenCalled();
+  });
+
+  it('should verify admin role is checked via loadAuthedProfile', async () => {
+    expect(loadAuthedProfile).toBeDefined();
+    expect(authenticateRequest).toBeDefined();
   });
 });

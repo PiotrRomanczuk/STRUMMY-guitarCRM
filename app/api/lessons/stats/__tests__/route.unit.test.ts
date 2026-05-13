@@ -1,29 +1,16 @@
 /**
  * Lesson Stats API Security Tests
  *
- * Tests for admin client security fix (STRUMMY-262).
- * Verifies that getUserWithRolesSSR is used instead of admin client for role checking.
- *
- * Security Improvement:
- * - BEFORE: Used admin client to check user role (unnecessary admin privilege)
- * - AFTER: Uses getUserWithRolesSSR (standard role checking)
+ * Tests that authenticateRequest guards the stats route.
  */
 
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
-import * as getUserWithRolesSSR from '@/lib/getUserWithRolesSSR';
-import * as supabaseServer from '@/lib/supabase/server';
+import { authenticateRequest } from '@/lib/auth/api-auth';
+import { createAdminClient } from '@/lib/supabase/admin';
 
-jest.mock('@/lib/getUserWithRolesSSR');
-jest.mock('@/lib/supabase/server');
-
-const mockSupabase = {
-  from: jest.fn(),
-  rpc: jest.fn(),
-  auth: {
-    getUser: jest.fn(),
-  },
-};
+jest.mock('@/lib/auth/api-auth');
+jest.mock('@/lib/supabase/admin');
 
 const createMockRequest = (params = {}) => {
   const searchParams = new URLSearchParams(params as Record<string, string>);
@@ -31,19 +18,18 @@ const createMockRequest = (params = {}) => {
   return new NextRequest(url);
 };
 
+const mockUser = { id: 'admin-id', email: 'admin@test.com' };
+
 describe('GET /api/lessons/stats - Security (STRUMMY-262)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (supabaseServer.createClient as jest.Mock).mockResolvedValue(mockSupabase);
   });
 
   it('should return 401 when user is not authenticated', async () => {
-    (getUserWithRolesSSR.getUserWithRolesSSR as jest.Mock).mockResolvedValue({
+    (authenticateRequest as jest.Mock).mockResolvedValue({
       user: null,
-      isAdmin: false,
-      isTeacher: false,
-      isStudent: false,
-      isDevelopment: false,
+      error: 'Unauthorized',
+      status: 401,
     });
 
     const request = createMockRequest();
@@ -54,36 +40,26 @@ describe('GET /api/lessons/stats - Security (STRUMMY-262)', () => {
     expect(data.error).toBe('Unauthorized');
   });
 
-  it('should use getUserWithRolesSSR for role checking (not admin client)', async () => {
-    (getUserWithRolesSSR.getUserWithRolesSSR as jest.Mock).mockResolvedValue({
-      user: { id: 'admin-id' },
-      isAdmin: true,
-      isTeacher: false,
-      isStudent: false,
-      isDevelopment: false,
-    });
+  it('should use authenticateRequest for auth checking (not getUserWithRolesSSR)', async () => {
+    (authenticateRequest as jest.Mock).mockResolvedValue({ user: mockUser, status: 200 });
 
-    // Mock RPC call
-    mockSupabase.rpc.mockResolvedValue({ data: [], error: null });
+    const mockQuery = {
+      select: jest.fn().mockReturnThis(),
+      or: jest.fn().mockReturnThis(),
+      gte: jest.fn().mockReturnThis(),
+      lte: jest.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
+    };
+    (createAdminClient as jest.Mock).mockReturnValue({
+      from: jest.fn().mockReturnValue(mockQuery),
+    });
 
     const request = createMockRequest();
     await GET(request);
 
-    // Verify getUserWithRolesSSR was called (security fix)
-    expect(getUserWithRolesSSR.getUserWithRolesSSR).toHaveBeenCalled();
+    expect(authenticateRequest).toHaveBeenCalled();
   });
 
-  it('should verify role check uses getUserWithRolesSSR', async () => {
-    (getUserWithRolesSSR.getUserWithRolesSSR as jest.Mock).mockResolvedValue({
-      user: { id: 'admin-id' },
-      isAdmin: true,
-      isTeacher: false,
-      isStudent: false,
-      isDevelopment: false,
-    });
-
-    // We only test that getUserWithRolesSSR is called for role checking
-    // Full query testing is handled by integration tests
-    expect(getUserWithRolesSSR.getUserWithRolesSSR).toBeDefined();
+  it('should verify role check uses authenticateRequest', async () => {
+    expect(authenticateRequest).toBeDefined();
   });
 });
