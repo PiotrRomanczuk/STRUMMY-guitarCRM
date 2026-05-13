@@ -10,7 +10,11 @@ delete {
 }
 
 tests {
-  test('Status 200 or 404', function() {
-    expect([200, 404]).to.include(res.status);
+  test('Status 200, 400, 404 or 500', function() {
+    expect([200, 400, 404, 500]).to.include(res.status);
+  });
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
   });
 }

@@ -5,10 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/song/{{sample_id}}/videos/{{sample_videoId}}/stream
+  url: {{baseUrl}}/api/song/{{sample_song_id}}/videos/{{sample_videoId}}/stream
   auth: inherit
 }
 
-docs {
-  Domain song [orphan]. Auth user.
+tests {
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
+  });
 }

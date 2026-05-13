@@ -21,13 +21,17 @@ export async function GET(request: NextRequest) {
     const includeSongs = searchParams.get('includeSongs') === 'true';
     const includeProfiles = searchParams.get('includeProfiles') === 'true';
 
-    // Build query
-    let query = supabase.from('lessons').select(`
-        *,
-        ${includeProfiles ? 'profile:profiles!lessons_student_id_fkey(email, firstName, lastName),' : ''}
-        ${includeProfiles ? 'teacher_profile:profiles!lessons_teacher_id_fkey(email, firstName, lastName),' : ''}
-        ${includeSongs ? 'lesson_songs(song_id, status, songs(title, author, level, key))' : ''}
-      `);
+    // Build query — assemble join fragments without trailing commas
+    const joinParts = [];
+    if (includeProfiles) {
+      joinParts.push('profile:profiles!lessons_student_id_fkey(email, full_name)');
+      joinParts.push('teacher_profile:profiles!lessons_teacher_id_fkey(email, full_name)');
+    }
+    if (includeSongs) {
+      joinParts.push('lesson_songs(song_id, status, songs(title, author, level, key))');
+    }
+    const selectStr = joinParts.length > 0 ? `*, ${joinParts.join(', ')}` : '*';
+    let query = supabase.from('lessons').select(selectStr);
 
     if (userId) {
       query = query.or(`student_id.eq.${userId},teacher_id.eq.${userId}`);
@@ -43,11 +47,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (dateFrom) {
-      query = query.gte('date', dateFrom);
+      query = query.gte('scheduled_at', dateFrom);
     }
 
     if (dateTo) {
-      query = query.lte('date', dateTo);
+      query = query.lte('scheduled_at', dateTo);
     }
 
     query = query.order('created_at', { ascending: false });

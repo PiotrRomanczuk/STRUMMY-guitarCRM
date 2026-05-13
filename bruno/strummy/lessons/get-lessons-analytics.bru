@@ -13,9 +13,7 @@ tests {
   test('Status 200', function() {
     expect(res.status).to.equal(200);
   });
-  test('Has totalLessons or completionRate', function() {
-    expect(res.body).to.satisfy(function(b) {
-      return b.hasOwnProperty('totalLessons') || b.hasOwnProperty('completionRate');
-    });
+  test('Has overview', function() {
+    expect(res.body).to.have.property('overview');
   });
 }

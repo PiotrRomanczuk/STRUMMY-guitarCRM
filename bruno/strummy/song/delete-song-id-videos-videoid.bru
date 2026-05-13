@@ -5,10 +5,13 @@ meta {
 }
 
 delete {
-  url: {{baseUrl}}/api/song/{{sample_id}}/videos/{{sample_videoId}}
+  url: {{baseUrl}}/api/song/{{sample_song_id}}/videos/{{sample_videoId}}
   auth: inherit
 }
 
-docs {
-  Domain song [orphan]. Auth user. schemas=SongVideoSchema
+tests {
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
+  });
 }

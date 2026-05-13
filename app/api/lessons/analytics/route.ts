@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     // Build base query for lessons
     let baseQuery = supabase
       .from('lessons')
-      .select('id, status, date, time, teacher_id, student_id');
+      .select('id, status, scheduled_at, teacher_id, student_id');
 
     // Role-based filtering: teachers see only their own, students see only their own
     if (profile.is_admin) {
@@ -57,11 +57,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (dateFrom) {
-      baseQuery = baseQuery.gte('date', dateFrom);
+      baseQuery = baseQuery.gte('scheduled_at', dateFrom);
     }
 
     if (dateTo) {
-      baseQuery = baseQuery.lte('date', dateTo);
+      baseQuery = baseQuery.lte('scheduled_at', dateTo);
     }
 
     // Get lesson completion rates
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
         `
         status,
         songs(level, key),
-        lesson:lessons(date, status)
+        lesson:lessons(scheduled_at, status)
       `
       );
 
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
     // Get time-based analytics
     const { data: timeAnalytics, error: timeError } = await supabase
       .from('lessons')
-      .select('date, status, time');
+      .select('scheduled_at, status');
 
     const timeBasedAnalytics = {
       peakHours: {} as { [key: string]: number },
@@ -202,18 +202,12 @@ export async function GET(request: NextRequest) {
     };
 
     if (!timeError && timeAnalytics) {
-      // Analyze peak hours
-      timeAnalytics.forEach((lesson: { time?: string }) => {
-        if (lesson.time) {
-          const hour = lesson.time.split(':')[0];
+      timeAnalytics.forEach((lesson: { scheduled_at?: string }) => {
+        if (lesson.scheduled_at) {
+          const dt = new Date(lesson.scheduled_at);
+          const hour = String(dt.getHours()).padStart(2, '0');
           timeBasedAnalytics.peakHours[hour] = (timeBasedAnalytics.peakHours[hour] || 0) + 1;
-        }
-      });
 
-      // Analyze weekly distribution
-      timeAnalytics.forEach((lesson: { date?: string }) => {
-        if (lesson.date) {
-          const dayOfWeek = new Date(lesson.date).getDay();
           const dayNames = [
             'Sunday',
             'Monday',
@@ -223,7 +217,7 @@ export async function GET(request: NextRequest) {
             'Friday',
             'Saturday',
           ];
-          const dayName = dayNames[dayOfWeek];
+          const dayName = dayNames[dt.getDay()];
           timeBasedAnalytics.weeklyDistribution[dayName] =
             (timeBasedAnalytics.weeklyDistribution[dayName] || 0) + 1;
         }

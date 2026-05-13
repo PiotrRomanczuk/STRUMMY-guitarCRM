@@ -91,7 +91,6 @@ export async function POST(request: NextRequest) {
             scheduled_at: lessonData.scheduled_at,
             notes: lessonData.notes || null,
             status: lessonData.status || 'SCHEDULED',
-            creator_user_id: auth.user.id,
           })
           .select()
           .single();

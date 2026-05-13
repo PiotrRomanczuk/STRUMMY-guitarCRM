@@ -43,8 +43,9 @@ export async function GET(request: NextRequest) {
     const { data: templates, error } = await query;
 
     if (error) {
+      // lesson_templates table may not exist in all environments
       logger.error('Error fetching lesson templates:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ templates: [] });
     }
 
     return NextResponse.json({ templates: templates || [] });

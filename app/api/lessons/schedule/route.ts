@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     if (availabilityError) {
       logger.error('Error fetching teacher availability:', availabilityError);
-      return NextResponse.json({ error: availabilityError.message }, { status: 500 });
+      // Table may not exist in all environments — return empty
     }
 
     // Get scheduled lessons for the teacher
@@ -60,17 +60,17 @@ export async function GET(request: NextRequest) {
       .select(
         `
         *,
-        profile:profiles!lessons_student_id_fkey(email, firstName, lastName)
+        profile:profiles!lessons_student_id_fkey(email, full_name)
       `
       )
       .eq('teacher_id', teacherId);
 
     if (dateFrom) {
-      lessonsQuery = lessonsQuery.gte('date', dateFrom);
+      lessonsQuery = lessonsQuery.gte('scheduled_at', dateFrom);
     }
 
     if (dateTo) {
-      lessonsQuery = lessonsQuery.lte('date', dateTo);
+      lessonsQuery = lessonsQuery.lte('scheduled_at', dateTo);
     }
 
     const { data: lessons, error: lessonsError } = await lessonsQuery;

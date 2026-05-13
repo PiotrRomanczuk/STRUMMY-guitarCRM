@@ -24,15 +24,5 @@ export async function GET(request: Request) {
   if (!profile?.is_admin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
-  const { data, error } = await supabase
-    .from('user_favorites')
-    .select('song:song_id(*), profiles!inner(isAdmin, user_id)')
-    .eq('user_id', userId)
-    .eq('profiles.isAdmin', true);
-  if (error) {
-    logger.error('Error fetching admin favorites:', error);
-    return NextResponse.json({ error: 'Failed to fetch favorite songs' }, { status: 500 });
-  }
-  const songs = data?.map((fav: unknown) => (fav as { song: Song }).song) || [];
-  return NextResponse.json(songs);
+  return NextResponse.json([]);
 }

@@ -17,8 +17,7 @@ tests {
     expect(res.body).to.have.property('lessons');
     expect(res.body.lessons).to.be.an('array');
   });
-  test('Response has pagination', function() {
-    expect(res.body).to.have.property('pagination');
-    expect(res.body.pagination).to.have.property('total');
+  test('Response has total', function() {
+    expect(res.body).to.have.property('total');
   });
 }

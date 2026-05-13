@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { SongWithLessonsSchema, type SongWithLessons } from '@/schemas/SongSchema';
+import type { SongWithLessons } from '@/schemas/SongSchema';
 import { authenticateRequest } from '@/lib/auth/api-auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   let userId = searchParams.get('userId');
-  const level = searchParams.get('level');
+  const level = searchParams.get('level') ?? undefined;
 
   // Students can only see their own songs
   if (profile.is_student && !profile.is_admin && !profile.is_teacher) {
@@ -41,31 +41,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Invalid query params' }, { status: 400 });
   }
 
-  // Fetch assigned songs for student
+  // Fetch songs from student_repertoire for the given student
   const { data, error } = await supabase
-    .from('lesson_songs')
-    .select('*,songs(*)')
-    .eq('student_id', userId)
+    .from('student_repertoire')
+    .select('current_status, songs(*)')
+    .eq('student_id', parseResult.data.userId)
+    .eq('is_active', true)
     .order('created_at', { ascending: false });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Map lesson_songs to SongWithStatus
-  const mapped: SongWithLessons[] = data.map((ls: { songs: SongWithLessons; status: string }) => ({
-    ...ls.songs,
-    status: ls.status,
-  }));
+  const mapped: SongWithLessons[] = data.map(
+    (row: { songs: SongWithLessons; current_status: string }) => ({
+      ...row.songs,
+      status: row.current_status,
+    })
+  );
 
-  // Optionally filter by level
   const filtered = level ? mapped.filter((song) => song.level === level) : mapped;
 
-  // Validate output
-  const safe = SongWithLessonsSchema.array().safeParse(filtered);
-  if (!safe.success) {
-    return NextResponse.json({ error: 'Invalid song data' }, { status: 500 });
-  }
-
-  return NextResponse.json(safe.data);
+  return NextResponse.json(filtered);
 }

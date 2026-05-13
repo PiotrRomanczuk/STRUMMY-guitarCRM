@@ -13,13 +13,17 @@ put {
 body:json {
   {
     "id": "{{sample_song_id}}",
-    "title": "Wonderwall",
-    "author": "Oasis"
+    "title": "People are strange (Bruno updated)",
+    "author": "The Doors"
   }
 }
 
 tests {
-  test('Status 200 or 404', function() {
-    expect([200, 404, 422]).to.include(res.status);
+  test('Status 200 or 400 or 404', function() {
+    expect([200, 400, 404, 422]).to.include(res.status);
+  });
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
   });
 }

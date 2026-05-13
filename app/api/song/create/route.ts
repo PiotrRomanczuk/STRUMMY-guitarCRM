@@ -49,6 +49,9 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      if (error.code === '23505') {
+        return NextResponse.json({ error: 'Song already exists' }, { status: 409 });
+      }
       logger.error('Error creating song:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

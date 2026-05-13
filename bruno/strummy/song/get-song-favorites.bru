@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/song/favorites
+  url: {{baseUrl}}/api/song/favorites?userId={{sample_student_id}}
   auth: inherit
 }
 
@@ -13,7 +13,8 @@ tests {
   test('Status 200', function() {
     expect(res.status).to.equal(200);
   });
-  test('Response is an array', function() {
-    expect(res.body).to.be.an('array');
+  test('Response has favorites', function() {
+    expect(res.body).to.have.property('favorites');
+    expect(res.body.favorites).to.be.an('array');
   });
 }

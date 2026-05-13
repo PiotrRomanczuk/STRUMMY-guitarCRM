@@ -20,7 +20,11 @@ body:json {
 }
 
 tests {
-  test('Status 200 or 201', function() {
-    expect([200, 201]).to.include(res.status);
+  test('Status 200 or 201 or 409', function() {
+    expect([200, 201, 409]).to.include(res.status);
+  });
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
   });
 }

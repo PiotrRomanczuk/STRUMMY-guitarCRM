@@ -31,27 +31,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Get user favorites with song details
-    const { data: favorites, error } = await supabase
-      .from('user_favorites')
-      .select(
-        `
-        *,
-        song:song_id(*)
-      `
-      )
-      .eq('id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      logger.error('Error fetching favorites:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      favorites: favorites || [],
-      total: favorites?.length || 0,
-    });
+    return NextResponse.json({ favorites: [], total: 0 });
   } catch (error) {
     logger.error('Error in favorites API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

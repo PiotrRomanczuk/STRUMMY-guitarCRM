@@ -72,7 +72,6 @@ export async function POST(request: NextRequest) {
         scheduled_at: validatedData.scheduled_at,
         notes: validatedData.notes || null,
         status: validatedData.status || 'SCHEDULED',
-        creator_user_id: auth.user.id,
       })
       .select()
       .single();

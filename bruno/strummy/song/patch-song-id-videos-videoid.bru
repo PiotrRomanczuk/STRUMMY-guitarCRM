@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{baseUrl}}/api/song/{{sample_id}}/videos/{{sample_videoId}}
+  url: {{baseUrl}}/api/song/{{sample_song_id}}/videos/{{sample_videoId}}
   body: json
   auth: inherit
 }
@@ -15,6 +15,9 @@ body { json }
 body:json {
   {}
 }
-docs {
-  Domain song [orphan]. Auth user. schemas=SongVideoSchema
+tests {
+  test('Response is not auth error', function() {
+    expect(res.status).to.not.equal(401);
+    expect(res.status).to.not.equal(403);
+  });
 }
