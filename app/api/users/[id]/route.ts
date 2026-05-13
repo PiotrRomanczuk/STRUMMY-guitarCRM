@@ -15,6 +15,35 @@ const UpdateUserSchema = z.object({
   parentId: z.string().uuid().nullable().optional(),
 });
 
+type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
+
+/**
+ * Build a true PATCH update payload from a parsed user-update body.
+ * Only fields the client actually sent are included; this prevents
+ * silently clobbering columns (notably role flags) on partial updates.
+ * Always sets updated_at. See STRUM-253.
+ */
+function buildUserUpdatePayload(body: UpdateUserInput): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (body.full_name !== undefined) {
+    payload.full_name = body.full_name;
+  } else if (body.firstName !== undefined || body.lastName !== undefined) {
+    payload.full_name = `${body.firstName ?? ''} ${body.lastName ?? ''}`.trim();
+  }
+
+  if (body.isAdmin !== undefined) payload.is_admin = body.isAdmin;
+  if (body.isTeacher !== undefined) payload.is_teacher = body.isTeacher;
+  if (body.isStudent !== undefined) payload.is_student = body.isStudent;
+  if (body.isParent !== undefined) payload.is_parent = body.isParent;
+  if (body.isActive !== undefined) payload.is_active = body.isActive;
+  if (body.parentId !== undefined) payload.parent_id = body.parentId;
+
+  return payload;
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, isAdmin } = await getUserWithRolesSSR();
@@ -28,7 +57,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, full_name, first_name, last_name, phone, notes, is_admin, is_teacher, is_student, is_shadow, is_active, is_parent, parent_id, student_status, created_at, updated_at')
+      .select(
+        'id, email, full_name, first_name, last_name, phone, notes, is_admin, is_teacher, is_student, is_shadow, is_active, is_parent, parent_id, student_status, created_at, updated_at'
+      )
       .eq('id', id)
       .single();
 
@@ -62,7 +93,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       const parsed = JSON.parse(text);
       const result = UpdateUserSchema.safeParse(parsed);
       if (!result.success) {
-        return Response.json({ error: 'Invalid request body', details: result.error.issues }, { status: 400 });
+        return Response.json(
+          { error: 'Invalid request body', details: result.error.issues },
+          { status: 400 }
+        );
       }
       body = result.data;
     } catch (e) {
@@ -92,23 +126,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       }
     }
 
-    let fullName = body.full_name;
-    if (!fullName && (body.firstName || body.lastName)) {
-      fullName = `${body.firstName || ''} ${body.lastName || ''}`.trim();
-    }
+    const updatePayload = buildUserUpdatePayload(body);
 
-    const updatePayload: Record<string, unknown> = {
-      full_name: fullName,
-      is_admin: body.isAdmin,
-      is_teacher: body.isTeacher,
-      is_student: body.isStudent,
-      is_parent: body.isParent,
-      is_active: body.isActive,
-      updated_at: new Date().toISOString(),
-    };
-
-    if (body.parentId !== undefined) {
-      updatePayload.parent_id = body.parentId;
+    // Only updated_at present means the client sent nothing actionable.
+    if (Object.keys(updatePayload).length === 1) {
+      return Response.json({ error: 'No updatable fields provided' }, { status: 400 });
     }
 
     const { data, error } = await supabase
