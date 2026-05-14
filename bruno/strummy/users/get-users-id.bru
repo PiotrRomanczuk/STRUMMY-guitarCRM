@@ -1,14 +1,27 @@
 meta {
   name: get-users-id
   type: http
-  seq: 1
+  seq: 3
 }
 
 get {
-  url: {{baseUrl}}/api/users/{{sample_id}}
+  url: {{baseUrl}}/api/users/{{created_user_id}}
   auth: inherit
 }
 
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("response has id", function() {
+    expect(res.body).to.have.property("id");
+  });
+  test("response has full_name", function() {
+    expect(res.body).to.have.property("full_name");
+  });
+}
+
 docs {
-  Domain users. Auth user, role:admin+teacher+student.
+  Domain users. Auth user, role:admin only.
+  Uses created_user_id set by post-users.
 }

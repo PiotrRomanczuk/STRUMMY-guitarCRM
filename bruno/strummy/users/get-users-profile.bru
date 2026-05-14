@@ -1,7 +1,7 @@
 meta {
   name: get-users-profile
   type: http
-  seq: 4
+  seq: 6
 }
 
 get {
@@ -9,6 +9,18 @@ get {
   auth: inherit
 }
 
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("response has id", function() {
+    expect(res.body).to.have.property("id");
+  });
+  test("response has email", function() {
+    expect(res.body).to.have.property("email");
+  });
+}
+
 docs {
-  Domain users. Auth user. schemas=shared/phone
+  Domain users. Auth user (any role). Returns own profile.
 }

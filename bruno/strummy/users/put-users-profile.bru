@@ -1,7 +1,7 @@
 meta {
   name: put-users-profile
   type: http
-  seq: 5
+  seq: 7
 }
 
 put {
@@ -10,11 +10,22 @@ put {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "full_name": "Piotr Romańczuk"
+  }
 }
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("no 5xx", function() {
+    expect(res.status).to.be.below(500);
+  });
+}
+
 docs {
-  Domain users. Auth user. schemas=shared/phone
+  Domain users. Auth user (any role). Updates own profile.
+  Idempotent — resets admin's full_name to known value.
 }

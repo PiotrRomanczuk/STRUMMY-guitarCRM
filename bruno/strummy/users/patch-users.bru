@@ -1,7 +1,7 @@
 meta {
   name: patch-users
   type: http
-  seq: 8
+  seq: 5
 }
 
 patch {
@@ -10,11 +10,28 @@ patch {
   auth: inherit
 }
 
-body { json }
+script:pre-request {
+  bru.setVar("invite_email_unique", "bruno-shadow-" + Date.now() + "@example.com");
+}
 
 body:json {
-  {}
+  {
+    "userId": "{{created_user_id}}",
+    "inviteEmail": "{{invite_email_unique}}"
+  }
 }
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("no 5xx", function() {
+    expect(res.status).to.be.below(500);
+  });
+}
+
 docs {
-  Domain users. Auth user, admin-client, role:admin+teacher+student.
+  Domain users. Auth user, admin-client, role:admin+teacher.
+  PATCH sets invite_email on a shadow profile.
+  Uses created_user_id set by post-users.
 }

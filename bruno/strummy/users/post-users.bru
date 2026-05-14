@@ -1,7 +1,7 @@
 meta {
   name: post-users
   type: http
-  seq: 7
+  seq: 1
 }
 
 post {
@@ -10,11 +10,27 @@ post {
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "full_name": "Bruno Test Shadow",
+    "isStudent": true
+  }
 }
+
+tests {
+  test("status 201", function() {
+    expect(res.status).to.equal(201);
+  });
+  test("response has id", function() {
+    expect(res.body).to.have.property("id");
+    bru.setVar("created_user_id", res.body.id);
+  });
+  test("is shadow user", function() {
+    expect(res.body.is_shadow).to.equal(true);
+  });
+}
+
 docs {
-  Domain users. Auth user, admin-client, role:admin+teacher+student.
+  Domain users. Auth user, admin-client, role:admin+teacher.
+  POST without email creates a shadow profile (no auth user).
 }
