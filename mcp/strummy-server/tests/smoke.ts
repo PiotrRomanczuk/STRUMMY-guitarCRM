@@ -11,6 +11,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { getLesson, getUpcomingLessons, listLessons } from '../src/tools/lessons.js';
 import {
   lessonPlanContext,
   practiceScheduleContext,
