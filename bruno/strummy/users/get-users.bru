@@ -1,12 +1,22 @@
 meta {
   name: get-users
   type: http
-  seq: 6
+  seq: 2
 }
 
 get {
   url: {{baseUrl}}/api/users
   auth: inherit
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("response has data array", function() {
+    expect(res.body).to.have.property("data");
+    expect(res.body.data).to.be.an("array");
+  });
 }
 
 docs {

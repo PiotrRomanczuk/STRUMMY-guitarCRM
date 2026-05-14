@@ -1,14 +1,25 @@
 meta {
   name: delete-users-id
   type: http
-  seq: 3
+  seq: 8
 }
 
 delete {
-  url: {{baseUrl}}/api/users/{{sample_id}}
+  url: {{baseUrl}}/api/users/{{created_user_id}}
   auth: inherit
 }
 
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("no 5xx", function() {
+    expect(res.status).to.be.below(500);
+  });
+}
+
 docs {
-  Domain users. Auth user, role:admin+teacher+student.
+  Domain users. Auth user, role:admin only.
+  Cleans up shadow user created by post-users.
+  Uses created_user_id set by post-users.
 }

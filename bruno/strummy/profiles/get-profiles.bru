@@ -9,6 +9,15 @@ get {
   auth: inherit
 }
 
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("response is array", function() {
+    expect(res.body).to.be.an("array");
+  });
+}
+
 docs {
-  Domain profiles. Auth user.
+  Domain profiles. Auth user, role:admin+teacher.
 }

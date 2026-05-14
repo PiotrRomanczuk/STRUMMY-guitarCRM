@@ -1,20 +1,31 @@
 meta {
   name: put-users-id
   type: http
-  seq: 2
+  seq: 4
 }
 
 put {
-  url: {{baseUrl}}/api/users/{{sample_id}}
+  url: {{baseUrl}}/api/users/{{created_user_id}}
   body: json
   auth: inherit
 }
 
-body { json }
-
 body:json {
-  {}
+  {
+    "full_name": "Bruno Shadow Updated"
+  }
 }
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("no 5xx", function() {
+    expect(res.status).to.be.below(500);
+  });
+}
+
 docs {
-  Domain users. Auth user, role:admin+teacher+student.
+  Domain users. Auth user, role:admin only.
+  Uses created_user_id set by post-users.
 }
