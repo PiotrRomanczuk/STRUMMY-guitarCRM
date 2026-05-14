@@ -93,9 +93,17 @@ export function AssignmentsList({ assignments }: AssignmentsListProps) {
       </div>
 
       {assignments.length === 0 ? (
-        <p className="text-sm text-muted-foreground px-1">
-          No active assignments right now. Great work!
-        </p>
+        <div className="px-1 space-y-2">
+          <p className="text-sm text-muted-foreground">
+            No active assignments right now. Great work!
+          </p>
+          <Link
+            href="/dashboard/assignments?status=completed"
+            className="inline-block text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-2"
+          >
+            View past assignments
+          </Link>
+        </div>
       ) : (
         <ul className="-mx-2 space-y-1">
           {assignments.map((a) => (

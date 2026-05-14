@@ -1,7 +1,7 @@
 'use client';
 
 import { formatDistanceToNow } from 'date-fns';
-import { Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { StudentV2 } from '@/types/teacher-dashboard-v2';
@@ -76,6 +76,13 @@ export function StudentsWidget({ students }: StudentsWidgetProps) {
           </div>
           <p className="font-serif text-base italic text-muted-foreground">No students yet</p>
           <p className="text-xs text-muted-foreground mt-0.5">Invite students to get started</p>
+          <Link
+            href="/dashboard/users/invite"
+            className="mt-3 inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="h-3 w-3" aria-hidden="true" />
+            Invite a student
+          </Link>
         </div>
       ) : (
         <div className="px-6 pb-5">

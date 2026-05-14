@@ -25,6 +25,12 @@ export function RepertoireProgress({ items, maxItems = 6 }: RepertoireProgressPr
         <p className="text-sm text-muted-foreground py-2">
           No songs in your repertoire yet. Ask your teacher to add some!
         </p>
+        <Link
+          href="/dashboard/songs"
+          className="mt-2 inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          Browse song library
+        </Link>
       </section>
     );
   }

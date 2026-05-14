@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, listItem } from '@/lib/animations/variants';
-import { Calendar, User } from 'lucide-react';
+import { Calendar, Plus, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDashboardAgendaRealtime } from '@/lib/hooks/useDashboardAgendaRealtime';
 
@@ -140,6 +140,13 @@ function EmptyAgenda() {
       </div>
       <p className="text-sm font-medium">No items today</p>
       <p className="text-xs text-muted-foreground mt-0.5">Enjoy your free day!</p>
+      <Link
+        href="/dashboard/calendar"
+        className="mt-3 inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
+      >
+        <Plus className="h-3 w-3" aria-hidden="true" />
+        Schedule a lesson
+      </Link>
     </div>
   );
 }
