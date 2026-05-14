@@ -1,14 +1,27 @@
 meta {
   name: get-assignments-id
   type: http
-  seq: 1
+  seq: 3
 }
 
 get {
-  url: {{baseUrl}}/api/assignments/{{sample_id}}
+  url: {{baseUrl}}/api/assignments/{{created_assignment_id}}
   auth: inherit
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("has id field", function() {
+    expect(res.body).to.have.property("id");
+  });
+  test("has title field", function() {
+    expect(res.body).to.have.property("title");
+  });
 }
 
 docs {
   Domain assignments. Auth user. schemas=AssignmentSchema
+  Uses created_assignment_id set by post-assignments.bru
 }

@@ -9,6 +9,25 @@ get {
   auth: inherit
 }
 
+tests {
+  test("status 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  test("no 5xx", function() {
+    expect(res.status).to.be.below(500);
+  });
+  test("response has agents array", function() {
+    expect(res.body.agents).to.be.an("array");
+  });
+  test("response has queue stats", function() {
+    expect(res.body.queue).to.be.an("object");
+  });
+  test("response has checkedAt", function() {
+    expect(res.body.checkedAt).to.be.a("string");
+  });
+}
+
 docs {
-  Domain ai. Auth user, admin-client.
+  Domain ai. Auth user (admin only), Bearer token via withApiAuth.
+  GET returns in-memory AI infrastructure state: queue, rate limits, agents, streaming analytics.
 }

@@ -1,0 +1,27 @@
+meta {
+  name: get-auth-bad-token
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/lessons
+  auth: none
+}
+
+headers {
+  Authorization: Bearer this-is-not-a-valid-jwt-token
+}
+
+docs {
+  Verifies that a malformed / invalid bearer token is rejected with 401.
+}
+
+tests {
+  test('Bad token returns 401', function() {
+    expect(res.status).to.equal(401);
+  });
+  test('Error message present', function() {
+    expect(res.body).to.have.property('error');
+  });
+}

@@ -1,0 +1,36 @@
+meta {
+  name: get-auth-api-key
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/lessons
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{API_KEY}}
+}
+
+docs {
+  Verifies that the gcrm_ API key bearer path in api-auth.ts is exercised.
+  API_KEY must be set in .env.bruno.<env> as a real active key.
+  Returns 200 if key is valid, 401 if key is not configured in this environment.
+}
+
+tests {
+  test('API key auth returns 200 or 401 (not 5xx)', function() {
+    expect(res.status).to.be.below(500);
+  });
+  test('If 200: response has lessons array', function() {
+    if (res.status === 200) {
+      expect(res.body).to.have.property('lessons');
+    }
+  });
+  test('If 401: error message present', function() {
+    if (res.status === 401) {
+      expect(res.body).to.have.property('error');
+    }
+  });
+}

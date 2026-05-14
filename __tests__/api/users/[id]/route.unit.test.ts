@@ -7,15 +7,15 @@
  */
 
 import { PUT } from '@/app/api/users/[id]/route';
-import { createClient } from '@/lib/supabase/server';
-import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
 
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn(),
+jest.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: jest.fn(),
 }));
 
-jest.mock('@/lib/getUserWithRolesSSR', () => ({
-  getUserWithRolesSSR: jest.fn(),
+jest.mock('@/lib/auth/withApiAuth', () => ({
+  withApiAuth: jest.fn(),
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -29,7 +29,6 @@ interface UpdateCall {
 }
 
 function buildSupabaseMock(updateCalls: UpdateCall[]) {
-  // Single returns the row after update
   const returnedRow = { id: targetUserId, full_name: 'Updated' };
 
   const builder = {
@@ -50,25 +49,29 @@ function buildSupabaseMock(updateCalls: UpdateCall[]) {
 function makeRequest(body: Record<string, unknown>): Request {
   return new Request('http://localhost/api/users/' + targetUserId, {
     method: 'PUT',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', Authorization: 'Bearer mock-token' },
     body: JSON.stringify(body),
   });
 }
 
 const paramsPromise = Promise.resolve({ id: targetUserId });
 
+const mockAdminContext = {
+  user: { id: 'admin-id' },
+  roles: { isAdmin: true, isTeacher: false, isStudent: false },
+};
+
 describe('PUT /api/users/[id] - partial payload (STRUM-253)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (getUserWithRolesSSR as jest.Mock).mockResolvedValue({
-      user: { id: 'admin-id' },
-      isAdmin: true,
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
+      return handler(mockAdminContext, _req);
     });
   });
 
   it('does not include role flags when client omits them', async () => {
     const calls: UpdateCall[] = [];
-    (createClient as jest.Mock).mockResolvedValue(buildSupabaseMock(calls));
+    (createAdminClient as jest.Mock).mockReturnValue(buildSupabaseMock(calls));
 
     const res = await PUT(makeRequest({ full_name: 'New Name' }), {
       params: paramsPromise,
@@ -89,7 +92,7 @@ describe('PUT /api/users/[id] - partial payload (STRUM-253)', () => {
 
   it('includes role flags only when explicitly provided (incl. false)', async () => {
     const calls: UpdateCall[] = [];
-    (createClient as jest.Mock).mockResolvedValue(buildSupabaseMock(calls));
+    (createAdminClient as jest.Mock).mockReturnValue(buildSupabaseMock(calls));
 
     const res = await PUT(makeRequest({ isAdmin: false, isTeacher: true }), {
       params: paramsPromise,
@@ -105,7 +108,7 @@ describe('PUT /api/users/[id] - partial payload (STRUM-253)', () => {
 
   it('rejects empty payload (no updatable fields)', async () => {
     const calls: UpdateCall[] = [];
-    (createClient as jest.Mock).mockResolvedValue(buildSupabaseMock(calls));
+    (createAdminClient as jest.Mock).mockReturnValue(buildSupabaseMock(calls));
 
     const res = await PUT(makeRequest({}), { params: paramsPromise });
 
@@ -115,7 +118,7 @@ describe('PUT /api/users/[id] - partial payload (STRUM-253)', () => {
 
   it('derives full_name from firstName/lastName only when provided', async () => {
     const calls: UpdateCall[] = [];
-    (createClient as jest.Mock).mockResolvedValue(buildSupabaseMock(calls));
+    (createAdminClient as jest.Mock).mockReturnValue(buildSupabaseMock(calls));
 
     const res = await PUT(makeRequest({ firstName: 'Ada', lastName: 'Lovelace' }), {
       params: paramsPromise,

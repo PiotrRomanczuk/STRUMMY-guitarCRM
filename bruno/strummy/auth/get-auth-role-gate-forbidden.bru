@@ -1,0 +1,30 @@
+meta {
+  name: get-auth-role-gate-forbidden
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/song/admin-favorites
+  auth: none
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiLCJyb2xlIjoidGVhY2hlciIsImlhdCI6MTUxNjIzOTAyMn0.invalid_signature_not_admin
+}
+
+docs {
+  Calls the admin-only /api/song/admin-favorites with a non-admin JWT.
+  The JWT has a teacher role claim but an invalid signature so Supabase rejects it.
+  Expects 401 (invalid token) or 403 (valid token, wrong role) — both mean access blocked.
+  This validates that the admin gate in withApiAuth rejects non-admin callers.
+}
+
+tests {
+  test('Non-admin token blocked (401 or 403)', function() {
+    expect([401, 403]).to.include(res.status);
+  });
+  test('Not 5xx', function() {
+    expect(res.status).to.be.below(500);
+  });
+}

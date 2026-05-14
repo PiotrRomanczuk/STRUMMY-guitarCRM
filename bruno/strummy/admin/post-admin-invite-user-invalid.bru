@@ -1,0 +1,31 @@
+meta {
+  name: post-admin-invite-user-invalid
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/admin/invite-user
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "not-an-email",
+    "fullName": ""
+  }
+}
+
+docs {
+  Validates that invite-user rejects malformed input with 400.
+}
+
+tests {
+  test('Invalid body returns 400', function() {
+    expect(res.status).to.equal(400);
+  });
+  test('Response has validation details', function() {
+    expect(res.body).to.have.property('error');
+  });
+}

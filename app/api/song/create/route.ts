@@ -39,6 +39,9 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
+        if (error.code === '42501' || error.message?.includes('row-level security')) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
         logger.error('Error creating song:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }

@@ -2,31 +2,27 @@
  * @jest-environment node
  */
 import { GET, PUT } from './route';
-import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { NextRequest } from 'next/server';
+import { withApiAuth } from '@/lib/auth/withApiAuth';
+import { createAdminClient } from '@/lib/supabase/admin';
 
-jest.mock('@/lib/supabase/server');
-jest.mock('@/lib/getUserWithRolesSSR');
-
-const mockSelect = jest.fn();
-const mockUpdate = jest.fn();
-const _mockEq = jest.fn();
-const _mockSingle = jest.fn();
-
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn().mockResolvedValue({
-    from: jest.fn(() => ({
-      select: mockSelect,
-      update: mockUpdate,
-    })),
-  }),
+jest.mock('@/lib/auth/withApiAuth');
+jest.mock('@/lib/supabase/admin');
+jest.mock('@/lib/logger', () => ({
+  logger: { error: jest.fn(), info: jest.fn(), warn: jest.fn() },
 }));
 
-const mockGetUser = getUserWithRolesSSR as jest.MockedFunction<typeof getUserWithRolesSSR>;
+const mockUserContext = {
+  user: { id: 'user-1', email: 'user@example.com' },
+  roles: { isAdmin: false, isTeacher: false, isStudent: true },
+};
 
 const mockProfile = {
   id: 'user-1',
   email: 'user@example.com',
   full_name: 'John Doe',
+  first_name: null,
+  last_name: null,
   phone: '123456789',
   avatar_url: null,
   is_admin: false,
@@ -43,34 +39,32 @@ describe('Users Profile API - GET', () => {
   });
 
   it('returns 401 when not authenticated', async () => {
-    mockGetUser.mockResolvedValue({
-      user: null,
-      isAdmin: false,
-      isTeacher: false,
-      isStudent: false,
-      isDevelopment: false,
-    });
+    (withApiAuth as jest.Mock).mockResolvedValue(
+      Response.json({ error: 'Unauthorized' }, { status: 401 })
+    );
 
-    const response = await GET();
+    const req = new NextRequest('http://localhost/api/users/profile');
+    const response = await GET(req);
     expect(response.status).toBe(401);
   });
 
   it('returns the authenticated user profile', async () => {
-    mockGetUser.mockResolvedValue({
-      user: { id: 'user-1', email: 'user@example.com' } as never,
-      isAdmin: false,
-      isTeacher: false,
-      isStudent: true,
-      isDevelopment: false,
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
+      return handler(mockUserContext, _req);
     });
 
-    mockSelect.mockReturnValue({
-      eq: jest.fn().mockReturnValue({
-        single: jest.fn().mockResolvedValue({ data: mockProfile, error: null }),
-      }),
+    (createAdminClient as jest.Mock).mockReturnValue({
+      from: jest.fn(() => ({
+        select: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            single: jest.fn().mockResolvedValue({ data: mockProfile, error: null }),
+          })),
+        })),
+      })),
     });
 
-    const response = await GET();
+    const req = new NextRequest('http://localhost/api/users/profile');
+    const response = await GET(req);
     expect(response.status).toBe(200);
 
     const data = await response.json();
@@ -85,15 +79,11 @@ describe('Users Profile API - PUT', () => {
   });
 
   it('returns 401 when not authenticated', async () => {
-    mockGetUser.mockResolvedValue({
-      user: null,
-      isAdmin: false,
-      isTeacher: false,
-      isStudent: false,
-      isDevelopment: false,
-    });
+    (withApiAuth as jest.Mock).mockResolvedValue(
+      Response.json({ error: 'Unauthorized' }, { status: 401 })
+    );
 
-    const request = new Request('http://localhost/api/users/profile', {
+    const request = new NextRequest('http://localhost/api/users/profile', {
       method: 'PUT',
       body: JSON.stringify({ full_name: 'New Name' }),
     });
@@ -103,15 +93,11 @@ describe('Users Profile API - PUT', () => {
   });
 
   it('returns 400 for invalid body', async () => {
-    mockGetUser.mockResolvedValue({
-      user: { id: 'user-1', email: 'user@example.com' } as never,
-      isAdmin: false,
-      isTeacher: false,
-      isStudent: true,
-      isDevelopment: false,
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
+      return handler(mockUserContext, _req);
     });
 
-    const request = new Request('http://localhost/api/users/profile', {
+    const request = new NextRequest('http://localhost/api/users/profile', {
       method: 'PUT',
       body: 'not json',
     });
@@ -121,15 +107,11 @@ describe('Users Profile API - PUT', () => {
   });
 
   it('returns 400 when no fields provided', async () => {
-    mockGetUser.mockResolvedValue({
-      user: { id: 'user-1', email: 'user@example.com' } as never,
-      isAdmin: false,
-      isTeacher: false,
-      isStudent: true,
-      isDevelopment: false,
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
+      return handler(mockUserContext, _req);
     });
 
-    const request = new Request('http://localhost/api/users/profile', {
+    const request = new NextRequest('http://localhost/api/users/profile', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
@@ -140,46 +122,40 @@ describe('Users Profile API - PUT', () => {
   });
 
   it('rejects role escalation fields silently', async () => {
-    mockGetUser.mockResolvedValue({
-      user: { id: 'user-1', email: 'user@example.com' } as never,
-      isAdmin: false,
-      isTeacher: false,
-      isStudent: true,
-      isDevelopment: false,
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
+      return handler(mockUserContext, _req);
     });
 
-    // Attempting to set is_admin should be ignored by Zod (not in schema)
-    const request = new Request('http://localhost/api/users/profile', {
+    const request = new NextRequest('http://localhost/api/users/profile', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_admin: true }),
     });
 
     const response = await PUT(request);
-    // No valid fields = 400
     expect(response.status).toBe(400);
   });
 
   it('updates profile with valid fields', async () => {
-    mockGetUser.mockResolvedValue({
-      user: { id: 'user-1', email: 'user@example.com' } as never,
-      isAdmin: false,
-      isTeacher: false,
-      isStudent: true,
-      isDevelopment: false,
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
+      return handler(mockUserContext, _req);
     });
 
     const updatedProfile = { ...mockProfile, full_name: 'Jane Updated' };
 
-    mockUpdate.mockReturnValue({
-      eq: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({ data: updatedProfile, error: null }),
-        }),
-      }),
+    (createAdminClient as jest.Mock).mockReturnValue({
+      from: jest.fn(() => ({
+        update: jest.fn(() => ({
+          eq: jest.fn(() => ({
+            select: jest.fn(() => ({
+              single: jest.fn().mockResolvedValue({ data: updatedProfile, error: null }),
+            })),
+          })),
+        })),
+      })),
     });
 
-    const request = new Request('http://localhost/api/users/profile', {
+    const request = new NextRequest('http://localhost/api/users/profile', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ full_name: 'Jane Updated' }),

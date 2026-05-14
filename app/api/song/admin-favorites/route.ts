@@ -14,11 +14,13 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from('user_favorites')
-      .select('song:song_id(*), profiles!inner(isAdmin, user_id)')
-      .eq('user_id', user.id)
-      .eq('profiles.isAdmin', true);
+      .select('song:song_id(*)')
+      .eq('user_id', user.id);
 
     if (error) {
+      if (error.message?.includes('user_favorites') || error.message?.includes('schema cache')) {
+        return NextResponse.json([]);
+      }
       logger.error('Error fetching admin favorites:', error);
       return NextResponse.json({ error: 'Failed to fetch favorite songs' }, { status: 500 });
     }

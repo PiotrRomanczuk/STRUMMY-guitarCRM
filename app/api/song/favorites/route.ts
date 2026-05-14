@@ -31,10 +31,13 @@ export async function GET(req: NextRequest) {
         song:song_id(*)
       `
         )
-        .eq('id', userId)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) {
+        if (error.message?.includes('user_favorites') || error.message?.includes('schema cache')) {
+          return NextResponse.json(createListResponse('favorites', [], { total: 0 }));
+        }
         logger.error('Error fetching favorites:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }

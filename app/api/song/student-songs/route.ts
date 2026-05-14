@@ -22,15 +22,15 @@ export async function GET(request: Request) {
       userId = user.id;
     }
 
-    const parseResult = querySchema.safeParse({ userId, level });
+    const parseResult = querySchema.safeParse({ userId, level: level ?? undefined });
     if (!parseResult.success) {
       return NextResponse.json({ error: 'Invalid query params' }, { status: 400 });
     }
 
-    // Fetch assigned songs for student
+    // Fetch assigned songs for student via student_repertoire (lesson_songs has no student_id)
     const { data, error } = await supabase
-      .from('lesson_songs')
-      .select('*,songs(*)')
+      .from('student_repertoire')
+      .select('current_status,songs(*)')
       .eq('student_id', userId)
       .order('created_at', { ascending: false });
 
@@ -38,13 +38,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Map lesson_songs to SongWithStatus
-    const mapped: SongWithLessons[] = data.map(
-      (ls: { songs: SongWithLessons; status: string }) => ({
-        ...ls.songs,
-        status: ls.status,
-      })
-    );
+    // Map student_repertoire to SongWithStatus.
+    // Supabase types the FK join as any[] but many-to-one returns a single object at runtime.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mapped: SongWithLessons[] = (data as any[]).map((sr) => ({
+      ...(Array.isArray(sr.songs) ? sr.songs[0] : sr.songs),
+      status: sr.current_status,
+    }));
 
     // Optionally filter by level
     const filtered = level ? mapped.filter((song) => song.level === level) : mapped;
