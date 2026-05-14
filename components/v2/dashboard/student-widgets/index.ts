@@ -5,3 +5,6 @@ export { RepertoireProgress } from './RepertoireProgress';
 export { QuickLinks } from './QuickLinks';
 export { StreakTracker } from './StreakTracker';
 export { AchievementBadges } from './AchievementBadges';
+export { LastLessonCard } from './LastLessonCard';
+export { PracticeToday } from './PracticeToday';
+export { AssignmentsList } from './AssignmentsList';

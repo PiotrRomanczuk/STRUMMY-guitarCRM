@@ -2,16 +2,17 @@
 
 import { motion } from 'framer-motion';
 import { staggerContainer, listItem, cardEntrance, safeVariants } from '@/lib/animations/variants';
-import { Flame } from 'lucide-react';
 import { MobilePageShell } from '@/components/v2/primitives/MobilePageShell';
 import { SOTWCard } from '@/components/v2/song-of-the-week';
 import { StatPills } from './student-widgets/StatPills';
 import { WhatsNextCard } from './student-widgets/WhatsNextCard';
-import { PracticeSongList } from './student-widgets/PracticeSongList';
 import { RepertoireProgress } from './student-widgets/RepertoireProgress';
 import { QuickLinks } from './student-widgets/QuickLinks';
 import { StreakTracker } from './student-widgets/StreakTracker';
 import { AchievementBadges } from './student-widgets/AchievementBadges';
+import { LastLessonCard } from './student-widgets/LastLessonCard';
+import { PracticeToday } from './student-widgets/PracticeToday';
+import { AssignmentsList } from './student-widgets/AssignmentsList';
 import { PracticeLogButton } from '@/components/v2/practice';
 import type { StudentDashboardV2Props } from './StudentDashboard';
 
@@ -22,6 +23,7 @@ export function StudentDashboardMobile({
 }: StudentDashboardV2Props) {
   const greeting = getGreeting();
   const displayName = data.studentName?.split(' ')[0] || 'Student';
+  const streakDays = data.practiceStreakDays ?? 0;
 
   return (
     <MobilePageShell
@@ -35,14 +37,6 @@ export function StudentDashboardMobile({
         animate="visible"
         className="space-y-6"
       >
-        {/* Streak banner */}
-        <motion.div variants={safeVariants(listItem)}>
-          <div className="flex items-center gap-2 text-primary font-medium">
-            <Flame className="h-5 w-5" fill="currentColor" />
-            <span className="tracking-wide uppercase text-xs font-bold">Keep practicing!</span>
-          </div>
-        </motion.div>
-
         {/* Stat pills */}
         <motion.div variants={safeVariants(listItem)}>
           <StatPills stats={data.stats} />
@@ -50,7 +44,7 @@ export function StudentDashboardMobile({
 
         {/* Streak tracker */}
         <motion.div variants={safeVariants(listItem)}>
-          <StreakTracker streakDays={data.stats.completedLessons} />
+          <StreakTracker streakDays={streakDays} />
         </motion.div>
 
         {/* What's Next card */}
@@ -58,16 +52,26 @@ export function StudentDashboardMobile({
           <WhatsNextCard nextLesson={data.nextLesson} topAssignment={data.assignments[0] ?? null} />
         </motion.div>
 
-        {/* Repertoire progress (falls back to recent songs if no repertoire) */}
+        {/* Practice Today */}
         <motion.div variants={safeVariants(listItem)}>
-          {data.repertoire && data.repertoire.length > 0 ? (
-            <RepertoireProgress items={data.repertoire} maxItems={4} />
-          ) : (
-            <PracticeSongList
-              songs={data.recentSongs.slice(0, 4)}
-              repertoire={data.repertoire?.slice(0, 4)}
-            />
-          )}
+          <PracticeToday repertoire={data.repertoire} recentSongs={data.recentSongs} />
+        </motion.div>
+
+        {/* Last Lesson */}
+        {data.lastLesson && (
+          <motion.div variants={safeVariants(listItem)}>
+            <LastLessonCard lesson={data.lastLesson} />
+          </motion.div>
+        )}
+
+        {/* Assignments */}
+        <motion.div variants={safeVariants(listItem)}>
+          <AssignmentsList assignments={data.assignments} />
+        </motion.div>
+
+        {/* Repertoire progress */}
+        <motion.div variants={safeVariants(listItem)}>
+          <RepertoireProgress items={data.repertoire} maxItems={4} />
         </motion.div>
 
         {/* Song of the Week */}

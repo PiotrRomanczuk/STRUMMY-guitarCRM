@@ -33,14 +33,10 @@ export function WhatsNextCard({ nextLesson, topAssignment }: WhatsNextCardProps)
           <p className="text-primary font-bold text-lg mb-0.5">
             {formatLessonDate(nextLesson.scheduled_at)}
           </p>
-          <p className="text-muted-foreground text-sm mb-4">
+          <p className="text-muted-foreground text-sm mb-2">
             {nextLesson.title || 'Upcoming Lesson'}
           </p>
-          <button className="w-full bg-gradient-to-r from-primary to-warning
-                             text-primary-foreground font-bold py-3 rounded-[10px] text-sm
-                             hover:opacity-90 transition-opacity active:scale-95">
-            Join Lesson
-          </button>
+          <p className="text-sm text-primary underline underline-offset-2">View lesson details</p>
         </Link>
       )}
 

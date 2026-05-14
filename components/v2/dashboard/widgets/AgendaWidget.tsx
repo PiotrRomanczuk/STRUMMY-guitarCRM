@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, listItem } from '@/lib/animations/variants';
 import { Calendar, User } from 'lucide-react';
 import { format } from 'date-fns';
+import { useDashboardAgendaRealtime } from '@/lib/hooks/useDashboardAgendaRealtime';
 
 interface AgendaItem {
   id: string;
@@ -19,13 +20,12 @@ interface AgendaWidgetProps {
   items: AgendaItem[];
 }
 
-export function AgendaWidget({ items }: AgendaWidgetProps) {
+export function AgendaWidget({ items: initialItems }: AgendaWidgetProps) {
+  const items = useDashboardAgendaRealtime(initialItems);
   return (
     <section className="bg-card rounded-[10px] p-6 lg:p-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-foreground font-bold text-xl">
-          Today&apos;s Schedule
-        </h2>
+        <h2 className="text-foreground font-bold text-xl">Today&apos;s Schedule</h2>
         <p className="text-muted-foreground text-xs font-medium">
           {format(new Date(), 'EEEE, MMM d')}
         </p>
@@ -65,7 +65,15 @@ export function AgendaWidget({ items }: AgendaWidgetProps) {
   );
 }
 
-function AgendaRow({ item, isActive, href }: { item: AgendaItem; isActive: boolean; href?: string }) {
+function AgendaRow({
+  item,
+  isActive,
+  href,
+}: {
+  item: AgendaItem;
+  isActive: boolean;
+  href?: string;
+}) {
   const dotClass = isActive
     ? 'bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.5)]'
     : item.status === 'completed'
@@ -86,12 +94,16 @@ function AgendaRow({ item, isActive, href }: { item: AgendaItem; isActive: boole
       <div className={`absolute left-[4px] w-4 h-4 rounded-full z-10 ${dotClass}`} />
       <div className="flex-1 min-w-0">
         {item.time && (
-          <p className={`text-[10px] font-bold uppercase tracking-tighter mb-0.5
-            ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+          <p
+            className={`text-[10px] font-bold uppercase tracking-tighter mb-0.5
+            ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
+          >
             {item.time}
           </p>
         )}
-        <h3 className={`font-semibold truncate ${isActive ? 'text-foreground text-lg font-bold' : 'text-foreground'}`}>
+        <h3
+          className={`font-semibold truncate ${isActive ? 'text-foreground text-lg font-bold' : 'text-foreground'}`}
+        >
           {item.title}
         </h3>
         {item.studentName && (
@@ -101,11 +113,13 @@ function AgendaRow({ item, isActive, href }: { item: AgendaItem; isActive: boole
           </p>
         )}
       </div>
-      <span className={`text-[10px] font-bold uppercase tracking-widest shrink-0
+      <span
+        className={`text-[10px] font-bold uppercase tracking-widest shrink-0
         ${item.status === 'completed' ? 'text-emerald-600 dark:text-emerald-400/80 bg-emerald-500/10 px-3 py-1 rounded-full' : ''}
         ${item.status === 'overdue' ? 'text-destructive' : ''}
         ${item.status === 'upcoming' && !isActive ? 'text-muted-foreground' : ''}
-        ${isActive ? 'hidden' : ''}`}>
+        ${isActive ? 'hidden' : ''}`}
+      >
         {statusLabel}
       </span>
     </motion.div>

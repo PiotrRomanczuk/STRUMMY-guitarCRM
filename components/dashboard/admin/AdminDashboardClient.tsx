@@ -114,6 +114,7 @@ export function AdminDashboardClient({
               value={stats.totalTeachers}
               icon={Shield}
               variant="gradient"
+              href="/dashboard/users?role=teacher"
               delay={150}
               iconColor="text-indigo-500"
               iconBgColor="bg-indigo-500/10"
@@ -124,6 +125,7 @@ export function AdminDashboardClient({
               description={`of ${stats.totalStudents} total`}
               icon={Users}
               variant="gradient"
+              href="/dashboard/users?role=student&status=active"
               delay={200}
               iconColor="text-emerald-500"
               iconBgColor="bg-emerald-500/10"
@@ -143,6 +145,7 @@ export function AdminDashboardClient({
               value={stats.totalLessons}
               icon={BookOpen}
               variant="gradient"
+              href="/dashboard/lessons"
               delay={300}
               iconColor="text-rose-500"
               iconBgColor="bg-rose-500/10"
