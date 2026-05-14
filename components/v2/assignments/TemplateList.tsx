@@ -94,26 +94,14 @@ function TemplateCard({ template }: { template: AssignmentTemplate }) {
 
       {/* Actions */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="min-h-[44px] flex-1"
-          asChild
-        >
+        <Button variant="outline" size="sm" className="min-h-[44px] flex-1" asChild>
           <Link href={`/dashboard/assignments/new?templateId=${template.id}`}>
             <Send className="h-3.5 w-3.5 mr-1" />
             Assign
           </Link>
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="min-h-[44px] flex-1"
-          asChild
-        >
-          <Link href={`/dashboard/assignments/templates/${template.id}`}>
-            Edit
-          </Link>
+        <Button variant="outline" size="sm" className="min-h-[44px] flex-1" asChild>
+          <Link href={`/dashboard/assignments/templates/${template.id}`}>Edit</Link>
         </Button>
         <Button
           variant="ghost"
@@ -123,7 +111,7 @@ function TemplateCard({ template }: { template: AssignmentTemplate }) {
           disabled={isDeleting}
           aria-label="Delete template"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
     </div>

@@ -41,7 +41,10 @@ function HealthSkeleton() {
   return (
     <div className="space-y-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-card rounded-xl border border-border p-4 space-y-3 animate-pulse">
+        <div
+          key={i}
+          className="bg-card rounded-xl border border-border p-4 space-y-3 animate-pulse"
+        >
           <div className="flex justify-between">
             <div className="space-y-2 flex-1">
               <div className="h-4 bg-muted rounded w-2/3" />
@@ -97,7 +100,7 @@ function MobileHealthDashboard() {
           aria-label="Refresh data"
           className="min-h-[44px] min-w-[44px]"
         >
-          <RefreshCw className={cn('h-5 w-5', isRefetching && 'animate-spin')} />
+          <RefreshCw className={cn('h-5 w-5', isRefetching && 'animate-spin')} aria-hidden="true" />
         </Button>
       }
     >
@@ -112,7 +115,7 @@ function MobileHealthDashboard() {
                 'shrink-0 h-11 min-h-[44px] px-4 rounded-full text-sm font-medium transition-colors border',
                 activeFilter === f.value
                   ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card text-muted-foreground border-border',
+                  : 'bg-card text-muted-foreground border-border'
               )}
             >
               {f.label}
@@ -126,11 +129,7 @@ function MobileHealthDashboard() {
         ) : error ? (
           <div className="text-center py-8 text-destructive text-sm">
             {error instanceof Error ? error.message : 'Failed to load health data.'}{' '}
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="underline text-primary"
-            >
+            <button type="button" onClick={() => refetch()} className="underline text-primary">
               Try again
             </button>
           </div>

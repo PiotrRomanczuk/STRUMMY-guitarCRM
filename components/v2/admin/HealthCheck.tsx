@@ -44,9 +44,7 @@ export function HealthCheckV2() {
     <MobilePageShell
       title="Health Check"
       subtitle={
-        health
-          ? `Last checked ${new Date(health.checkedAt).toLocaleTimeString()}`
-          : undefined
+        health ? `Last checked ${new Date(health.checkedAt).toLocaleTimeString()}` : undefined
       }
       headerActions={
         <Button
@@ -57,9 +55,7 @@ export function HealthCheckV2() {
           disabled={loading}
           aria-label="Refresh health check"
         >
-          <RefreshCcw
-            className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`}
-          />
+          <RefreshCcw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
         </Button>
       }
     >
@@ -72,10 +68,7 @@ export function HealthCheckV2() {
       {loading && !health && (
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-card rounded-xl border border-border p-4 animate-pulse"
-            >
+            <div key={i} className="bg-card rounded-xl border border-border p-4 animate-pulse">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-muted" />
                 <div className="flex-1 space-y-1.5">

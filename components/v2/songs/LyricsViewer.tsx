@@ -45,9 +45,7 @@ export function LyricsViewer({ text, className }: LyricsViewerProps) {
     <div className={cn('space-y-3', className)}>
       {/* Zoom controls */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
-          Size: {FONT_SIZES[sizeIdx].label}
-        </span>
+        <span className="text-xs text-muted-foreground">Size: {FONT_SIZES[sizeIdx].label}</span>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -57,7 +55,7 @@ export function LyricsViewer({ text, className }: LyricsViewerProps) {
             disabled={!canZoomOut}
             aria-label="Decrease font size"
           >
-            <ZoomOut className="h-4 w-4" />
+            <ZoomOut className="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -67,7 +65,7 @@ export function LyricsViewer({ text, className }: LyricsViewerProps) {
             disabled={!canZoomIn}
             aria-label="Increase font size"
           >
-            <ZoomIn className="h-4 w-4" />
+            <ZoomIn className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </div>

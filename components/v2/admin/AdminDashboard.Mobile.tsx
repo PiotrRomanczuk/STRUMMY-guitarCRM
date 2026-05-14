@@ -56,7 +56,7 @@ export function AdminDashboardMobile({ isAdmin }: AdminDashboardProps) {
           disabled={loading}
           aria-label="Refresh health status"
         >
-          <RefreshCcw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCcw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
         </Button>
       }
     >
@@ -71,9 +71,7 @@ export function AdminDashboardMobile({ isAdmin }: AdminDashboardProps) {
               {health ? STATUS_LABEL[health.overall] : 'Loading status...'}
             </p>
             <p className="text-xs text-muted-foreground">
-              {health
-                ? `${healthyCount}/${serviceCount} services healthy`
-                : 'Checking services...'}
+              {health ? `${healthyCount}/${serviceCount} services healthy` : 'Checking services...'}
             </p>
           </div>
         </div>
@@ -95,9 +93,7 @@ export function AdminDashboardMobile({ isAdmin }: AdminDashboardProps) {
             >
               <div className="flex items-center gap-2 mb-1">
                 <div className={`h-2 w-2 rounded-full ${STATUS_COLOR[service.status]}`} />
-                <span className="text-xs font-medium text-foreground truncate">
-                  {service.name}
-                </span>
+                <span className="text-xs font-medium text-foreground truncate">{service.name}</span>
               </div>
               {service.latencyMs !== undefined && (
                 <p className="text-xs text-muted-foreground">{service.latencyMs}ms</p>
@@ -110,7 +106,12 @@ export function AdminDashboardMobile({ isAdmin }: AdminDashboardProps) {
       {/* Quick links */}
       <div>
         <h2 className="text-base font-semibold text-foreground mb-3">Admin Tools</h2>
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-2">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="space-y-2"
+        >
           {ADMIN_LINKS.map((link) => {
             const Icon = link.icon;
             return (

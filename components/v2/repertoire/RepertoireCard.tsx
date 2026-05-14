@@ -88,7 +88,9 @@ export function RepertoireCard({ item, viewMode = 'teacher' }: RepertoireCardPro
               </span>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              {SONG_STATUS_DESCRIPTIONS[item.current_status as keyof typeof SONG_STATUS_DESCRIPTIONS] || item.current_status}
+              {SONG_STATUS_DESCRIPTIONS[
+                item.current_status as keyof typeof SONG_STATUS_DESCRIPTIONS
+              ] || item.current_status}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -107,9 +109,7 @@ export function RepertoireCard({ item, viewMode = 'teacher' }: RepertoireCardPro
               <Keyboard className="h-3 w-3" />
               {item.preferred_key || item.song.key}
               {hasKeyOverride && (
-                <span className="text-muted-foreground/60 ml-0.5">
-                  (orig: {item.song.key})
-                </span>
+                <span className="text-muted-foreground/60 ml-0.5">(orig: {item.song.key})</span>
               )}
             </span>
           )}
@@ -123,9 +123,7 @@ export function RepertoireCard({ item, viewMode = 'teacher' }: RepertoireCardPro
 
       {/* Row 3: Teacher notes */}
       {item.teacher_notes && (
-        <p className="text-xs text-muted-foreground italic line-clamp-2">
-          {item.teacher_notes}
-        </p>
+        <p className="text-xs text-muted-foreground italic line-clamp-2">{item.teacher_notes}</p>
       )}
 
       {/* Row 4: Self-rating (student view) or actions (teacher view) */}
@@ -155,7 +153,7 @@ export function RepertoireCard({ item, viewMode = 'teacher' }: RepertoireCardPro
               onClick={() => router.push(`/dashboard/songs/${item.song_id}`)}
               aria-label={`Edit ${item.song.title} in repertoire`}
             >
-              <Edit className="h-4 w-4 text-muted-foreground" />
+              <Edit className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </Button>
             <Link
               href={`/dashboard/songs/${item.song_id}`}

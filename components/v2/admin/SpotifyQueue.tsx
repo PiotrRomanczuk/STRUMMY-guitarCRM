@@ -35,34 +35,26 @@ export function SpotifyQueueV2() {
     hasPrev: false,
   });
 
-  const fetchMatches = useCallback(
-    async (status: string = 'pending', page: number = 1) => {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `/api/spotify/matches?status=${status}&page=${page}&limit=20`
-        );
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
-        setMatches(data.matches || []);
-        setPagination(data.pagination);
-      } catch {
-        toast.error('Failed to load Spotify matches');
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+  const fetchMatches = useCallback(async (status: string = 'pending', page: number = 1) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/spotify/matches?status=${status}&page=${page}&limit=20`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setMatches(data.matches || []);
+      setPagination(data.pagination);
+    } catch {
+      toast.error('Failed to load Spotify matches');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchMatches(activeTab, 1);
   }, [activeTab, fetchMatches]);
 
-  const handleAction = async (
-    matchId: string,
-    action: 'approve' | 'reject'
-  ) => {
+  const handleAction = async (matchId: string, action: 'approve' | 'reject') => {
     setActionLoading({ matchId, action });
     try {
       const res = await fetch('/api/spotify/matches/action', {
@@ -71,9 +63,7 @@ export function SpotifyQueueV2() {
         body: JSON.stringify({ matchId, action }),
       });
       if (!res.ok) throw new Error('Failed');
-      toast.success(
-        `Match ${action === 'approve' ? 'approved' : 'rejected'}`
-      );
+      toast.success(`Match ${action === 'approve' ? 'approved' : 'rejected'}`);
       setMatches((prev) => prev.filter((m) => m.id !== matchId));
       setPagination((prev) => ({
         ...prev,
@@ -99,9 +89,7 @@ export function SpotifyQueueV2() {
           disabled={loading}
           aria-label="Refresh queue"
         >
-          <RefreshCcw
-            className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`}
-          />
+          <RefreshCcw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
         </Button>
       }
     >
@@ -134,9 +122,7 @@ export function SpotifyQueueV2() {
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
               <Music2 className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-base font-semibold mb-1">
-              No {activeTab} matches
-            </h3>
+            <h3 className="text-base font-semibold mb-1">No {activeTab} matches</h3>
             <p className="text-sm text-muted-foreground max-w-xs">
               {activeTab === 'pending'
                 ? 'All caught up! No matches need review.'
@@ -178,8 +164,7 @@ export function SpotifyQueueV2() {
             Previous
           </Button>
           <span className="text-xs text-muted-foreground">
-            Page {pagination.page} of{' '}
-            {Math.ceil(pagination.total / pagination.limit)}
+            Page {pagination.page} of {Math.ceil(pagination.total / pagination.limit)}
           </span>
           <Button
             variant="outline"

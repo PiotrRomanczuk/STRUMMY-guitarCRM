@@ -75,25 +75,15 @@ export function MobilePageShell({
                 className="shrink-0 min-h-[44px] min-w-[44px]"
                 aria-label="Go back"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-5 w-5" aria-hidden="true" />
               </Button>
             )}
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold text-foreground truncate">
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="text-sm text-muted-foreground truncate">
-                  {subtitle}
-                </p>
-              )}
+              <h1 className="text-lg font-semibold text-foreground truncate">{title}</h1>
+              {subtitle && <p className="text-sm text-muted-foreground truncate">{subtitle}</p>}
             </div>
           </div>
-          {headerActions && (
-            <div className="flex items-center gap-1 shrink-0">
-              {headerActions}
-            </div>
-          )}
+          {headerActions && <div className="flex items-center gap-1 shrink-0">{headerActions}</div>}
         </div>
       </header>
 

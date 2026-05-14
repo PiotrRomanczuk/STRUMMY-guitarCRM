@@ -11,11 +11,7 @@ import {
   CommandInput,
   CommandItem,
 } from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 import { logger } from '@/lib/logger';
 
@@ -54,7 +50,9 @@ export function SongPicker({ value, onChange }: SongPickerProps) {
     };
 
     void fetchSongs();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const selectedSong = songs.find((s) => s.id === value);
@@ -109,9 +107,16 @@ export function SongPicker({ value, onChange }: SongPickerProps) {
                   <CommandGroup className="max-h-60 overflow-y-auto">
                     {filtered.map((song) => (
                       <CommandItem key={song.id} value={song.id} onSelect={handleSelect}>
-                        <Check className={cn('mr-2 h-4 w-4', value === song.id ? 'opacity-100' : 'opacity-0')} />
+                        <Check
+                          className={cn(
+                            'mr-2 h-4 w-4',
+                            value === song.id ? 'opacity-100' : 'opacity-0'
+                          )}
+                        />
                         <span className="flex-1 truncate">{song.title}</span>
-                        <span className="ml-2 text-xs text-muted-foreground truncate">{song.author}</span>
+                        <span className="ml-2 text-xs text-muted-foreground truncate">
+                          {song.author}
+                        </span>
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -121,8 +126,14 @@ export function SongPicker({ value, onChange }: SongPickerProps) {
           </PopoverContent>
         </Popover>
         {value && (
-          <Button type="button" variant="ghost" size="icon" className="shrink-0" onClick={() => onChange('')}>
-            <X className="h-4 w-4" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            onClick={() => onChange('')}
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
             <span className="sr-only">Clear song</span>
           </Button>
         )}
