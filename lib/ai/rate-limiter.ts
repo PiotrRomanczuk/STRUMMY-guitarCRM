@@ -64,7 +64,7 @@ async function incrementCounter(
     const row = rpcData as RpcResult;
     return { count: row.count, resetTime: new Date(row.reset_at).getTime() };
   } catch (err) {
-    logger.warn('[RateLimiter] Falling back to in-memory store:', err);
+    logger.warn('[RateLimiter] Falling back to in-memory store:', { error: String(err) });
 
     // Fallback to in-memory
     const now = Date.now();

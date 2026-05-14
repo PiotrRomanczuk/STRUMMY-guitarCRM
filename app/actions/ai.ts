@@ -11,6 +11,7 @@ import {
 } from '@/lib/ai';
 import { DEFAULT_AI_MODEL } from '@/lib/ai-models';
 import { getAgent, prepareContext, buildSystemPrompt, buildUserMessage } from '@/lib/ai/registry';
+import { randomUUID } from 'crypto';
 import type { AgentContext } from '@/lib/ai/registry';
 import { mapToOllamaModel } from '@/lib/ai/model-mappings';
 import { requireAIAuth } from '@/lib/ai/auth';
@@ -220,7 +221,8 @@ async function* executeAgentStream(
     const executionContext = await prepareContext({ agentId, input, context: agentContext }, agent);
 
     // 4. Build messages from agent spec + context
-    const systemPrompt = buildSystemPrompt(agent, executionContext);
+    const contextNonce = randomUUID().replace(/-/g, '').slice(0, 12);
+    const systemPrompt = buildSystemPrompt(agent, executionContext, contextNonce);
     const userMessage = buildUserMessage(input, agent);
     const messages: AIMessage[] = [
       { role: 'system', content: systemPrompt },
