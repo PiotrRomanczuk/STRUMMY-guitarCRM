@@ -64,7 +64,7 @@ const mockAdminContext = {
 describe('PUT /api/users/[id] - partial payload (STRUM-253)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: Function) => {
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
       return handler(mockAdminContext, _req);
     });
   });

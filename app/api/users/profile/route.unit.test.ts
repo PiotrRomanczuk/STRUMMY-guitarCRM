@@ -49,7 +49,7 @@ describe('Users Profile API - GET', () => {
   });
 
   it('returns the authenticated user profile', async () => {
-    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: Function) => {
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
       return handler(mockUserContext, _req);
     });
 
@@ -93,7 +93,7 @@ describe('Users Profile API - PUT', () => {
   });
 
   it('returns 400 for invalid body', async () => {
-    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: Function) => {
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
       return handler(mockUserContext, _req);
     });
 
@@ -107,7 +107,7 @@ describe('Users Profile API - PUT', () => {
   });
 
   it('returns 400 when no fields provided', async () => {
-    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: Function) => {
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
       return handler(mockUserContext, _req);
     });
 
@@ -122,7 +122,7 @@ describe('Users Profile API - PUT', () => {
   });
 
   it('rejects role escalation fields silently', async () => {
-    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: Function) => {
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
       return handler(mockUserContext, _req);
     });
 
@@ -137,7 +137,7 @@ describe('Users Profile API - PUT', () => {
   });
 
   it('updates profile with valid fields', async () => {
-    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: Function) => {
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
       return handler(mockUserContext, _req);
     });
 

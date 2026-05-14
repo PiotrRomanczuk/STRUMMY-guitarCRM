@@ -95,7 +95,7 @@ function makeAdminSupabase(overrides = {}) {
 describe('Users API - GET endpoint', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: Function) => {
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
       return handler(mockAdminContext);
     });
   });
@@ -168,7 +168,7 @@ describe('Users API - GET endpoint', () => {
     });
 
     it('should allow students to see only their own profile', async () => {
-      (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: Function) => {
+      (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
         return handler(mockStudentContext);
       });
 
@@ -255,7 +255,7 @@ describe('Users API - GET endpoint', () => {
 describe('Users API - POST endpoint', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: Function) => {
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
       return handler(mockAdminContext);
     });
   });
@@ -316,7 +316,7 @@ describe('Users API - POST endpoint', () => {
   });
 
   it('should return 403 when teacher tries to create admin or teacher', async () => {
-    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: Function) => {
+    (withApiAuth as jest.Mock).mockImplementation(async (_req: unknown, handler: (ctx: unknown, req?: unknown) => Promise<Response>) => {
       return handler(mockTeacherContext);
     });
 
