@@ -1,0 +1,16 @@
+meta {
+  name: get-admin-aal-status
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/admin/aal-status
+  auth: inherit
+}
+
+docs {
+  Domain admin. Auth user with MFA (aal2). Returns userId, roles, flags, and aal level.
+  aal1 sessions with MFA enrolled receive 401 mfa_required.
+  Sessions without MFA enrollment receive 200 (gate is a no-op).
+}

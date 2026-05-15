@@ -1,0 +1,18 @@
+meta {
+  name: post-google-disconnect
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/google/disconnect
+  body: none
+  auth: inherit
+}
+
+docs {
+  Domain integrations. Auth user.
+  Revokes Google OAuth credentials, stops all calendar webhooks, and deletes the user_integrations row.
+  Returns { success: true } on success, or { success: true, alreadyDisconnected: true } if no integration exists.
+  Returns 401 if unauthenticated.
+}
