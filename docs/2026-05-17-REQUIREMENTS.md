@@ -49,17 +49,17 @@ Tables grouped by domain. Names match Postgres. All tables have RLS.
 
 ### 2.1 Identity & access
 
-| Table               | Purpose                                                      | Key columns                                                                                                     |
-| ------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `profiles`          | One row per `auth.users`. Source of truth for roles + status | `id`, `is_admin`, `is_teacher`, `is_student`, `is_parent`, `is_development`, `student_status` enum, `parent_id` |
-| `user_roles`        | Junction (legacy / explicit role assignment)                 | `user_id`, `role`                                                                                               |
-| `user_settings`     | UI preferences (theme, language, timezone)                   | `user_id`, JSONB                                                                                                |
-| `user_preferences`  | Notification + product preferences                           | `user_id`, channel toggles                                                                                      |
-| `user_integrations` | OAuth tokens for Google / Spotify                            | `user_id`, `provider`, `access_token`, `refresh_token`, `expires_at`                                            |
-| `api_keys`          | Bearer tokens for external clients (iOS widget, scripts)     | `user_id`, `key_hash`, `name`, `last_used_at`                                                                   |
-| `auth_events`       | Sign-in / MFA / password events for audit                    | `user_id`, `event_type`                                                                                         |
-| `auth_rate_limits`  | Per-user / per-IP throttling                                 | `key`, `count`, `expires_at`                                                                                    |
-| `pending_students`  | Shadow users created from calendar attendees before claim    | `email`, `display_name`, `teacher_id`                                                                           |
+| Table                  | Purpose                                                                                                                                                                                                                                                                                                         | Key columns                                                                                                                                             |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles`             | Source of truth for roles + status. Includes both real users (FK via `user_id` → `auth.users`) and **shadow users** (`is_shadow=true`, `user_id=null`, placeholder `email`, optional `invite_email`). Shadow lifecycle is governed by [ADR 0002](./adr/2026-05-17-0002-shadow-students-in-the-lesson-system.md) | `id`, `user_id`, `is_admin`, `is_teacher`, `is_student`, `is_parent`, `is_shadow`, `invite_email`, `is_development`, `student_status` enum, `parent_id` |
+| `user_roles`           | Junction (legacy / explicit role assignment)                                                                                                                                                                                                                                                                    | `user_id`, `role`                                                                                                                                       |
+| `user_settings`        | UI preferences (theme, language, timezone)                                                                                                                                                                                                                                                                      | `user_id`, JSONB                                                                                                                                        |
+| `user_preferences`     | Notification + product preferences                                                                                                                                                                                                                                                                              | `user_id`, channel toggles                                                                                                                              |
+| `user_integrations`    | OAuth tokens for Google / Spotify                                                                                                                                                                                                                                                                               | `user_id`, `provider`, `access_token`, `refresh_token`, `expires_at`                                                                                    |
+| `api_keys`             | Bearer tokens for external clients (iOS widget, scripts)                                                                                                                                                                                                                                                        | `user_id`, `key_hash`, `name`, `last_used_at`                                                                                                           |
+| `auth_events`          | Sign-in / MFA / password events for audit                                                                                                                                                                                                                                                                       | `user_id`, `event_type`                                                                                                                                 |
+| `auth_rate_limits`     | Per-user / per-IP throttling                                                                                                                                                                                                                                                                                    | `key`, `count`, `expires_at`                                                                                                                            |
+| ~~`pending_students`~~ | **Dropped 2026-04-25.** Superseded by shadow profiles on `profiles` (`is_shadow=true`). See [ADR 0002](./adr/2026-05-17-0002-shadow-students-in-the-lesson-system.md)                                                                                                                                           | —                                                                                                                                                       |
 
 ### 2.2 Curriculum
 
@@ -226,6 +226,8 @@ Teacher is the primary daily user. Workflow centers on lesson lifecycle.
   → `GET /api/teacher/students` · `GET /api/students/needs-attention` · `GET /api/students/health`
 - Add a new student (creates `profiles` row; can also create a shadow student from calendar).
   → `app/actions/student-management.ts::createStudentProfile`
+- Invite a shadow student (two-step: set `invite_email` then send via `inviteUserByEmail`). See [ADR 0002](./adr/2026-05-17-0002-shadow-students-in-the-lesson-system.md).
+  → `PATCH /api/users` + `app/dashboard/actions.ts::sendInvite` (shadow-aware path TBD)
 - View student detail + history + repertoire + progress export.
   → `GET /api/users/:id` · `GET /api/exports/student/:id` (CSV/JSON)
 
@@ -241,8 +243,8 @@ Teacher is the primary daily user. Workflow centers on lesson lifecycle.
   → reads `lesson_songs`, writes status updates via `updateLessonSongStatus`
 - Lesson notes editor with AI assist.
   → `app/actions/ai.ts::generateLessonNotesStream` + `generatePostLessonSummaryStream` (OpenRouter / Ollama)
-- Import lessons from Google Calendar (auto-create shadow students for unknown attendees).
-  → `app/actions/import-lessons.ts` · Google Calendar API
+- Import lessons from Google Calendar (auto-create shadow students for unknown attendees, dedup-aware per [ADR 0002](./adr/2026-05-17-0002-shadow-students-in-the-lesson-system.md)).
+  → `app/actions/import-lessons.ts` · `lib/services/import-utils.ts::matchStudentByEmail` (matches `email OR invite_email`) · Google Calendar API
 - Enable real-time Google Calendar sync.
   → `app/actions/calendar-webhook.ts::enableCalendarWebhook` · webhook receives at `POST /api/webhooks/google-calendar`
 
@@ -447,7 +449,8 @@ All agents stream via Vercel AI SDK. Prompt-injection guardrails in `lib/ai/agen
 ### 7.5 Validation
 
 - All API inputs validated with Zod schemas from `schemas/` (31 schema files). Server actions revalidate at boundary.
-- Never trust `student_id` from a payload — always derive from session for student writes (`app/actions/chord-quiz.ts`, `practice.ts`, etc.).
+- Never trust `student_id` from a payload — always derive from session for student writes (`app/actions/chord-quiz.ts`, `practice.ts`, etc.). Corollary: shadow students cannot self-log practice or self-rate; this is intentional and there are **no teacher-proxy variants** for these actions. See [ADR 0002](./adr/2026-05-17-0002-shadow-students-in-the-lesson-system.md) §7 / W1.
+- Outbound email to a student MUST route through `getDeliverableEmail(profile)` (per [ADR 0002](./adr/2026-05-17-0002-shadow-students-in-the-lesson-system.md)) — direct `profile.email` access in a notification or AI-draft path is a code-review red flag.
 
 ### 7.6 File hygiene (project rules)
 

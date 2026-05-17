@@ -189,6 +189,179 @@ Shipped in the dashboard strip commit. Root `/dashboard` shows email + role line
 
 - [x] DASH-006
 
+---
+
+## Phase 2.5 — Shadow students foundation (prereq for DASH-007 → DASH-013)
+
+This phase implements [ADR 0002](./adr/2026-05-17-0002-shadow-students-in-the-lesson-system.md). It is **prerequisite** for the rest of Phase 2: DASH-007's banner, DASH-009's picker, DASH-011/012's notes editor + AI assist, and DASH-013's post-lesson summary all depend on the chokepoint, resolver, and audit events shipping first. **No UI ticket in this phase** — these are data-layer + cron + service-layer changes.
+
+**Ordering inside the phase is not optional** (per ADR §Consequences):
+
+```
+SHADOW-001 (migration + backfill)
+   ↓
+SHADOW-002 (email resolver + cron pre-filter)
+SHADOW-003 (matchStudentByEmail extension + chokepoint)        ← can ship in parallel with 002
+   ↓
+SHADOW-004 (reconcile queue + auth_events enum)
+SHADOW-005 (invite shadow action — server side)
+   ↓
+SHADOW-006 (archive-stale-shadows cron + student_status filter)
+```
+
+### SHADOW-001 — Backfill + unique partial index on `invite_email`
+
+**Phase**: 2.5 · **Estimate**: M · **Depends on**: —
+**Roles**: backend only
+
+- Builds: one-off backfill script under `scripts/backfill/2026-05-shadow-dedup.ts` + migration `supabase/migrations/<ts>_unique_invite_email.sql`
+- Reads: `profiles` (production state)
+- Writes: consolidates collision groups via existing `transfer_shadow_profile_references()`; creates unique partial index
+
+**Acceptance**
+
+- AC1 Script runs with `--validateOnly` first and prints every collision group it would consolidate (real+shadows or shadow+shadow with overlapping `email`/`invite_email`)
+- AC2 Same script with `--commit` consolidates each group onto the canonical profile (real if present, else oldest by `created_at`)
+- AC3 Migration `CREATE UNIQUE INDEX uq_profiles_invite_email ON profiles(invite_email) WHERE invite_email IS NOT NULL` applies cleanly after the backfill
+- AC4 The migration is gated behind a check that backfill has run (e.g. SQL fails if any collision still exists, so accidentally applying the migration first surfaces loudly)
+
+**Test** — `scripts/backfill/__tests__/shadow-dedup.test.ts`
+
+- unit: synthetic collision groups consolidate to the canonical profile, FKs transfer correctly
+- integration: local Supabase with seeded duplicates, run script in commit mode, assert profile count drops and FKs all point at canonical
+
+- [ ] SHADOW-001
+
+### SHADOW-002 — `getDeliverableEmail` helper + cron pre-filters
+
+**Phase**: 2.5 · **Estimate**: M · **Depends on**: —
+
+- Builds: `lib/email/recipient.ts::getDeliverableEmail(profile)` + audit-pass through every send-site
+- Reads: `profiles.is_shadow`, `profiles.email`, `profiles.invite_email`
+- Writes: `notification_log` (when skipped, with `reason='shadow_no_invite_email'`)
+
+**Acceptance**
+
+- AC1 Helper returns `is_shadow ? invite_email : email`, returns `null` cleanly when shadow lacks invite_email
+- AC2 Every existing student-bound send path uses it: `lesson-reminders` cron, `assignment-due-reminders` cron, `post-lesson-summary` action, `email-draft` AI action, `weekly-digest` cron, `assignment-overdue-check` cron
+- AC3 Each cron query adds `AND (is_shadow = false OR invite_email IS NOT NULL)` as pre-filter — verified by reading the cron handler SQL
+- AC4 Skipped sends emit a structured `notification_log` row; no silent drops
+
+**Test** — `lib/email/__tests__/recipient.test.ts` + per-cron handler tests
+
+- unit: resolver returns correct value across (real, shadow-with-invite, shadow-without-invite)
+- integration: lesson-reminders cron run against a teacher who has 2 real students + 1 shadow-without-invite + 1 shadow-with-invite — only 3 emails attempt, 1 `notification_log` skip row written
+
+- [ ] SHADOW-002
+
+### SHADOW-003 — Extend `matchStudentByEmail` + service-layer chokepoint
+
+**Phase**: 2.5 · **Estimate**: S · **Depends on**: SHADOW-001 (so the index exists)
+
+- Builds: rewrite `lib/services/import-utils.ts::matchStudentByEmail` to match `email = X OR invite_email = X`; replace direct `INSERT INTO profiles ... is_shadow=true` calls everywhere with `matchStudentByEmail` + branch
+- Reads: `profiles`
+- Writes: only via the existing `createShadowStudent` helper, called only when no match exists
+
+**Acceptance**
+
+- AC1 `matchStudentByEmail` returns priority: real with `email=X` > shadow with `email=X` (edge case) > shadow with `invite_email=X`
+- AC2 Callers updated: `app/actions/import-lessons.ts`, `components/dashboard/calendar/CalendarEventsList.tsx`, `UserForm`'s "create shadow" path
+- AC3 No production code creates a `profiles` row with `is_shadow=true` outside this chokepoint
+- AC4 Existing test suite still green (`matchStudentByEmail.test.ts` updated to cover the new priority cases)
+
+**Test** — `lib/services/__tests__/import-utils.test.ts`
+
+- unit: all three priority scenarios resolve correctly; concurrent inserts trip the unique index from SHADOW-001 and the second loser falls back to "use the existing row"
+
+- [ ] SHADOW-003
+
+### SHADOW-004 — Reconcile queue + `auth_events` extension
+
+**Phase**: 2.5 · **Estimate**: M · **Depends on**: SHADOW-002, SHADOW-003
+
+- Builds:
+  - Migration: `ALTER TYPE auth_event_type ADD VALUE` for `shadow_invite_email_set`, `shadow_invite_sent`, `shadow_link_completed`, `shadow_link_failed`
+  - Enqueue helper in `lib/services/calendar-reconcile.ts::enqueueCalendarReconcile(studentId)`
+  - Drainer step in `app/api/cron/process-notification-queue/route.ts` for the new task type `reconcile_calendar_for_student`
+  - Audit-event emit points: `handle_new_user` trigger writes `shadow_link_completed` with `transfer_result` JSONB; `POST /api/admin/link-shadow-user` writes the same on success and `shadow_link_failed` on error
+- Reads: `notification_queue`, `lessons.google_event_id`
+- Writes: `auth_events`, Google Calendar (via `updateGoogleCalendarEvent`)
+
+**Acceptance**
+
+- AC1 Linking a shadow (via signup or admin endpoint) enqueues exactly one reconcile task per student
+- AC2 Cron drains the task, iterates the student's `google_event_id`s, swaps the attendee email; per-event retry with backoff; dead-letter after N retries to `notification_log` with `reason='reconcile_failed'`
+- AC3 `auth_events` rows appear for every link completion with `metadata.transfer_counts` set
+- AC4 `shadow_link_failed` row written when the admin endpoint errors
+
+**Test** — `lib/services/__tests__/calendar-reconcile.test.ts` + integration
+
+- unit: enqueue helper writes one row
+- integration: link a shadow with 3 historical lessons, run the cron, assert all 3 calendar events updated (mocked Google client), assert one `auth_events` row
+
+- [ ] SHADOW-004
+
+### SHADOW-005 — Server-side invite-shadow action
+
+**Phase**: 2.5 · **Estimate**: S · **Depends on**: SHADOW-004 (for the audit events)
+
+- Builds: `app/actions/shadow-invite.ts::inviteShadowStudent(shadowId, realEmail)` — replaces / complements the current `sendInvite` rejection path
+- Reads: target shadow profile
+- Writes: `profiles.invite_email`, fires `supabase.auth.admin.inviteUserByEmail`, emits `shadow_invite_email_set` + `shadow_invite_sent` to `auth_events`
+
+**Acceptance**
+
+- AC1 If `invite_email` already set to a different address, action returns a structured error — never silently overwrites
+- AC2 On success, both `auth_events` rows written; `PATCH /api/users` path remains for the rare case of "set invite_email without sending"
+- AC3 Rate-limited per teacher (reuse `auth_rate_limits`)
+- AC4 Audit-friendly error messages on the Supabase Auth side (already-invited, deliverability failure)
+
+**Test** — `app/actions/__tests__/shadow-invite.test.ts`
+
+- unit: happy path, already-set-different-address path, already-real-user path, Supabase auth error path
+
+- [ ] SHADOW-005
+
+### SHADOW-006 — `archive-stale-shadows` cron + picker filter
+
+**Phase**: 2.5 · **Estimate**: S · **Depends on**: SHADOW-001 (so the data is clean) — independent of others
+
+- Builds: cron at `app/api/cron/archive-stale-shadows/route.ts` (daily); picker default filter excludes `student_status='inactive'`
+- Reads: `profiles`, `lessons.scheduled_at`
+- Writes: `profiles.student_status='inactive'` for matching rows
+
+**Acceptance**
+
+- AC1 Cron query: `is_shadow=true AND invite_email IS NULL AND (max(lessons.scheduled_at) IS NULL OR < now() - interval '90 days')`
+- AC2 Idempotent: re-running the same day on already-archived rows is a no-op
+- AC3 Picker default excludes inactive; "Include inactive" toggle reveals them
+- AC4 Admin pipeline counts skip inactive in default view; toggle restores
+
+**Test**
+
+- integration: seed shadows at various recency, run cron, assert which got archived
+- unit: picker filter helper
+
+- [ ] SHADOW-006
+
+### Phase 2.5 progress
+
+- [ ] SHADOW-001 backfill + unique index
+- [ ] SHADOW-002 `getDeliverableEmail` + cron pre-filter
+- [ ] SHADOW-003 `matchStudentByEmail` chokepoint
+- [ ] SHADOW-004 reconcile queue + `auth_events` extension
+- [ ] SHADOW-005 invite-shadow action
+- [ ] SHADOW-006 `archive-stale-shadows` cron + picker filter
+
+After Phase 2.5, the following Phase 2 cards adopt their shadow-aware UX:
+
+- **DASH-007 (lesson detail)** renders an "Unclaimed" badge in the header for shadow students, plus an **Invite** affordance that opens the dialog wired to `SHADOW-005`. ADR 0002 §1 + §2.
+- **DASH-009 (lesson create form)** picker becomes a Combobox with inline shadow badges, an inline "Create shadow for `<email>`" option (routed through `SHADOW-003`), and a non-blocking warning when a shadow without `invite_email` is selected. ADR 0002 §6.
+- **DASH-011 (lesson notes editor)** + **DASH-013 (post-lesson summary)** — outbound sends route through `getDeliverableEmail` (`SHADOW-002`).
+- **DASH-046 (email draft)** — same.
+
+---
+
 ### DASH-007 — Lesson detail page (read-only)
 
 **Phase**: 2 · **Estimate**: M · **Depends on**: DASH-005
@@ -1347,6 +1520,7 @@ Every spec under `tests/e2e/dashboard/` imports from this helper. Keeps each spe
 - Phase 0: 1 / 1
 - Phase 1: 3 / 3 ✅
 - Phase 2: 2 / 9
+- Phase 2.5: 0 / 6 (shadow students foundation — prereq for DASH-007 → DASH-013)
 - Phase 3: 0 / 8
 - Phase 4: 0 / 6
 - Phase 5: 0 / 3
@@ -1357,6 +1531,6 @@ Every spec under `tests/e2e/dashboard/` imports from this helper. Keeps each spe
 - Phase 10: 0 / 8
 - Phase 11: 0 / 2
 
-**Total**: 6 / 60
+**Total**: 6 / 66 (60 dashboard cards + 6 shadow-foundation tickets)
 
 Update the counters as steps ship. When a phase hits 100%, run the full E2E suite (`npx playwright test`) before opening the next phase.
