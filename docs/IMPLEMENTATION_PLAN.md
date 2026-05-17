@@ -93,7 +93,7 @@ Shipped in the dashboard strip commit. Root `/dashboard` shows email + role line
 - teacher: sees Students, Lessons, Songs, Assignments, Settings (no Users, no Health)
 - student: sees Lessons, Songs, Practice, Assignments, Settings (no Students)
 
-- [ ] DASH-002
+- [x] DASH-002
 
 ### DASH-003 — Top bar (user menu, role switcher, sign-out)
 
@@ -116,7 +116,7 @@ Shipped in the dashboard strip commit. Root `/dashboard` shows email + role line
 - teacher (single role): no RoleSwitcher
 - student (single role): no RoleSwitcher, sign-out works
 
-- [ ] DASH-003
+- [x] DASH-003
 
 ### DASH-004 — Loading, empty, and error boundary primitives
 
@@ -139,7 +139,7 @@ Shipped in the dashboard strip commit. Root `/dashboard` shows email + role line
 - any role: navigate to a route that throws → ErrorState renders, retry button visible
 - any role: navigate to a route with no data → Empty state visible
 
-- [ ] DASH-004
+- [x] DASH-004
 
 ---
 
@@ -1345,7 +1345,7 @@ Every spec under `tests/e2e/dashboard/` imports from this helper. Keeps each spe
 ## Progress
 
 - Phase 0: 1 / 1
-- Phase 1: 0 / 3
+- Phase 1: 3 / 3 ✅
 - Phase 2: 0 / 9
 - Phase 3: 0 / 8
 - Phase 4: 0 / 6
@@ -1357,6 +1357,6 @@ Every spec under `tests/e2e/dashboard/` imports from this helper. Keeps each spe
 - Phase 10: 0 / 8
 - Phase 11: 0 / 2
 
-**Total**: 1 / 60
+**Total**: 4 / 60
 
 Update the counters as steps ship. When a phase hits 100%, run the full E2E suite (`npx playwright test`) before opening the next phase.
