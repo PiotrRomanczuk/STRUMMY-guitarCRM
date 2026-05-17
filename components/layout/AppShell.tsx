@@ -46,7 +46,10 @@ export function AppShell({
   const isAuthPage = ['/sign-in', '/sign-up', '/auth/login', '/auth/register'].includes(
     pathname || ''
   );
-  const showNavigation = !!user && !isAuthPage;
+  // /dashboard/* owns its own shell (Sidebar + Topbar) via app/dashboard/layout.tsx —
+  // AppShell should pass through without injecting its legacy chrome.
+  const isDashboardPage = (pathname || '').startsWith('/dashboard');
+  const showNavigation = !!user && !isAuthPage && !isDashboardPage;
 
   const useSidebar = showNavigation && (layoutMode === 'widescreen' || layoutMode === 'tablet');
   const _useMobileNav = showNavigation && layoutMode === 'mobile';
@@ -67,6 +70,16 @@ export function AppShell({
       <>
         <Header user={user} isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent} />
         <main className="min-h-screen bg-background">{children}</main>
+        <Toaster />
+      </>
+    );
+  }
+
+  // Dashboard rebuild owns its own chrome — just pass children through.
+  if (isDashboardPage) {
+    return (
+      <>
+        {children}
         <Toaster />
       </>
     );
@@ -112,9 +125,7 @@ export function AppShell({
                     : 'Details';
                 }
 
-                return lastSegment
-                  .replace(/-/g, ' ')
-                  .replace(/^\w/, (c) => c.toUpperCase());
+                return lastSegment.replace(/-/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
               })()}
             </h2>
             <NotificationBell userId={user?.id} />
@@ -132,7 +143,9 @@ export function AppShell({
   return (
     <>
       <HorizontalNav user={user} isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent} />
-      <main className="pt-16 pb-16 md:pb-0 min-h-screen bg-background px-4 sm:px-6 md:px-8">{children}</main>
+      <main className="pt-16 pb-16 md:pb-0 min-h-screen bg-background px-4 sm:px-6 md:px-8">
+        {children}
+      </main>
       <MobileBottomNav
         isAdmin={isAdmin}
         isTeacher={isTeacher}

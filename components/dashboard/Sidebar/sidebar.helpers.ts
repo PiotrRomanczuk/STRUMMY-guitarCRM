@@ -1,71 +1,71 @@
-export type NavIconName =
-  | 'users'
-  | 'health'
-  | 'ai'
-  | 'students'
-  | 'lessons'
-  | 'songs'
-  | 'assignments'
-  | 'practice'
-  | 'settings';
-
-export interface NavItem {
-  /** Visible label, also used as the `data-nav-item` test hook. */
-  name: string;
-  href: string;
-  /** Stable icon identifier — resolved to a component on the client. */
-  icon: NavIconName;
-}
+import { LayoutDashboard, Settings, type LucideIcon } from 'lucide-react';
+import { getMenuGroups, type MenuGroup, type MenuItem } from '@/components/navigation/menuConfig';
 
 export interface RoleFlags {
   isAdmin: boolean;
   isTeacher: boolean;
   isStudent: boolean;
+  isDemoAccount?: boolean;
 }
 
-const ADMIN_ITEMS: readonly NavItem[] = [
-  { name: 'Users', href: '/dashboard/users', icon: 'users' },
-  { name: 'Health', href: '/dashboard/health', icon: 'health' },
-  { name: 'AI', href: '/dashboard/ai', icon: 'ai' },
-];
+export interface SidebarGroup extends MenuGroup {
+  /** Stable identifier for collapse persistence. */
+  id: string;
+}
 
-const TEACHER_ITEMS: readonly NavItem[] = [
-  { name: 'Students', href: '/dashboard/students', icon: 'students' },
-  { name: 'Lessons', href: '/dashboard/lessons', icon: 'lessons' },
-  { name: 'Songs', href: '/dashboard/songs', icon: 'songs' },
-  { name: 'Assignments', href: '/dashboard/assignments', icon: 'assignments' },
-];
+export interface SidebarSoloItem {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  path: string;
+}
 
-const STUDENT_ITEMS: readonly NavItem[] = [
-  { name: 'Lessons', href: '/dashboard/lessons', icon: 'lessons' },
-  { name: 'Songs', href: '/dashboard/songs', icon: 'songs' },
-  { name: 'Practice', href: '/dashboard/practice', icon: 'practice' },
-  { name: 'Assignments', href: '/dashboard/assignments', icon: 'assignments' },
-];
+export const HOME_ITEM: SidebarSoloItem = {
+  id: 'home',
+  label: 'Dashboard',
+  icon: LayoutDashboard,
+  path: '/dashboard',
+};
 
-const SETTINGS_ITEM: NavItem = {
-  name: 'Settings',
-  href: '/dashboard/settings',
-  icon: 'settings',
+export const SETTINGS_ITEM: SidebarSoloItem = {
+  id: 'settings',
+  label: 'Settings',
+  icon: Settings,
+  path: '/dashboard/settings',
 };
 
 /**
- * Returns the de-duplicated, role-filtered nav set.
- * Order: admin-only -> teaching -> student-only -> Settings.
+ * Returns role-filtered groups with stable ids, derived from the central menu config.
+ * Empty groups are dropped so the Practice / Admin sections only appear when populated.
  */
-export function getNavItemsForRole(roles: RoleFlags): NavItem[] {
-  const seen = new Set<string>();
-  const result: NavItem[] = [];
-  const pushUnique = (items: readonly NavItem[]): void => {
-    for (const item of items) {
-      if (seen.has(item.href)) continue;
-      seen.add(item.href);
-      result.push(item);
-    }
-  };
-  if (roles.isAdmin) pushUnique(ADMIN_ITEMS);
-  if (roles.isAdmin || roles.isTeacher) pushUnique(TEACHER_ITEMS);
-  if (roles.isStudent) pushUnique(STUDENT_ITEMS);
-  pushUnique([SETTINGS_ITEM]);
-  return result;
+export function getSidebarGroups(roles: RoleFlags): SidebarGroup[] {
+  return getMenuGroups(roles)
+    .filter((g) => g.items.length > 0)
+    .map((g) => ({ ...g, id: g.label.toLowerCase().replace(/\s+/g, '-') }));
+}
+
+export function getRoleLabel(
+  roles: Pick<RoleFlags, 'isAdmin' | 'isTeacher' | 'isStudent'>
+): string {
+  if (roles.isAdmin) return 'Admin';
+  if (roles.isTeacher) return 'Teacher';
+  if (roles.isStudent) return 'Student';
+  return 'User';
+}
+
+export function filterGroups(groups: SidebarGroup[], query: string): SidebarGroup[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return groups;
+  return groups
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((it) => it.label.toLowerCase().includes(q)),
+    }))
+    .filter((g) => g.items.length > 0);
+}
+
+export function matchesItem(item: SidebarSoloItem | MenuItem, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return item.label.toLowerCase().includes(q);
 }

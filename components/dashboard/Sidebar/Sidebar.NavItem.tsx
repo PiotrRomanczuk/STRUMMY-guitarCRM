@@ -2,64 +2,52 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  Activity,
-  BookOpen,
-  ClipboardList,
-  GraduationCap,
-  HeartPulse,
-  type LucideIcon,
-  Music,
-  Settings,
-  Sparkles,
-  Users,
-} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { NavIconName, NavItem } from './sidebar.helpers';
 
-const ICON_BY_NAME: Record<NavIconName, LucideIcon> = {
-  users: Users,
-  health: HeartPulse,
-  ai: Sparkles,
-  students: GraduationCap,
-  lessons: BookOpen,
-  songs: Music,
-  assignments: ClipboardList,
-  practice: Activity,
-  settings: Settings,
-};
-
-interface SidebarNavItemProps {
-  item: NavItem;
+export interface SidebarNavItemProps {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  isHome?: boolean;
   onNavigate?: () => void;
 }
 
-function isActive(pathname: string | null, href: string): boolean {
+function isActive(pathname: string | null, href: string, isHome?: boolean): boolean {
   if (!pathname) return false;
+  if (isHome) return pathname === href;
   if (pathname === href) return true;
   return pathname.startsWith(`${href}/`);
 }
 
-export function SidebarNavItem({ item, onNavigate }: SidebarNavItemProps) {
+export function SidebarNavItem({
+  label,
+  href,
+  icon: Icon,
+  isHome,
+  onNavigate,
+}: SidebarNavItemProps) {
   const pathname = usePathname();
-  const active = isActive(pathname, item.href);
-  const Icon = ICON_BY_NAME[item.icon];
+  const active = isActive(pathname, href, isHome);
+
   return (
     <Link
-      href={item.href}
+      href={href}
       onClick={onNavigate}
-      data-nav-item={item.name}
+      data-nav-item={label}
       data-active={active ? 'true' : 'false'}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-        'hover:bg-muted hover:text-foreground',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        active ? 'bg-muted text-foreground dark:bg-muted' : 'text-muted-foreground'
+        'mx-1 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors',
+        'hover:bg-muted/70 hover:text-foreground',
+        'focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
+        active
+          ? 'bg-primary/10 text-primary dark:bg-primary/15 font-medium'
+          : 'text-muted-foreground font-normal'
       )}
     >
       <Icon className="size-4 shrink-0" aria-hidden="true" />
-      <span className="truncate">{item.name}</span>
+      <span className="truncate">{label}</span>
     </Link>
   );
 }

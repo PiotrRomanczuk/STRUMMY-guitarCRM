@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { SidebarMobileSheet } from '@/components/dashboard/Sidebar';
-import { getNavItemsForRole, type NavItem } from '@/components/dashboard/Sidebar/sidebar.helpers';
+import { SidebarMobileSheet, getRoleLabel } from '@/components/dashboard/Sidebar';
 import { TopbarUserMenu } from './Topbar.UserMenu';
 import { TopbarRoleSwitcher } from './Topbar.RoleSwitcher';
 
@@ -13,9 +12,10 @@ interface TopbarProps {
 }
 
 export function Topbar({ email, fullName, isAdmin, isTeacher, isStudent }: TopbarProps) {
-  const navItems: NavItem[] = getNavItemsForRole({ isAdmin, isTeacher, isStudent });
   const roleCount = [isAdmin, isTeacher, isStudent].filter(Boolean).length;
   const hasMultipleRoles = roleCount > 1;
+  const roles = { isAdmin, isTeacher, isStudent };
+  const roleLabel = getRoleLabel(roles);
 
   return (
     <header
@@ -23,7 +23,7 @@ export function Topbar({ email, fullName, isAdmin, isTeacher, isStudent }: Topba
       data-testid="dashboard-topbar"
     >
       <div className="md:hidden">
-        <SidebarMobileSheet items={navItems} />
+        <SidebarMobileSheet roles={roles} email={email} fullName={fullName} roleLabel={roleLabel} />
       </div>
       <Link href="/dashboard" className="text-sm font-semibold md:hidden">
         Strummy

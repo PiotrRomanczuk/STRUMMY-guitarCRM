@@ -19,7 +19,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="bg-background flex min-h-screen w-full">
-      <Sidebar isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent} />
+      <Sidebar
+        email={user.email ?? ''}
+        fullName={profile?.full_name ?? null}
+        isAdmin={isAdmin}
+        isTeacher={isTeacher}
+        isStudent={isStudent}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar
           email={user.email ?? ''}
