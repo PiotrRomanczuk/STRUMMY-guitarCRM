@@ -1,36 +1,46 @@
-import { Page, expect } from '@playwright/test';
-import { loginAsAdmin, loginAsTeacher, loginAsStudent } from './auth';
+import { expect, type Page } from '@playwright/test';
+import { loginAsAdmin, loginAsStudent, loginAsTeacher } from './auth';
 
-export type Role = 'admin' | 'teacher' | 'student';
+export type DashboardRole = 'admin' | 'teacher' | 'student';
 
-export async function loginAs(page: Page, role: Role): Promise<void> {
+/**
+ * Logs into the dashboard as the given role.
+ * Uses the existing role-specific helpers in `tests/helpers/auth.ts`.
+ */
+export async function loginAs(page: Page, role: DashboardRole): Promise<void> {
   if (role === 'admin') return loginAsAdmin(page);
   if (role === 'teacher') return loginAsTeacher(page);
   return loginAsStudent(page);
 }
 
-export async function expectCardVisible(page: Page, testId: string): Promise<void> {
-  await expect(page.getByTestId(testId)).toBeVisible({ timeout: 10_000 });
+/**
+ * Asserts that a nav item with the given label is visible somewhere on
+ * the page. The Sidebar tags each link with `data-nav-item="<name>"`.
+ *
+ * On desktop the link is in the persistent aside; on mobile we open the
+ * Sheet drawer first.
+ */
+export async function expectNavItemVisible(page: Page, name: string): Promise<void> {
+  const viewport = page.viewportSize();
+  const isMobile = viewport ? viewport.width < 768 : false;
+  if (isMobile) {
+    await page.getByTestId('sidebar-mobile-trigger').click();
+  }
+  const item = page.locator(`[data-nav-item="${name}"]`).first();
+  await expect(item).toBeVisible();
 }
 
-export async function expectCardHidden(page: Page, testId: string): Promise<void> {
-  await expect(page.getByTestId(testId)).toHaveCount(0);
-}
-
-export async function expectForbidden(page: Page, route: string): Promise<void> {
-  await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-  await page.waitForLoadState('networkidle', { timeout: 30_000 });
-  const url = page.url();
-  const redirectedToSignIn = url.includes('/sign-in');
-  const redirectedToDashboardRoot = new URL(url).pathname === '/dashboard';
-  const has403 = (await page.getByText(/forbidden|not authorized|access denied/i).count()) > 0;
-  expect(redirectedToSignIn || redirectedToDashboardRoot || has403).toBeTruthy();
-}
-
-export async function expectNavItemVisible(page: Page, label: string): Promise<void> {
-  await expect(page.getByRole('link', { name: new RegExp(label, 'i') })).toBeVisible();
-}
-
-export async function expectNavItemHidden(page: Page, label: string): Promise<void> {
-  await expect(page.getByRole('link', { name: new RegExp(label, 'i') })).toHaveCount(0);
+/**
+ * Asserts that no nav item with the given label exists on the page.
+ * Opens the mobile drawer first on small viewports so we check the full
+ * rendered nav, not just the desktop aside.
+ */
+export async function expectNavItemHidden(page: Page, name: string): Promise<void> {
+  const viewport = page.viewportSize();
+  const isMobile = viewport ? viewport.width < 768 : false;
+  if (isMobile) {
+    await page.getByTestId('sidebar-mobile-trigger').click();
+  }
+  const item = page.locator(`[data-nav-item="${name}"]`);
+  await expect(item).toHaveCount(0);
 }
