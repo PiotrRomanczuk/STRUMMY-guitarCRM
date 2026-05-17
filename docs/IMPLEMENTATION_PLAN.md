@@ -166,7 +166,7 @@ Shipped in the dashboard strip commit. Root `/dashboard` shows email + role line
 - teacher: sees card with seeded today's lessons
 - student: card not visible on `/dashboard`
 
-- [ ] DASH-005
+- [x] DASH-005
 
 ### DASH-006 — Upcoming lessons (next 7 days) card (teacher)
 
@@ -1346,7 +1346,7 @@ Every spec under `tests/e2e/dashboard/` imports from this helper. Keeps each spe
 
 - Phase 0: 1 / 1
 - Phase 1: 3 / 3 ✅
-- Phase 2: 0 / 9
+- Phase 2: 1 / 9
 - Phase 3: 0 / 8
 - Phase 4: 0 / 6
 - Phase 5: 0 / 3
@@ -1357,6 +1357,6 @@ Every spec under `tests/e2e/dashboard/` imports from this helper. Keeps each spe
 - Phase 10: 0 / 8
 - Phase 11: 0 / 2
 
-**Total**: 4 / 60
+**Total**: 5 / 60
 
 Update the counters as steps ship. When a phase hits 100%, run the full E2E suite (`npx playwright test`) before opening the next phase.
