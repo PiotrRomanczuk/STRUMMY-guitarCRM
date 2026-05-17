@@ -28,7 +28,7 @@ Available schemes:
 lib/fonts/
 ├── fonts.config.ts   # Font scheme definitions and configuration
 ├── index.ts          # Font loading and utility functions
-└── README.md         # This file
+└── 2026-03-16-2025-11-02-README.md         # This file
 ```
 
 ### How It Works

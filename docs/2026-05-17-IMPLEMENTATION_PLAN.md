@@ -3,7 +3,7 @@
 **Date**: 2026-05-17
 **Author**: Claude
 **Scope**: Atomic, card-by-card rebuild of the dashboard stripped on 2026-05-17. Each step lands in one PR and is verified against all 3 roles before the next starts.
-**Companion doc**: `docs/REQUIREMENTS.md` — capability inventory & API surface (source of truth for what each step builds against)
+**Companion doc**: `docs/2026-05-17-REQUIREMENTS.md` — capability inventory & API surface (source of truth for what each step builds against)
 **Status**: Living plan — update checkboxes as steps ship; bump `updated:` when reordering
 
 ---
@@ -32,7 +32,7 @@ Each step has this shape:
 **Roles**: admin / teacher / student (✓ visible, ✗ hidden, ✦ partial)
 
 - Builds: <component path>, mounted at <route>
-- Reads: <API endpoint(s) or server action(s) from REQUIREMENTS.md>
+- Reads: <API endpoint(s) or server action(s) from 2026-05-17-REQUIREMENTS.md>
 - Writes: <if any>
 - External deps: <Supabase / Google / Spotify / AI / none>
 

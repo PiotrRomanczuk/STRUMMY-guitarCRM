@@ -436,13 +436,13 @@ Push/PR
 
 | Guide | Description |
 |:---|:---|
-| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System design, RBAC model, database schema |
-| [DEVELOPMENT.md](./docs/DEVELOPMENT.md) | Local setup, Git workflow, CI/CD |
-| [AI_SYSTEM.md](./docs/AI_SYSTEM.md) | AI provider architecture, agent specifications |
-| [NOTIFICATION_SYSTEM.md](./docs/NOTIFICATION_SYSTEM.md) | Email + in-app notification pipeline |
-| [GOOGLE_CALENDAR_INTEGRATION.md](./docs/GOOGLE_CALENDAR_INTEGRATION.md) | Calendar sync, webhooks, conflict resolution |
-| [API_REFERENCE.md](./docs/API_REFERENCE.md) | REST API and Server Actions reference |
-| [TESTING.md](./docs/TESTING.md) | Testing strategy and coverage targets |
+| [2025-12-05-ARCHITECTURE.md](./docs/2025-12-05-ARCHITECTURE.md) | System design, RBAC model, database schema |
+| [2025-12-05-DEVELOPMENT.md](./docs/2025-12-05-DEVELOPMENT.md) | Local setup, Git workflow, CI/CD |
+| [2026-01-07-AI_SYSTEM.md](./docs/2026-01-07-AI_SYSTEM.md) | AI provider architecture, agent specifications |
+| [2026-02-10-NOTIFICATION_SYSTEM.md](./docs/2026-02-10-NOTIFICATION_SYSTEM.md) | Email + in-app notification pipeline |
+| [2026-02-02-GOOGLE_CALENDAR_INTEGRATION.md](./docs/2026-02-02-GOOGLE_CALENDAR_INTEGRATION.md) | Calendar sync, webhooks, conflict resolution |
+| [2026-01-07-API_REFERENCE.md](./docs/2026-01-07-API_REFERENCE.md) | REST API and Server Actions reference |
+| [2026-01-07-TESTING.md](./docs/2026-01-07-TESTING.md) | Testing strategy and coverage targets |
 
 ---
 

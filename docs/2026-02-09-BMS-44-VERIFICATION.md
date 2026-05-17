@@ -8,7 +8,7 @@
 - [x] `prepareLessonForDb()` filters all auto-generated fields
 - [x] `allowedUpdateFields` only includes updateable columns
 - [x] E2E test skip removed and tests re-enabled
-- [x] Documentation updated (PLAYWRIGHT-MIGRATION.md)
+- [x] Documentation updated (2026-02-12-PLAYWRIGHT-MIGRATION.md)
 
 ### 2. Database Schema
 - [ ] Verify migrations apply without errors

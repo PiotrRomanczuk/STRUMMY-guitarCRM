@@ -69,7 +69,7 @@ mcp-guitar-spotify/
 │   └── utils/
 │       ├── spotify-client.ts
 │       └── error-handling.ts
-└── README.md
+└── 2026-03-16-2025-11-02-README.md
 ```
 
 ## Tool Design Patterns

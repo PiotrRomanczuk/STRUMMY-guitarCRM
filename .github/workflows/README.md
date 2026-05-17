@@ -120,7 +120,7 @@ The following artifacts are saved (retention varies):
 
 #### Status Badges
 
-Add these to your README.md:
+Add these to your 2026-03-16-2025-11-02-README.md:
 
 ```markdown
 ![CI/CD Pipeline](https://github.com/PiotrRomanczuk/guitar-crm/workflows/CI%2FCD%20Pipeline/badge.svg)

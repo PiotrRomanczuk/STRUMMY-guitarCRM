@@ -175,7 +175,7 @@ All v2 dialogs render as bottom sheets on mobile, centered dialogs on desktop:
 
 ```tsx
 // Use existing Drawer component on mobile, Dialog on desktop
-// See ResponsiveDialog pattern in UI_STANDARDS.md
+// See ResponsiveDialog pattern in 2025-12-12-UI_STANDARDS.md
 // Bottom sheet min-height: 40vh, max-height: 85vh
 // Always include drag handle (DrawerContent provides this)
 ```

@@ -93,7 +93,7 @@ find . -maxdepth 1 -name "*.md" -mtime +90
 ```
 
 Also check:
-- `MASTER_TODO.md` (if it exists)
+- `2025-11-27-MASTER_TODO.md` (if it exists)
 - `docs/**/*.md`
 - `supabase/migrations/*.md`
 

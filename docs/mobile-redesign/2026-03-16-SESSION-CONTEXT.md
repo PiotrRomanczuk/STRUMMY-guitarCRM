@@ -16,7 +16,7 @@ This session focused on the v2 mobile-first redesign of Strummy. The user had pr
 
 ### Wave 1: Foundation — FULLY COMPLETE (all 18 tasks)
 
-All foundation tasks are done and checked off in PROGRESS.md:
+All foundation tasks are done and checked off in 2026-03-16-PROGRESS.md:
 
 1. **Cookie toggle system** (`lib/ui-version.ts`): Client-side cookie read/write for `strummy-ui-version`
 2. **Server helper** (`lib/ui-version.server.ts`): Server-only `getUIVersion()` using `next/headers` cookies
@@ -185,7 +185,7 @@ This fixed 25 profiles that had matching auth.users entries. The remaining 78 ar
 | `components/settings/SettingsPageClient.tsx` | Added UIVersionToggle import/render |
 | `components/settings/SettingsSections.tsx` | Added v2 toggle section |
 | `components/songs/list/index.tsx` | Added `is_draft` to SONG_LIST_COLUMNS |
-| `docs/mobile-redesign/PROGRESS.md` | Updated all Wave 1 + Wave 2 Agent 1 tasks as complete |
+| `docs/mobile-redesign/2026-03-16-PROGRESS.md` | Updated all Wave 1 + Wave 2 Agent 1 tasks as complete |
 
 ### New untracked files:
 | File | Purpose |
@@ -221,7 +221,7 @@ This fixed 25 profiles that had matching auth.users entries. The remaining 78 ar
 2. **Commit current work** — All changes are uncommitted on `feature/STRUM-v2-foundation`
 3. **Decide on design workflow** — Should we design in Stitch/Figma before coding Wave 2 Agents 2-4?
 
-### Wave 2 Remaining (unchecked in PROGRESS.md)
+### Wave 2 Remaining (unchecked in 2026-03-16-PROGRESS.md)
 - **Agent 1 (Nav Shell)**: 2 manual testing tasks remaining
 - **Agent 2 (Teacher Dashboard)**: 8 tasks — files exist from crashed agents but not verified
 - **Agent 3 (Student Dashboard + SOTW)**: 7 tasks — not started
@@ -239,30 +239,30 @@ This fixed 25 profiles that had matching auth.users entries. The remaining 78 ar
 ## File Reference
 
 ### Design System Docs
-- `docs/mobile-redesign/V2_DESIGN_SYSTEM.md` — Spacing, tokens, patterns, animations
-- `docs/mobile-redesign/PROGRESS.md` — Task tracker (source of truth for what's done/remaining)
-- `docs/UI_STANDARDS.md` — General UI conventions
+- `docs/mobile-redesign/2026-03-16-V2_DESIGN_SYSTEM.md` — Spacing, tokens, patterns, animations
+- `docs/mobile-redesign/2026-03-16-PROGRESS.md` — Task tracker (source of truth for what's done/remaining)
+- `docs/2025-12-12-UI_STANDARDS.md` — General UI conventions
 
 ### Feature Specs (docs/mobile-redesign/)
-- `01-dashboard.md` — Teacher + Student dashboard
-- `02-lessons.md` — Lesson management
-- `03-songs.md` — Song library
-- `04-assignments.md` — Assignments
-- `05-student-repertoire.md` — Student repertoire
-- `06-users-students.md` — User management
-- `07-calendar.md` — Calendar
-- `08-notifications.md` — Notifications
-- `09-profile-settings.md` — Profile/Settings
-- `10-theory-courses.md` — Theory courses
-- `11-skills.md` — Skills
-- `12-cohorts.md` — Cohorts
-- `13-student-health.md` — Student health
-- `14-statistics.md` — Statistics
-- `15-admin-tools.md` — Admin tools
-- `16-fretboard.md` — Interactive fretboard
-- `17-ai-assistant.md` — AI assistant
-- `18-song-of-the-week.md` — Song of the Week
-- `19-onboarding.md` — Onboarding
+- `2026-03-16-01-dashboard.md` — Teacher + Student dashboard
+- `2026-03-16-02-lessons.md` — Lesson management
+- `2026-03-16-03-songs.md` — Song library
+- `2026-03-16-04-assignments.md` — Assignments
+- `2026-03-16-05-student-repertoire.md` — Student repertoire
+- `2026-03-16-06-users-students.md` — User management
+- `2026-03-16-07-calendar.md` — Calendar
+- `2026-03-16-08-notifications.md` — Notifications
+- `2026-03-16-09-profile-settings.md` — Profile/Settings
+- `2026-03-16-10-theory-courses.md` — Theory courses
+- `2026-03-16-11-skills.md` — Skills
+- `2026-03-16-12-cohorts.md` — Cohorts
+- `2026-03-16-13-student-health.md` — Student health
+- `2026-03-16-14-statistics.md` — Statistics
+- `2026-03-16-15-admin-tools.md` — Admin tools
+- `2026-03-16-16-fretboard.md` — Interactive fretboard
+- `2026-03-16-17-ai-assistant.md` — AI assistant
+- `2026-03-16-18-song-of-the-week.md` — Song of the Week
+- `2026-03-16-19-onboarding.md` — Onboarding
 
 ### Key Implementation Files
 - `lib/ui-version.ts` — Client cookie utilities

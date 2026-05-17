@@ -458,7 +458,7 @@ const { data: students, error: studentsError } = await supabase
 - `/cypress/support/commands.ts` - Test utilities
 
 **Documentation**:
-- `/PLAYWRIGHT_MIGRATION_PROGRESS.md` - Original analysis document
+- `/PLAYWRIGHT_MIGRATION_2026-03-16-PROGRESS.md` - Original analysis document
 - `/CLAUDE.md` - Project overview and conventions
 
 ### Database Schema

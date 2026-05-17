@@ -150,7 +150,7 @@ copilot-instructions.md (496 lines)
 ├── commands/                  ← Detailed command specs (14 files)
 ├── instructions/              ← Development standards (12 files)
 ├── deployment/                ← Deployment guides (1 file)
-├── README.md                  ← Folder navigation
+├── 2026-03-16-2025-11-02-README.md                  ← Folder navigation
 └── workflows/                 ← CI/CD configuration
 ```
 

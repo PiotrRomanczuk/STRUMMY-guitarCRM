@@ -10,7 +10,7 @@ Convert E2E test plan documents (`docs/e2e/*.md`) into real, working tests — s
 ## Invocation
 
 ```
-/test-journey docs/e2e/02-teacher-lessons.md
+/test-journey docs/e2e/2026-02-28-02-teacher-lessons.md
 ```
 
 The argument is the path to a `docs/e2e/*.md` file. If omitted, list available docs and prompt the user to pick one:
@@ -302,13 +302,13 @@ If any check fails, fix and retry (max 3 attempts). Do NOT proceed to ship if ch
 
 ```
 docs/e2e/01-teacher-songs.md        # Journeys 1-2: Song CRUD + Export
-docs/e2e/02-teacher-lessons.md      # (if exists) Lessons
-docs/e2e/03-teacher-calendar.md     # Calendar integration
-docs/e2e/04-teacher-assignments.md  # Assignments
-docs/e2e/05-teacher-integrations.md # External integrations
-docs/e2e/06-teacher-user-management.md # User management
-docs/e2e/07-teacher-ai.md           # AI features
-docs/e2e/08-teacher-exports.md      # Export workflows
-docs/e2e/09-student-journeys.md     # Student-side flows
-docs/e2e/10-cross-role.md           # Cross-role interactions
+docs/e2e/2026-02-28-02-teacher-lessons.md      # (if exists) Lessons
+docs/e2e/2026-02-28-03-teacher-calendar.md     # Calendar integration
+docs/e2e/2026-02-28-04-teacher-assignments.md  # Assignments
+docs/e2e/2026-02-28-05-teacher-integrations.md # External integrations
+docs/e2e/2026-02-28-06-teacher-user-management.md # User management
+docs/e2e/2026-02-28-07-teacher-ai.md           # AI features
+docs/e2e/2026-02-28-08-teacher-exports.md      # Export workflows
+docs/e2e/2026-02-28-09-student-journeys.md     # Student-side flows
+docs/e2e/2026-02-28-10-cross-role.md           # Cross-role interactions
 ```

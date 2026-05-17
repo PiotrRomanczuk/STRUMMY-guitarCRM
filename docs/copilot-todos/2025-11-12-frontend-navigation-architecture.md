@@ -15,8 +15,8 @@ This TODO tracks the implementation of the interconnected navigation architectur
 - [x] Create `StatusBadge` component - Universal status badges with helpers
 - [x] Create `Breadcrumbs` component - Navigation breadcrumbs
 - [x] Create `components/shared/index.ts` - Export all shared components
-- [x] Create architecture documentation - `FRONTEND_NAVIGATION_ARCHITECTURE.md`
-- [x] Create implementation guide - `FRONTEND_NAVIGATION_IMPLEMENTATION.md`
+- [x] Create architecture documentation - `FRONTEND_NAVIGATION_2025-12-05-ARCHITECTURE.md`
+- [x] Create implementation guide - `2025-11-12-FRONTEND_NAVIGATION_IMPLEMENTATION.md`
 
 **Files Created:**
 
@@ -26,8 +26,8 @@ This TODO tracks the implementation of the interconnected navigation architectur
 - `components/shared/StatusBadge.tsx`
 - `components/shared/Breadcrumbs.tsx`
 - `components/shared/index.ts`
-- `docs/FRONTEND_NAVIGATION_ARCHITECTURE.md`
-- `docs/FRONTEND_NAVIGATION_IMPLEMENTATION.md`
+- `docs/FRONTEND_NAVIGATION_2025-12-05-ARCHITECTURE.md`
+- `docs/2025-11-12-FRONTEND_NAVIGATION_IMPLEMENTATION.md`
 
 ---
 
@@ -263,7 +263,7 @@ This TODO tracks the implementation of the interconnected navigation architectur
 
 ## 🔗 Related Documentation
 
-- `docs/FRONTEND_NAVIGATION_ARCHITECTURE.md` - Complete architecture overview
-- `docs/FRONTEND_NAVIGATION_IMPLEMENTATION.md` - Step-by-step implementation guide
+- `docs/FRONTEND_NAVIGATION_2025-12-05-ARCHITECTURE.md` - Complete architecture overview
+- `docs/2025-11-12-FRONTEND_NAVIGATION_IMPLEMENTATION.md` - Step-by-step implementation guide
 - `components/lessons/LessonTable.Row.tsx` - Example of clickable rows
 - `components/lessons/LessonSongs.tsx` - Example of related items (to be refactored)

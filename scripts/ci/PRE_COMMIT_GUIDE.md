@@ -315,7 +315,7 @@ If pre-commit checks fail unexpectedly:
 
 ## Related Documentation
 
-- **CI/CD Pipeline**: `.github/workflows/README.md`
+- **CI/CD Pipeline**: `.github/workflows/2026-03-16-2025-11-02-README.md`
 - **Quality Checks**: `scripts/ci/quality-check.sh`
 - **Database Checks**: `scripts/database/check-db-quality.sh`
 - **Testing Guide**: `docs/TDD_GUIDE.md`

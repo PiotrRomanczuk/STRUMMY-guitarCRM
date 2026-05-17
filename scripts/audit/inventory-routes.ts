@@ -3,7 +3,7 @@
  * Inventory all Next.js API routes under app/api/**\/route.ts.
  *
  * Emits:
- *   docs/api-inventory.md   — grouped markdown table
+ *   docs/2026-05-13-api-inventory.md   — grouped markdown table
  *   docs/api-inventory.json — machine-readable, feeds bruno + callgraph
  *
  * Run: npm run audit:routes
@@ -15,7 +15,7 @@ import path from 'node:path';
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const API_ROOT = path.join(REPO_ROOT, 'app', 'api');
 const OUT_JSON = path.join(REPO_ROOT, 'docs', 'api-inventory.json');
-const OUT_MD = path.join(REPO_ROOT, 'docs', 'api-inventory.md');
+const OUT_MD = path.join(REPO_ROOT, 'docs', '2026-05-13-api-inventory.md');
 
 const HTTP_VERBS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'] as const;
 type HttpVerb = (typeof HTTP_VERBS)[number];

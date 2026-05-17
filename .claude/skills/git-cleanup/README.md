@@ -35,7 +35,7 @@ Comprehensive git tree cleanup tool for managing branches, PRs, and keeping your
 ```
 git-cleanup/
 ├── SKILL.md                    # Main skill instructions
-├── README.md                   # This file
+├── 2026-03-16-2025-11-02-README.md                   # This file
 ├── scripts/
 │   └── analyze-branches.sh     # Branch analysis helper
 └── references/

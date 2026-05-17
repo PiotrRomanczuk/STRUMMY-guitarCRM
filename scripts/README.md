@@ -406,6 +406,6 @@ The scripts directory was significantly cleaned up to reduce complexity:
 ## 📚 Additional Resources
 
 - [TDD Guide](../docs/TDD_GUIDE.md) - Complete TDD documentation
-- [Branch-Based Testing](../docs/BRANCH_TESTING.md) - Test organization system
+- [Branch-Based Testing](../docs/BRANCH_2026-01-07-TESTING.md) - Test organization system
 - [Project Overview](../docs/PROJECT_OVERVIEW.md) - Architecture and structure
 - [Contributing Guidelines](../CONTRIBUTING.md) - Development standards

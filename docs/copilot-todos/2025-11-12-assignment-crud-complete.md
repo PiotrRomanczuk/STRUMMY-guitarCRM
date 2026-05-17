@@ -289,8 +289,8 @@ supabase db reset  # Or apply migration manually
 
 - CRUD Standards: `docs/CRUD_STANDARDS.md`
 - CRUD Quick Reference: `docs/CRUD_QUICK_REFERENCE.md`
-- Role-Based Architecture: `docs/ROLE_BASED_ARCHITECTURE.md`
-- Schema Documentation: `schemas/README.md`
+- Role-Based Architecture: `docs/ROLE_BASED_2025-12-05-ARCHITECTURE.md`
+- Schema Documentation: `schemas/2026-03-16-2025-11-02-README.md`
 - Migration File: `supabase/migrations/20251112000000_restructure_assignments_table.sql`
 
 ---

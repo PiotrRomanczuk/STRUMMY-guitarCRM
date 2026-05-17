@@ -78,7 +78,7 @@ Coverage:    100% for rate-limiter.ts
 
 ### 4. Documentation
 
-**`/docs/RATE_LIMITING.md`**
+**`/docs/2026-02-09-RATE_LIMITING.md`**
 - Complete implementation guide
 - Security features explained
 - Usage examples
@@ -157,7 +157,7 @@ Consider upgrading to:
 - Database-backed rate limiting
 - Edge-level rate limiting (Cloudflare, Vercel Edge)
 
-See `/docs/RATE_LIMITING.md` for detailed scaling guide.
+See `/docs/2026-02-09-RATE_LIMITING.md` for detailed scaling guide.
 
 ## Testing Evidence
 
@@ -197,8 +197,8 @@ Total: 18 tests passed
 - `/lib/auth/rate-limiter.test.ts` (375 lines)
 - `/app/auth/__tests__/actions.test.ts` (307 lines)
 - `/tests/e2e/security/password-reset-rate-limit.spec.ts` (268 lines)
-- `/docs/RATE_LIMITING.md` (367 lines)
-- `/docs/implementations/BMS-29-RATE-LIMITING-IMPLEMENTATION.md` (this file)
+- `/docs/2026-02-09-RATE_LIMITING.md` (367 lines)
+- `/docs/implementations/2026-02-09-BMS-29-RATE-LIMITING-IMPLEMENTATION.md` (this file)
 
 ### Modified
 - `/app/auth/actions.ts` - Added rate limiting to resetPassword
@@ -270,7 +270,7 @@ After deployment, monitor:
 
 ## Future Enhancements
 
-See `/docs/RATE_LIMITING.md` for:
+See `/docs/2026-02-09-RATE_LIMITING.md` for:
 - Redis implementation for multi-server
 - CAPTCHA integration
 - Adaptive rate limiting

@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 import { addSotwToRepertoire } from '@/app/actions/song-of-the-week';
 import type { SongOfTheWeekWithSong } from '@/types/SongOfTheWeek';
 
-/** Design system STATUS_STYLES pattern (section 8 of V2_DESIGN_SYSTEM.md) */
+/** Design system STATUS_STYLES pattern (section 8 of 2026-03-16-V2_DESIGN_SYSTEM.md) */
 const DIFFICULTY_STYLES: Record<string, string> = {
   beginner: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
   intermediate: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20',

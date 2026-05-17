@@ -1,18 +1,18 @@
 ---
 name: mobile-redesign
-description: Pick and implement the next available mobile redesign task from PROGRESS.md. Reads the progress tracker, claims a task (WIP lock), reads the feature spec + design system, implements it in a worktree, and marks it done. Designed for 4 parallel agents — each picks a different task from the current wave.
+description: Pick and implement the next available mobile redesign task from 2026-03-16-PROGRESS.md. Reads the progress tracker, claims a task (WIP lock), reads the feature spec + design system, implements it in a worktree, and marks it done. Designed for 4 parallel agents — each picks a different task from the current wave.
 ---
 
 # Mobile Redesign — Task Runner
 
-Automated workflow for implementing v2 mobile-first UI tasks from `docs/mobile-redesign/PROGRESS.md`.
+Automated workflow for implementing v2 mobile-first UI tasks from `docs/mobile-redesign/2026-03-16-PROGRESS.md`.
 
 ## Workflow
 
 ### Step 1: Read progress tracker + identify current wave
 
 ```
-Read: docs/mobile-redesign/PROGRESS.md
+Read: docs/mobile-redesign/2026-03-16-PROGRESS.md
 ```
 
 1. Find the **current wave** — the first wave that has unchecked tasks (`- [ ]`) not marked `WIP` or `BLOCKED`.
@@ -27,7 +27,7 @@ If the user passed an argument:
 
 ### Step 2: Claim the task
 
-Edit `docs/mobile-redesign/PROGRESS.md` — add `WIP (@agent)` to the task line:
+Edit `docs/mobile-redesign/2026-03-16-PROGRESS.md` — add `WIP (@agent)` to the task line:
 
 ```
 - [ ] WIP (@agent) Create `components/v2/navigation/AppShell.tsx` — v2 mobile shell
@@ -43,7 +43,7 @@ Before writing ANY code, read these files IN ORDER:
 
 1. **Design System** (MANDATORY):
    ```
-   Read: docs/mobile-redesign/V2_DESIGN_SYSTEM.md
+   Read: docs/mobile-redesign/2026-03-16-V2_DESIGN_SYSTEM.md
    ```
 
 2. **Feature Spec** (the spec file listed in your agent block header):
@@ -53,7 +53,7 @@ Before writing ANY code, read these files IN ORDER:
 
 3. **UI Standards**:
    ```
-   Read: docs/UI_STANDARDS.md
+   Read: docs/2025-12-12-UI_STANDARDS.md
    ```
 
 4. **Existing v1 components** — find and read the current implementation to understand:
@@ -78,7 +78,7 @@ git checkout -b feature/STRUM-v2-<task-name>
 
 #### Implementation Rules
 
-Follow V2_DESIGN_SYSTEM.md exactly. Key rules:
+Follow 2026-03-16-V2_DESIGN_SYSTEM.md exactly. Key rules:
 
 1. **Mobile/Desktop pattern** — every feature uses:
    ```tsx
@@ -156,7 +156,7 @@ Also verify manually (or describe what to check):
 
 ### Step 6: Mark done
 
-Update `docs/mobile-redesign/PROGRESS.md`:
+Update `docs/mobile-redesign/2026-03-16-PROGRESS.md`:
 
 ```
 - [x] Create `components/v2/navigation/AppShell.tsx` — v2 mobile shell
@@ -218,9 +218,9 @@ Agent(subagent_type="ui-engineer", isolation="worktree", prompt="
 
 ## Rules
 
-1. **Always read PROGRESS.md first** — never start without checking what's available
+1. **Always read 2026-03-16-PROGRESS.md first** — never start without checking what's available
 2. **Always claim before working** — WIP lock prevents collisions
-3. **Always read the design system** — V2_DESIGN_SYSTEM.md is non-negotiable
+3. **Always read the design system** — 2026-03-16-V2_DESIGN_SYSTEM.md is non-negotiable
 4. **Always read the feature spec** — the numbered doc (01-19) for your feature
 5. **Reuse v1 hooks** — zero new data fetching unless the spec explicitly requires it
 6. **Each file < 200 LOC** — split if larger

@@ -59,7 +59,7 @@ The cleanup system identifies test data using these patterns:
 - Titles: Starting with `E2E Test Conversation` or `Test AI Conversation`
 - **Note**: Deleting conversations cascades to AI messages
 
-For complete pattern documentation, see `TESTING-CLEANUP.md`
+For complete pattern documentation, see `2026-02-01-TESTING-CLEANUP.md`
 
 ### Adding New Test Patterns
 
@@ -135,7 +135,7 @@ tests/
 │   ├── cleanup.ts          # Data cleanup utilities
 │   └── form.ts             # Form interaction helpers
 ├── global-teardown.ts      # Global teardown script
-└── README.md               # This file
+└── 2026-03-16-2025-11-02-README.md               # This file
 ```
 
 ## Best Practices

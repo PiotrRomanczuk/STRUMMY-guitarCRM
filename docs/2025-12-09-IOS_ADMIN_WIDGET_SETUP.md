@@ -488,7 +488,7 @@ Content-Type: application/json
 
 ## Need Help?
 
-- **Regular Widget**: See [IOS_WIDGET_SETUP.md](./IOS_WIDGET_SETUP.md) for teacher/student widget
+- **Regular Widget**: See [2025-12-09-IOS_WIDGET_SETUP.md](./2025-12-09-IOS_WIDGET_SETUP.md) for teacher/student widget
 - **API Keys**: Generate from Settings → API Keys in web app
 - **Admin Access**: Contact your Guitar CRM administrator
 - **Troubleshooting**: Check the Troubleshooting section above

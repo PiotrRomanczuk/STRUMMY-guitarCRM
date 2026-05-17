@@ -263,7 +263,7 @@ export async function GET(req: NextRequest) {
 - `components/dashboard/BearerTokenDisplay.tsx`
 - `components/settings/ApiKeyManager.tsx`
 - `__tests__/lib/bearer-auth.test.ts`
-- `docs/BEARER_TOKEN_IMPLEMENTATION.md`
+- `docs/2025-12-09-BEARER_TOKEN_IMPLEMENTATION.md`
 
 **Modified Files**:
 - `components/dashboard/DashboardPageContent.tsx` (added BearerTokenDisplay)
@@ -324,7 +324,7 @@ Example: `gcrm_b5KjLmQpR8xYzWvAhNdEfG==`
 
 ## Related Documentation
 
-- `/docs/BEARER_TOKEN_IMPLEMENTATION.md` - Detailed implementation guide
+- `/docs/2025-12-09-BEARER_TOKEN_IMPLEMENTATION.md` - Detailed implementation guide
 - `/lib/bearer-auth.ts` - Authentication logic
 - `/lib/api-keys.ts` - Key generation and hashing
 - `/.github/instructions/api-data-fetching.instructions.md` - API patterns

@@ -1389,7 +1389,7 @@ const transporter = nodemailer.createTransport({
 
 ### Project Documentation
 
-- **Main README:** `/README.md`
+- **Main README:** `/2026-03-16-2025-11-02-README.md`
 - **Project Guidelines:** `/CLAUDE.md`
 - **User Documentation:** `/docs/USER_GUIDE.md` (to be created)
 

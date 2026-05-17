@@ -324,7 +324,7 @@ export function LessonAnalytics() {
 4. **Implement Hooks:** Start with data fetching hooks
 5. **Build Components:** Create UI components for each feature
 6. **Test:** Ensure proper error handling and loading states
-7. **Document:** Update UI_STANDARDS.md with new patterns
+7. **Document:** Update 2025-12-12-UI_STANDARDS.md with new patterns
 
 ## Questions to Address
 

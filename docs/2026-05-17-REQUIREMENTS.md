@@ -1,7 +1,7 @@
 # Strummy Guitar CRM — Requirements
 
 **Date**: 2026-05-17
-**Author**: Claude (synthesized from `docs/api-inventory.md`, `docs/ARCHITECTURE.md`, `docs/AI_SYSTEM.md`, supabase migrations, server actions, integration code)
+**Author**: Claude (synthesized from `docs/2026-05-13-api-inventory.md`, `docs/2025-12-05-ARCHITECTURE.md`, `docs/2026-01-07-AI_SYSTEM.md`, supabase migrations, server actions, integration code)
 **Scope**: Functional and non-functional requirements for the post-cleanup dashboard rebuild, organized by user role (Admin / Teacher / Student)
 **Status**: Living document — update `updated:` date when the underlying API/data model shifts
 
@@ -489,7 +489,7 @@ Each step: add the card, render data from the existing API, verify role-login sp
 
 - Not a UI spec. No mockups, no copy, no component breakdown.
 - Not a migration plan. Schema lives in `supabase/migrations/`; deltas go through `supabase-migration-assistant`.
-- Not a security policy. See `docs/SECURITY-TEST-SUMMARY.md` and the `security-reviewer` agent for that.
+- Not a security policy. See `docs/2026-02-02-SECURITY-TEST-SUMMARY.md` and the `security-reviewer` agent for that.
 - Not exhaustive of every internal helper. Lib utilities (`lib/access/`, `lib/queries/`) exist but are implementation detail — consult the source.
 
 When you change the API surface, the data model, or external connections, update **§2, §3, §4, §6** of this file and bump the `updated:` date.

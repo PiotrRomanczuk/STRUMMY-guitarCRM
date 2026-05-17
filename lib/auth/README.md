@@ -162,18 +162,18 @@ console.log('Headers:', {
 
 - Current implementation: In-memory (single server)
 - For multi-server: Use Redis or database
-- See `/docs/RATE_LIMITING.md` for scaling guide
+- See `/docs/2026-02-09-RATE_LIMITING.md` for scaling guide
 
 ## Related Files
 
 - Implementation: `/lib/auth/rate-limiter.ts`
 - Tests: `/lib/auth/rate-limiter.test.ts`
 - Integration: `/app/auth/actions.ts`
-- Documentation: `/docs/RATE_LIMITING.md`
+- Documentation: `/docs/2026-02-09-RATE_LIMITING.md`
 - E2E Tests: `/tests/e2e/security/password-reset-rate-limit.spec.ts`
 
 ## Support
 
 - Linear Issue: BMS-29
 - Security Questions: Contact security team
-- Implementation Questions: See full documentation in `/docs/RATE_LIMITING.md`
+- Implementation Questions: See full documentation in `/docs/2026-02-09-RATE_LIMITING.md`

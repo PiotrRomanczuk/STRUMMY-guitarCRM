@@ -31,7 +31,7 @@ Automated cleanup system to prevent test data pollution in the database from E2E
 - 3-second countdown before execution (Ctrl+C to cancel)
 - Accessible via `npm run test:cleanup`
 
-### 4. Documentation (`tests/README.md`)
+### 4. Documentation (`tests/2026-03-16-2025-11-02-README.md`)
 - Complete guide for E2E testing
 - Test organization structure
 - Best practices and troubleshooting

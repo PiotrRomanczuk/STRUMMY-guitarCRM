@@ -89,7 +89,7 @@ $ curl -H "Authorization: Bearer test" http://localhost:3000/api/api-keys
 6. `components/dashboard/BearerTokenDisplay.tsx` - Token display component
 7. `components/settings/ApiKeyManager.tsx` - Settings interface
 8. `__tests__/lib/bearer-auth.test.ts` - Authentication tests
-9. `docs/BEARER_TOKEN_IMPLEMENTATION.md` - Implementation guide
+9. `docs/2025-12-09-BEARER_TOKEN_IMPLEMENTATION.md` - Implementation guide
 
 ### Modified Files (3)
 1. `components/dashboard/DashboardPageContent.tsx` - Added BearerTokenDisplay
@@ -350,8 +350,8 @@ if (response.ok) {
 - **Solution**: Check server logs for details
 
 ### Documentation
-- Full guide: `docs/BEARER_TOKEN_IMPLEMENTATION.md`
-- Setup guide: `docs/BEARER_TOKEN_SETUP_COMPLETE.md`
+- Full guide: `docs/2025-12-09-BEARER_TOKEN_IMPLEMENTATION.md`
+- Setup guide: `docs/2025-12-09-BEARER_TOKEN_SETUP_COMPLETE.md`
 - Testing guide: `docs/BEARER_TOKEN_TESTING.sh`
 
 ---

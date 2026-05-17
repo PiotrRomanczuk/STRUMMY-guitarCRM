@@ -22,7 +22,7 @@ Comprehensive Playwright security tests have been created to verify teacher data
 - Documents known vulnerabilities
 
 ### 2. Documentation
-**Location**: `/tests/e2e/security/README.md` (294 lines)
+**Location**: `/tests/e2e/security/2026-03-16-2025-11-02-README.md` (294 lines)
 
 **Contents**:
 - Test overview and purpose
@@ -292,7 +292,7 @@ This vulnerability may impact:
 ## Questions?
 
 For questions about these tests or security concerns:
-1. Review `/tests/e2e/security/README.md`
+1. Review `/tests/e2e/security/2026-03-16-2025-11-02-README.md`
 2. Check existing test patterns in `/tests/e2e/lessons/teacher/`
 3. Review Supabase RLS policies in `/supabase/migrations/022_rls_policies.sql`
 
