@@ -42,6 +42,7 @@ const config: Config = {
     '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/schemas/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/__tests__/**/*.test.{js,jsx,ts,tsx}',
+    '<rootDir>/scripts/backfill/**/*.test.{js,jsx,ts,tsx}',
   ],
 
   // Performance optimizations
