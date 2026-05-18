@@ -20,10 +20,11 @@ import {
   REDACT_KEYS,
   getLogLevel,
   getNodeEnv,
+  readEnv,
   redactObject,
 } from './shared';
-
 const isDev = getNodeEnv() === 'development';
+const persistEnabled = !isDev && readEnv('SYSTEM_LOGS_PERSIST') !== 'off';
 
 /**
  * Pino's `redact.paths` matches by dotted-path. We give it all the
@@ -41,7 +42,7 @@ function buildRedactPaths(): string[] {
   return paths;
 }
 
-const rootLogger: PinoLogger = pino({
+const baseOptions = {
   level: getLogLevel(),
   base: { app: 'strummy' },
   timestamp: pino.stdTimeFunctions.isoTime,
@@ -49,20 +50,60 @@ const rootLogger: PinoLogger = pino({
     paths: buildRedactPaths(),
     censor: '<redacted>',
   },
-  ...(isDev
-    ? {
-        transport: {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss.l',
-            ignore: 'pid,hostname,app',
-            messageFormat: '[{prefix}] {msg}',
-          },
+};
+
+/**
+ * Build the destination Pino writes to.
+ *
+ * - Dev: pino-pretty transport (terminal-friendly).
+ * - Prod with `SYSTEM_LOGS_PERSIST` ≠ 'off': multistream tee — stdout for
+ *   the full firehose (Vercel logs) + `supabaseLogStream` for warn/error
+ *   (admin UI). The supabase stream filters internally, but pino's
+ *   `level` per-stream still gates by level — both are belt-and-suspenders.
+ * - Prod with persist disabled: default stdout only.
+ */
+function buildRootLogger(): PinoLogger {
+  if (isDev) {
+    return pino({
+      ...baseOptions,
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'HH:MM:ss.l',
+          ignore: 'pid,hostname,app',
+          messageFormat: '[{prefix}] {msg}',
         },
-      }
-    : {}),
-});
+      },
+    });
+  }
+
+  if (persistEnabled) {
+    // Lazy require — keeps lib/supabase/admin (Node-only) out of the
+    // client/Edge bundles. This branch only runs server-side, and `require`
+    // is unreachable at bundle-eval time so Webpack/Turbopack tree-shake it.
+    /* eslint-disable @typescript-eslint/no-require-imports */
+    const { supabaseLogStream } =
+      require('./supabase-destination') as typeof import('./supabase-destination');
+    /* eslint-enable @typescript-eslint/no-require-imports */
+    const streams: pino.StreamEntry[] = [
+      { level: getLogLevel() as pino.Level, stream: process.stdout },
+      { level: 'warn' as pino.Level, stream: supabaseLogStream },
+    ];
+    return pino(baseOptions, pino.multistream(streams));
+  }
+
+  return pino(baseOptions);
+}
+
+// Lazy — construction triggers `pino.multistream` etc., which fail in the
+// browser bundle (pino/browser.js stub). Defer until first call so that
+// merely importing this module from a client context does not crash.
+let _rootLogger: PinoLogger | null = null;
+function getRootLogger(): PinoLogger {
+  if (!_rootLogger) _rootLogger = buildRootLogger();
+  return _rootLogger;
+}
 
 function mergeContext(context?: LogContext): LogContext {
   const reqCtx = getRequestContext();
@@ -70,7 +111,7 @@ function mergeContext(context?: LogContext): LogContext {
 }
 
 export function makePinoLogger(prefix: string): BoundLogger {
-  const child = rootLogger.child({ prefix });
+  const child = getRootLogger().child({ prefix });
   return {
     debug(message, context) {
       child.debug(mergeContext(context), message);

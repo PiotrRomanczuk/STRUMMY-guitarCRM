@@ -72,6 +72,15 @@ export function isEdgeRuntime(): boolean {
 }
 
 /**
+ * Detect whether we're running in a browser/client context.
+ * Used to route browser bundles to the console-backend so the
+ * Pino Node API surface (multistream, etc.) is never invoked there.
+ */
+export function isBrowserRuntime(): boolean {
+  return typeof window !== 'undefined';
+}
+
+/**
  * Edge-safe env reads. `process.env` exists on Edge but is a static snapshot.
  */
 export function readEnv(key: string): string | undefined {

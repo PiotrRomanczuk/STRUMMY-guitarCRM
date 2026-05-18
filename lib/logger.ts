@@ -17,7 +17,7 @@
  * See `lib/logger/` for the backends + request-context.
  */
 
-import { isEdgeRuntime } from './logger/shared';
+import { isBrowserRuntime, isEdgeRuntime } from './logger/shared';
 import { makeConsoleLogger } from './logger/console-backend';
 import { makePinoLogger } from './logger/pino-backend';
 import type { BoundLogger } from './logger/shared';
@@ -32,7 +32,14 @@ export {
 } from './logger/request-context';
 
 function makeLogger(prefix: string): BoundLogger {
-  return isEdgeRuntime() ? makeConsoleLogger(prefix) : makePinoLogger(prefix);
+  // Browser bundle (client components like error boundaries): console only.
+  // Pino is statically imported above and ships in the client bundle, but
+  // its root-logger construction is lazy — calling makePinoLogger here
+  // would hit `pino.multistream` and crash in the browser stub.
+  if (isBrowserRuntime() || isEdgeRuntime()) {
+    return makeConsoleLogger(prefix);
+  }
+  return makePinoLogger(prefix);
 }
 
 /** Default (un-prefixed) logger for quick usage */
