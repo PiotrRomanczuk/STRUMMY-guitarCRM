@@ -109,7 +109,7 @@ export async function POST(request: Request) {
             { status: 409 }
           );
         }
-        logger.error('[from-spotify] DB insert error:', dbError.message);
+        logger.error('[from-spotify] DB insert error', dbError);
         return NextResponse.json({ error: dbError.message }, { status: 500 });
       }
 

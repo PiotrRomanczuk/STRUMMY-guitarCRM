@@ -1,14 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import {
-  listFilesInFolder,
-  findFolderByName,
-  DriveFileInfo,
-} from './google-drive-service-account';
-import {
-  matchAllVideosToSongs,
-  VideoMatchResult,
-  SongRecord,
-} from './drive-video-matcher';
+import { listFilesInFolder, findFolderByName, DriveFileInfo } from './google-drive-service-account';
+import { matchAllVideosToSongs, VideoMatchResult, SongRecord } from './drive-video-matcher';
 import { logger } from '@/lib/logger';
 
 export interface SyncOptions {
@@ -55,15 +47,12 @@ export interface DuplicateVideoInfo {
 async function resolveFolderId(options: SyncOptions): Promise<string> {
   if (options.folderId) return options.folderId;
 
-  const rawParentId =
-    options.parentFolderId || process.env.GOOGLE_DRIVE_FOLDER_ID || '';
+  const rawParentId = options.parentFolderId || process.env.GOOGLE_DRIVE_FOLDER_ID || '';
   // Strip URL query params that may be pasted from browser URLs
   const parentId = rawParentId.split('?')[0];
 
   if (!parentId) {
-    throw new Error(
-      'No parent folder ID. Set GOOGLE_DRIVE_FOLDER_ID or pass parentFolderId.'
-    );
+    throw new Error('No parent folder ID. Set GOOGLE_DRIVE_FOLDER_ID or pass parentFolderId.');
   }
 
   // If folderName is explicitly set to empty string, use parentId directly
@@ -75,9 +64,7 @@ async function resolveFolderId(options: SyncOptions): Promise<string> {
   // Otherwise, search for subfolder by name
   const id = await findFolderByName(parentId, options.folderName);
   if (!id) {
-    throw new Error(
-      `Folder "${options.folderName}" not found in parent folder ${parentId}`
-    );
+    throw new Error(`Folder "${options.folderName}" not found in parent folder ${parentId}`);
   }
   return id;
 }
@@ -85,13 +72,8 @@ async function resolveFolderId(options: SyncOptions): Promise<string> {
 /**
  * Fetch all songs from Supabase (admin client bypasses RLS).
  */
-async function fetchAllSongs(
-  supabase: SupabaseClient
-): Promise<SongRecord[]> {
-  const { data, error } = await supabase
-    .from('songs')
-    .select('id, title, author')
-    .order('title');
+async function fetchAllSongs(supabase: SupabaseClient): Promise<SongRecord[]> {
+  const { data, error } = await supabase.from('songs').select('id, title, author').order('title');
 
   if (error) throw new Error(`Failed to fetch songs: ${error.message}`);
   return (data || []) as SongRecord[];
@@ -113,9 +95,7 @@ async function fetchExistingVideos(
   }
 
   // Fetch all songs for title lookup
-  const { data: songs, error: songsError } = await supabase
-    .from('songs')
-    .select('id, title');
+  const { data: songs, error: songsError } = await supabase.from('songs').select('id, title');
 
   if (songsError) {
     throw new Error(`Failed to fetch songs for duplicates: ${songsError.message}`);
@@ -128,21 +108,21 @@ async function fetchExistingVideos(
   });
 
   // Build result map
-  const map = new Map<string, { id: string; songId: string; songTitle: string; uploadedAt: string }>();
+  const map = new Map<
+    string,
+    { id: string; songId: string; songTitle: string; uploadedAt: string }
+  >();
 
-  (videos || []).forEach((row: {
-    id: string;
-    google_drive_file_id: string;
-    song_id: string;
-    created_at: string;
-  }) => {
-    map.set(row.google_drive_file_id, {
-      id: row.id,
-      songId: row.song_id,
-      songTitle: songTitles.get(row.song_id) || 'Unknown',
-      uploadedAt: row.created_at,
-    });
-  });
+  (videos || []).forEach(
+    (row: { id: string; google_drive_file_id: string; song_id: string; created_at: string }) => {
+      map.set(row.google_drive_file_id, {
+        id: row.id,
+        songId: row.song_id,
+        songTitle: songTitles.get(row.song_id) || 'Unknown',
+        uploadedAt: row.created_at,
+      });
+    }
+  );
 
   return map;
 }
@@ -150,9 +130,7 @@ async function fetchExistingVideos(
 /**
  * Main sync entry point.
  */
-export async function syncDriveVideosToSongs(
-  options: SyncOptions
-): Promise<SyncResult> {
+export async function syncDriveVideosToSongs(options: SyncOptions): Promise<SyncResult> {
   const folderId = await resolveFolderId(options);
   const files = await listFilesInFolder(folderId, 'video/');
   const songs = await fetchAllSongs(options.supabase);
@@ -216,13 +194,10 @@ export async function syncDriveVideosToSongs(
     const BATCH_SIZE = 50;
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE);
-      const { error, data } = await options.supabase
-        .from('song_videos')
-        .insert(batch)
-        .select('id');
+      const { error, data } = await options.supabase.from('song_videos').insert(batch).select('id');
 
       if (error) {
-        logger.error(`Batch insert error (${i}–${i + batch.length}):`, error.message);
+        logger.error(`Batch insert error (${i}–${i + batch.length})`, error);
       } else {
         inserted += data?.length || batch.length;
       }

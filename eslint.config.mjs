@@ -61,15 +61,26 @@ const eslintConfig = defineConfig([
       'max-depth': ['warn', 10],
       // Discourage explicit 'any' — prefer unknown or proper types
       '@typescript-eslint/no-explicit-any': 'warn',
+      // ADR 0003 §6: route operational logs through @/lib/logger. console.warn/error
+      // remain allowed for genuine fallback paths and dev tooling output.
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
   // Do not apply size rules to generated types, migrations, or tests
   {
     name: 'project/size-rules-exceptions',
-    files: ['types/**/*.ts', 'supabase/**/*.{ts,sql}', '__tests__/**/*.{ts,tsx}', '**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+    files: [
+      'types/**/*.ts',
+      'supabase/**/*.{ts,sql}',
+      '__tests__/**/*.{ts,tsx}',
+      '**/*.test.{ts,tsx}',
+      '**/*.spec.{ts,tsx}',
+    ],
     rules: {
       'max-lines': 'off',
       'max-lines-per-function': 'off',
+      // Tests legitimately spy on console as part of mock assertions.
+      'no-console': 'off',
     },
   },
 ]);

@@ -139,7 +139,7 @@ export async function createSongHandler(
           status: 409,
         };
       }
-      logger.error('Supabase insert error:', error.message);
+      logger.error('Supabase insert error', error);
       return { error: error.message, status: 500 };
     }
 

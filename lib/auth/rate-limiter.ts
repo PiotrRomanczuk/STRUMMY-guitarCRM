@@ -70,7 +70,7 @@ export async function checkAuthRateLimit(
 
     if (countError) {
       // Fail closed — block on DB error for security
-      logger.error('[RateLimit] DB error during rate limit check:', countError.message);
+      logger.error('[RateLimit] DB error during rate limit check', countError);
       return { allowed: false, remaining: 0, resetTime: now + config.windowMs, retryAfter: 60 };
     }
 
@@ -129,7 +129,10 @@ export async function resetAuthRateLimit(
 export async function clearAllAuthRateLimits(): Promise<void> {
   try {
     const supabase = createAdminClient();
-    await supabase.from('auth_rate_limits' as never).delete().neq('id' as never, '00000000-0000-0000-0000-000000000000' as never);
+    await supabase
+      .from('auth_rate_limits' as never)
+      .delete()
+      .neq('id' as never, '00000000-0000-0000-0000-000000000000' as never);
   } catch {
     // Best effort
   }

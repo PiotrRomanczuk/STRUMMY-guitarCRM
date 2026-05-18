@@ -5,13 +5,22 @@ import { headers } from 'next/headers';
 import { logger } from '@/lib/logger';
 
 type AuthEventType =
-  | 'signup_attempted' | 'signup_succeeded' | 'signup_failed'
+  | 'signup_attempted'
+  | 'signup_succeeded'
+  | 'signup_failed'
   | 'email_confirmed'
-  | 'invite_sent' | 'invite_failed'
-  | 'user_created_by_admin' | 'shadow_user_created'
-  | 'signin_succeeded' | 'signin_failed' | 'signin_locked' | 'signin_rate_limited'
-  | 'password_reset_requested' | 'password_reset_failed'
-  | 'resend_verification_requested' | 'resend_verification_failed';
+  | 'invite_sent'
+  | 'invite_failed'
+  | 'user_created_by_admin'
+  | 'shadow_user_created'
+  | 'signin_succeeded'
+  | 'signin_failed'
+  | 'signin_locked'
+  | 'signin_rate_limited'
+  | 'password_reset_requested'
+  | 'password_reset_failed'
+  | 'resend_verification_requested'
+  | 'resend_verification_failed';
 
 type AuthEmailStatus = 'not_applicable' | 'sent' | 'failed' | 'skipped';
 
@@ -31,9 +40,7 @@ async function getClientIp(): Promise<string> {
   try {
     const headersList = await headers();
     const forwarded = headersList.get('x-forwarded-for');
-    return forwarded?.split(',')[0].trim() ||
-      headersList.get('x-real-ip') ||
-      'unknown';
+    return forwarded?.split(',')[0].trim() || headersList.get('x-real-ip') || 'unknown';
   } catch {
     return 'unknown';
   }
@@ -62,7 +69,7 @@ export async function logAuthEvent(payload: AuthEventPayload): Promise<string | 
       .single();
 
     if (error) {
-      logger.error('[AuthEventLogger] Failed to log event:', error.message);
+      logger.error('[AuthEventLogger] Failed to log event', error);
       return null;
     }
 
@@ -79,12 +86,27 @@ export async function logSignupAttempt(email: string) {
   return logAuthEvent({ eventType: 'signup_attempted', userEmail: email, success: true });
 }
 
-export async function logSignupSuccess(email: string, userId: string, emailStatus: AuthEmailStatus = 'sent') {
-  return logAuthEvent({ eventType: 'signup_succeeded', userEmail: email, userId, success: true, emailStatus });
+export async function logSignupSuccess(
+  email: string,
+  userId: string,
+  emailStatus: AuthEmailStatus = 'sent'
+) {
+  return logAuthEvent({
+    eventType: 'signup_succeeded',
+    userEmail: email,
+    userId,
+    success: true,
+    emailStatus,
+  });
 }
 
 export async function logSignupFailure(email: string, error: string) {
-  return logAuthEvent({ eventType: 'signup_failed', userEmail: email, success: false, errorMessage: error });
+  return logAuthEvent({
+    eventType: 'signup_failed',
+    userEmail: email,
+    success: false,
+    errorMessage: error,
+  });
 }
 
 export async function logSigninSuccess(email: string, userId: string) {
@@ -92,15 +114,30 @@ export async function logSigninSuccess(email: string, userId: string) {
 }
 
 export async function logSigninFailure(email: string, error: string) {
-  return logAuthEvent({ eventType: 'signin_failed', userEmail: email, success: false, errorMessage: error });
+  return logAuthEvent({
+    eventType: 'signin_failed',
+    userEmail: email,
+    success: false,
+    errorMessage: error,
+  });
 }
 
 export async function logSigninLocked(email: string) {
-  return logAuthEvent({ eventType: 'signin_locked', userEmail: email, success: false, errorMessage: 'Account locked' });
+  return logAuthEvent({
+    eventType: 'signin_locked',
+    userEmail: email,
+    success: false,
+    errorMessage: 'Account locked',
+  });
 }
 
 export async function logSigninRateLimited(email: string) {
-  return logAuthEvent({ eventType: 'signin_rate_limited', userEmail: email, success: false, errorMessage: 'Rate limited' });
+  return logAuthEvent({
+    eventType: 'signin_rate_limited',
+    userEmail: email,
+    success: false,
+    errorMessage: 'Rate limited',
+  });
 }
 
 export async function logEmailConfirmed(email: string, userId: string) {
@@ -108,27 +145,62 @@ export async function logEmailConfirmed(email: string, userId: string) {
 }
 
 export async function logInviteSent(email: string, actorId: string, userId: string) {
-  return logAuthEvent({ eventType: 'invite_sent', userEmail: email, actorId, userId, success: true, emailStatus: 'sent' });
+  return logAuthEvent({
+    eventType: 'invite_sent',
+    userEmail: email,
+    actorId,
+    userId,
+    success: true,
+    emailStatus: 'sent',
+  });
 }
 
 export async function logInviteFailed(email: string, actorId: string, error: string) {
-  return logAuthEvent({ eventType: 'invite_failed', userEmail: email, actorId, success: false, errorMessage: error });
+  return logAuthEvent({
+    eventType: 'invite_failed',
+    userEmail: email,
+    actorId,
+    success: false,
+    errorMessage: error,
+  });
 }
 
 export async function logAdminUserCreated(email: string, actorId: string, userId: string) {
-  return logAuthEvent({ eventType: 'user_created_by_admin', userEmail: email, actorId, userId, success: true });
+  return logAuthEvent({
+    eventType: 'user_created_by_admin',
+    userEmail: email,
+    actorId,
+    userId,
+    success: true,
+  });
 }
 
 export async function logShadowUserCreated(email: string, actorId: string, userId: string) {
-  return logAuthEvent({ eventType: 'shadow_user_created', userEmail: email, actorId, userId, success: true });
+  return logAuthEvent({
+    eventType: 'shadow_user_created',
+    userEmail: email,
+    actorId,
+    userId,
+    success: true,
+  });
 }
 
 export async function logPasswordResetRequested(email: string) {
-  return logAuthEvent({ eventType: 'password_reset_requested', userEmail: email, success: true, emailStatus: 'sent' });
+  return logAuthEvent({
+    eventType: 'password_reset_requested',
+    userEmail: email,
+    success: true,
+    emailStatus: 'sent',
+  });
 }
 
 export async function logPasswordResetFailed(email: string, error: string) {
-  return logAuthEvent({ eventType: 'password_reset_failed', userEmail: email, success: false, errorMessage: error });
+  return logAuthEvent({
+    eventType: 'password_reset_failed',
+    userEmail: email,
+    success: false,
+    errorMessage: error,
+  });
 }
 
 export async function logResendVerification(email: string, success: boolean, error?: string) {
