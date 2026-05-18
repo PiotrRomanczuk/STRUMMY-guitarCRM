@@ -5,9 +5,7 @@ jest.mock('@sentry/nextjs', () => ({
 }));
 
 import * as Sentry from '@sentry/nextjs';
-import { __internal, createLogger, logger } from '../logger';
-
-const { redactObject, REDACT_KEYS } = __internal;
+import { REDACT_KEYS, createLogger, logger, redactObject } from '../logger';
 
 describe('redactObject', () => {
   it('masks top-level sensitive keys', () => {
@@ -56,7 +54,7 @@ describe('redactObject', () => {
     expect(out.items).toEqual([{ token: '<redacted>' }, { token: '<redacted>' }]);
   });
 
-  it('preserves null and undefined', () => {
+  it('preserves null, undefined, and falsy primitives', () => {
     const out = redactObject({ a: null, b: undefined, c: 0, d: false });
     expect(out.a).toBeNull();
     expect(out.b).toBeUndefined();
@@ -82,16 +80,12 @@ describe('REDACT_KEYS', () => {
   });
 });
 
-describe('logger.error', () => {
+describe('logger Sentry contract', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-  afterEach(() => {
-    jest.restoreAllMocks();
   });
 
-  it('calls Sentry.captureException with a real Error and redacted extras', () => {
+  it('logger.error with a real Error calls captureException with redacted extras', () => {
     const err = new Error('boom');
     logger.error('something failed', err, { token: 'abc', userId: 'u1' });
 
@@ -102,46 +96,32 @@ describe('logger.error', () => {
     expect(arg.extra.message).toBe('something failed');
   });
 
-  it('falls back to captureMessage when error is not an Error instance', () => {
+  it('logger.error with a non-Error falls back to captureMessage', () => {
     logger.error('plain string error', 'string-error', { password: 's' });
     expect(Sentry.captureMessage).toHaveBeenCalledTimes(1);
     const arg = (Sentry.captureMessage as jest.Mock).mock.calls[0][1];
     expect(arg.extra.password).toBe('<redacted>');
   });
-});
 
-describe('logger.info', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-  });
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
-  it('logs in any environment (no isDev gate)', () => {
-    logger.info('hello');
-    expect(console.log).toHaveBeenCalledTimes(1);
-  });
-
-  it('redacts context in console output', () => {
-    logger.info('with secrets', { token: 't', userId: 'u1' });
-    const line = (console.log as jest.Mock).mock.calls[0][0] as string;
-    expect(line).toContain('<redacted>');
-    expect(line).not.toContain('"token":"t"');
-    expect(line).toContain('u1');
-  });
-
-  it('adds a Sentry breadcrumb with redacted data', () => {
-    logger.info('event', { access_token: 'a' });
+  it('logger.info adds a Sentry breadcrumb with redacted data', () => {
+    logger.info('event', { access_token: 'a', userId: 'u' });
+    expect(Sentry.addBreadcrumb).toHaveBeenCalledTimes(1);
     const arg = (Sentry.addBreadcrumb as jest.Mock).mock.calls[0][0];
     expect(arg.data.access_token).toBe('<redacted>');
+    expect(arg.data.userId).toBe('u');
     expect(arg.level).toBe('info');
+  });
+
+  it('logger.warn adds a Sentry breadcrumb with warning level', () => {
+    logger.warn('about to fail', { reason: 'timeout' });
+    expect(Sentry.addBreadcrumb).toHaveBeenCalledTimes(1);
+    const arg = (Sentry.addBreadcrumb as jest.Mock).mock.calls[0][0];
+    expect(arg.level).toBe('warning');
   });
 });
 
 describe('createLogger', () => {
-  it('returns the same shape as the default logger', () => {
+  it('returns the BoundLogger shape', () => {
     const l = createLogger('test');
     expect(typeof l.debug).toBe('function');
     expect(typeof l.info).toBe('function');
@@ -149,11 +129,10 @@ describe('createLogger', () => {
     expect(typeof l.error).toBe('function');
   });
 
-  it('namespaces the prefix in output', () => {
-    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  it('namespaces the prefix in the Sentry breadcrumb message', () => {
+    jest.clearAllMocks();
     createLogger('my-mod').info('hi');
-    const line = spy.mock.calls[0][0] as string;
-    expect(line).toContain('[my-mod]');
-    spy.mockRestore();
+    const arg = (Sentry.addBreadcrumb as jest.Mock).mock.calls[0][0];
+    expect(arg.message).toContain('[my-mod]');
   });
 });

@@ -89,7 +89,7 @@ CODE-AGENTS/
 .mcp.json
 server.log
 *.log
-logs/
+/logs/
 temp/
 
 # Backup files

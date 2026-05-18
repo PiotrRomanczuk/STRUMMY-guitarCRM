@@ -1,143 +1,52 @@
 /**
- * Structured logger with Sentry integration.
+ * Structured logger — public facade. ADR 0003.
  *
  * Public API (stable per ADR 0003 — do not change without amending it):
  *   logger.{debug,info,warn,error}        — default singleton
  *   createLogger('namespace').{debug,..}  — namespaced child logger
  *
- * Levels:
- *   debug  — dev console only (LOG_LEVEL=debug to force on in prod), no Sentry
- *   info   — always console.log + Sentry breadcrumb (was dev-only pre-Phase 1)
- *   warn   — always console.warn + Sentry breadcrumb
- *   error  — always console.error + Sentry captureException / captureMessage
+ * Backend dispatch:
+ *   Node runtime → Pino (structured JSON in prod, pino-pretty in dev)
+ *   Edge runtime → console-based fallback (Phase 1 behaviour)
  *
- * Secret redaction:
- *   Context keys matching REDACT_KEYS are replaced with `<redacted>` before
- *   serialization. Centralized — callers do not hand-mask. See ADR 0003 §3.
+ * Cross-cutting concerns handled inside the backends:
+ *   - Secret redaction for token / password / authorization / cookie / …
+ *   - Sentry tying (info/warn → breadcrumb; error → captureException)
+ *   - Request-scoped context (requestId, userId) via AsyncLocalStorage
  *
- * Phase 1 of ADR 0003 (lib/logger.ts header comment).
+ * See `lib/logger/` for the backends + request-context.
  */
 
-import * as Sentry from '@sentry/nextjs';
+import { isBrowserRuntime, isEdgeRuntime } from './logger/shared';
+import { makeConsoleLogger } from './logger/console-backend';
+import { makePinoLogger } from './logger/pino-backend';
+import type { BoundLogger } from './logger/shared';
 
-type LogContext = Record<string, unknown>;
+// Re-export the request-context helpers so callers don't reach into the
+// internal directory.
+export {
+  runWithRequestContext,
+  getRequestContext,
+  generateRequestId,
+  type RequestContext,
+} from './logger/request-context';
 
-// Edge-safe env checks — `process` may be a stub in Edge runtime.
-const NODE_ENV = typeof process !== 'undefined' ? process.env?.NODE_ENV : undefined;
-const isDev = NODE_ENV === 'development';
-const LOG_LEVEL = (
-  typeof process !== 'undefined' ? process.env?.LOG_LEVEL : undefined
-)?.toLowerCase();
-const debugEnabled = isDev || LOG_LEVEL === 'debug';
-
-/**
- * Keys whose values are masked before serialization. Match is
- * case-insensitive and applies to top-level keys of the context object.
- * Nested objects are walked one level for the common `{ headers: { authorization } }` shape.
- */
-const REDACT_KEYS = new Set([
-  'token',
-  'access_token',
-  'accesstoken',
-  'refresh_token',
-  'refreshtoken',
-  'password',
-  'api_key',
-  'apikey',
-  'secret',
-  'client_secret',
-  'clientsecret',
-  'authorization',
-  'cookie',
-  'set-cookie',
-]);
-
-function redactValue(value: unknown): unknown {
-  if (value === null || value === undefined) return value;
-  if (Array.isArray(value)) return value.map(redactValue);
-  if (typeof value === 'object') return redactObject(value as Record<string, unknown>);
-  return value;
-}
-
-function redactObject(obj: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (REDACT_KEYS.has(key.toLowerCase())) {
-      out[key] = '<redacted>';
-    } else {
-      out[key] = redactValue(value);
-    }
+function makeLogger(prefix: string): BoundLogger {
+  // Browser bundle (client components like error boundaries): console only.
+  // Pino is statically imported above and ships in the client bundle, but
+  // its root-logger construction is lazy — calling makePinoLogger here
+  // would hit `pino.multistream` and crash in the browser stub.
+  if (isBrowserRuntime() || isEdgeRuntime()) {
+    return makeConsoleLogger(prefix);
   }
-  return out;
-}
-
-function safeStringify(ctx: LogContext): string {
-  try {
-    return JSON.stringify(redactObject(ctx));
-  } catch {
-    return '[unserializable context]';
-  }
-}
-
-function fmt(level: string, prefix: string, message: string, context?: LogContext): string {
-  const ts = new Date().toISOString();
-  const ctx = context && Object.keys(context).length > 0 ? ` ${safeStringify(context)}` : '';
-  return `[${ts}] [${level}] [${prefix}] ${message}${ctx}`;
-}
-
-function makeLogger(prefix: string) {
-  return {
-    /** Debug — dev or LOG_LEVEL=debug only, no Sentry */
-    debug(message: string, context?: LogContext) {
-      if (!debugEnabled) return;
-      // eslint-disable-next-line no-console -- logger is the chokepoint
-      console.log(fmt('DEBUG', prefix, message, context));
-    },
-
-    /** Info — always logged + Sentry breadcrumb */
-    info(message: string, context?: LogContext) {
-      // eslint-disable-next-line no-console -- logger is the chokepoint
-      console.log(fmt('INFO', prefix, message, context));
-      Sentry.addBreadcrumb({
-        message: `[${prefix}] ${message}`,
-        data: context ? redactObject(context) : undefined,
-        level: 'info',
-      });
-    },
-
-    /** Warn — always log + Sentry breadcrumb */
-    warn(message: string, context?: LogContext) {
-      console.warn(fmt('WARN', prefix, message, context));
-      Sentry.addBreadcrumb({
-        message: `[${prefix}] ${message}`,
-        data: context ? redactObject(context) : undefined,
-        level: 'warning',
-      });
-    },
-
-    /** Error — always log + Sentry capture */
-    error(message: string, error?: unknown, context?: LogContext) {
-      console.error(fmt('ERROR', prefix, message, context), error ?? '');
-      const safeExtra = context ? redactObject(context) : {};
-      if (error instanceof Error) {
-        Sentry.captureException(error, {
-          extra: { message, prefix, ...safeExtra },
-        });
-      } else {
-        Sentry.captureMessage(`[${prefix}] ${message}`, {
-          level: 'error',
-          extra: { error, prefix, ...safeExtra },
-        });
-      }
-    },
-  };
+  return makePinoLogger(prefix);
 }
 
 /** Default (un-prefixed) logger for quick usage */
 export const logger = makeLogger('app');
 
 /** Create a namespaced logger — keeps backward compat with old API */
-export function createLogger(prefix: string) {
+export function createLogger(prefix: string): BoundLogger {
   return makeLogger(prefix);
 }
 
@@ -147,5 +56,8 @@ export const authLogger = createLogger('Auth');
 export const apiLogger = createLogger('API');
 export const dbLogger = createLogger('Database');
 
-// Exposed for tests only — do not import from app code.
-export const __internal = { redactObject, safeStringify, REDACT_KEYS };
+// Internal helpers exposed for unit tests. Do not import from app code.
+export { redactObject, safeStringify, REDACT_KEYS } from './logger/shared';
+export const __internal = (() => {
+  return { isEdgeRuntime };
+})();
