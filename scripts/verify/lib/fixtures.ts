@@ -1,11 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServiceClient } from './supabase-clients';
 
-// Seeded demo accounts (see CLAUDE.md "Dev Credentials"). Passwords are local-only.
+// Seeded demo accounts — these are LOCAL-DEV ONLY credentials, also documented
+// openly in CLAUDE.md ("Dev Credentials") and matched by supabase/seed.sql.
+// They unlock nothing in production. GitGuardian inline pragmas below mark
+// them as intentional fixtures, not leaked secrets.
 export const DEMO = {
-  admin: { email: 'p.romanczuk@gmail.com', password: 'test123_admin' },
-  teacherA: { email: 'sarah@strummy.app', password: 'Demo2024!' },
-  studentA: { email: 'emma@strummy.app', password: 'Demo2024!' },
+  admin: { email: 'p.romanczuk@gmail.com', password: 'test123_admin' }, // pragma: allowlist secret
+  teacherA: { email: 'sarah@strummy.app', password: 'Demo2024!' }, // pragma: allowlist secret
+  studentA: { email: 'emma@strummy.app', password: 'Demo2024!' }, // pragma: allowlist secret
 } as const;
 
 const EPHEMERAL_PASSWORD = `verify-crud-${Date.now()}`;
