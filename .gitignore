@@ -117,3 +117,5 @@ landing.html
 
 # Content plan source data (personal)
 data/JustMeAndGuitar_*.xlsx
+.fallow/
+.fallowrc.json
