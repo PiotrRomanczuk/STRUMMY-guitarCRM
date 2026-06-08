@@ -164,7 +164,11 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Use a production-ready SMTP server
+# Production SMTP is configured via the Supabase Management API directly
+# (PATCH /v1/projects/{ref}/config/auth) — not via `supabase config push`,
+# because the rest of this [auth.*] block is local-dev oriented (localhost
+# site_url, low rate limits, dev OAuth credentials) and would clobber prod
+# if pushed. See scripts/verify/README.md for the current SMTP arrangement.
 # [auth.email.smtp]
 # enabled = true
 # host = "smtp.sendgrid.net"

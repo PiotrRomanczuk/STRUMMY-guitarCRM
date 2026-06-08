@@ -226,11 +226,27 @@ async function assertRlsSelfQuery(reporter: Reporter, ctx: Context): Promise<voi
 
 async function cleanup(reporter: Reporter, admin: SupabaseClient, ctx: Context): Promise<void> {
   await reporter.step('cleanup (delete fixture rows + auth user)', async () => {
-    if (ctx.lessonId) await admin.from('lessons').delete().eq('id', ctx.lessonId);
-    if (ctx.assignmentId) await admin.from('assignments').delete().eq('id', ctx.assignmentId);
+    const failures: string[] = [];
+    const tryDel = async (
+      label: string,
+      op: () => Promise<{ error: { message: string } | null }>
+    ): Promise<void> => {
+      const { error } = await op();
+      if (error) failures.push(`${label}: ${error.message}`);
+    };
+    if (ctx.lessonId)
+      await tryDel('lesson', () => admin.from('lessons').delete().eq('id', ctx.lessonId!));
+    if (ctx.assignmentId)
+      await tryDel('assignment', () =>
+        admin.from('assignments').delete().eq('id', ctx.assignmentId!)
+      );
     if (ctx.notificationId)
-      await admin.from('in_app_notifications').delete().eq('id', ctx.notificationId);
-    if (ctx.newUserId) await admin.auth.admin.deleteUser(ctx.newUserId);
-    await admin.from('profiles').delete().eq('id', ctx.shadowId);
+      await tryDel('notification', () =>
+        admin.from('in_app_notifications').delete().eq('id', ctx.notificationId!)
+      );
+    if (ctx.newUserId) await tryDel('auth user', () => admin.auth.admin.deleteUser(ctx.newUserId!));
+    await tryDel('shadow profile', () => admin.from('profiles').delete().eq('id', ctx.shadowId));
+    if (failures.length)
+      throw new Error(`${failures.length} cleanup step(s) failed:\n  ${failures.join('\n  ')}`);
   });
 }

@@ -44,8 +44,19 @@ export async function seedCrudFixtures(): Promise<CrudFixtures> {
     lessonA,
     lessonB,
     cleanup: async () => {
-      for (const id of tracked.lessons) await admin.from('lessons').delete().eq('id', id);
-      for (const id of tracked.authUsers) await admin.auth.admin.deleteUser(id);
+      const failures: string[] = [];
+      for (const id of tracked.lessons) {
+        const { error } = await admin.from('lessons').delete().eq('id', id);
+        if (error) failures.push(`delete lessons[${id}]: ${error.message}`);
+      }
+      for (const id of tracked.authUsers) {
+        const { error } = await admin.auth.admin.deleteUser(id);
+        if (error) failures.push(`deleteUser(${id}): ${error.message}`);
+      }
+      if (failures.length)
+        throw new Error(
+          `${failures.length} fixture cleanup step(s) failed:\n  ${failures.join('\n  ')}`
+        );
     },
   };
 }

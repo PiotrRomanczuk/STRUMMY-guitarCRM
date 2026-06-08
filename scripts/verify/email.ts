@@ -68,8 +68,15 @@ async function runLocal(reporter: Reporter, email: string): Promise<void> {
     );
   } finally {
     await reporter.step('cleanup (delete invited user + Mailpit messages)', async () => {
-      if (userId) await admin.auth.admin.deleteUser(userId);
-      await fetch(`${MAILPIT_BASE}/api/v1/messages`, { method: 'DELETE' });
+      const failures: string[] = [];
+      if (userId) {
+        const { error } = await admin.auth.admin.deleteUser(userId);
+        if (error) failures.push(`deleteUser: ${error.message}`);
+      }
+      const mp = await fetch(`${MAILPIT_BASE}/api/v1/messages`, { method: 'DELETE' });
+      if (!mp.ok) failures.push(`Mailpit clear: HTTP ${mp.status}`);
+      if (failures.length)
+        throw new Error(`${failures.length} cleanup step(s) failed:\n  ${failures.join('\n  ')}`);
     });
   }
 }
@@ -104,7 +111,9 @@ async function runProd(reporter: Reporter, email: string): Promise<void> {
     }
   } finally {
     await reporter.step('cleanup (delete invited PROD auth user)', async () => {
-      if (userId) await admin.auth.admin.deleteUser(userId);
+      if (!userId) return;
+      const { error } = await admin.auth.admin.deleteUser(userId);
+      if (error) throw new Error(`deleteUser(${userId}): ${error.message}`);
     });
   }
 }
