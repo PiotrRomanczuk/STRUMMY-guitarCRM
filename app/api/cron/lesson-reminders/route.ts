@@ -17,6 +17,10 @@ import {
   logError,
 } from '@/lib/logging/notification-logger';
 import { verifyCronSecret } from '@/lib/auth/cron-auth';
+// home-ops: cross-cut observability — emits lesson_reminders_{started,
+// succeeded,failed} to the home-ops console. Init happens once in
+// instrumentation.ts; no-op when INGEST_URL/INGEST_TOKEN aren't set.
+import * as hops from '@/lib/observability/home-ops-log.mjs';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +32,7 @@ export async function GET(request: Request) {
 
   try {
     logCronStart('lesson-reminders');
+    hops.event('lesson_reminders_started');
 
     const supabase = createAdminClient();
 
@@ -57,6 +62,10 @@ export async function GET(request: Request) {
         'lesson-reminders',
         error instanceof Error ? error : new Error('Failed to fetch lessons')
       );
+      hops.event('lesson_reminders_failed', {
+        level: 'error',
+        data: { stage: 'fetch_lessons', error: error.message, duration_ms: Date.now() - startTime },
+      });
       return NextResponse.json(
         { success: false, error: 'Failed to fetch lessons' },
         { status: 200 }
@@ -64,9 +73,9 @@ export async function GET(request: Request) {
     }
 
     if (!lessons || lessons.length === 0) {
-      logCronComplete('lesson-reminders', Date.now() - startTime, {
-        lessons_found: 0,
-      });
+      const duration_ms = Date.now() - startTime;
+      logCronComplete('lesson-reminders', duration_ms, { lessons_found: 0 });
+      hops.event('lesson_reminders_succeeded', { data: { lessons_found: 0, duration_ms } });
       return NextResponse.json({
         success: true,
         message: 'No lessons to remind',
@@ -130,6 +139,10 @@ export async function GET(request: Request) {
       queued,
       failed,
     });
+    hops.event('lesson_reminders_succeeded', {
+      level: failed > 0 ? 'warn' : 'info',
+      data: { lessons_found: lessons.length, queued, failed, duration_ms: duration },
+    });
 
     return NextResponse.json({
       success: true,
@@ -138,10 +151,12 @@ export async function GET(request: Request) {
       total: lessons.length,
     });
   } catch (error) {
-    logCronError(
-      'lesson-reminders',
-      error instanceof Error ? error : new Error('Unknown error')
-    );
+    const err = error instanceof Error ? error : new Error('Unknown error');
+    logCronError('lesson-reminders', err);
+    hops.event('lesson_reminders_failed', {
+      level: 'error',
+      data: { error: err.message, duration_ms: Date.now() - startTime },
+    });
 
     return NextResponse.json(
       { success: false, error: 'Internal Server Error' },
