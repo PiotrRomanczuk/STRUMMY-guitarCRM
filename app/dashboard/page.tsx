@@ -6,9 +6,11 @@ import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingCard } from '@/components/dashboard/states';
 import { TodayLessons, UpcomingLessons } from '@/components/dashboard/cards';
+import { StudentDashboardEditorial } from '@/components/dashboard/editorial/student/StudentDashboardEditorial';
 import { TeacherDashboardEditorial } from '@/components/dashboard/editorial/teacher/TeacherDashboardEditorial';
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getStudentNextLesson, getStudentTopSongs } from '@/lib/services/student-dashboard-queries';
 import {
   getTeacherDayLessons,
   summariseDayLessons,
@@ -84,6 +86,26 @@ async function TeacherEditorialView({ userId, email }: { userId: string; email: 
   );
 }
 
+async function StudentEditorialView({ userId, email }: { userId: string; email: string }) {
+  const now = new Date();
+  const [fullName, nextLesson, songs] = await Promise.all([
+    loadProfileName(userId),
+    getStudentNextLesson(userId),
+    getStudentTopSongs(userId),
+  ]);
+  return (
+    <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
+      <StudentDashboardEditorial
+        fullName={fullName}
+        email={email}
+        now={now}
+        nextLesson={nextLesson}
+        songs={songs}
+      />
+    </div>
+  );
+}
+
 function LegacyShell({
   user,
   isAdmin,
@@ -147,6 +169,10 @@ export default async function DashboardPage({
 
   if (activeView === 'teacher' && user) {
     return <TeacherEditorialView userId={user.id} email={user.email ?? ''} />;
+  }
+
+  if (activeView === 'student' && user) {
+    return <StudentEditorialView userId={user.id} email={user.email ?? ''} />;
   }
 
   return (
