@@ -9,22 +9,31 @@
 # Required GitHub Actions secrets:
 #   CRON_SECRET       - same value as the Vercel env var
 #   PRODUCTION_URL    - production app URL (e.g. https://strummy.app)
+#
+# 2026-06-09 — schedule triggers disabled. Both notification-queue and
+# admin-monitoring depend on the notification_log, notification_queue,
+# notification_preferences tables and the get_bounce_stats() RPC, all of
+# which are missing from the production Supabase project. Every run was
+# logging 4 schema-drift errors per day to system_logs (see PR #453 for
+# the full reconciliation report). Re-enable by uncommenting the
+# `schedule:` block below once those migrations are restored in
+# production. workflow_dispatch is preserved for manual debugging.
 
 name: Scheduled Cron Jobs
 
 on:
-  schedule:
-    # Every 6 hours — notification queue + auth cleanup
-    # (was every 15min — caused ~2,880 runs/month, $100+ in Actions minutes)
-    - cron: "0 */6 * * *"
-    # Once daily at 08:00 UTC — admin monitoring
-    - cron: "0 8 * * *"
+  # schedule:
+  #   # Every 6 hours — notification queue + auth cleanup
+  #   # (was every 15min — caused ~2,880 runs/month, $100+ in Actions minutes)
+  #   - cron: "0 */6 * * *"
+  #   # Once daily at 08:00 UTC — admin monitoring
+  #   - cron: "0 8 * * *"
 
   # Allow manual trigger for debugging
   workflow_dispatch:
     inputs:
       job:
-        description: "Which job to run"
+        description: 'Which job to run'
         required: true
         type: choice
         options:
