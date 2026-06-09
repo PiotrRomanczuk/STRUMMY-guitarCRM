@@ -11,20 +11,49 @@ type Props = {
   breakdown: LessonsBreakdown;
   canCreate: boolean;
   showStudentColumn: boolean;
+  activeStatuses: string[];
+  activeSort: 'newest' | 'oldest';
 };
 
 const STATUS_KEYS = ['scheduled', 'in_progress', 'completed', 'cancelled'] as const;
+
+const buildFilterHref = (current: string[], toggle: string, sort: 'newest' | 'oldest'): string => {
+  const next = current.includes(toggle)
+    ? current.filter((s) => s !== toggle)
+    : [...current, toggle];
+  const params = new URLSearchParams();
+  if (next.length > 0 && next.length < STATUS_KEYS.length) {
+    params.set('status', next.join(','));
+  }
+  if (sort === 'oldest') params.set('sort', 'oldest');
+  const qs = params.toString();
+  return qs ? `/dashboard/lessons?${qs}` : '/dashboard/lessons';
+};
+
+const buildSortHref = (current: string[], nextSort: 'newest' | 'oldest'): string => {
+  const params = new URLSearchParams();
+  if (current.length > 0 && current.length < STATUS_KEYS.length) {
+    params.set('status', current.join(','));
+  }
+  if (nextSort === 'oldest') params.set('sort', 'oldest');
+  const qs = params.toString();
+  return qs ? `/dashboard/lessons?${qs}` : '/dashboard/lessons';
+};
 
 const Header = ({
   count,
   canCreate,
   showStudentColumn,
   breakdown,
+  activeStatuses,
+  activeSort,
 }: {
   count: number;
   canCreate: boolean;
   showStudentColumn: boolean;
   breakdown: LessonsBreakdown;
+  activeStatuses: string[];
+  activeSort: 'newest' | 'oldest';
 }) => (
   <div style={{ padding: '0 0 18px' }}>
     <div
@@ -107,18 +136,23 @@ const Header = ({
       {STATUS_KEYS.map((k) => {
         const label = lessonStatusLabel(k);
         const colour = lessonStatusColour(k);
+        const active = activeStatuses.includes(k);
         return (
-          <span
+          <Link
             key={k}
+            href={buildFilterHref(activeStatuses, k, activeSort)}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
               padding: '4px 10px',
               borderRadius: 99,
-              border: '1px solid var(--rule)',
+              border: `1px solid ${active ? 'var(--ink)' : 'var(--rule)'}`,
+              background: active ? 'var(--ink)' : 'transparent',
               fontSize: 12,
-              color: 'var(--ink-3)',
+              color: active ? 'var(--paper)' : 'var(--ink-3)',
+              textDecoration: 'none',
+              fontFamily: 'var(--sans)',
             }}
           >
             <span
@@ -130,12 +164,33 @@ const Header = ({
               }}
             />
             {label}
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-4)' }}>
+            <span
+              style={{
+                fontFamily: 'var(--mono)',
+                fontSize: 10,
+                color: active ? 'rgba(255,255,255,.6)' : 'var(--ink-4)',
+              }}
+            >
               {breakdown.byStatus[k] ?? 0}
             </span>
-          </span>
+          </Link>
         );
       })}
+      <span style={{ flex: 1 }} />
+      <Link
+        href={buildSortHref(activeStatuses, activeSort === 'newest' ? 'oldest' : 'newest')}
+        style={{
+          padding: '4px 10px',
+          borderRadius: 99,
+          border: '1px solid var(--rule)',
+          fontSize: 12,
+          color: 'var(--ink-3)',
+          textDecoration: 'none',
+          fontFamily: 'var(--sans)',
+        }}
+      >
+        {activeSort === 'newest' ? 'Newest first' : 'Oldest first'}
+      </Link>
     </div>
   </div>
 );
@@ -145,6 +200,8 @@ export const LessonsListEditorial = ({
   breakdown,
   canCreate,
   showStudentColumn,
+  activeStatuses,
+  activeSort,
 }: Props) => {
   const tableColumns = showStudentColumn ? '160px 1fr 130px 130px' : '160px 1fr 130px';
 
@@ -160,6 +217,8 @@ export const LessonsListEditorial = ({
       }}
     >
       <Header
+        activeStatuses={activeStatuses}
+        activeSort={activeSort}
         count={lessons.length}
         canCreate={canCreate}
         showStudentColumn={showStudentColumn}

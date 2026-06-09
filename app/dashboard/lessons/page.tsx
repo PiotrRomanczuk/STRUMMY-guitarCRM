@@ -28,13 +28,33 @@ const fraunces = Fraunces({
   display: 'swap',
 });
 
-export default async function LessonsPage() {
+const STATUS_KEYS = new Set(['scheduled', 'in_progress', 'completed', 'cancelled']);
+
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+const parseStatuses = (value: string | string[] | undefined): string[] => {
+  if (!value) return [];
+  const raw = Array.isArray(value) ? value.join(',') : value;
+  return raw
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => STATUS_KEYS.has(s));
+};
+
+export default async function LessonsPage({ searchParams }: { searchParams: SearchParams }) {
   const { user, isAdmin, isTeacher, isStudent } = await getUserWithRolesSSR();
   if (!user) {
     redirect('/sign-in?redirect=/dashboard/lessons');
   }
 
-  const lessons = await getRecentLessons(user.id, isStudent && !isTeacher && !isAdmin);
+  const params = await searchParams;
+  const activeStatuses = parseStatuses(params.status);
+  const activeSort: 'newest' | 'oldest' = params.sort === 'oldest' ? 'oldest' : 'newest';
+
+  const lessons = await getRecentLessons(user.id, isStudent && !isTeacher && !isAdmin, {
+    statuses: activeStatuses.length > 0 ? activeStatuses : undefined,
+    sort: activeSort,
+  });
   const breakdown = summariseLessons(lessons);
   const canCreate = isTeacher || isAdmin;
   const showStudentColumn = isTeacher || isAdmin;
@@ -46,6 +66,8 @@ export default async function LessonsPage() {
         breakdown={breakdown}
         canCreate={canCreate}
         showStudentColumn={showStudentColumn}
+        activeStatuses={activeStatuses}
+        activeSort={activeSort}
       />
     </div>
   );

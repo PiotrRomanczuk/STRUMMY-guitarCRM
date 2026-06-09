@@ -38,23 +38,34 @@ export const lessonStatusLabel = (status: string): string => STATUS_LABELS[statu
 export const lessonStatusColour = (status: string): string =>
   STATUS_COLOURS[status] ?? 'var(--ink-4)';
 
+export type LessonsFilters = {
+  statuses?: string[];
+  sort?: 'newest' | 'oldest';
+};
+
 export async function getRecentLessons(
   userId: string,
   isStudent: boolean,
+  filters: LessonsFilters = {},
   limit = 60
 ): Promise<LessonRow[]> {
   const supabase = await createClient();
 
   const filterColumn = isStudent ? 'student_id' : 'teacher_id';
-  const { data, error } = await supabase
+  let query = supabase
     .from('lessons')
     .select(
       'id, scheduled_at, status, title, teacher_id, student_id, student:profiles!lessons_student_id_fkey(id, full_name, email)'
     )
     .eq(filterColumn, userId)
     .is('deleted_at', null)
-    .order('scheduled_at', { ascending: false })
-    .limit(limit);
+    .order('scheduled_at', { ascending: filters.sort === 'oldest' });
+
+  if (filters.statuses && filters.statuses.length > 0) {
+    query = query.in('status', filters.statuses);
+  }
+
+  const { data, error } = await query.limit(limit);
 
   if (error) {
     logger.warn('[lessons-queries] recent lessons error', {
