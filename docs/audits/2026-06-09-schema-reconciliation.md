@@ -222,9 +222,85 @@ orphans_in_mcp        ∋ {assignment_history, lesson_history, song_sections, so
 
 ---
 
-## Open questions (for Piotr)
+## Open questions (answered 2026-06-09)
 
-1. **Where does production talk to?** Vercel env vars are the answer.
-2. **Is `zmlluqqqwrfhygvpfqka` a deliberate staging env, an abandoned project, or the actual production project?**
-3. **Are the orphan `*_history` table CREATEs really lost?** If yes, they need to be reconstructed before any new contributor can `supabase db reset` a fresh local clone.
-4. **Should the local stack on `uwh` be the source of truth for now?** If yes, getting node-fetch to work against `192.168.1.75:54321` is worth a 30-minute fix (currently `EHOSTUNREACH`, only curl/ping work — per CLAUDE.md note 2026-06-08).
+### Q1. Where does production talk to?
+
+**Answer**: `zmlluqqqwrfhygvpfqka.supabase.co` — same project as the MCP. Confirmed via `vercel env pull --environment=production`:
+
+```text
+POSTGRES_URL=postgres://postgres.zmlluqqqwrfhygvpfqka:…@aws-1-us-east-1.pooler.supabase.com:6543/postgres
+POSTGRES_URL_NON_POOLING=postgres://postgres.zmlluqqqwrfhygvpfqka:…@aws-1-us-east-1.pooler.supabase.com:5432/postgres
+NEXT_PUBLIC_SUPABASE_URL=""    ← intentionally empty in Vercel; runtime uses POSTGRES_* via the Supabase Vercel integration
+```
+
+### Q2. Is `zmlluqqqwrfhygvpfqka` staging, abandoned, or production?
+
+**Answer**: **It is production.** Same Postgres URL as Vercel prod above. The 14 missing tables really are absent from the database that serves `strummy.app`.
+
+Re-querying via MCP (`execute_sql … pg_tables` against the candidate list) confirms the absences are real and not an MCP cache quirk. Only these legacy candidates actually exist in prod: `assignment_history`, `lesson_history`, `song_sections`, `song_status_history`, `user_history`, `user_roles`. The other 14 (notification*\*, audit_log, sync_conflicts, content*\*, hashtag_sets, etc.) are not there.
+
+**Implication**: every `.from('notification_log')`, `.from('notification_queue')`, `.from('audit_log')`, `.from('sync_conflicts')`, `.from('user_settings')`, `.from('content_posts')`, `.from('hashtag_sets')`, `.from('student_skills')` call in the codebase fails at runtime on production with a `relation does not exist` error. This isn't a typing problem — it's a real bug surface.
+
+### Q3. Are the orphan `*_history` table CREATEs really lost?
+
+**Answer**: They exist in git history but were **deleted** by commit `2cde4c2b` (Jan 30, 2026, "refactor: major codebase cleanup and migration reorganization") which deleted 80 migration files including:
+
+```
+20260106000001_create_assignment_history_table.sql
+20260106000002_create_lesson_history_table.sql
+20260106000003_create_history_triggers.sql
+20260106000004_create_user_history_table.sql
+20260106000005_create_user_history_trigger.sql
+20260105100015_create_song_status_history_table.sql
+```
+
+The reorganization renamed most files into the new `001_*` … `026_*` numbered scheme, but this handful never made it across. They can be recovered with:
+
+```bash
+git show 2cde4c2b^:supabase/migrations/20260106000001_create_assignment_history_table.sql > ...
+```
+
+**`song_sections` is different**: it was never in the repo as a CREATE TABLE. Commit `72873262` ("feat(songs): add song_sections table and structured section display") only added the TypeScript types (`types/database.types.ts`) and UI; the table was created directly in the Supabase project (likely via dashboard SQL editor). It needs to be reverse-engineered from the live schema.
+
+### Q4. Should the local stack on `uwh` be the source of truth?
+
+**Answer**: **Yes — uwh is the closest thing to canonical.** It has 55 endpoints (47 tables + 8 views/MVs). It is a strict superset of production:
+
+```text
+Tables in uwh LOCAL but missing from PROD (11):
+  audit_log, content_post_metrics, content_posts, hashtag_sets,
+  notification_log, notification_preferences, notification_queue,
+  skills, student_skills, user_preferences, user_settings
+
+Tables in PROD but missing from uwh LOCAL: 0
+```
+
+So local is what the migrations declare; production has drifted backwards by 11 tables.
+
+**Three tables exist in `supabase/migrations/` but are absent from both LOCAL and PROD**: `sync_conflicts`, `auth_events`, `task_management`. Their CREATE TABLE migrations exist in the repo but were apparently never applied to either environment — these are migrations that got committed but never run.
+
+**Network reachability** (re-tested 2026-06-09 from Mac on Orange LAN, IP `192.168.1.77`):
+
+- `curl http://192.168.1.75:54321/...` → HTTP 200, ~100ms ✅
+- Node.js `fetch('http://192.168.1.75:54321/...')` → `EHOSTUNREACH` (errno -65) ❌
+
+The CLAUDE.md note from 2026-06-08 is still accurate. The Tailscale-on-LAN routing quirk only affects Node's undici/fetch, not curl. Workarounds: use Tailscale URL (`100.86.245.121:54321`) in `.env.local`, OR resolve the routing quirk in `macOS`.
+
+---
+
+## Concrete next actions (recommended order)
+
+Given the answers above, the path through this mess is:
+
+1. **Recover the deleted history migrations** (30 min) — `git show 2cde4c2b^:…` for the 5 files, write back under `supabase/migrations/` with current dates so `supabase db reset` works on fresh clones. _Low risk; the SQL is preserved._
+2. **Reverse-engineer `song_sections`** (15 min) — `pg_dump --schema-only --table=song_sections` against uwh, save as a new migration.
+3. **Decide on the 3 unapplied tables** (`sync_conflicts`, `auth_events`, `task_management`):
+   - Read the code that references each
+   - Either apply the migration to both LOCAL and PROD, OR delete the migration and the dead code paths
+4. **Reconcile production with the canonical migrations** — this is the big one. Either:
+   - Apply the 11 missing migrations against `zmlluqqqwrfhygvpfqka` (and risk schema/data conflicts on a live DB)
+   - Or accept the divergence and audit every `.from('<missing>')` call to confirm it's already runtime-disabled (feature flag, dead code path, etc.)
+5. **Once schema is reconciled, resume Followup B** — regenerate types from the now-canonical production project, delete the two stale `database.types*.ts` copies, migrate 29 imports to `@/types/database.types`.
+
+The original Followup B (a 1-hour type consolidation) only becomes safe after step 4. Steps 1 and 2 are independent and worth doing immediately so `supabase db reset` stops being broken on fresh clones.
