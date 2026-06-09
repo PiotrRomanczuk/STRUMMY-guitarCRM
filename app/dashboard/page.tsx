@@ -6,10 +6,12 @@ import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingCard } from '@/components/dashboard/states';
 import { TodayLessons, UpcomingLessons } from '@/components/dashboard/cards';
+import { AdminDashboardEditorial } from '@/components/dashboard/editorial/admin/AdminDashboardEditorial';
 import { StudentDashboardEditorial } from '@/components/dashboard/editorial/student/StudentDashboardEditorial';
 import { TeacherDashboardEditorial } from '@/components/dashboard/editorial/teacher/TeacherDashboardEditorial';
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getPendingInvites, getPlatformPulse } from '@/lib/services/admin-dashboard-queries';
 import { getStudentNextLesson, getStudentTopSongs } from '@/lib/services/student-dashboard-queries';
 import {
   getTeacherDayLessons,
@@ -82,6 +84,16 @@ async function TeacherEditorialView({ userId, email }: { userId: string; email: 
         lessons={lessons}
         stats={stats}
       />
+    </div>
+  );
+}
+
+async function AdminEditorialView() {
+  const now = new Date();
+  const [pulse, invites] = await Promise.all([getPlatformPulse(), getPendingInvites()]);
+  return (
+    <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
+      <AdminDashboardEditorial pulse={pulse} invites={invites} now={now} />
     </div>
   );
 }
@@ -173,6 +185,10 @@ export default async function DashboardPage({
 
   if (activeView === 'student' && user) {
     return <StudentEditorialView userId={user.id} email={user.email ?? ''} />;
+  }
+
+  if (activeView === 'admin' && user) {
+    return <AdminEditorialView />;
   }
 
   return (
