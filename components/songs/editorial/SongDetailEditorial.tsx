@@ -6,6 +6,7 @@ import type {
   SongUsageStats,
 } from '@/lib/services/song-detail-queries';
 
+import { ComingSoonCard } from './ComingSoonCard';
 import { SongChordsCardEditorial } from './SongChordsCardEditorial';
 import { SongHeroEditorial } from './SongHeroEditorial';
 import { LearnersCard, RelatedCard, UsageCard } from './SongSidebarEditorial';
@@ -17,8 +18,13 @@ type Props = {
   related: RelatedSongRow[];
 };
 
+const upperCaseChordRoots = (chords: string | null | undefined): string => {
+  if (!chords) return '';
+  return chords.replace(/(^|[,\s{])([a-g])/g, (_, sep, c) => `${sep}${c.toUpperCase()}`);
+};
+
 const chordTokensFromSong = (song: Song): string[] => {
-  const parsed = parseChordsColumn(song.chords);
+  const parsed = parseChordsColumn(upperCaseChordRoots(song.chords));
   const seen = new Set<string>();
   const tokens: string[] = [];
   for (const c of parsed) {
@@ -54,6 +60,7 @@ export const SongDetailEditorial = ({ song, stats, learners, related }: Props) =
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
           <SongChordsCardEditorial title={song.title ?? 'this song'} chordTokens={chordTokens} />
+          <ComingSoonCard />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <UsageCard stats={stats} />
