@@ -1,0 +1,71 @@
+import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+
+export type LessonDetail = {
+  id: string;
+  scheduledAt: string;
+  status: string;
+  title: string | null;
+  notes: string | null;
+  teacherId: string;
+  teacherName: string | null;
+  studentId: string;
+  studentName: string | null;
+  studentEmail: string | null;
+  songs: {
+    songId: string;
+    title: string;
+    author: string | null;
+    key: string | null;
+    status: string | null;
+  }[];
+};
+
+export async function getLessonDetail(lessonId: string): Promise<LessonDetail | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('lessons')
+    .select(
+      'id, scheduled_at, status, title, notes, teacher_id, student_id, teacher:profiles!lessons_teacher_id_fkey(full_name), student:profiles!lessons_student_id_fkey(full_name, email), lesson_songs(song_id, status, songs(title, author, key))'
+    )
+    .eq('id', lessonId)
+    .is('deleted_at', null)
+    .single();
+
+  if (error) {
+    if (error.code !== 'PGRST116') {
+      logger.warn('[lesson-detail-queries] error', { error: error.message, code: error.code });
+    }
+    return null;
+  }
+
+  const teacher = Array.isArray(data.teacher) ? data.teacher[0] : data.teacher;
+  const student = Array.isArray(data.student) ? data.student[0] : data.student;
+  const songs = (data.lesson_songs ?? [])
+    .map((ls) => {
+      const song = Array.isArray(ls.songs) ? ls.songs[0] : ls.songs;
+      if (!song) return null;
+      return {
+        songId: ls.song_id as string,
+        title: song.title as string,
+        author: (song.author as string) ?? null,
+        key: (song.key as string) ?? null,
+        status: (ls.status as string) ?? null,
+      };
+    })
+    .filter((s): s is NonNullable<typeof s> => s !== null);
+
+  return {
+    id: data.id as string,
+    scheduledAt: data.scheduled_at as string,
+    status: data.status as string,
+    title: (data.title as string) ?? null,
+    notes: (data.notes as string) ?? null,
+    teacherId: data.teacher_id as string,
+    teacherName: (teacher?.full_name as string) ?? null,
+    studentId: data.student_id as string,
+    studentName: (student?.full_name as string) ?? null,
+    studentEmail: (student?.email as string) ?? null,
+    songs,
+  };
+}
