@@ -108,7 +108,10 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test:ci -- --coverage --testPathIgnorePatterns='integration.test.ts' --testPathIgnorePatterns='database/'
+        # No CLI --testPathIgnorePatterns here: the flag REPLACES the config's
+        # ignore list (incl. the quarantine in jest.config.ts), it does not merge.
+        # Integration/database tests are already excluded by the config.
+        run: npm run test:ci
         env:
           CI: true
           SKIP_DB_TESTS: true

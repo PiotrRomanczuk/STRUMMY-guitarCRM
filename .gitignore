@@ -112,3 +112,6 @@ landing.html
 
 # Content plan source data (personal)
 data/JustMeAndGuitar_*.xlsx
+
+# Claude Code worktrees (local only, never commit)
+.claude/worktrees/

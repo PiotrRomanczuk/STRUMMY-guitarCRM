@@ -7,6 +7,7 @@
 
 import { authenticateRequest } from '@/lib/auth/api-auth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 
 // ---------------------------------------------------------------------------
 // Mock next/server — provide both NextRequest and a constructable NextResponse
@@ -64,6 +65,12 @@ jest.mock('@/lib/auth/api-auth', () => ({
 
 jest.mock('@/lib/supabase/admin', () => ({
   createAdminClient: jest.fn(),
+}));
+
+// The route reads songs through the cookie-scoped server client; outside a real
+// request scope next/headers `cookies()` throws, so it must be mocked too.
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -157,6 +164,7 @@ function setupMockClient(options: {
       : { user: null, error: 'Unauthorized', status: 401 }
   );
   (createAdminClient as jest.Mock).mockReturnValue(client);
+  (createClient as jest.Mock).mockResolvedValue(client);
   return { client, songQb, profileQb };
 }
 
@@ -191,6 +199,9 @@ describe('Song Export API – Integration Tests', () => {
         status: 200,
       });
       (createAdminClient as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue(profileQb),
+      });
+      (createClient as jest.Mock).mockResolvedValue({
         from: jest.fn().mockReturnValue(profileQb),
       });
 
