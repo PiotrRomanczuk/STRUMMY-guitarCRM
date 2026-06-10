@@ -28,3 +28,29 @@ export async function markAllNotificationsReadAction(): Promise<void> {
 
   revalidatePath('/dashboard/notifications');
 }
+
+export async function markNotificationReadAction(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { error } = await supabase
+    .from('in_app_notifications')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (error) {
+    logger.warn('[notifications] mark-row-read error', {
+      error: error.message,
+      code: error.code,
+    });
+    return;
+  }
+
+  revalidatePath('/dashboard/notifications');
+}

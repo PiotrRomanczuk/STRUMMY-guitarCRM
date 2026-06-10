@@ -1,4 +1,7 @@
-import { markAllNotificationsReadAction } from '@/app/actions/notifications';
+import {
+  markAllNotificationsReadAction,
+  markNotificationReadAction,
+} from '@/app/actions/notifications';
 import type { NotificationRow } from '@/lib/services/notifications-queries';
 import { countUnread } from '@/lib/services/notifications-queries';
 
@@ -192,16 +195,47 @@ export const NotificationsEditorial = ({ notifications, now }: Props) => {
                   </div>
                   <div
                     style={{
-                      fontFamily: 'var(--mono)',
-                      fontSize: 10,
-                      color: 'var(--ink-4)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '.1em',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-end',
+                      gap: 8,
                       alignSelf: 'flex-start',
-                      whiteSpace: 'nowrap',
                     }}
                   >
-                    {formatRelative(n.createdAt, now)}
+                    <span
+                      style={{
+                        fontFamily: 'var(--mono)',
+                        fontSize: 10,
+                        color: 'var(--ink-4)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '.1em',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {formatRelative(n.createdAt, now)}
+                    </span>
+                    {!n.isRead && (
+                      <form action={markNotificationReadAction}>
+                        <input type="hidden" name="id" value={n.id} />
+                        <button
+                          type="submit"
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: 6,
+                            border: '1px solid var(--rule)',
+                            background: 'var(--card)',
+                            color: 'var(--ink-3)',
+                            fontSize: 10,
+                            cursor: 'pointer',
+                            fontFamily: 'var(--mono)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '.08em',
+                          }}
+                        >
+                          Mark read
+                        </button>
+                      </form>
+                    )}
                   </div>
                 </div>
               );
