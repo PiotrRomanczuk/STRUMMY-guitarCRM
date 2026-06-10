@@ -1,12 +1,19 @@
+import type {
+  AtRiskStudent,
+  RosterStudent,
+  SongLibrarySummary,
+  Utilization,
+  WeekDensityDay,
+} from '@/lib/services/teacher-dashboard-backfill-queries';
 import type { DayLesson, TeacherDayStats } from '@/lib/services/teacher-dashboard-queries';
 
 import {
-  NeedsAttentionCardPlaceholder,
-  SongLibraryCardPlaceholder,
-  StudentRosterCardPlaceholder,
-  UtilizationCardPlaceholder,
-  WeekDensityCardPlaceholder,
-} from './PlaceholderCards';
+  NeedsAttentionCard,
+  SongLibraryCard,
+  StudentRosterCard,
+  UtilizationCard,
+  WeekDensityCard,
+} from './BackfillCards';
 import { TeacherDaySpine } from './TeacherDaySpine';
 import { TeacherGreeting } from './TeacherGreeting';
 
@@ -16,9 +23,25 @@ type Props = {
   now: Date;
   lessons: DayLesson[];
   stats: TeacherDayStats;
+  atRisk: AtRiskStudent[];
+  weekDensity: WeekDensityDay[];
+  utilization: Utilization;
+  roster: RosterStudent[];
+  library: SongLibrarySummary;
 };
 
-export const TeacherDashboardEditorial = ({ fullName, email, now, lessons, stats }: Props) => (
+export const TeacherDashboardEditorial = ({
+  fullName,
+  email,
+  now,
+  lessons,
+  stats,
+  atRisk,
+  weekDensity,
+  utilization,
+  roster,
+  library,
+}: Props) => (
   <div
     style={{
       background: 'var(--ivory)',
@@ -39,9 +62,9 @@ export const TeacherDashboardEditorial = ({ fullName, email, now, lessons, stats
     >
       <TeacherDaySpine lessons={lessons} now={now} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <NeedsAttentionCardPlaceholder />
-        <WeekDensityCardPlaceholder />
-        <UtilizationCardPlaceholder />
+        <NeedsAttentionCard rows={atRisk} />
+        <WeekDensityCard days={weekDensity} />
+        <UtilizationCard utilization={utilization} />
       </div>
     </div>
     <div
@@ -52,8 +75,8 @@ export const TeacherDashboardEditorial = ({ fullName, email, now, lessons, stats
         gap: 20,
       }}
     >
-      <StudentRosterCardPlaceholder />
-      <SongLibraryCardPlaceholder />
+      <StudentRosterCard rows={roster} />
+      <SongLibraryCard summary={library} />
     </div>
   </div>
 );

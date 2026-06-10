@@ -14,6 +14,13 @@ import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { getPendingInvites, getPlatformPulse } from '@/lib/services/admin-dashboard-queries';
 import { getStudentNextLesson, getStudentTopSongs } from '@/lib/services/student-dashboard-queries';
 import {
+  calcUtilization,
+  getAtRiskStudents,
+  getSongLibrarySummary,
+  getTeacherRoster,
+  getWeekDensity,
+} from '@/lib/services/teacher-dashboard-backfill-queries';
+import {
   getTeacherDayLessons,
   summariseDayLessons,
 } from '@/lib/services/teacher-dashboard-queries';
@@ -70,11 +77,16 @@ async function loadProfileName(userId: string): Promise<string | null> {
 
 async function TeacherEditorialView({ userId, email }: { userId: string; email: string }) {
   const now = new Date();
-  const [fullName, lessons] = await Promise.all([
+  const [fullName, lessons, atRisk, weekDensity, roster, library] = await Promise.all([
     loadProfileName(userId),
     getTeacherDayLessons(userId, now),
+    getAtRiskStudents(userId, now),
+    getWeekDensity(userId, now),
+    getTeacherRoster(userId),
+    getSongLibrarySummary(),
   ]);
   const stats = summariseDayLessons(lessons);
+  const utilization = calcUtilization(weekDensity);
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
       <TeacherDashboardEditorial
@@ -83,6 +95,11 @@ async function TeacherEditorialView({ userId, email }: { userId: string; email: 
         now={now}
         lessons={lessons}
         stats={stats}
+        atRisk={atRisk}
+        weekDensity={weekDensity}
+        utilization={utilization}
+        roster={roster}
+        library={library}
       />
     </div>
   );
