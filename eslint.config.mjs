@@ -59,8 +59,9 @@ const eslintConfig = defineConfig([
       'max-lines-per-function': ['warn', { max: 80, skipBlankLines: true, IIFEs: true }],
       complexity: ['warn', { max: 50 }],
       'max-depth': ['warn', 10],
-      // Discourage explicit 'any' — prefer unknown or proper types
-      '@typescript-eslint/no-explicit-any': 'warn',
+      // Ban explicit 'any' — use unknown or a proper type. Suppressible per-site
+      // with eslint-disable-next-line when Supabase generics make it unavoidable.
+      '@typescript-eslint/no-explicit-any': 'error',
       // ADR 0003 §6: route operational logs through @/lib/logger. console.warn/error
       // remain allowed for genuine fallback paths and dev tooling output.
       'no-console': ['warn', { allow: ['warn', 'error'] }],
