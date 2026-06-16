@@ -54,6 +54,20 @@ const SERVICE_ROLE_KEY =
   process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ??
   process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// `jest.setup.js` injects placeholder fallbacks (example.supabase.co /
+// test-service-role-key) so unit tests have *some* env. Those are NOT a real
+// DB target — treat them as "no target configured" so this opt-in spec skips
+// cleanly instead of running against a non-existent host with an undefined
+// client. A real target is provided via SHADOW_DEDUP_TEST_* or a live local
+// Supabase stack.
+const PLACEHOLDER_URL_HOSTS = ['example.supabase.co', 'test.supabase.co'];
+const PLACEHOLDER_KEYS = ['test-service-role-key', 'test-anon-key'];
+const hasRealTarget =
+  !!SUPABASE_URL &&
+  !!SERVICE_ROLE_KEY &&
+  !PLACEHOLDER_URL_HOSTS.some((host) => SUPABASE_URL.includes(host)) &&
+  !PLACEHOLDER_KEYS.includes(SERVICE_ROLE_KEY);
+
 async function isReachable(url: string): Promise<boolean> {
   try {
     const res = await fetch(`${url}/auth/v1/health`, {
@@ -65,7 +79,7 @@ async function isReachable(url: string): Promise<boolean> {
   }
 }
 
-const describeIfLocal = SUPABASE_URL && SERVICE_ROLE_KEY ? describe : describe.skip;
+const describeIfLocal = hasRealTarget ? describe : describe.skip;
 
 describeIfLocal('shadow-dedup integration', () => {
   let client: SupabaseClient;
@@ -141,6 +155,10 @@ describeIfLocal('shadow-dedup integration', () => {
   }, 15_000);
 
   it('validate-only run reports the group without mutating anything', async () => {
+    if (!reachable) {
+      console.warn('[shadow-dedup.integration] local Supabase unreachable — skipping');
+      return;
+    }
     const profiles = await fetchAllProfiles(client);
     const itGroup = findCollisionGroups(profiles).find((g) =>
       g.emailKeys.includes(collisionInvite.toLowerCase())
@@ -161,6 +179,10 @@ describeIfLocal('shadow-dedup integration', () => {
   });
 
   it('commit run consolidates duplicates and rewires FK references', async () => {
+    if (!reachable) {
+      console.warn('[shadow-dedup.integration] local Supabase unreachable — skipping');
+      return;
+    }
     const profiles = await fetchAllProfiles(client);
     const itGroup = findCollisionGroups(profiles).find((g) =>
       g.emailKeys.includes(collisionInvite.toLowerCase())

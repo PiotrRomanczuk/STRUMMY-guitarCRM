@@ -59,6 +59,11 @@ describe('Auth Rate Limiter (Supabase-backed)', () => {
       expect(AUTH_RATE_LIMITS.signup.maxAttempts).toBe(3);
       expect(AUTH_RATE_LIMITS.signup.windowMs).toBe(60 * 60 * 1000);
     });
+
+    it('should have correct resendEmail limits', () => {
+      expect(AUTH_RATE_LIMITS.resendEmail.maxAttempts).toBe(3);
+      expect(AUTH_RATE_LIMITS.resendEmail.windowMs).toBe(60 * 60 * 1000);
+    });
   });
 
   describe('checkAuthRateLimit', () => {
@@ -78,14 +83,11 @@ describe('Auth Rate Limiter (Supabase-backed)', () => {
 
       await checkAuthRateLimit('user@test.com', 'passwordReset');
 
-      expect(mockRpc).toHaveBeenCalledWith(
-        'check_auth_rate_limit',
-        {
-          p_identifier: 'user@test.com',
-          p_operation: 'passwordReset',
-          p_window_ms: AUTH_RATE_LIMITS.passwordReset.windowMs,
-        }
-      );
+      expect(mockRpc).toHaveBeenCalledWith('check_auth_rate_limit', {
+        p_identifier: 'user@test.com',
+        p_operation: 'passwordReset',
+        p_window_ms: AUTH_RATE_LIMITS.passwordReset.windowMs,
+      });
     });
 
     it('should record the attempt via insert', async () => {
@@ -214,7 +216,9 @@ describe('Auth Rate Limiter (Supabase-backed)', () => {
         throw new Error('DB error');
       });
 
-      await expect(resetAuthRateLimit('test@example.com', 'passwordReset')).resolves.toBeUndefined();
+      await expect(
+        resetAuthRateLimit('test@example.com', 'passwordReset')
+      ).resolves.toBeUndefined();
     });
   });
 

@@ -1,372 +1,225 @@
- 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SignUpForm from '@/components/auth/SignUpForm';
 
-// Mock Supabase browser client
+// SignUpForm submits through the `signUp` server action (not the Supabase
+// browser client). Mock the action module. `resendVerificationEmail` is pulled
+// in by the hook but unused by these tests.
 const mockSignUp = jest.fn();
+const mockResend = jest.fn();
 
-jest.mock('@/lib/supabase-browser', () => ({
-	getSupabaseBrowserClient: jest.fn(() => ({
-		auth: {
-			signUp: mockSignUp,
-		},
-	})),
+jest.mock('@/app/auth/actions', () => ({
+  signUp: (...args: unknown[]) => mockSignUp(...args),
+  resendVerificationEmail: (...args: unknown[]) => mockResend(...args),
 }));
 
+function fillValidForm() {
+  fireEvent.change(screen.getByLabelText(/email/i), {
+    target: { value: 'student@example.com' },
+  });
+  fireEvent.change(screen.getByLabelText(/^password$/i), {
+    target: { value: 'test123_student' },
+  });
+  fireEvent.change(screen.getByLabelText(/confirm password/i), {
+    target: { value: 'test123_student' },
+  });
+  fireEvent.change(screen.getByLabelText(/first name/i), {
+    target: { value: 'John' },
+  });
+  fireEvent.change(screen.getByLabelText(/last name/i), {
+    target: { value: 'Doe' },
+  });
+}
+
 describe('SignUpForm', () => {
-	beforeEach(() => {
-		jest.clearAllMocks();
-	});
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-	describe('Rendering', () => {
-		it('should render sign up form with all required fields', () => {
-			render(<SignUpForm />);
+  describe('Rendering', () => {
+    it('should render sign up form with all required fields', () => {
+      render(<SignUpForm />);
 
-			expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-			expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
-			expect(
-				screen.getByRole('button', { name: /^sign up$/i })
-			).toBeInTheDocument();
-		});
+      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^sign up$/i })).toBeInTheDocument();
+    });
 
-		it('should render link to sign in page', () => {
-			render(<SignUpForm />);
+    it('should render link to sign in page', () => {
+      render(<SignUpForm />);
 
-			const signInLink = screen.getByText(/already have an account/i);
-			expect(signInLink).toBeInTheDocument();
-		});
+      const signInLink = screen.getByText(/already have an account/i);
+      expect(signInLink).toBeInTheDocument();
+    });
 
-		it('should render password strength indicator when focused', async () => {
-			render(<SignUpForm />);
+    it('should render password strength indicator once a password is entered', async () => {
+      render(<SignUpForm />);
 
-			const passwordInput = screen.getByLabelText(/^password$/i);
-			fireEvent.focus(passwordInput);
-			
-			await waitFor(() => {
-				expect(screen.getByText(/at least 8 characters/i)).toBeInTheDocument();
-			});
-		});
-	});
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      fireEvent.change(passwordInput, { target: { value: 'abc' } });
 
-	describe('Form Validation', () => {
-		it('should show error for invalid email format', async () => {
-			render(<SignUpForm />);
+      await waitFor(() => {
+        expect(screen.getByText(/at least 6 characters/i)).toBeInTheDocument();
+      });
+    });
+  });
 
-			const emailInput = screen.getByLabelText(/email/i);
-			fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
-			fireEvent.blur(emailInput);
+  describe('Form Validation', () => {
+    it('should show error for invalid email format', async () => {
+      render(<SignUpForm />);
 
-			await waitFor(() => {
-				expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
-			});
-		});
+      const emailInput = screen.getByLabelText(/email/i);
+      fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
+      fireEvent.blur(emailInput);
 
-		it('should show error for password shorter than 6 characters', async () => {
-			render(<SignUpForm />);
+      await waitFor(() => {
+        expect(screen.getByText(/valid email required/i)).toBeInTheDocument();
+      });
+    });
 
-			const passwordInput = screen.getByLabelText(/^password$/i);
-			fireEvent.change(passwordInput, { target: { value: '12345' } });
-			fireEvent.blur(passwordInput);
+    it('should show error for password shorter than the minimum length', async () => {
+      render(<SignUpForm />);
 
-			await waitFor(() => {
-				expect(
-					screen.getByText(/password must be at least 6 characters/i)
-				).toBeInTheDocument();
-			});
-		});
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      fireEvent.change(passwordInput, { target: { value: '12345' } });
+      fireEvent.blur(passwordInput);
 
-		it('should show error when first name is missing', async () => {
-			render(<SignUpForm />);
+      await waitFor(() => {
+        expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
+      });
+    });
 
-			const firstNameInput = screen.getByLabelText(/first name/i);
-			fireEvent.change(firstNameInput, { target: { value: '' } });
-			fireEvent.blur(firstNameInput);
+    it('should show error when first name is missing', async () => {
+      render(<SignUpForm />);
 
-			await waitFor(() => {
-				expect(screen.getByText(/first name is required/i)).toBeInTheDocument();
-			});
-		});
+      const firstNameInput = screen.getByLabelText(/first name/i);
+      fireEvent.change(firstNameInput, { target: { value: '' } });
+      fireEvent.blur(firstNameInput);
 
-		it('should show error when last name is missing', async () => {
-			render(<SignUpForm />);
+      await waitFor(() => {
+        expect(screen.getByText(/first name is required/i)).toBeInTheDocument();
+      });
+    });
 
-			const lastNameInput = screen.getByLabelText(/last name/i);
-			fireEvent.change(lastNameInput, { target: { value: '' } });
-			fireEvent.blur(lastNameInput);
+    it('should show error when last name is missing', async () => {
+      render(<SignUpForm />);
 
-			await waitFor(() => {
-				expect(screen.getByText(/last name is required/i)).toBeInTheDocument();
-			});
-		});
+      const lastNameInput = screen.getByLabelText(/last name/i);
+      fireEvent.change(lastNameInput, { target: { value: '' } });
+      fireEvent.blur(lastNameInput);
 
-		it('should not submit form with validation errors', async () => {
-			render(<SignUpForm />);
+      await waitFor(() => {
+        expect(screen.getByText(/last name is required/i)).toBeInTheDocument();
+      });
+    });
 
-			const submitButton = screen.getByRole('button', { name: /^sign up$/i });
-			fireEvent.click(submitButton);
+    it('should not submit form with validation errors', async () => {
+      render(<SignUpForm />);
 
-			await waitFor(() => {
-				expect(mockSignUp).not.toHaveBeenCalled();
-			});
-		});
-	});
+      const submitButton = screen.getByRole('button', { name: /^sign up$/i });
+      fireEvent.click(submitButton);
 
-	describe('Form Submission', () => {
-		it('should call signUp with correct data on valid submission', async () => {
-			mockSignUp.mockResolvedValue({
-				data: {
-					user: {
-						id: '123',
-						identities: [{ id: '123' }], // Non-empty identities = new user
-					},
-					session: null,
-				},
-				error: null,
-			});
+      await waitFor(() => {
+        expect(mockSignUp).not.toHaveBeenCalled();
+      });
+    });
+  });
 
-			render(<SignUpForm />);
+  describe('Form Submission', () => {
+    it('should call the signUp action with the entered data', async () => {
+      mockSignUp.mockResolvedValue({ success: true });
 
-			fireEvent.change(screen.getByLabelText(/email/i), {
-				target: { value: 'student@example.com' },
-			});
-			fireEvent.change(screen.getByLabelText(/^password$/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/confirm password/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/first name/i), {
-				target: { value: 'John' },
-			});
-			fireEvent.change(screen.getByLabelText(/last name/i), {
-				target: { value: 'Doe' },
-			});
+      render(<SignUpForm />);
+      fillValidForm();
 
-			const submitButton = screen.getByRole('button', { name: /^sign up$/i });
-			fireEvent.click(submitButton);
+      fireEvent.click(screen.getByRole('button', { name: /^sign up$/i }));
 
-			await waitFor(() => {
-				expect(mockSignUp).toHaveBeenCalledWith({
-					email: 'student@example.com',
-					password: 'test123_student',
-					options: {
-						data: {
-							first_name: 'John',
-							last_name: 'Doe',
-						},
-					},
-				});
-			});
-		});
+      await waitFor(() => {
+        expect(mockSignUp).toHaveBeenCalledWith(
+          'John',
+          'Doe',
+          'student@example.com',
+          'test123_student',
+          'test123_student'
+        );
+      });
+    });
 
-		it('should show success message on successful sign up', async () => {
-			mockSignUp.mockResolvedValue({
-				data: {
-					user: {
-						id: '123',
-						identities: [{ id: '123' }], // Non-empty identities = new user
-					},
-					session: null,
-				},
-				error: null,
-			});
+    it('should show a verification message on successful sign up', async () => {
+      mockSignUp.mockResolvedValue({ success: true });
 
-			render(<SignUpForm />);
+      render(<SignUpForm />);
+      fillValidForm();
 
-			fireEvent.change(screen.getByLabelText(/email/i), {
-				target: { value: 'student@example.com' },
-			});
-			fireEvent.change(screen.getByLabelText(/^password$/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/confirm password/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/first name/i), {
-				target: { value: 'John' },
-			});
-			fireEvent.change(screen.getByLabelText(/last name/i), {
-				target: { value: 'Doe' },
-			});
+      fireEvent.click(screen.getByRole('button', { name: /^sign up$/i }));
 
-			fireEvent.click(screen.getByRole('button', { name: /^sign up$/i }));
+      await waitFor(() => {
+        expect(screen.getByText(/verification email sent/i)).toBeInTheDocument();
+      });
+    });
 
-			await waitFor(() => {
-				expect(
-					screen.getByText(/check your email for confirmation/i)
-				).toBeInTheDocument();
-			});
-		});
+    it('should show the error message returned by the action', async () => {
+      mockSignUp.mockResolvedValue({ error: 'User already registered' });
 
-		it('should show error message on sign up failure', async () => {
-			mockSignUp.mockResolvedValue({
-				data: { user: null, session: null },
-				error: { message: 'User already registered' },
-			});
+      render(<SignUpForm />);
+      fillValidForm();
 
-			render(<SignUpForm />);
+      fireEvent.click(screen.getByRole('button', { name: /^sign up$/i }));
 
-			fireEvent.change(screen.getByLabelText(/email/i), {
-				target: { value: 'student@example.com' },
-			});
-			fireEvent.change(screen.getByLabelText(/^password$/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/confirm password/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/first name/i), {
-				target: { value: 'John' },
-			});
-			fireEvent.change(screen.getByLabelText(/last name/i), {
-				target: { value: 'Doe' },
-			});
+      await waitFor(() => {
+        expect(screen.getByText(/user already registered/i)).toBeInTheDocument();
+      });
+    });
 
-			fireEvent.click(screen.getByRole('button', { name: /^sign up$/i }));
+    it('should show a user-friendly error when the email already exists', async () => {
+      mockSignUp.mockResolvedValue({
+        error: 'This email is already registered. Please sign in instead.',
+      });
 
-			await waitFor(() => {
-				expect(
-					screen.getByText(/user already registered/i)
-				).toBeInTheDocument();
-			});
-		});
+      render(<SignUpForm />);
+      fillValidForm();
 
-		it('should show user-friendly error when user already exists', async () => {
-			mockSignUp.mockResolvedValue({
-				data: {
-					user: {
-						id: '123',
-						identities: [], // Empty identities array indicates duplicate
-					},
-					session: null,
-				},
-				error: null,
-			});
+      fireEvent.click(screen.getByRole('button', { name: /^sign up$/i }));
 
-			render(<SignUpForm />);
+      await waitFor(() => {
+        expect(
+          screen.getByText(/this email is already registered\. please sign in instead/i)
+        ).toBeInTheDocument();
+      });
+    });
 
-			fireEvent.change(screen.getByLabelText(/email/i), {
-				target: { value: 'student@example.com' },
-			});
-			fireEvent.change(screen.getByLabelText(/^password$/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/confirm password/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/first name/i), {
-				target: { value: 'John' },
-			});
-			fireEvent.change(screen.getByLabelText(/last name/i), {
-				target: { value: 'Doe' },
-			});
+    it('should disable submit button while submitting', async () => {
+      mockSignUp.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ success: true }), 100))
+      );
 
-			fireEvent.click(screen.getByRole('button', { name: /^sign up$/i }));
+      render(<SignUpForm />);
+      fillValidForm();
 
-			await waitFor(() => {
-				expect(
-					screen.getByText(
-						/this email is already registered\. please sign in instead/i
-					)
-				).toBeInTheDocument();
-			});
-		});
+      const submitButton = screen.getByRole('button', { name: /^sign up$/i });
+      fireEvent.click(submitButton);
 
-		it('should disable submit button while submitting', async () => {
-			mockSignUp.mockImplementation(
-				() =>
-					new Promise((resolve) =>
-						setTimeout(
-							() =>
-								resolve({
-									data: {
-										user: {
-											id: '123',
-											identities: [{ id: '123' }],
-										},
-										session: null,
-									},
-									error: null,
-								}),
-							100
-						)
-					)
-			);
+      await waitFor(() => {
+        expect(submitButton).toBeDisabled();
+      });
+    });
 
-			render(<SignUpForm />);
+    it('should show loading state while submitting', async () => {
+      mockSignUp.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ success: true }), 100))
+      );
 
-			fireEvent.change(screen.getByLabelText(/email/i), {
-				target: { value: 'student@example.com' },
-			});
-			fireEvent.change(screen.getByLabelText(/^password$/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/confirm password/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/first name/i), {
-				target: { value: 'John' },
-			});
-			fireEvent.change(screen.getByLabelText(/last name/i), {
-				target: { value: 'Doe' },
-			});
+      render(<SignUpForm />);
+      fillValidForm();
 
-			const submitButton = screen.getByRole('button', { name: /^sign up$/i });
-			fireEvent.click(submitButton);
+      fireEvent.click(screen.getByRole('button', { name: /^sign up$/i }));
 
-			await waitFor(() => {
-				expect(submitButton).toBeDisabled();
-			});
-		});
-
-		it('should show loading state while submitting', async () => {
-			mockSignUp.mockImplementation(
-				() =>
-					new Promise((resolve) =>
-						setTimeout(
-							() =>
-								resolve({
-									data: {
-										user: {
-											id: '123',
-											identities: [{ id: '123' }],
-										},
-										session: null,
-									},
-									error: null,
-								}),
-							100
-						)
-					)
-			);
-
-			render(<SignUpForm />);
-
-			fireEvent.change(screen.getByLabelText(/email/i), {
-				target: { value: 'student@example.com' },
-			});
-			fireEvent.change(screen.getByLabelText(/^password$/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/confirm password/i), {
-				target: { value: 'test123_student' },
-			});
-			fireEvent.change(screen.getByLabelText(/first name/i), {
-				target: { value: 'John' },
-			});
-			fireEvent.change(screen.getByLabelText(/last name/i), {
-				target: { value: 'Doe' },
-			});
-
-			fireEvent.click(screen.getByRole('button', { name: /^sign up$/i }));
-
-			await waitFor(() => {
-				expect(screen.getByText(/signing up/i)).toBeInTheDocument();
-			});
-		});
-	});
+      await waitFor(() => {
+        expect(screen.getByText(/signing up/i)).toBeInTheDocument();
+      });
+    });
+  });
 });
