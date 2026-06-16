@@ -114,6 +114,26 @@ Affected: `app/api/spotify/track-from-url/route.ts` and any route using server-c
 
 ---
 
+## Known Issues (audit 2026-06-16)
+
+Full findings: [`audits/2026-06-16-test-cicd-audit.md`](./audits/2026-06-16-test-cicd-audit.md). Remediation plan: [`specs/11-testing-cicd.md`](./specs/11-testing-cicd.md). Measured state on 2026-06-16:
+
+| Area             | State                                                                                                          | Severity |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------- | --- |
+| **Unit suite**   | green (2,681/2,682) **only because ~51 files are quarantined** via `testPathIgnorePatterns`                    | S1       |
+| **Integration**  | **16 failing** (`__tests__/api/song/export.integration.test.ts` + 1 — Supabase client `undefined`)             | S2       |
+| **RLS**          | the only `*.rls.test.ts` is `describe.skip` — **0 RLS tests run** (ADR-0001 unverified)                        | S1       |
+| **Coverage**     | **53% lines** (goal 70%); CI check is **non-blocking**; jest thresholds 30–40%; README says 70%                | S2       |
+| **CI typecheck** | `tsc --noEmit` output **filtered with `grep -v`** + `                                                          |          | true` — real type errors pass the gate | S1  |
+| **E2E**          | Playwright runs **only on `production` pushes** (Desktop Chrome); never gates `main`/PRs                       | S1       |
+| **Hooks**        | pre-commit runs the full `npm run quality` (typecheck+lint+jest+coverage+DB+Lighthouse) → multi-minute commits | S2       |
+| **Lint**         | `@typescript-eslint/no-explicit-any` is `warn` (not `error`); ~37 prod `any`s                                  | S2       |
+| **Dead code**    | `cypress/` still present; `jest.config.simple.ts` unused                                                       | S3       |
+
+> **The suite is green by exclusion.** Treat the all-pass unit result with suspicion until the quarantine is burned down (spec 11, Phase 11B) and RLS/integration are honest (Phase 11A).
+
+---
+
 ## Security Test Patterns
 
 Security tests verify **teacher data isolation** (multi-tenant): a teacher must only reach their own students and lessons.

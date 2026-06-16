@@ -65,27 +65,7 @@ jobs:
         run: npm run lint
 
       - name: Run TypeScript type check
-        run: |
-          # Run tsc and filter known pre-existing errors:
-          # - notification-service.ts: missing Supabase generated types
-          # - TS2307/TS2875/TS7026: React/Next.js type resolution issues in CI
-          # - migrate-remote.ts: legacy script with any types
-          TSC_OUTPUT=$(npx tsc --noEmit 2>&1) || true
-          FILTERED=$(echo "$TSC_OUTPUT" | grep "error TS" \
-            | grep -v "lib/services/notification-service.ts" \
-            | grep -v "error TS2307" \
-            | grep -v "error TS2875" \
-            | grep -v "error TS7026" \
-            | grep -v "migrate-remote.ts" \
-            || true)
-
-          if [ -n "$FILTERED" ]; then
-            echo "TypeScript errors found:"
-            echo "$FILTERED"
-            exit 1
-          else
-            echo "TypeScript check passed (known pre-existing errors filtered)"
-          fi
+        run: npm run typecheck
 
   # Job 2: Unit and Integration Tests
   unit-tests:
@@ -114,32 +94,30 @@ jobs:
           SKIP_DB_TESTS: true
 
       - name: Run Integration Tests
-        run: npx jest --config jest.config.integration.ts --passWithNoTests
+        run: npx jest --config jest.config.integration.ts
 
-      - name: Check coverage thresholds (non-blocking)
+      - name: Check coverage thresholds (blocking)
         run: |
           if [ ! -f coverage/coverage-summary.json ]; then
-            echo "⚠️ Coverage summary not found (non-blocking)"
-            # exit 1  # Disabled - not failing CI
-          else
-            STATEMENTS=$(jq '.total.statements.pct' coverage/coverage-summary.json)
-            BRANCHES=$(jq '.total.branches.pct' coverage/coverage-summary.json)
-            FUNCTIONS=$(jq '.total.functions.pct' coverage/coverage-summary.json)
-            LINES=$(jq '.total.lines.pct' coverage/coverage-summary.json)
-            
-            echo "Coverage: Statements=$STATEMENTS%, Branches=$BRANCHES%, Functions=$FUNCTIONS%, Lines=$LINES%"
-            
-            # Threshold set to 15% temporarily as current coverage is around 18%
-            if (( $(echo "$STATEMENTS < 15" | bc -l) )) || 
-               (( $(echo "$BRANCHES < 15" | bc -l) )) || 
-               (( $(echo "$FUNCTIONS < 15" | bc -l) )) || 
-               (( $(echo "$LINES < 15" | bc -l) )); then
-              echo "❌ Coverage below 15% threshold"
-              exit 1
-            else
-              echo "✅ Coverage meets thresholds"
-            fi
+            echo "❌ Coverage summary not found — coverage gate cannot run"
+            exit 1
           fi
+
+          STATEMENTS=$(jq '.total.statements.pct' coverage/coverage-summary.json)
+          BRANCHES=$(jq '.total.branches.pct' coverage/coverage-summary.json)
+          FUNCTIONS=$(jq '.total.functions.pct' coverage/coverage-summary.json)
+          LINES=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+
+          echo "Coverage: Statements=$STATEMENTS%, Branches=$BRANCHES%, Functions=$FUNCTIONS%, Lines=$LINES%"
+
+          # Blocking line-coverage floor. Real current floor is ~53%; we gate at a
+          # conservative 50% to avoid flaky wedging and ratchet upward per PR.
+          LINES_FLOOR=50
+          if (( $(echo "$LINES < $LINES_FLOOR" | bc -l) )); then
+            echo "❌ Line coverage ${LINES}% is below the ${LINES_FLOOR}% floor"
+            exit 1
+          fi
+          echo "✅ Line coverage ${LINES}% meets the ${LINES_FLOOR}% floor"
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
@@ -278,6 +256,34 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # Smoke E2E on the PR/main path. Cheap subset (@smoke, Desktop Chrome only) so a
+  # broken critical path fails CI before merge — the full E2E suite stays
+  # production-only above.
+  e2e-smoke:
+    name: E2E Smoke (Playwright)
+    runs-on: ubuntu-latest
+    needs: [should-run, build]
+    if: needs.should-run.outputs.should_run == 'true' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - name: Run smoke E2E
+        run: npx playwright test --grep @smoke --project="Desktop Chrome"
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'mock-key' }}
+      - uses: actions/upload-artifact@v6
+        if: failure()
+        with:
+          name: playwright-smoke-report
+          path: playwright-report/
+          retention-days: 7
+
   # Job 6: Security Audit
   security-audit:
     name: Security Audit
@@ -357,7 +363,7 @@ jobs:
   quality-gate:
     name: Quality Gate Summary
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, build, database-quality, security-audit]
+    needs: [lint-and-typecheck, unit-tests, build, database-quality, security-audit, e2e-smoke]
     if: always()
 
     steps:
@@ -411,6 +417,15 @@ jobs:
             echo "✅ Security Audit: PASSED"
           fi
 
+          if [[ "${{ needs.e2e-smoke.result }}" == "skipped" ]]; then
+            echo "⏭️  E2E Smoke: SKIPPED"
+          elif [[ "${{ needs.e2e-smoke.result }}" != "success" ]]; then
+            echo "❌ E2E Smoke: FAILED"
+            exit 1
+          else
+            echo "✅ E2E Smoke: PASSED"
+          fi
+
           # if [[ "${{ needs.lighthouse.result }}" != "success" ]]; then
           #   echo "❌ Lighthouse CI: FAILED"
           #   exit 1
@@ -446,7 +461,6 @@ jobs:
         run: supabase db push --dry-run && supabase db push
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        continue-on-error: true
 
   # Deploy Preview (for PRs only — production deploys are manual via deploy.yml)
   deploy-preview:

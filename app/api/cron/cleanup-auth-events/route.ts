@@ -13,6 +13,7 @@
 import { NextResponse } from 'next/server';
 import { verifyCronSecret } from '@/lib/auth/cron-auth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isMissingTableError } from '@/lib/services/db-error-helpers';
 import { createLogger } from '@/lib/logger';
 
 const RETENTION_DAYS = 90;
@@ -38,6 +39,21 @@ export async function GET(request: Request) {
       .select('id' as never);
 
     if (error) {
+      // Degrade gracefully if auth_events is not present in the target DB
+      // (restored as part of Phase 0.1). Skip rather than report a failure.
+      if (isMissingTableError(error)) {
+        log.warn('auth_events table absent — skipping cleanup', {
+          code: error.code,
+        });
+        return NextResponse.json({
+          success: true,
+          skipped: true,
+          reason: 'auth_events table not available',
+          deletedCount: 0,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       log.error('Failed to delete expired auth events', error);
       return NextResponse.json(
         {
@@ -66,9 +82,6 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     log.error('Unexpected error during auth events cleanup', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 200 });
   }
 }

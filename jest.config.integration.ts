@@ -5,6 +5,14 @@ const createJestConfig = nextJest({
   dir: './',
 });
 
+// When running inside a worktree (cwd at .claude/worktrees/<name>/), ignore the
+// OTHER worktrees but allow the current one. When running from main, ignore all
+// worktrees. A blanket `/.claude/` ignore breaks worktree test runs entirely.
+const worktreeMatch = process.cwd().match(/\.claude\/worktrees\/([^/]+)/);
+const worktreeIgnorePattern = worktreeMatch
+  ? `/\\.claude/worktrees/(?!${worktreeMatch[1]}/)`
+  : '/\\.claude/worktrees/';
+
 /**
  * Jest config for integration tests only.
  * Run via: npm run test:integration
@@ -23,7 +31,7 @@ const config: Config = {
 
   testMatch: ['<rootDir>/**/*.integration.test.{ts,tsx}'],
 
-  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/.claude/worktrees/'],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', worktreeIgnorePattern],
 
   maxWorkers: '50%',
   cache: true,

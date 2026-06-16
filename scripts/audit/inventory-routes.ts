@@ -91,10 +91,7 @@ function analyseFile(file: string): RouteEntry {
     ),
     requiresAdminClient: /\bcreateAdminClient\b/.test(source),
     requiresCronSecret: /\bverifyCronSecret\b|\bCRON_SECRET\b/.test(source),
-    requiresApiKey:
-      /\bverifyApiKey\b|\bauthenticateWithBearerToken\b|\bextractBearerToken\b|\bx-api-key\b/i.test(
-        source
-      ),
+    requiresApiKey: /\bverifyApiKey\b|\bx-api-key\b/i.test(source),
     requiresServiceRole: /\bSUPABASE_SERVICE_ROLE_KEY\b|\bSERVICE_ROLE_KEY\b/.test(source),
     roleChecks,
   };

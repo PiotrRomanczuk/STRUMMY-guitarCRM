@@ -22,16 +22,18 @@ export const SignInSchema = z.object({
  * Schema for user sign-up form validation.
  * Validates user details and ensures password confirmation matches.
  */
-export const SignUpSchema = z.object({
-  firstName: z.string().min(1, 'First name is required').max(100, 'First name too long'),
-  lastName: z.string().min(1, 'Last name is required').max(100, 'Last name too long'),
-  email: z.string().email('Valid email required'),
-  password: StrongPasswordSchema,
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+export const SignUpSchema = z
+  .object({
+    firstName: z.string().min(1, 'First name is required').max(100, 'First name too long'),
+    lastName: z.string().min(1, 'Last name is required').max(100, 'Last name too long'),
+    email: z.string().email('Valid email required'),
+    password: StrongPasswordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 /**
  * Schema for forgot password form validation.
@@ -45,13 +47,15 @@ export const ForgotPasswordSchema = z.object({
  * Schema for reset password form validation.
  * Validates new password requirements and ensures confirmation matches.
  */
-export const ResetPasswordSchema = z.object({
-  password: StrongPasswordSchema,
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+export const ResetPasswordSchema = z
+  .object({
+    password: StrongPasswordSchema,
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 /** Type inferred from SignInSchema for form data */
 export type SignInFormData = z.infer<typeof SignInSchema>;

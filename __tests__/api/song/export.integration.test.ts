@@ -1,12 +1,41 @@
 /**
  * Integration tests for Song Export API route.
  *
- * Tests the GET /api/song/export endpoint by mocking authenticateRequest and
- * createAdminClient. Covers auth, JSON export, CSV export, and schema validation.
+ * The route is wrapped in `withApiAuth` and resolves its Supabase client via
+ * `createClient()` from `@/lib/supabase/server`. We mock `withApiAuth` to inject
+ * a role context (or short-circuit to 401) and mock `createClient` to return a
+ * chainable query-builder. Covers auth, JSON export, CSV export, and schema
+ * validation.
  */
 
-import { authenticateRequest } from '@/lib/auth/api-auth';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
+
+// ---------------------------------------------------------------------------
+// Auth wrapper mock — drive the handler's role context from `mockAuthed`.
+// A null `mockAuthed` makes the wrapper return 401 (mirrors withApiAuth).
+// ---------------------------------------------------------------------------
+type MockRoles = { isAdmin: boolean; isTeacher: boolean; isStudent: boolean };
+let mockAuthed: { roles: MockRoles } | null = null;
+
+jest.mock('@/lib/auth/withApiAuth', () => ({
+  withApiAuth: jest.fn(
+    async (
+      req: unknown,
+      handler: (authed: { roles: MockRoles }, req: unknown) => Promise<unknown>
+    ) => {
+      if (!mockAuthed) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { NextResponse } = require('next/server');
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      return handler(mockAuthed, req);
+    }
+  ),
+}));
+
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: jest.fn(),
+}));
 
 // ---------------------------------------------------------------------------
 // Mock next/server — provide both NextRequest and a constructable NextResponse
@@ -57,14 +86,6 @@ jest.mock('next/server', () => ({
 // Must import GET *after* the mock is registered so it picks up MockNextResponse
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { GET } = require('@/app/api/song/export/route');
-
-jest.mock('@/lib/auth/api-auth', () => ({
-  authenticateRequest: jest.fn(),
-}));
-
-jest.mock('@/lib/supabase/admin', () => ({
-  createAdminClient: jest.fn(),
-}));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -124,16 +145,12 @@ function buildSongQueryBuilder(songs: typeof mockSongs = mockSongs) {
   return builder;
 }
 
-function buildProfileQueryBuilder(role: 'admin' | 'teacher' | 'student') {
-  const profile = {
-    is_admin: role === 'admin',
-    is_teacher: role === 'teacher' || role === 'admin',
+function rolesFor(role: 'admin' | 'teacher' | 'student'): MockRoles {
+  return {
+    isAdmin: role === 'admin',
+    isTeacher: role === 'teacher' || role === 'admin',
+    isStudent: role === 'student',
   };
-  const builder: Record<string, jest.Mock> = {};
-  builder.select = jest.fn().mockReturnValue(builder);
-  builder.eq = jest.fn().mockReturnValue(builder);
-  builder.single = jest.fn().mockResolvedValue({ data: profile, error: null });
-  return builder;
 }
 
 function setupMockClient(options: {
@@ -142,22 +159,15 @@ function setupMockClient(options: {
   songs?: typeof mockSongs;
 }) {
   const songQb = buildSongQueryBuilder(options.songs ?? mockSongs);
-  const profileQb = buildProfileQueryBuilder(options.role);
 
   const client = {
-    from: jest.fn((table: string) => {
-      if (table === 'profiles') return profileQb;
-      return songQb;
-    }),
+    from: jest.fn(() => songQb),
   };
 
-  (authenticateRequest as jest.Mock).mockResolvedValue(
-    options.userId
-      ? { user: { id: options.userId }, status: 200 }
-      : { user: null, error: 'Unauthorized', status: 401 }
-  );
-  (createAdminClient as jest.Mock).mockReturnValue(client);
-  return { client, songQb, profileQb };
+  // `null` userId mirrors an unauthenticated request → withApiAuth returns 401.
+  mockAuthed = options.userId ? { roles: rolesFor(options.role) } : null;
+  (createClient as jest.Mock).mockResolvedValue(client);
+  return { client, songQb };
 }
 
 // ---------------------------------------------------------------------------
@@ -165,7 +175,10 @@ function setupMockClient(options: {
 // ---------------------------------------------------------------------------
 
 describe('Song Export API – Integration Tests', () => {
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => {
+    jest.clearAllMocks();
+    mockAuthed = null;
+  });
 
   describe('Auth & Permissions', () => {
     it('returns 401 when not authenticated', async () => {
@@ -178,22 +191,7 @@ describe('Song Export API – Integration Tests', () => {
     });
 
     it('returns 403 when user is student', async () => {
-      const profileQb: Record<string, jest.Mock> = {};
-      profileQb.select = jest.fn().mockReturnValue(profileQb);
-      profileQb.eq = jest.fn().mockReturnValue(profileQb);
-      profileQb.single = jest.fn().mockResolvedValue({
-        data: { is_admin: false, is_teacher: false },
-        error: null,
-      });
-
-      (authenticateRequest as jest.Mock).mockResolvedValue({
-        user: { id: MOCK_STUDENT_ID },
-        status: 200,
-      });
-      (createAdminClient as jest.Mock).mockReturnValue({
-        from: jest.fn().mockReturnValue(profileQb),
-      });
-
+      setupMockClient({ userId: MOCK_STUDENT_ID, role: 'student' });
       const res = await GET(buildRequest());
       expect(res.status).toBe(403);
     });
