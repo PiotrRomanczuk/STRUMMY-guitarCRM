@@ -42,9 +42,10 @@ type Props = {
   rows: AssignmentRow[];
   counts: Record<string, number>;
   asStudent: boolean;
+  canCreate?: boolean;
 };
 
-export const AssignmentsListEditorial = ({ rows, counts, asStudent }: Props) => {
+export const AssignmentsListEditorial = ({ rows, counts, asStudent, canCreate }: Props) => {
   const showStudentColumn = !asStudent;
   const cols = showStudentColumn ? '150px 1fr 160px 140px' : '150px 1fr 140px';
 
@@ -59,34 +60,63 @@ export const AssignmentsListEditorial = ({ rows, counts, asStudent }: Props) => 
         padding: '28px 32px 64px',
       }}
     >
-      <div style={{ marginBottom: 20 }}>
-        <div
-          style={{
-            fontFamily: 'var(--mono)',
-            fontSize: 11,
-            color: 'var(--ink-4)',
-            textTransform: 'uppercase',
-            letterSpacing: '.16em',
-          }}
-        >
-          {asStudent ? 'From your teacher' : 'Teaching'}
+      <div
+        style={{
+          marginBottom: 20,
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 11,
+              color: 'var(--ink-4)',
+              textTransform: 'uppercase',
+              letterSpacing: '.16em',
+            }}
+          >
+            {asStudent ? 'From your teacher' : 'Teaching'}
+          </div>
+          <h1
+            style={{
+              margin: '4px 0 6px',
+              fontFamily: 'var(--serif)',
+              fontWeight: 400,
+              fontSize: 40,
+              letterSpacing: '-0.02em',
+              fontStyle: 'italic',
+            }}
+          >
+            Assignments
+          </h1>
+          <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>
+            {rows.length} total · {counts.pending ?? 0} pending · {counts.in_progress ?? 0} in
+            progress · {counts.completed ?? 0} completed · {counts.overdue ?? 0} overdue
+          </div>
         </div>
-        <h1
-          style={{
-            margin: '4px 0 6px',
-            fontFamily: 'var(--serif)',
-            fontWeight: 400,
-            fontSize: 40,
-            letterSpacing: '-0.02em',
-            fontStyle: 'italic',
-          }}
-        >
-          Assignments
-        </h1>
-        <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>
-          {rows.length} total · {counts.pending ?? 0} pending · {counts.in_progress ?? 0} in
-          progress · {counts.completed ?? 0} completed · {counts.overdue ?? 0} overdue
-        </div>
+        {canCreate && (
+          <Link
+            href="/dashboard/assignments/new"
+            style={{
+              border: '1px solid var(--rule)',
+              borderRadius: 8,
+              padding: '8px 16px',
+              fontFamily: 'var(--mono)',
+              fontSize: 11,
+              textTransform: 'uppercase',
+              letterSpacing: '.1em',
+              color: 'var(--ink-2)',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            + New assignment
+          </Link>
+        )}
       </div>
 
       <div

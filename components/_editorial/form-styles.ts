@@ -1,0 +1,91 @@
+import type { CSSProperties } from 'react';
+
+/**
+ * Shared inline-style tokens for editorial forms (lessons + assignments).
+ * Mirrors the `.theme-editorial` token set used by the read surfaces.
+ */
+export const formStyles: Record<string, CSSProperties> = {
+  page: {
+    background: 'var(--ivory)',
+    color: 'var(--ink)',
+    fontSize: 13,
+    lineHeight: 1.4,
+    minHeight: '100%',
+    padding: '28px 32px 64px',
+  },
+  shell: { maxWidth: 720, margin: '0 auto' },
+  eyebrow: {
+    fontFamily: 'var(--mono)',
+    fontSize: 11,
+    color: 'var(--ink-4)',
+    textTransform: 'uppercase',
+    letterSpacing: '.16em',
+  },
+  title: {
+    margin: '6px 0 24px',
+    fontFamily: 'var(--serif)',
+    fontWeight: 400,
+    fontSize: 40,
+    letterSpacing: '-0.02em',
+    fontStyle: 'italic',
+  },
+  field: { display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 18 },
+  label: {
+    fontFamily: 'var(--mono)',
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: '.12em',
+    color: 'var(--ink-4)',
+  },
+  input: {
+    background: 'var(--card)',
+    border: '1px solid var(--rule)',
+    borderRadius: 8,
+    padding: '10px 12px',
+    fontSize: 14,
+    color: 'var(--ink)',
+    fontFamily: 'var(--sans, inherit)',
+    width: '100%',
+  },
+  textarea: {
+    background: 'var(--card)',
+    border: '1px solid var(--rule)',
+    borderRadius: 8,
+    padding: '10px 12px',
+    fontSize: 14,
+    color: 'var(--ink)',
+    minHeight: 96,
+    fontFamily: 'var(--serif)',
+    width: '100%',
+    resize: 'vertical',
+  },
+  actions: { display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 },
+  primary: {
+    background: 'var(--ink)',
+    color: 'var(--ivory)',
+    border: 'none',
+    borderRadius: 8,
+    padding: '10px 20px',
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontFamily: 'var(--mono)',
+    textTransform: 'uppercase',
+    letterSpacing: '.08em',
+  },
+  cancel: {
+    color: 'var(--ink-4)',
+    textDecoration: 'none',
+    fontFamily: 'var(--mono)',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: '.1em',
+  },
+  error: {
+    color: 'var(--danger)',
+    fontSize: 13,
+    marginBottom: 16,
+    fontFamily: 'var(--mono)',
+  },
+  hint: { fontSize: 11, color: 'var(--ink-4)', fontStyle: 'italic' },
+};

@@ -1,16 +1,29 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import '@/app/design-preview/editorial-tokens.css';
 
-export default function Page() {
+import { redirect } from 'next/navigation';
+
+import { AssignmentCreateEditorial } from '@/components/assignments/editorial/create/AssignmentCreateEditorial';
+import { editorialFontClass } from '@/components/_editorial/editorial-fonts';
+import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getSongOptions, getStudentOptions } from '@/lib/services/lesson-form-data';
+
+export default async function NewAssignmentPage() {
+  const { user, isAdmin, isTeacher } = await getUserWithRolesSSR();
+  if (!user) {
+    redirect('/sign-in?redirect=/dashboard/assignments/new');
+  }
+  if (!isAdmin && !isTeacher) {
+    redirect('/dashboard/assignments');
+  }
+
+  const [students, songs] = await Promise.all([
+    getStudentOptions(user.id, isAdmin),
+    getSongOptions(),
+  ]);
+
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Coming soon</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          This page is being rebuilt.
-        </CardContent>
-      </Card>
+    <div className={editorialFontClass}>
+      <AssignmentCreateEditorial mode="create" students={students} songs={songs} />
     </div>
   );
 }

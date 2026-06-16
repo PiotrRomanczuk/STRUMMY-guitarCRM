@@ -1,16 +1,53 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import '@/app/design-preview/editorial-tokens.css';
 
-export default function Page() {
+import { notFound, redirect } from 'next/navigation';
+
+import { AssignmentCreateEditorial } from '@/components/assignments/editorial/create/AssignmentCreateEditorial';
+import { editorialFontClass } from '@/components/_editorial/editorial-fonts';
+import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getAssignmentDetail } from '@/lib/services/assignment-detail-queries';
+import { getSongOptions, getStudentOptions } from '@/lib/services/lesson-form-data';
+
+type PageProps = { params: Promise<{ id: string }> };
+
+export default async function EditAssignmentPage({ params }: PageProps) {
+  const { id } = await params;
+  const { user, isAdmin, isTeacher } = await getUserWithRolesSSR();
+  if (!user) {
+    redirect(`/sign-in?redirect=/dashboard/assignments/${id}/edit`);
+  }
+  if (!isAdmin && !isTeacher) {
+    redirect(`/dashboard/assignments/${id}`);
+  }
+
+  const assignment = await getAssignmentDetail(id);
+  if (!assignment) {
+    notFound();
+  }
+  if (!isAdmin && assignment.teacherId !== user.id) {
+    redirect(`/dashboard/assignments/${id}`);
+  }
+
+  const [students, songs] = await Promise.all([
+    getStudentOptions(user.id, isAdmin),
+    getSongOptions(),
+  ]);
+
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Coming soon</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          This page is being rebuilt.
-        </CardContent>
-      </Card>
+    <div className={editorialFontClass}>
+      <AssignmentCreateEditorial
+        mode="edit"
+        students={students}
+        songs={songs}
+        initial={{
+          assignmentId: assignment.id,
+          studentId: assignment.studentId,
+          title: assignment.title,
+          description: assignment.description,
+          dueDate: assignment.dueDate,
+          songId: assignment.song?.id ?? null,
+        }}
+      />
     </div>
   );
 }

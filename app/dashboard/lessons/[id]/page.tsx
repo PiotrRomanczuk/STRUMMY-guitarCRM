@@ -30,7 +30,7 @@ type PageProps = { params: Promise<{ id: string }> };
 
 export default async function LessonDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const { user } = await getUserWithRolesSSR();
+  const { user, isAdmin, isTeacher } = await getUserWithRolesSSR();
   if (!user) {
     redirect(`/sign-in?redirect=/dashboard/lessons/${id}`);
   }
@@ -40,9 +40,11 @@ export default async function LessonDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  const canEdit = isAdmin || (isTeacher && lesson.teacherId === user.id);
+
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <LessonDetailEditorial lesson={lesson} />
+      <LessonDetailEditorial lesson={lesson} canEdit={canEdit} />
     </div>
   );
 }

@@ -73,7 +73,13 @@ const CardHeader = ({ eyebrow, title }: { eyebrow: string; title: string }) => (
   </div>
 );
 
-export const LessonDetailEditorial = ({ lesson }: { lesson: LessonDetail }) => {
+export const LessonDetailEditorial = ({
+  lesson,
+  canEdit = false,
+}: {
+  lesson: LessonDetail;
+  canEdit?: boolean;
+}) => {
   const colour = lessonStatusColour(lesson.status);
   const studentDisplay = lesson.studentName ?? lesson.studentEmail ?? 'Student';
 
@@ -89,19 +95,36 @@ export const LessonDetailEditorial = ({ lesson }: { lesson: LessonDetail }) => {
       }}
     >
       <div style={{ maxWidth: 980, margin: '0 auto' }}>
-        <Link
-          href="/dashboard/lessons"
-          style={{
-            fontFamily: 'var(--mono)',
-            fontSize: 11,
-            color: 'var(--ink-4)',
-            textDecoration: 'none',
-            textTransform: 'uppercase',
-            letterSpacing: '.14em',
-          }}
-        >
-          ← Lessons
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link
+            href="/dashboard/lessons"
+            style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 11,
+              color: 'var(--ink-4)',
+              textDecoration: 'none',
+              textTransform: 'uppercase',
+              letterSpacing: '.14em',
+            }}
+          >
+            ← Lessons
+          </Link>
+          {canEdit && (
+            <Link
+              href={`/dashboard/lessons/${lesson.id}/edit`}
+              style={{
+                fontFamily: 'var(--mono)',
+                fontSize: 11,
+                color: 'var(--ink-3)',
+                textDecoration: 'none',
+                textTransform: 'uppercase',
+                letterSpacing: '.1em',
+              }}
+            >
+              Edit lesson
+            </Link>
+          )}
+        </div>
         <div style={{ marginTop: 14, marginBottom: 24 }}>
           <div
             style={{

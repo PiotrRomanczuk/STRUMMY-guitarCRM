@@ -38,7 +38,12 @@ export default async function AssignmentsPage() {
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <AssignmentsListEditorial rows={rows} counts={counts} asStudent={asStudent} />
+      <AssignmentsListEditorial
+        rows={rows}
+        counts={counts}
+        asStudent={asStudent}
+        canCreate={isTeacher || isAdmin}
+      />
     </div>
   );
 }
