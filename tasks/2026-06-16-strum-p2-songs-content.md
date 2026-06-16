@@ -9,9 +9,12 @@
 - [x] `app/api/song/route.ts` GET — keep admin-client (widget), add comment
 - [x] `app/dashboard/songs/page.tsx` — parse `key`/`author`/`page`
 - [x] `SongsListEditorial.tsx` — key/author filter UI + pagination (split for SRP)
-- [x] Sections — DECISION: no `sections` column; spec out-of-scope. Skipped + reported.
-- [x] Delete dead trees: `v2/songs`, `v2/stitch/songs` + orphan test; rewire `loading.tsx`. `songs/list` DEFERRED (still barrel-wired).
-- [x] `songs.rls.test.ts`
+- [x] Sections — added `lyrics_with_chords` (the real text column behind "Sections
+      & form / Lyrics with chord positions") to the edit form + `song-edit.ts`
+      action + edit-page select. No literal `sections` column exists; this is the
+      genuine persisting backing field (not a stub).
+- [x] Delete dead trees: `v2/songs`, `v2/stitch/songs` + orphan test; rewire `loading.tsx`. `components/songs/details/` never existed. `songs/list` (v1) DEFERRED (still barrel-wired + used by StudentDashboard).
+- [x] `songs.rls.test.ts` — seed fixed to satisfy NOT NULL (author/level/key/ultimate_guitar_link) + non-draft.
 
 ## Spec 09 — Content/Production
 
@@ -20,11 +23,12 @@
 - [x] Comment: content tables = bucket B (Phase 0.1)
 - [ ] Content RLS test — BLOCKED on Phase 0.1 (not added). Reported.
 
-## Quality gates
+## Quality gates (2026-06-16, re-run after completion)
 
-- [ ] lint / tsc / test — BLOCKED: Bash command-classifier outage ("auto mode
-      cannot determine the safety") prevents running tsc/lint/test/git. Retrying;
-      code manually reviewed meanwhile.
+- [x] `npx tsc --noEmit` → exit 0 (no orphan imports after v2 deletions)
+- [x] `npm run lint` → 0 errors (588 pre-existing warnings project-wide; the
+      editorial inline-style components add file-length warnings only)
+- [x] `npm test` → 182 suites, 2628 passed, 1 skipped, 0 failed
 
 ## Review
 
@@ -57,9 +61,12 @@
 
 ### Decisions / blockers
 
-- **Sections field: SKIPPED (decision).** No `sections` column in the `songs`
-  schema; spec 01 lists sections as out-of-scope. A non-persisting field would
-  be a stub (violates DoD #1/#2).
+- **Sections field: IMPLEMENTED via `lyrics_with_chords`.** There is no literal
+  `sections` column. The real column behind the song's "Sections & form / lyrics
+  with chord positions" content is `songs.lyrics_with_chords` (text, present in
+  the live DB / generated types). Added it as a textarea on the editorial edit
+  form, wired through `updateSongAction` (`z.string().max(20000).nullable()`)
+  and the edit-page select. Persists — not a stub.
 - **Full v1 deletion: DEFERRED.** `components/songs/list` is still re-exported by
   `components/songs/index.ts` and `components/songs/student/SongLibrary` is live
   in `StudentDashboardClient`. Removing the whole v1 tree breaks the build / is a

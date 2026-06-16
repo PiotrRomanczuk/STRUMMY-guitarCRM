@@ -38,7 +38,7 @@ export default async function EditSongPage({ params }: PageProps) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('songs')
-    .select('id, title, author, level, key, capo_fret, tempo, chords')
+    .select('id, title, author, level, key, capo_fret, tempo, chords, lyrics_with_chords')
     .eq('id', id)
     .is('deleted_at', null)
     .single();
@@ -82,7 +82,8 @@ export default async function EditSongPage({ params }: PageProps) {
             Edit {data.title ?? 'song'}
           </h1>
           <p style={{ margin: '0 0 22px', fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.55 }}>
-            The basics. Cover art, audio, lyrics, and tab notation get edited from the detail view.
+            The basics plus sections &amp; lyrics. Cover art, audio, and tab notation get edited
+            from the detail view.
           </p>
           <SongEditFormEditorial
             song={data as Parameters<typeof SongEditFormEditorial>[0]['song']}

@@ -17,6 +17,9 @@ const SongEditSchema = z.object({
   capo_fret: z.number().int().min(0).max(20).nullable(),
   tempo: z.number().int().min(0).max(300).nullable(),
   chords: z.string().max(500).nullable(),
+  // Song sections / lyrics-with-chord-positions. Real `songs.lyrics_with_chords`
+  // column (text) — the backing store for the "Sections & form" content.
+  lyrics_with_chords: z.string().max(20000).nullable(),
 });
 
 export type SongEditErrors = Partial<Record<string, string>> & { _form?: string };
@@ -41,6 +44,7 @@ export async function updateSongAction(
     capo_fret: numOrNull(formData.get('capo_fret')),
     tempo: numOrNull(formData.get('tempo')),
     chords: String(formData.get('chords') ?? '').trim() || null,
+    lyrics_with_chords: String(formData.get('lyrics_with_chords') ?? '').trim() || null,
   });
 
   if (!parsed.success) {
