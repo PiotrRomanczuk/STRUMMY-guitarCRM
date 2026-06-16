@@ -1229,6 +1229,7 @@ export type Database = {
           is_admin: boolean;
           is_development: boolean;
           is_parent: boolean;
+          invite_email: string | null;
           is_shadow: boolean | null;
           is_student: boolean;
           is_teacher: boolean;
@@ -1262,6 +1263,7 @@ export type Database = {
           is_admin?: boolean;
           is_development?: boolean;
           is_parent?: boolean;
+          invite_email?: string | null;
           is_shadow?: boolean | null;
           is_student?: boolean;
           is_teacher?: boolean;
@@ -1295,6 +1297,7 @@ export type Database = {
           is_admin?: boolean;
           is_development?: boolean;
           is_parent?: boolean;
+          invite_email?: string | null;
           is_shadow?: boolean | null;
           is_student?: boolean;
           is_teacher?: boolean;

@@ -11,6 +11,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import transporter, { isSmtpConfigured } from '@/lib/email/smtp-client';
+import { getDeliverableEmail } from '@/lib/email/recipient';
 import { checkRateLimit, checkSystemRateLimit } from '@/lib/email/rate-limiter';
 import {
   getRetryableNotifications,
@@ -19,11 +20,7 @@ import {
   shouldMoveToDeadLetter,
   moveToDeadLetter,
 } from '@/lib/email/retry-handler';
-import {
-  logBatchProcessed,
-  logError,
-  logInfo,
-} from '@/lib/logging/notification-logger';
+import { logBatchProcessed, logError, logInfo } from '@/lib/logging/notification-logger';
 import type { NotificationType } from '@/types/notifications';
 import { sendNotification } from './notification-service';
 import { logger } from '@/lib/logger';
@@ -68,8 +65,10 @@ export async function processQueuedNotifications(
     const supabase = createAdminClient();
 
     // Get pending notifications
-    const { data: rpcData, error: fetchError } = await supabase
-      .rpc('get_pending_notifications' as never, { batch_size: batchSize } as never);
+    const { data: rpcData, error: fetchError } = await supabase.rpc(
+      'get_pending_notifications' as never,
+      { batch_size: batchSize } as never
+    );
     const queuedNotifications = rpcData as QueuedNotification[] | null;
 
     if (fetchError) {
@@ -113,7 +112,9 @@ export async function processQueuedNotifications(
               })
               .eq('id', notification.id);
 
-            logInfo(`Skipped duplicate notification ${notification.id} — already sent for ${notification.entity_type}:${notification.entity_id}`);
+            logInfo(
+              `Skipped duplicate notification ${notification.id} — already sent for ${notification.entity_type}:${notification.entity_id}`
+            );
             processed++;
             continue;
           }
@@ -180,7 +181,11 @@ export async function processQueuedNotifications(
 /**
  * Retry failed notifications with exponential backoff
  */
-export async function retryFailedNotifications(): Promise<{ retried: number; failed: number; deadLettered: number }> {
+export async function retryFailedNotifications(): Promise<{
+  retried: number;
+  failed: number;
+  deadLettered: number;
+}> {
   try {
     const supabase = createAdminClient();
 
@@ -204,10 +209,11 @@ export async function retryFailedNotifications(): Promise<{ retried: number; fai
           continue;
         }
 
-        // Get recipient info (include is_student for student email kill switch)
+        // Get recipient info (include is_student for student email kill switch,
+        // is_shadow + invite_email for the deliverable-email chokepoint)
         const { data: recipient } = await supabase
           .from('profiles')
-          .select('id, email, full_name, is_student')
+          .select('id, email, full_name, is_student, is_shadow, invite_email')
           .eq('id', notification.recipient_user_id)
           .single();
 
@@ -217,9 +223,32 @@ export async function retryFailedNotifications(): Promise<{ retried: number; fai
 
         // Student email kill switch: skip retry for students when emails disabled
         if (recipient.is_student && !isStudentEmailEnabled()) {
-          logInfo(`Skipping retry for student notification ${notification.id} — student emails disabled`);
-          await updateNotificationRetry(notification.id, 'failed', notification.retry_count + 1, 'Student emails disabled');
+          logInfo(
+            `Skipping retry for student notification ${notification.id} — student emails disabled`
+          );
+          await updateNotificationRetry(
+            notification.id,
+            'failed',
+            notification.retry_count + 1,
+            'Student emails disabled'
+          );
           failed++;
+          continue;
+        }
+
+        // Deliverable-email chokepoint: un-invited shadows are skipped (not
+        // retried), never bounced to a placeholder address (spec 06 §6.2).
+        const deliverableEmail = getDeliverableEmail({
+          is_shadow: recipient.is_shadow ?? false,
+          email: recipient.email,
+          invite_email: recipient.invite_email ?? null,
+        });
+        if (!deliverableEmail) {
+          logInfo(`Skipping shadow notification ${notification.id} — no deliverable email`);
+          await supabase
+            .from('notification_log')
+            .update({ status: 'skipped', error_message: 'skipped_shadow' })
+            .eq('id', notification.id);
           continue;
         }
 
@@ -242,7 +271,12 @@ export async function retryFailedNotifications(): Promise<{ retried: number; fai
 
         // Check SMTP configuration
         if (!isSmtpConfigured()) {
-          await updateNotificationRetry(notification.id, 'failed', notification.retry_count + 1, 'SMTP not configured');
+          await updateNotificationRetry(
+            notification.id,
+            'failed',
+            notification.retry_count + 1,
+            'SMTP not configured'
+          );
           failed++;
           continue;
         }
@@ -250,17 +284,13 @@ export async function retryFailedNotifications(): Promise<{ retried: number; fai
         // Attempt to send
         await transporter.sendMail({
           from: `"Guitar CRM" <${process.env.GMAIL_USER}>`,
-          to: recipient.email,
+          to: deliverableEmail,
           subject: notification.subject,
           html: htmlContent,
         });
 
         // Update to sent (using retry handler)
-        await updateNotificationRetry(
-          notification.id,
-          'sent',
-          notification.retry_count + 1
-        );
+        await updateNotificationRetry(notification.id, 'sent', notification.retry_count + 1);
 
         retried++;
       } catch (error) {

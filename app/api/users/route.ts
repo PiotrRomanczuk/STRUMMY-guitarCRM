@@ -4,7 +4,12 @@ import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { randomUUID } from 'crypto';
 import { maskShadowEmail } from '@/lib/auth/shadow-email';
 import { z } from 'zod';
-import { logShadowUserCreated, logAdminUserCreated } from '@/lib/auth/auth-event-logger';
+import {
+  logShadowUserCreated,
+  logAdminUserCreated,
+  logShadowInviteEmailSet,
+  logShadowInviteSent,
+} from '@/lib/auth/auth-event-logger';
 import { logger } from '@/lib/logger';
 
 const CreateUserSchema = z.object({
@@ -401,6 +406,42 @@ export async function PATCH(request: Request) {
     if (updateError) {
       logger.error('Error setting invite_email:', updateError);
       return Response.json({ error: 'Internal server error' }, { status: 500 });
+    }
+
+    // TODO(phase-0.1): remove try/catch once bucket-A tables are restored to prod
+    try {
+      await logShadowInviteEmailSet(inviteEmail, user.id, userId);
+    } catch (logError) {
+      logger.error('Failed to log shadow_invite_email_set', logError);
+    }
+
+    // Set-and-send: dispatch the Supabase invite so the student can claim this
+    // shadow profile. The handle_new_user trigger matches invite_email on signup
+    // and transfers all references (ADR-0002). A shadow WITH invite_email is
+    // exactly who we invite — no is_shadow rejection here (spec 06 §6.1).
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      'http://localhost:3000';
+
+    const supabaseAdmin = createAdminClient();
+    const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(inviteEmail, {
+      redirectTo: `${baseUrl}/accept-invitation`,
+    });
+
+    if (inviteError) {
+      logger.error('Failed to send shadow invite:', inviteError);
+      return Response.json(
+        { error: `Invite email saved but sending failed: ${inviteError.message}` },
+        { status: 502 }
+      );
+    }
+
+    // TODO(phase-0.1): remove try/catch once bucket-A tables are restored to prod
+    try {
+      await logShadowInviteSent(inviteEmail, user.id, userId);
+    } catch (logError) {
+      logger.error('Failed to log shadow_invite_sent', logError);
     }
 
     return Response.json(updated, { status: 200 });
