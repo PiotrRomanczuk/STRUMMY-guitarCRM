@@ -85,7 +85,15 @@ type Song = {
   capo_fret: number | null;
   tempo: number | null;
   chords: string | null;
+  lyrics_with_chords: string | null;
 };
+
+const textareaStyle = {
+  ...monoStyle,
+  minHeight: 160,
+  resize: 'vertical' as const,
+  lineHeight: 1.5,
+} as const;
 
 export const SongEditFormEditorial = ({ song }: { song: Song }) => {
   const [state, formAction, pending] = useActionState(updateSongAction, INITIAL);
@@ -181,6 +189,17 @@ export const SongEditFormEditorial = ({ song }: { song: Song }) => {
           placeholder="C, G, Am, F"
           style={monoStyle}
         />
+      </div>
+      <div>
+        <Label optional>Sections &amp; lyrics</Label>
+        <textarea
+          name="lyrics_with_chords"
+          maxLength={20000}
+          defaultValue={song.lyrics_with_chords ?? ''}
+          placeholder={'[Verse 1]\nC        G\nLyrics line one…'}
+          style={textareaStyle}
+        />
+        {state.errors?.lyrics_with_chords && <Error msg={state.errors.lyrics_with_chords} />}
       </div>
 
       {state.errors?._form && (

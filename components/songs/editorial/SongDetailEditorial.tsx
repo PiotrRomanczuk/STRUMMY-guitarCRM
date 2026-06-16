@@ -8,6 +8,7 @@ import type {
 
 import { ComingSoonCard } from './ComingSoonCard';
 import { SongChordsCardEditorial } from './SongChordsCardEditorial';
+import { SongDetailTabs } from './SongDetailTabs';
 import { SongHeroEditorial } from './SongHeroEditorial';
 import { LearnersCard, RelatedCard, UsageCard } from './SongSidebarEditorial';
 
@@ -16,6 +17,8 @@ type Props = {
   stats: SongUsageStats;
   learners: SongLearner[];
   related: RelatedSongRow[];
+  /** Teacher/admin only — gates the Production tab. Students never see it. */
+  canSeeProduction: boolean;
 };
 
 const upperCaseChordRoots = (chords: string | null | undefined): string => {
@@ -35,8 +38,35 @@ const chordTokensFromSong = (song: Song): string[] => {
   return tokens;
 };
 
-export const SongDetailEditorial = ({ song, stats, learners, related }: Props) => {
+export const SongDetailEditorial = ({
+  song,
+  stats,
+  learners,
+  related,
+  canSeeProduction,
+}: Props) => {
   const chordTokens = chordTokensFromSong(song);
+
+  const overview = (
+    <div
+      style={{
+        padding: '24px 32px 0',
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr)',
+        gap: 24,
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
+        <SongChordsCardEditorial title={song.title ?? 'this song'} chordTokens={chordTokens} />
+        <ComingSoonCard />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <UsageCard stats={stats} />
+        <LearnersCard learners={learners} />
+        <RelatedCard related={related} />
+      </div>
+    </div>
+  );
 
   return (
     <div
@@ -50,24 +80,7 @@ export const SongDetailEditorial = ({ song, stats, learners, related }: Props) =
       }}
     >
       <SongHeroEditorial song={song} chordTokens={chordTokens} />
-      <div
-        style={{
-          padding: '24px 32px 0',
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr)',
-          gap: 24,
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
-          <SongChordsCardEditorial title={song.title ?? 'this song'} chordTokens={chordTokens} />
-          <ComingSoonCard />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <UsageCard stats={stats} />
-          <LearnersCard learners={learners} />
-          <RelatedCard related={related} />
-        </div>
-      </div>
+      {canSeeProduction ? <SongDetailTabs songId={song.id} overview={overview} /> : overview}
     </div>
   );
 };

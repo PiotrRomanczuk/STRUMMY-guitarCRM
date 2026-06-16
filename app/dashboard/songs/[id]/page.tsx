@@ -5,6 +5,7 @@ import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
 
 import { logger } from '@/lib/logger';
 import { createClient } from '@/lib/supabase/server';
+import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import {
   getRelatedSongs,
   getSongLearners,
@@ -60,7 +61,7 @@ type PageProps = { params: Promise<{ id: string }> };
 export default async function SongDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  const song = await loadSong(id);
+  const [song, { isAdmin, isTeacher }] = await Promise.all([loadSong(id), getUserWithRolesSSR()]);
   if (!song) {
     notFound();
   }
@@ -73,7 +74,13 @@ export default async function SongDetailPage({ params }: PageProps) {
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <SongDetailEditorial song={song} stats={stats} learners={learners} related={related} />
+      <SongDetailEditorial
+        song={song}
+        stats={stats}
+        learners={learners}
+        related={related}
+        canSeeProduction={isAdmin || isTeacher}
+      />
     </div>
   );
 }

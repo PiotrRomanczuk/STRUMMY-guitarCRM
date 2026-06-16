@@ -52,6 +52,11 @@ const parseSort = (value: string | string[] | undefined): SongsListFilters['sort
     : 'newest';
 };
 
+const parsePage = (value: string | string[] | undefined): number => {
+  const raw = Number(pickString(value));
+  return Number.isInteger(raw) && raw > 0 ? raw : 1;
+};
+
 export default async function SongsPage({ searchParams }: { searchParams: SearchParams }) {
   const { user, isAdmin, isTeacher, isStudent } = await getUserWithRolesSSR();
   if (!user) {
@@ -61,11 +66,14 @@ export default async function SongsPage({ searchParams }: { searchParams: Search
   const params = await searchParams;
   const filters: SongsListFilters = {
     level: parseLevel(params.level),
+    key: pickString(params.key)?.trim() || undefined,
+    author: pickString(params.author)?.trim() || undefined,
     search: pickString(params.search)?.trim() || undefined,
     sort: parseSort(params.sort),
+    page: parsePage(params.page),
   };
 
-  const { songs, total, breakdown } = await getSongsForList(
+  const { songs, total, page, totalPages, breakdown } = await getSongsForList(
     user,
     { isAdmin, isTeacher, isStudent },
     filters
@@ -76,6 +84,8 @@ export default async function SongsPage({ searchParams }: { searchParams: Search
       <SongsListEditorial
         songs={songs}
         total={total}
+        page={page}
+        totalPages={totalPages}
         breakdown={breakdown}
         canCreate={isTeacher || isAdmin}
         filters={filters}
