@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -38,7 +39,11 @@ function buildUserUpdatePayload(body: UpdateUserInput): Record<string, unknown> 
   if (body.isTeacher !== undefined) payload.is_teacher = body.isTeacher;
   if (body.isStudent !== undefined) payload.is_student = body.isStudent;
   if (body.isParent !== undefined) payload.is_parent = body.isParent;
-  if (body.isActive !== undefined) payload.is_active = body.isActive;
+  if (body.isActive !== undefined) {
+    payload.is_active = body.isActive;
+    // Reactivation clears the soft-delete marker; deactivation stamps it.
+    payload.deleted_at = body.isActive ? null : new Date().toISOString();
+  }
   if (body.parentId !== undefined) payload.parent_id = body.parentId;
 
   return payload;
@@ -144,6 +149,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return Response.json({ error: error.message }, { status: 500 });
     }
 
+    // Lifting/applying the auth ban mirrors the is_active transition so a
+    // reactivated user can sign in again (and a deactivated one cannot).
+    if (body.isActive !== undefined) {
+      const { error: banError } = await createAdminClient().auth.admin.updateUserById(id, {
+        ban_duration: body.isActive ? 'none' : '876000h',
+      });
+      if (banError) {
+        logger.error('Error toggling auth ban on isActive change:', banError);
+        return Response.json(
+          { ...data, warning: 'Profile updated but auth ban toggle failed' },
+          { status: 200 }
+        );
+      }
+    }
+
     return Response.json(data, { status: 200 });
   } catch (error) {
     logger.error('Error updating user:', error);
@@ -151,6 +171,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
+/**
+ * Soft-delete (deactivate) a Profile. Sets is_active=false + deleted_at via the
+ * cookie-bound client (RLS admits admin) and bans the auth user via the admin
+ * client. NEVER hard-deletes — FKs to lessons/assignments/repertoire are kept
+ * (MASTER_SPEC ledger D-09). Reactivate via PUT with isActive=true.
+ */
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, isAdmin } = await getUserWithRolesSSR();
@@ -160,17 +186,37 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     const { id } = await params;
+
+    if (id === user.id) {
+      return Response.json({ error: 'You cannot deactivate your own account' }, { status: 400 });
+    }
+
     const supabase = await createClient();
 
-    const { error } = await supabase.from('profiles').delete().eq('id', id);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_active: false, deleted_at: new Date().toISOString() })
+      .eq('id', id);
 
     if (error) {
       return Response.json({ error: error.message }, { status: 500 });
     }
 
+    const { error: banError } = await createAdminClient().auth.admin.updateUserById(id, {
+      ban_duration: '876000h',
+    });
+
+    if (banError) {
+      logger.error('Error banning deactivated auth user:', banError);
+      return Response.json(
+        { success: true, warning: 'Profile deactivated but login ban failed' },
+        { status: 200 }
+      );
+    }
+
     return Response.json({ success: true }, { status: 200 });
   } catch (error) {
-    logger.error('Error deleting user:', error);
+    logger.error('Error deactivating user:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -28,7 +28,7 @@ export async function sendUserInvite(userId: string) {
 
   const { data: targetProfile } = await supabase
     .from('profiles')
-    .select('email, is_shadow, sign_in_count, full_name')
+    .select('email, is_shadow, invite_email, sign_in_count, full_name')
     .eq('id', userId)
     .single();
 
@@ -36,12 +36,20 @@ export async function sendUserInvite(userId: string) {
     throw new Error('User not found');
   }
 
-  if (targetProfile.is_shadow) {
-    throw new Error('Cannot send invite to shadow user — they need a real email first');
-  }
-
   if (targetProfile.sign_in_count > 0) {
     throw new Error('User has already signed in — no invite needed');
+  }
+
+  // Shadow profiles carry a placeholder email; the real address lives in
+  // invite_email (set via PATCH /api/users). Prefer it when present so shadows
+  // can be invited without first promoting them to a real account.
+  const inviteAddress =
+    targetProfile.is_shadow && targetProfile.invite_email
+      ? targetProfile.invite_email
+      : targetProfile.email;
+
+  if (targetProfile.is_shadow && !targetProfile.invite_email) {
+    throw new Error('Set an invite email for this unclaimed profile before sending an invite');
   }
 
   const supabaseAdmin = createAdminClient();
@@ -54,20 +62,60 @@ export async function sendUserInvite(userId: string) {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-  const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-    targetProfile.email,
-    {
-      redirectTo: `${baseUrl}/accept-invitation`,
-    }
-  );
+  const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(inviteAddress, {
+    redirectTo: `${baseUrl}/accept-invitation`,
+  });
 
   if (inviteError) {
-    logInviteFailed(targetProfile.email, currentUser.id, inviteError.message);
+    logInviteFailed(inviteAddress, currentUser.id, inviteError.message);
     throw new Error(`Failed to send invite: ${inviteError.message}`);
   }
 
-  logInviteSent(targetProfile.email, currentUser.id, userId);
+  logInviteSent(inviteAddress, currentUser.id, userId);
   return { success: true };
+}
+
+/**
+ * Invite an unclaimed (shadow) Profile: persist the real invite_email on the
+ * shadow row, then dispatch the invite. Teacher/admin only (RLS + sendUserInvite
+ * re-check). Surfaces errors to the caller; nothing is swallowed.
+ */
+export async function inviteShadowUser(userId: string, inviteEmail: string) {
+  const trimmed = inviteEmail.trim();
+  if (!trimmed) {
+    throw new Error('An invite email is required');
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+  if (!currentUser) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+
+  const { data: callerProfile } = await supabase
+    .from('profiles')
+    .select('is_admin, is_teacher')
+    .eq('id', currentUser.id)
+    .single();
+
+  if (!callerProfile?.is_admin && !callerProfile?.is_teacher) {
+    throw new Error('Unauthorized: Only admins and teachers can send invites');
+  }
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ invite_email: trimmed })
+    .eq('id', userId)
+    .eq('is_shadow', true);
+
+  if (updateError) {
+    logger.error('Error setting invite_email on shadow profile:', updateError);
+    throw new Error('Could not save the invite email — try again');
+  }
+
+  return sendUserInvite(userId);
 }
 
 export async function inviteUser(
@@ -288,6 +336,12 @@ export async function createShadowUser(studentEmail: string) {
   return { success: true, userId };
 }
 
+/**
+ * Soft-delete (deactivate) a Profile. Sets is_active=false + deleted_at and
+ * bans the auth user indefinitely. NEVER hard-deletes the profile or auth user —
+ * lesson/assignment/repertoire FKs are preserved (MASTER_SPEC ledger D-09).
+ * Reactivation is the admin PUT /api/users/[id] with isActive=true.
+ */
 export async function deleteUser(userId: string) {
   const supabase = await createClient();
   const {
@@ -296,6 +350,10 @@ export async function deleteUser(userId: string) {
 
   if (!user) {
     throw new Error('Unauthorized');
+  }
+
+  if (user.id === userId) {
+    throw new Error('You cannot deactivate your own account');
   }
 
   const { data: profile } = await supabase
@@ -310,23 +368,29 @@ export async function deleteUser(userId: string) {
 
   const supabaseAdmin = createAdminClient();
 
-  const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
-
-  const { error: profileError } = await supabaseAdmin.from('profiles').delete().eq('id', userId);
+  const { error: profileError } = await supabaseAdmin
+    .from('profiles')
+    .update({ is_active: false, deleted_at: new Date().toISOString() })
+    .eq('id', userId);
 
   if (profileError) {
-    logger.error('Error deleting profile:', profileError);
+    logger.error('Error deactivating profile:', profileError);
+    throw new Error(`Failed to deactivate user: ${profileError.message}`);
   }
 
-  if (authUser?.user) {
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
 
-    if (error) {
-      logger.error('Error deleting auth user:', error);
-      if (!profileError) {
-        return { success: true, warning: 'Profile deleted but auth user deletion failed' };
-      }
-      throw new Error(`Failed to delete user: ${error.message}`);
+  if (authUser?.user) {
+    const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      ban_duration: '876000h', // ~100 years = indefinite
+    });
+
+    if (banError) {
+      logger.error('Error banning auth user:', banError);
+      return {
+        success: true,
+        warning: 'Profile deactivated but login ban failed — user may still sign in',
+      };
     }
   }
 

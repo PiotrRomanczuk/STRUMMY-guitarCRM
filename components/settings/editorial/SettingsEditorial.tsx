@@ -74,13 +74,26 @@ const readonlyInputStyle = {
   color: 'var(--ink-3)',
 };
 
+const editableInputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 12px',
+  border: '1px solid var(--rule)',
+  borderRadius: 6,
+  background: 'var(--paper)',
+  fontFamily: 'var(--sans)',
+  fontSize: 14,
+  color: 'var(--ink)',
+};
+
 type Props = {
   email: string;
   fullName: string | null;
+  phone: string | null;
+  avatarUrl: string | null;
   roleLabel: string;
 };
 
-export const SettingsEditorial = ({ email, fullName, roleLabel }: Props) => {
+export const SettingsEditorial = ({ email, fullName, phone, avatarUrl, roleLabel }: Props) => {
   const [state, formAction, pending] = useActionState(updateProfileNameAction, INITIAL);
 
   return (
@@ -154,16 +167,28 @@ export const SettingsEditorial = ({ email, fullName, roleLabel }: Props) => {
                 placeholder="Your name"
                 maxLength={120}
                 required
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid var(--rule)',
-                  borderRadius: 6,
-                  background: 'var(--paper)',
-                  fontFamily: 'var(--sans)',
-                  fontSize: 14,
-                  color: 'var(--ink)',
-                }}
+                style={editableInputStyle}
+              />
+            </div>
+            <div>
+              <FieldLabel label="Phone" />
+              <input
+                name="phone"
+                type="tel"
+                defaultValue={phone ?? ''}
+                placeholder="+1 555 123 4567"
+                maxLength={50}
+                style={editableInputStyle}
+              />
+            </div>
+            <div>
+              <FieldLabel label="Avatar URL" />
+              <input
+                name="avatar_url"
+                type="url"
+                defaultValue={avatarUrl ?? ''}
+                placeholder="https://…"
+                style={editableInputStyle}
               />
               {state.error && (
                 <div

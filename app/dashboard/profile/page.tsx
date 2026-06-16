@@ -1,16 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { redirect } from 'next/navigation';
 
-export default function Page() {
-  return (
-    <div className="mx-auto max-w-2xl p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Coming soon</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          This page is being rebuilt.
-        </CardContent>
-      </Card>
-    </div>
-  );
+// The single self-edit surface lives at /dashboard/settings (spec 10).
+export default function ProfilePage() {
+  redirect('/dashboard/settings');
 }

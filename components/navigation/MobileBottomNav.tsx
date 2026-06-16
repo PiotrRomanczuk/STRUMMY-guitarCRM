@@ -4,8 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard, Music, BookOpen, Users,
-  BarChart, MoreHorizontal, type LucideIcon,
+  LayoutDashboard,
+  Music,
+  BookOpen,
+  Users,
+  BarChart,
+  MoreHorizontal,
+  type LucideIcon,
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -21,17 +26,26 @@ const SHARED_TABS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/dashboard/songs', label: 'Songs', icon: Music },
 ];
 
-const TAB_CLASS = 'flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors duration-200';
+const TAB_CLASS =
+  'flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors duration-200';
 
-export function MobileBottomNav({ isStudent, onOpenSidebar }: MobileBottomNavProps) {
+export function MobileBottomNav({
+  isAdmin,
+  isTeacher,
+  isStudent,
+  onOpenSidebar,
+}: MobileBottomNavProps) {
   const pathname = usePathname();
 
-  const tabs = [
-    ...SHARED_TABS,
-    isStudent
-      ? { href: '/dashboard/stats', label: 'Stats', icon: BarChart }
-      : { href: '/dashboard/users', label: 'Students', icon: Users },
-  ];
+  // Union of held-role destinations: a teacher/admin gets Students, a student
+  // gets Stats. A multi-role Profile (e.g. teacher+student) sees both, never
+  // an either/or that drops Stats (spec 10, site #3).
+  const roleTabs: { href: string; label: string; icon: LucideIcon }[] = [];
+  if (isTeacher || isAdmin)
+    roleTabs.push({ href: '/dashboard/users', label: 'Students', icon: Users });
+  if (isStudent) roleTabs.push({ href: '/dashboard/stats', label: 'Stats', icon: BarChart });
+
+  const tabs = [...SHARED_TABS, ...roleTabs];
 
   const isActive = (href: string) =>
     href === '/dashboard' ? pathname === '/dashboard' : (pathname?.startsWith(href) ?? false);
@@ -41,7 +55,7 @@ export function MobileBottomNav({ isStudent, onOpenSidebar }: MobileBottomNavPro
       className={cn(
         'fixed bottom-0 left-0 right-0 z-50 md:hidden',
         'bg-background/95 backdrop-blur-md border-t border-border',
-        'pb-[env(safe-area-inset-bottom)]',
+        'pb-[env(safe-area-inset-bottom)]'
       )}
       aria-label="Mobile navigation"
     >

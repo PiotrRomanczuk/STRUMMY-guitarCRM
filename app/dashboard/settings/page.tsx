@@ -43,13 +43,19 @@ export default async function SettingsPage() {
   }
 
   const supabase = await createClient();
-  const { data } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+  const { data } = await supabase
+    .from('profiles')
+    .select('full_name, phone, avatar_url')
+    .eq('id', user.id)
+    .single();
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
       <SettingsEditorial
         email={user.email ?? ''}
         fullName={(data?.full_name as string) ?? null}
+        phone={(data?.phone as string) ?? null}
+        avatarUrl={(data?.avatar_url as string) ?? null}
         roleLabel={roleLabelFrom(isAdmin, isTeacher, isStudent)}
       />
     </div>

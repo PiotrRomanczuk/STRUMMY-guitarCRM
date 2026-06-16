@@ -15,6 +15,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { roleChipsLabel } from '@/lib/roles/roleLabel';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -106,13 +107,19 @@ export function HorizontalNav({ user, isAdmin, isTeacher, isStudent }: Horizonta
   const menuItems = getMenuItems();
 
   // Split into primary nav items (always visible) and secondary (in "More" dropdown on tablet)
-  const secondaryIds = new Set(['skills', 'cohorts', 'spotify-matches', 'song-stats', 'lesson-stats', 'logs']);
+  const secondaryIds = new Set([
+    'skills',
+    'cohorts',
+    'spotify-matches',
+    'song-stats',
+    'lesson-stats',
+    'logs',
+  ]);
   const primaryItems = menuItems.filter((item) => !secondaryIds.has(item.id));
   const secondaryItems = menuItems.filter((item) => secondaryIds.has(item.id));
   const hasSecondaryActive = secondaryItems.some(
     (item) =>
-      pathname === item.path ||
-      (item.path !== '/dashboard' && pathname.startsWith(item.path))
+      pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path))
   );
 
   return (
@@ -126,7 +133,7 @@ export function HorizontalNav({ user, isAdmin, isTeacher, isStudent }: Horizonta
           <div className="hidden sm:block">
             <h1 className="font-semibold text-sm">GuitarStudio</h1>
             <p className="text-xs text-muted-foreground">
-              {isAdmin ? 'Admin' : isTeacher ? 'Teacher' : isStudent ? 'Student' : 'User'}
+              {roleChipsLabel(isAdmin, isTeacher, isStudent)}
             </p>
           </div>
         </Link>
@@ -225,7 +232,6 @@ export function HorizontalNav({ user, isAdmin, isTeacher, isStudent }: Horizonta
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
         </div>
       </div>
     </nav>

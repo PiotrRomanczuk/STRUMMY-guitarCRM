@@ -6,6 +6,8 @@ export type StudentProfile = {
   fullName: string | null;
   email: string | null;
   createdAt: string | null;
+  isShadow: boolean;
+  inviteEmail: string | null;
 };
 
 export type StudentRepertoireRow = {
@@ -28,7 +30,7 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, created_at')
+    .select('id, full_name, email, created_at, is_shadow, invite_email')
     .eq('id', studentId)
     .single();
 
@@ -47,6 +49,8 @@ export async function getStudentProfile(studentId: string): Promise<StudentProfi
     fullName: (data.full_name as string) ?? null,
     email: (data.email as string) ?? null,
     createdAt: (data.created_at as string) ?? null,
+    isShadow: (data.is_shadow as boolean) ?? false,
+    inviteEmail: (data.invite_email as string) ?? null,
   };
 }
 

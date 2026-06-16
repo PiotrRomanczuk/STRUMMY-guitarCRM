@@ -6,6 +6,8 @@ import type {
   StudentRepertoireRow,
 } from '@/lib/services/student-detail-queries';
 import { totalPracticeMinutes } from '@/lib/services/student-detail-queries';
+import { ShadowBadge } from './ShadowBadge';
+import { InviteShadowButton } from './InviteShadowButton';
 
 const STATUS_COLOURS: Record<string, string> = {
   to_learn: 'var(--ink-4)',
@@ -166,13 +168,22 @@ export const StudentDetailEditorial = ({ profile, repertoire, lessons }: Props) 
                 fontSize: 44,
                 letterSpacing: '-0.02em',
                 fontStyle: 'italic',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
               }}
             >
               {display}
+              {profile.isShadow && <ShadowBadge />}
             </h1>
             {profile.email && (
               <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--ink-3)' }}>
                 {profile.email}
+              </div>
+            )}
+            {profile.isShadow && (
+              <div style={{ marginTop: 12 }}>
+                <InviteShadowButton userId={profile.id} defaultEmail={profile.inviteEmail} />
               </div>
             )}
           </div>

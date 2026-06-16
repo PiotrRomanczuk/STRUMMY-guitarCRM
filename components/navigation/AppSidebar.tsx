@@ -18,7 +18,6 @@ import {
   Grid3X3,
   GraduationCap,
   Zap,
-  Clapperboard,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -39,6 +38,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { ModeToggle } from '@/components/ui/mode-toggle';
+import { roleChipsLabel, teachingGroupLabel } from '@/lib/roles/roleLabel';
 import { FontSwitcherDropdown } from './FontSwitcherDropdown';
 
 interface AppSidebarProps {
@@ -90,12 +90,8 @@ export function AppSidebar({ isAdmin, isTeacher, isStudent }: AppSidebarProps) {
         ],
         tools: [
           { id: 'calendar', label: 'Calendar', icon: Calendar, path: '/dashboard/calendar' },
-          {
-            id: 'content',
-            label: 'Content',
-            icon: Clapperboard,
-            path: '/dashboard/content/calendar',
-          },
+          // Content/Production is reached via the song-detail Production tab
+          // (decision D-10) — no standalone Content nav entry.
           { id: 'fretboard', label: 'Fretboard', icon: Grid3X3, path: '/dashboard/fretboard' },
           { id: 'ai', label: 'AI Assistant', icon: Sparkles, path: '/dashboard/ai' },
         ],
@@ -174,7 +170,7 @@ export function AppSidebar({ isAdmin, isTeacher, isStudent }: AppSidebarProps) {
                       Strummy
                     </span>
                     <span className="truncate font-mono text-[10px] uppercase tracking-[.1em] text-muted-foreground">
-                      {isAdmin ? 'Admin' : isTeacher ? 'Teacher' : isStudent ? 'Student' : 'User'}
+                      {roleChipsLabel(isAdmin, isTeacher, isStudent)}
                     </span>
                   </div>
                 </Link>
@@ -189,7 +185,7 @@ export function AppSidebar({ isAdmin, isTeacher, isStudent }: AppSidebarProps) {
         {/* Teaching */}
         <SidebarGroup>
           <SidebarGroupLabel className="font-mono text-[10px] uppercase tracking-[.14em] font-medium">
-            {isStudent ? 'Learning' : 'Teaching'}
+            {teachingGroupLabel(isAdmin, isTeacher, isStudent)}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
