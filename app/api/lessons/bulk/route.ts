@@ -4,11 +4,36 @@ import { LessonInputSchema, LessonSchema, type LessonInput, type Lesson } from '
 import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { logger } from '@/lib/logger';
 
+/**
+ * Safely parses a JSON request body.
+ * Returns a discriminated result so callers can respond with 400 on malformed
+ * or empty bodies instead of throwing into the generic 500 catch.
+ */
+async function parseJsonBody(
+  request: NextRequest
+): Promise<{ ok: true; body: Record<string, unknown> } | { ok: false }> {
+  try {
+    const body = await request.json();
+    // An empty body can resolve to null/undefined (instead of throwing) on some
+    // runtimes; a non-object JSON primitive is equally unusable. Reject both.
+    if (body === null || typeof body !== 'object') {
+      return { ok: false };
+    }
+    return { ok: true, body: body as Record<string, unknown> };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export async function POST(request: NextRequest) {
   return withApiAuth(request, async ({ user, roles }) => {
     try {
       const supabase = await createClient();
-      const body = await request.json();
+      const parsed = await parseJsonBody(request);
+      if (!parsed.ok) {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
+      const body = parsed.body;
 
       if (!roles.isAdmin && !roles.isTeacher) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -139,7 +164,11 @@ export async function PUT(request: NextRequest) {
   return withApiAuth(request, async ({ roles }) => {
     try {
       const supabase = await createClient();
-      const body = await request.json();
+      const parsed = await parseJsonBody(request);
+      if (!parsed.ok) {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
+      const body = parsed.body;
 
       if (!roles.isAdmin && !roles.isTeacher) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -254,7 +283,11 @@ export async function DELETE(request: NextRequest) {
   return withApiAuth(request, async ({ roles }) => {
     try {
       const supabase = await createClient();
-      const body = await request.json();
+      const parsed = await parseJsonBody(request);
+      if (!parsed.ok) {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
+      const body = parsed.body;
 
       if (!roles.isAdmin && !roles.isTeacher) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
