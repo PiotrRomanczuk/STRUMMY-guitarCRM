@@ -1,5 +1,7 @@
 # Editorial Production Migration Plan
 
+> **⚠️ Superseded by [`docs/MASTER_SPEC.md`](../../docs/MASTER_SPEC.md) (2026-06-16).** The editorial-migration track was unified into the master spec (§3.2 + per-feature gate 5). Retained for history only — no longer maintained.
+
 **Date**: 2026-06-09
 **Author**: Claude
 **Scope**: Convert all 14 design-preview artboards into production pages backed by real Supabase data, in-place at existing routes.
