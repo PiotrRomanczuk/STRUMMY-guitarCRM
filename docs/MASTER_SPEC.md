@@ -78,6 +78,7 @@ Each feature has a standalone, code-grounded, implementation-grade spec under [`
 | 08  | Notifications         | [08-notifications.md](./specs/08-notifications.md)             | 2     | In-app + email on restored bucket-A tables; preferences; unsubscribe                 |
 | 09  | Content / Production  | [09-content-production.md](./specs/09-content-production.md)   | 2     | ProductionTab only; remove standalone content from nav (D-10)                        |
 | 10  | Profile & Multi-role  | [10-profile-multirole.md](./specs/10-profile-multirole.md)     | 2     | Self-edit form + multi-role rendering sweep                                          |
+| 11  | Testing & CI/CD       | [11-testing-cicd.md](./specs/11-testing-cicd.md)               | 0.6/4 | Restore honest test signal then make gates blocking (§3.3 + audit 2026-06-16)        |
 
 > **Universal rule (every feature):** the route mounts `components/<domain>/editorial/*`; RLS is the security boundary (ADR-0001); deleting the v1/v2/v3 trees for that domain is part of done (§3.2).
 
@@ -140,12 +141,16 @@ At 100% (after all domains migrate): delete `lib/ui-version.ts`, `lib/ui-version
 
 ### 3.3 Testing & CI gates (Phase 4)
 
-- **RLS breadth** (§3.1) — P0.
+> **Full audit + remediation: [specs/11-testing-cicd.md](./specs/11-testing-cicd.md)** and [audits/2026-06-16-test-cicd-audit.md](./audits/2026-06-16-test-cicd-audit.md). Measured 2026-06-16: unit green **by exclusion** (51 quarantined files); integration **16 failing**; RLS **0 running** (`describe.skip`); coverage **53%** (non-blocking); CI **filters `tsc` errors** with `grep -v`; E2E runs **only on `production`**.
+
+The four S1s (honest-signal): un-skip RLS (§3.1), burn down the 51-file quarantine, remove the CI `tsc` `grep -v` filter, and add a `@smoke` E2E gate to the PR path. Then make gates blocking:
+
+- **RLS breadth** (§3.1) — P0; the RLS suite is currently 100% skipped.
 - **Shadow merge test** — un-skip; assert transfer counts (§2.6 acceptance) — P0.
 - **Journey E2E** — `sign-up-email-verification`, `onboarding-flow`, `calendar-sync-workflow` (after §2.7).
 - **Untested subsystems** — `in-app-notifications`, `send-weekly-insights`, `ai-history`, `profile-settings`.
-- **Quarantine triage** — `jest.config.ts` (~61 files): fix the 8 auth-form tests first; delete tests for deleted components; dedupe the 5–7 duplicate pairs (`lib/google.test.ts` vs `__tests__/lib/google.test.ts`, etc.).
-- **CI gates** — PR path gets `playwright test --grep @smoke`; coverage check blocking at today's real number, ratcheting up; remove hardcoded TS-error filters in the typecheck step; `@typescript-eslint/no-explicit-any: error` (fix the ~15 prod `any`s, `app/api/lessons/handlers.ts` ×4 first).
+- **Quarantine triage** — `jest.config.ts` (51 files): fix the 8 auth-form tests first; delete tests for deleted components; dedupe (`google.test.ts` ×4, `rate-limiter.test.ts` ×5).
+- **CI gates** — PR path gets `playwright test --grep @smoke`; coverage check **blocking** at today's real number (~50%), ratcheting up; **remove the `grep -v` TS-error filter** (`ci-cd.yml:73–80`) and `--passWithNoTests`; `@typescript-eslint/no-explicit-any: error` (fix the ~37 prod `any`s, `app/api/lessons/handlers/*` first).
 
 ### 3.4 Observability — unified logger (ADR-0003)
 

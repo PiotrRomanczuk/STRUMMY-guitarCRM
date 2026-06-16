@@ -13,12 +13,12 @@ Documentation is organized in four layers. When they conflict, the deeper layer 
 
 ### Plan & decisions (the spine)
 
-| Doc                                  | What                                                                                                                                                            |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`../CONTEXT.md`](../CONTEXT.md)     | **Domain model / ubiquitous language.** What the words mean (Profile, Role, Teaches, Repertoire, Progress…). Deepest layer.                                     |
-| [`MASTER_SPEC.md`](./MASTER_SPEC.md) | **The plan.** Single source of truth for "Strummy → 100%": Phase 0, feature index (§2), cross-cutting concerns, sequencing, decision ledger.                    |
-| [`specs/`](./specs)                  | **Per-feature implementation specs.** One code-grounded, agent-ready file per feature (00 Phase 0 + 01–10). MASTER_SPEC §2 indexes them; the detail lives here. |
-| [`adr/`](./adr)                      | **Settled architectural decisions.** 0001 RLS is the security boundary · 0002 Shadow students are first-class · 0003 Unified Pino logger.                       |
+| Doc                                  | What                                                                                                                                                                                     |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`../CONTEXT.md`](../CONTEXT.md)     | **Domain model / ubiquitous language.** What the words mean (Profile, Role, Teaches, Repertoire, Progress…). Deepest layer.                                                              |
+| [`MASTER_SPEC.md`](./MASTER_SPEC.md) | **The plan.** Single source of truth for "Strummy → 100%": Phase 0, feature index (§2), cross-cutting concerns, sequencing, decision ledger.                                             |
+| [`specs/`](./specs)                  | **Per-feature implementation specs.** One code-grounded, agent-ready file per feature (00 Phase 0 + 01–10, plus 11 Testing & CI/CD). MASTER_SPEC §2 indexes them; the detail lives here. |
+| [`adr/`](./adr)                      | **Settled architectural decisions.** 0001 RLS is the security boundary · 0002 Shadow students are first-class · 0003 Unified Pino logger.                                                |
 
 ### Reference (how the system works — living)
 
@@ -38,12 +38,13 @@ Documentation is organized in four layers. When they conflict, the deeper layer 
 
 ### Audits (transient — delete once Phase 0 lands)
 
-| Doc                                                                                          | What                                                                 |
-| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| [`2026-06-10-backend-audit.md`](./2026-06-10-backend-audit.md)                               | The 14 findings Phase 0 closes.                                      |
-| [`audits/2026-06-09-fallow-audit.md`](./audits/2026-06-09-fallow-audit.md)                   | Dead-code / duplication / complexity health.                         |
-| [`audits/2026-06-09-schema-reconciliation.md`](./audits/2026-06-09-schema-reconciliation.md) | The 14-table production drift investigation (Phase 0.1 input).       |
-| [`2026-05-13-api-inventory.md`](./2026-05-13-api-inventory.md)                               | Auto-generated route catalog. Regenerate via the route-audit script. |
+| Doc                                                                                          | What                                                                                        |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [`2026-06-10-backend-audit.md`](./2026-06-10-backend-audit.md)                               | The 14 findings Phase 0 closes.                                                             |
+| [`audits/2026-06-09-fallow-audit.md`](./audits/2026-06-09-fallow-audit.md)                   | Dead-code / duplication / complexity health.                                                |
+| [`audits/2026-06-09-schema-reconciliation.md`](./audits/2026-06-09-schema-reconciliation.md) | The 14-table production drift investigation (Phase 0.1 input).                              |
+| [`audits/2026-06-16-test-cicd-audit.md`](./audits/2026-06-16-test-cicd-audit.md)             | Measured test-suite + CI/CD state; findings drive [`specs/11`](./specs/11-testing-cicd.md). |
+| [`2026-05-13-api-inventory.md`](./2026-05-13-api-inventory.md)                               | Auto-generated route catalog. Regenerate via the route-audit script.                        |
 
 ## Conventions
 
