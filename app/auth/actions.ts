@@ -91,17 +91,7 @@ export async function signIn(email: string, password: string) {
     await updateLastSignIn(data.user.id);
     logSigninSuccess(email, data.user.id);
 
-    // Check for MFA requirement
-    const factors = data.user.factors ?? [];
-    const verifiedFactors = factors.filter((f) => f.status === 'verified');
-    if (verifiedFactors.length > 0) {
-      return {
-        success: true,
-        mfaRequired: true,
-        factorId: verifiedFactors[0].id,
-      };
-    }
-
+    // Sign-in is single-step (D-06: MFA removed). No challenge branch.
     return { success: true };
   }
 

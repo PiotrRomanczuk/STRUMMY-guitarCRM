@@ -12,6 +12,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import transporter, { isSmtpConfigured } from '@/lib/email/smtp-client';
+import { getDeliverableEmail } from '@/lib/email/recipient';
 import { checkRateLimit, checkSystemRateLimit } from '@/lib/email/rate-limiter';
 import {
   logNotificationSent,
@@ -70,7 +71,7 @@ export async function sendNotification(
     // 1. Get recipient info (include is_student for student email kill switch)
     const { data: recipient, error: recipientError } = await supabase
       .from('profiles')
-      .select('id, email, full_name, is_student')
+      .select('id, email, full_name, is_student, is_shadow, invite_email')
       .eq('id', recipientUserId)
       .single();
 
@@ -247,11 +248,42 @@ export async function sendNotification(
         };
       }
 
+      // 5.4b. Deliverable-email chokepoint (ADR-0002 §3, spec 06 §6.2).
+      // Shadow profiles with no invite_email (or placeholder addresses) are
+      // skipped — never bounced to shadow_*@placeholder.com.
+      const deliverableEmail = getDeliverableEmail({
+        is_shadow: recipient.is_shadow ?? false,
+        email: recipient.email,
+        invite_email: recipient.invite_email ?? null,
+      });
+
+      if (!deliverableEmail) {
+        await supabase
+          .from('notification_log')
+          .update({
+            status: 'skipped',
+            error_message: 'skipped_shadow: no deliverable email (un-invited shadow)',
+          })
+          .eq('id', logEntry.id);
+
+        logNotificationSkipped(recipientUserId, type, 'skipped_shadow: no deliverable email', {
+          notification_id: logEntry.id,
+          entity_type: entityType,
+          entity_id: entityId,
+        });
+
+        return {
+          success: results.inApp === true,
+          skipped: true,
+          logId: logEntry.id,
+        };
+      }
+
       // 5.5. Send email
       try {
         await transporter.sendMail({
           from: `"Guitar CRM" <${process.env.GMAIL_USER}>`,
-          to: recipient.email,
+          to: deliverableEmail,
           subject,
           html: htmlContent,
         });

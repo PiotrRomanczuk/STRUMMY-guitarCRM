@@ -8,7 +8,6 @@ import { SignInSchema } from '@/schemas/AuthSchema';
 import { signIn as signInAction } from '@/app/auth/actions';
 import { AuthLayout, AuthHeader, AuthDivider, GoogleAuthButton } from '@/components/auth';
 import { PasswordInput } from '@/components/auth/PasswordInput';
-import { MFAChallengeDialog } from '@/components/auth/MFAChallengeDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -26,13 +25,13 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState({ email: false, password: false });
-  const [mfaRequired, setMfaRequired] = useState(false);
-  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         router.push('/dashboard');
       } else {
@@ -94,12 +93,6 @@ export default function SignInPage() {
       return;
     }
 
-    if ('mfaRequired' in signInResult && signInResult.mfaRequired && 'factorId' in signInResult && signInResult.factorId) {
-      setMfaFactorId(signInResult.factorId);
-      setMfaRequired(true);
-      return;
-    }
-
     if ('success' in signInResult && signInResult.success) {
       router.refresh();
       router.push('/dashboard');
@@ -132,17 +125,10 @@ export default function SignInPage() {
 
   return (
     <AuthLayout>
-      <AuthHeader
-        title="Sign in to Strummy"
-        subtitle="Manage your studio with AI-powered tools."
-      />
+      <AuthHeader title="Sign in to Strummy" subtitle="Manage your studio with AI-powered tools." />
 
       {/* Google Auth */}
-      <GoogleAuthButton
-        onClick={handleGoogleSignIn}
-        disabled={loading}
-        loading={loading}
-      />
+      <GoogleAuthButton onClick={handleGoogleSignIn} disabled={loading} loading={loading} />
 
       <AuthDivider />
 
@@ -249,23 +235,6 @@ export default function SignInPage() {
         </Link>
       </div>
 
-      {/* MFA Challenge Dialog */}
-      {mfaFactorId && (
-        <MFAChallengeDialog
-          open={mfaRequired}
-          factorId={mfaFactorId}
-          onSuccess={() => {
-            setMfaRequired(false);
-            router.refresh();
-            router.push('/dashboard');
-          }}
-          onCancel={() => {
-            setMfaRequired(false);
-            setMfaFactorId(null);
-          }}
-        />
-      )}
-
       {/* Pro Tip Card - only visible on larger screens */}
       <div className="mt-8 rounded-xl overflow-hidden relative h-32 w-full group hidden sm:block dark:bg-muted/40">
         <div
@@ -276,9 +245,7 @@ export default function SignInPage() {
         <div className="absolute bottom-3 left-4 right-4 flex justify-between items-end">
           <div>
             <p className="text-xs font-medium text-primary mb-0.5">Pro Tip</p>
-            <p className="text-xs text-muted-foreground">
-              Automate your lesson scheduling today.
-            </p>
+            <p className="text-xs text-muted-foreground">Automate your lesson scheduling today.</p>
           </div>
         </div>
       </div>

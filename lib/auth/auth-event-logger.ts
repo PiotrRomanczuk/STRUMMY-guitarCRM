@@ -13,6 +13,10 @@ type AuthEventType =
   | 'invite_failed'
   | 'user_created_by_admin'
   | 'shadow_user_created'
+  | 'shadow_invite_email_set'
+  | 'shadow_invite_sent'
+  | 'shadow_link_completed'
+  | 'shadow_link_failed'
   | 'signin_succeeded'
   | 'signin_failed'
   | 'signin_locked'
@@ -182,6 +186,48 @@ export async function logShadowUserCreated(email: string, actorId: string, userI
     actorId,
     userId,
     success: true,
+  });
+}
+
+export async function logShadowInviteEmailSet(email: string, actorId: string, userId: string) {
+  return logAuthEvent({
+    eventType: 'shadow_invite_email_set',
+    userEmail: email,
+    actorId,
+    userId,
+    success: true,
+  });
+}
+
+export async function logShadowInviteSent(email: string, actorId: string, userId: string) {
+  return logAuthEvent({
+    eventType: 'shadow_invite_sent',
+    userEmail: email,
+    actorId,
+    userId,
+    success: true,
+    emailStatus: 'sent',
+  });
+}
+
+export async function logShadowLinkCompleted(
+  userId: string,
+  transferCounts: Record<string, unknown>
+) {
+  return logAuthEvent({
+    eventType: 'shadow_link_completed',
+    userId,
+    success: true,
+    metadata: { transfer_counts: transferCounts },
+  });
+}
+
+export async function logShadowLinkFailed(userId: string, error: string) {
+  return logAuthEvent({
+    eventType: 'shadow_link_failed',
+    userId,
+    success: false,
+    errorMessage: error,
   });
 }
 

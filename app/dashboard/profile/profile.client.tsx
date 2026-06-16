@@ -9,7 +9,6 @@ import {
   SessionInfo,
   EmailChangeForm,
   AccountDeletionDialog,
-  MFASetup,
   LinkedAccounts,
 } from '@/components/profile';
 import { redirect } from 'next/navigation';
@@ -22,8 +21,22 @@ interface ProfilePageClientProps {
   deletionScheduledFor?: string | null;
 }
 
-export default function ProfilePageClient({ userId, userEmail, deletionScheduledFor }: ProfilePageClientProps) {
-  const { loading, saving, error, success, formData, validationErrors, setFormData, handleBlur, handleSubmit } = useProfileData({
+export default function ProfilePageClient({
+  userId,
+  userEmail,
+  deletionScheduledFor,
+}: ProfilePageClientProps) {
+  const {
+    loading,
+    saving,
+    error,
+    success,
+    formData,
+    validationErrors,
+    setFormData,
+    handleBlur,
+    handleSubmit,
+  } = useProfileData({
     id: userId,
   });
 
@@ -68,7 +81,6 @@ export default function ProfilePageClient({ userId, userEmail, deletionScheduled
         <div className="mt-8 space-y-4">
           <SessionInfo userId={userId} />
           <EmailChangeForm currentEmail={email} />
-          <MFASetup />
           <LinkedAccounts />
           <AccountDeletionDialog deletionScheduledFor={deletion} />
         </div>

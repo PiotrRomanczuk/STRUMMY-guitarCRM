@@ -37,7 +37,9 @@ export async function sendUserInvite(userId: string) {
   }
 
   if (targetProfile.is_shadow) {
-    throw new Error('Cannot send invite to shadow user — they need a real email first');
+    // Shadows are invited via the Invite dialog (PATCH /api/users), which sets
+    // invite_email and sends the claim invite in one action (spec 06 §6.1).
+    throw new Error('Use the Invite dialog to set the student’s email and send their invite');
   }
 
   if (targetProfile.sign_in_count > 0) {

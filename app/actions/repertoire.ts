@@ -107,7 +107,7 @@ export async function updateRepertoireEntryAction(
   repertoireId: string,
   input: Record<string, unknown>
 ): Promise<{ success: true } | { error: string }> {
-  const { isDevelopment } = await getUserWithRolesSSR();
+  const { isDevelopment, isAdmin, isTeacher } = await getUserWithRolesSSR();
   const guard = guardTestAccountMutation(isDevelopment);
   if (guard) return { error: guard.error };
 
@@ -119,6 +119,20 @@ export async function updateRepertoireEntryAction(
 
   if (authError || !user) {
     return { error: 'Unauthorized' };
+  }
+
+  // Column-level guard: the RLS policy `sr_update_own_notes` does NOT restrict
+  // columns, so a student caller is constrained here to notes + difficulty only.
+  // Staff (admin/teacher) may edit any field, including a direct status override.
+  const isStaff = isAdmin || isTeacher;
+  if (!isStaff) {
+    const STUDENT_ALLOWED_KEYS = ['student_notes', 'difficulty_rating'];
+    const disallowed = Object.keys(input).filter((k) => !STUDENT_ALLOWED_KEYS.includes(k));
+    if (disallowed.length > 0) {
+      return {
+        error: `You can only edit your notes and difficulty (rejected: ${disallowed.join(', ')})`,
+      };
+    }
   }
 
   const parsed = UpdateRepertoireInputSchema.safeParse(input);
@@ -184,10 +198,7 @@ export async function removeFromRepertoireAction(
     .eq('id', repertoireId)
     .single();
 
-  const { error } = await supabase
-    .from('student_repertoire')
-    .delete()
-    .eq('id', repertoireId);
+  const { error } = await supabase.from('student_repertoire').delete().eq('id', repertoireId);
 
   if (error) {
     log.error('Failed to remove from repertoire', { repertoireId, error });
@@ -268,7 +279,19 @@ export async function addSongToNextLessonAction(
 export async function searchSongsForRepertoireAction(
   query: string,
   studentId: string
-): Promise<{ data: Array<{ id: string; title: string; author: string; level: string | null; key: string | null; cover_image_url: string | null }> } | { error: string }> {
+): Promise<
+  | {
+      data: Array<{
+        id: string;
+        title: string;
+        author: string;
+        level: string | null;
+        key: string | null;
+        cover_image_url: string | null;
+      }>;
+    }
+  | { error: string }
+> {
   const supabase = await createClient();
   const {
     data: { user },
