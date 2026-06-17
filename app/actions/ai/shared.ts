@@ -270,7 +270,9 @@ export async function* executeAgentStream(
         generationType,
         agentId,
         inputParams: input,
-        outputContent: '',
+        // Preserve whatever was streamed before the error so partial/aborted
+        // generations are still captured in the history log.
+        outputContent: fullContent,
         isSuccessful: false,
         errorMessage: errorMsg,
       });

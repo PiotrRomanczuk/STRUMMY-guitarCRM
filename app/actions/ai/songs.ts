@@ -106,7 +106,7 @@ INSTRUCTIONS:
     saveAIGeneration({
       generationType: 'song_notes',
       inputParams: params,
-      outputContent: '',
+      outputContent: fullContent, // preserve partial output on error
       isSuccessful: false,
       errorMessage: errorMsg,
     });
