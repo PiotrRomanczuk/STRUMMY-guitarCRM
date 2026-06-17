@@ -112,25 +112,6 @@ const config: Config = {
     // tasks/test-coverage-analysis.md §3 and §P0. Remove an entry only after
     // the file passes locally.
 
-    // ── §3.3 withApiAuth mock drift (14 files) ──────────────────────────────
-    // All fail because tests mock createClient() but don't mock authenticateRequest()
-    // / the profiles fetch that withApiAuth does → every handler returns 403.
-    // Fix: add jest.mock('@/lib/auth/withApiAuth', ...) per file.
-    '__tests__/api/lessons/\\[id\\]/route\\.test\\.ts',
-    '__tests__/api/lessons/bulk/route\\.test\\.ts',
-    '__tests__/api/lessons/route\\.test\\.ts',
-    '__tests__/api/notifications/unsubscribe\\.test\\.ts',
-    '__tests__/api/song/handlers\\.test\\.ts',
-    'app/api/admin/lessons/route\\.test\\.ts',
-    'app/api/admin/users/route\\.test\\.ts',
-    'app/api/lessons/\\[id\\]/route\\.test\\.ts',
-    'app/api/lessons/bulk/route\\.test\\.ts',
-    'app/api/lessons/route\\.test\\.ts',
-    'app/api/lessons/search/route\\.test\\.ts',
-    'app/api/notifications/unsubscribe/__tests__/route\\.test\\.ts',
-    'app/api/song/handlers\\.test\\.ts',
-    'app/dashboard/assignments/page\\.test\\.tsx',
-
     // ── Spotify: cookies() called outside Next.js request scope ─────────────
     'app/api/spotify/features/route\\.test\\.ts',
     'app/api/spotify/matches/approve/route\\.test\\.ts',

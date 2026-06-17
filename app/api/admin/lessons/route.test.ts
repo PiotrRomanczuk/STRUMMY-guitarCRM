@@ -1,7 +1,8 @@
 import { GET, POST } from './route';
 import { createClient } from '@/lib/supabase/server';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getLessonsHandler, createLessonHandler } from '../../lessons/handlers';
+import type { AuthedProfile } from '@/lib/auth/loadAuthedProfile';
 
 // Mock dependencies
 jest.mock('@/lib/supabase/server', () => ({
@@ -13,51 +14,68 @@ jest.mock('../../lessons/handlers', () => ({
   createLessonHandler: jest.fn(),
 }));
 
+// Controllable withApiAuth mock — set _authedProfile to control auth state
+let _authedProfile: AuthedProfile | null = null;
+
+jest.mock('@/lib/auth/withApiAuth', () => ({
+  withApiAuth: jest.fn(
+    async (
+      _req: Request,
+      handler: (authed: AuthedProfile, req: Request) => Promise<Response>,
+      _options?: unknown
+    ) => {
+      if (!_authedProfile) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      if (!(_authedProfile as { roles?: { isAdmin?: boolean } }).roles?.isAdmin) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      return handler(_authedProfile, _req);
+    }
+  ),
+}));
+
 describe('Admin Lessons API', () => {
   const mockSupabase = {
-    auth: {
-      getUser: jest.fn(),
-    },
     from: jest.fn(),
   };
 
+  const adminProfile: AuthedProfile = {
+    user: { id: 'admin1', email: 'admin@test.com' } as AuthedProfile['user'],
+    profile: { id: 'admin1', is_admin: true } as AuthedProfile['profile'],
+    roles: { isAdmin: true, isTeacher: false, isStudent: false },
+    flags: {},
+  } as unknown as AuthedProfile;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    _authedProfile = adminProfile;
     (createClient as jest.Mock).mockResolvedValue(mockSupabase);
   });
 
   describe('GET', () => {
     it('returns 401 if not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
-      
+      _authedProfile = null;
+
       const req = new NextRequest('http://localhost/api/admin/lessons');
       const res = await GET(req);
-      
+
       expect(res.status).toBe(401);
     });
 
     it('returns 403 if not admin', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user1' } } });
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ data: [{ role: 'student' }], error: null }),
-        }),
-      });
+      _authedProfile = {
+        ...adminProfile,
+        roles: { isAdmin: false, isTeacher: false, isStudent: true },
+      } as unknown as AuthedProfile;
 
       const req = new NextRequest('http://localhost/api/admin/lessons');
       const res = await GET(req);
-      
+
       expect(res.status).toBe(403);
     });
 
     it('returns lessons if admin', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'admin1' } } });
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ data: [{ role: 'admin' }], error: null }),
-        }),
-      });
-
       (getLessonsHandler as jest.Mock).mockResolvedValue({
         lessons: [{ id: 1 }],
         count: 1,
@@ -74,13 +92,6 @@ describe('Admin Lessons API', () => {
     });
 
     it('handles handler errors', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'admin1' } } });
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ data: [{ role: 'admin' }], error: null }),
-        }),
-      });
-
       (getLessonsHandler as jest.Mock).mockResolvedValue({
         error: 'DB Error',
         status: 500,
@@ -88,49 +99,40 @@ describe('Admin Lessons API', () => {
 
       const req = new NextRequest('http://localhost/api/admin/lessons');
       const res = await GET(req);
-      
+
       expect(res.status).toBe(500);
     });
   });
 
   describe('POST', () => {
     it('returns 401 if not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
-      
+      _authedProfile = null;
+
       const req = new NextRequest('http://localhost/api/admin/lessons', {
         method: 'POST',
         body: JSON.stringify({}),
       });
       const res = await POST(req);
-      
+
       expect(res.status).toBe(401);
     });
 
     it('returns 403 if not admin', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user1' } } });
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ data: [{ role: 'student' }], error: null }),
-        }),
-      });
+      _authedProfile = {
+        ...adminProfile,
+        roles: { isAdmin: false, isTeacher: false, isStudent: true },
+      } as unknown as AuthedProfile;
 
       const req = new NextRequest('http://localhost/api/admin/lessons', {
         method: 'POST',
         body: JSON.stringify({}),
       });
       const res = await POST(req);
-      
+
       expect(res.status).toBe(403);
     });
 
     it('creates lesson if admin', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'admin1' } } });
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ data: [{ role: 'admin' }], error: null }),
-        }),
-      });
-
       (createLessonHandler as jest.Mock).mockResolvedValue({
         lesson: { id: 1 },
         status: 201,
@@ -141,7 +143,7 @@ describe('Admin Lessons API', () => {
         body: JSON.stringify({ title: 'New Lesson' }),
       });
       const res = await POST(req);
-      
+
       expect(res.status).toBe(201);
       expect(createLessonHandler).toHaveBeenCalled();
     });

@@ -12,6 +12,16 @@ jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/withApiAuth', () => ({
+  withApiAuth: jest.fn((_request: Request, handler: (auth: unknown) => Promise<Response>) =>
+    handler({
+      user: { id: 'mock-user-id', email: 'test@example.com' },
+      profile: { id: 'mock-user-id', is_admin: true },
+      roles: { isAdmin: true, isTeacher: false, isStudent: false },
+    })
+  ),
+}));
+
 describe('Lesson API - Search Route', () => {
   const mockUser = {
     id: 'user-123',
@@ -46,16 +56,11 @@ describe('Lesson API - Search Route', () => {
     jest.clearAllMocks();
 
     mockSupabase = {
-      auth: {
-        getUser: jest.fn().mockResolvedValue({
-          data: { user: mockUser },
-          error: null,
-        }),
-      },
       from: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
       or: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
+      is: jest.fn().mockReturnThis(),
       gte: jest.fn().mockReturnThis(),
       lte: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
@@ -70,18 +75,14 @@ describe('Lesson API - Search Route', () => {
   });
 
   describe('GET /api/lessons/search', () => {
-    it('should return unauthorized if user is not authenticated', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
-
+    it('should return all lessons for admin without role filter', async () => {
+      // Admin role is injected via withApiAuth mock — no auto-filter on teacher_id/student_id
       const request = new NextRequest('http://localhost:3000/api/lessons/search');
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(401);
-      expect(data.error).toBe('Unauthorized');
+      expect(response.status).toBe(200);
+      expect(data.lessons).toHaveLength(2);
     });
 
     it('should search lessons with query parameter', async () => {
@@ -138,8 +139,8 @@ describe('Lesson API - Search Route', () => {
       const response = await GET(request);
 
       expect(response.status).toBe(200);
-      expect(mockSupabase.gte).toHaveBeenCalledWith('date', '2024-01-01');
-      expect(mockSupabase.lte).toHaveBeenCalledWith('date', '2024-01-31');
+      expect(mockSupabase.gte).toHaveBeenCalledWith('scheduled_at', '2024-01-01');
+      expect(mockSupabase.lte).toHaveBeenCalledWith('scheduled_at', '2024-01-31');
     });
 
     it('should sort by specified field in ascending order', async () => {
@@ -156,12 +157,12 @@ describe('Lesson API - Search Route', () => {
 
     it('should sort by specified field in descending order', async () => {
       const request = new NextRequest(
-        'http://localhost:3000/api/lessons/search?sortBy=date&sortOrder=desc'
+        'http://localhost:3000/api/lessons/search?sortBy=scheduled_at&sortOrder=desc'
       );
       const response = await GET(request);
 
       expect(response.status).toBe(200);
-      expect(mockSupabase.order).toHaveBeenCalledWith('date', {
+      expect(mockSupabase.order).toHaveBeenCalledWith('scheduled_at', {
         ascending: false,
       });
     });
@@ -240,8 +241,9 @@ describe('Lesson API - Search Route', () => {
 
       expect(response.status).toBe(200);
       expect(mockSupabase.or).toHaveBeenCalled();
-      expect(mockSupabase.eq).toHaveBeenCalledTimes(2); // status and studentId
-      expect(mockSupabase.gte).toHaveBeenCalled();
+      expect(mockSupabase.eq).toHaveBeenCalledWith('status', 'SCHEDULED');
+      expect(mockSupabase.eq).toHaveBeenCalledWith('student_id', 'student-456');
+      expect(mockSupabase.gte).toHaveBeenCalledWith('scheduled_at', '2024-01-01');
     });
 
     it('should handle database errors', async () => {

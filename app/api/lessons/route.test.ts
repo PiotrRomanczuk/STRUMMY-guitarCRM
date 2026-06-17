@@ -4,13 +4,32 @@
  * Tests for /api/lessons endpoints (GET, POST)
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GET, POST } from '@/app/api/lessons/route';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
-// Mock Supabase client
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn(),
+// Mock withApiAuth — bypass real auth; pass through to handler with admin context
+jest.mock('@/lib/auth/withApiAuth', () => ({
+  withApiAuth: jest.fn(
+    (_request: Request, handler: (auth: unknown) => Promise<Response>, _options?: unknown) =>
+      handler({
+        user: { id: 'mock-user-id', email: 'test@example.com' },
+        roles: { isAdmin: true, isTeacher: false, isStudent: false },
+        flags: { isParent: false, isDevelopment: false },
+      })
+  ),
+}));
+
+// Mock the admin Supabase client used by route.ts
+jest.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: jest.fn(),
+}));
+
+// Mock calendar sync to avoid real side effects
+jest.mock('@/lib/services/calendar-lesson-sync', () => ({
+  syncLessonCreation: jest.fn().mockResolvedValue(undefined),
+  syncLessonUpdate: jest.fn().mockResolvedValue(undefined),
+  syncLessonDeletion: jest.fn().mockResolvedValue(undefined),
 }));
 
 describe('Lesson API - Main Route', () => {
@@ -18,18 +37,6 @@ describe('Lesson API - Main Route', () => {
   const validTeacherId = '00000002-0000-4000-a000-000000000002';
   const validUserId = '00000003-0000-4000-a000-000000000003';
   const validLessonId = '00000004-0000-4000-a000-000000000004';
-
-  const mockUser = {
-    id: validUserId,
-    email: 'teacher@example.com',
-  };
-
-  const mockProfile = {
-    is_admin: true, // Use admin to bypass teacher restrictions for filtering tests
-    is_teacher: true,
-    is_student: false,
-    user_id: validUserId,
-  };
 
   const mockLesson = {
     id: validLessonId,
@@ -57,49 +64,41 @@ describe('Lesson API - Main Route', () => {
     },
   };
 
-   
   let mockSupabaseClient: any;
-   
   let mockSupabaseQueryBuilder: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Setup query builder mock
     mockSupabaseQueryBuilder = {
       select: jest.fn().mockReturnThis(),
       insert: jest.fn().mockReturnThis(),
       or: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
+      is: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: mockProfile, error: null }),
-      in: jest.fn().mockReturnThis(),
       range: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(), // Added limit
-      // Make the object thenable to simulate query execution
-      then: jest.fn((resolve) => resolve({ data: [mockLesson], error: null, count: 1 })),
+      limit: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({ data: null, error: null }),
+      maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+      then: jest.fn((resolve: (value: unknown) => void) =>
+        resolve({ data: [mockLesson], error: null, count: 1 })
+      ),
     };
 
-    // Setup client mock
     mockSupabaseClient = {
-      auth: {
-        getUser: jest.fn().mockResolvedValue({
-          data: { user: mockUser },
-          error: null,
-        }),
-      },
       from: jest.fn().mockReturnValue(mockSupabaseQueryBuilder),
     };
 
-    (createClient as jest.Mock).mockResolvedValue(mockSupabaseClient);
+    (createAdminClient as jest.Mock).mockReturnValue(mockSupabaseClient);
   });
 
   describe('GET /api/lessons', () => {
-    it('should return unauthorized if user is not authenticated', async () => {
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
+    it('should return 401 when withApiAuth rejects unauthenticated request', async () => {
+      const { withApiAuth } = require('@/lib/auth/withApiAuth');
+      withApiAuth.mockImplementationOnce(() =>
+        Promise.resolve(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+      );
 
       const request = new NextRequest('http://localhost:3000/api/lessons');
       const response = await GET(request);
@@ -140,7 +139,7 @@ describe('Lesson API - Main Route', () => {
       expect(mockSupabaseQueryBuilder.eq).toHaveBeenCalledWith('status', 'SCHEDULED');
     });
 
-    it('should ignore invalid status filter (permissive)', async () => {
+    it('should apply permissive status filter', async () => {
       const request = new NextRequest('http://localhost:3000/api/lessons?filter=INVALID_STATUS');
       const response = await GET(request);
 
@@ -153,7 +152,6 @@ describe('Lesson API - Main Route', () => {
       const response = await GET(request);
 
       expect(response.status).toBe(200);
-      expect(mockSupabaseQueryBuilder.select).toHaveBeenCalled();
       expect(mockSupabaseQueryBuilder.order).toHaveBeenCalledWith('date', {
         ascending: false,
       });
@@ -170,7 +168,7 @@ describe('Lesson API - Main Route', () => {
       expect(mockSupabaseQueryBuilder.eq).toHaveBeenCalledWith('student_id', validStudentId);
     });
 
-    it('should ignore invalid studentId format (permissive)', async () => {
+    it('should handle invalid studentId format permissively', async () => {
       const request = new NextRequest('http://localhost:3000/api/lessons?studentId=invalid-uuid');
       const response = await GET(request);
 
@@ -178,7 +176,6 @@ describe('Lesson API - Main Route', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      // For admin, it goes straight to query
       mockSupabaseQueryBuilder.then.mockImplementationOnce((resolve: (value: unknown) => void) =>
         resolve({
           data: null,
@@ -196,18 +193,10 @@ describe('Lesson API - Main Route', () => {
     });
 
     it('should handle lessons with null profile data', async () => {
-      const lessonWithNullProfile = {
-        ...mockLesson,
-        profile: null,
-        teacher_profile: null,
-      };
+      const lessonWithNullProfile = { ...mockLesson, profile: null, teacher_profile: null };
 
-      mockSupabaseQueryBuilder.then.mockImplementation((resolve: (value: unknown) => void) =>
-        resolve({
-          data: [lessonWithNullProfile],
-          error: null,
-          count: 1,
-        })
+      mockSupabaseQueryBuilder.then.mockImplementationOnce((resolve: (value: unknown) => void) =>
+        resolve({ data: [lessonWithNullProfile], error: null, count: 1 })
       );
 
       const request = new NextRequest('http://localhost:3000/api/lessons');
@@ -230,12 +219,8 @@ describe('Lesson API - Main Route', () => {
         created_at: '2024-01-01T00:00:00Z',
       };
 
-      mockSupabaseQueryBuilder.then.mockImplementation((resolve: (value: unknown) => void) =>
-        resolve({
-          data: [minimalLesson],
-          error: null,
-          count: 1,
-        })
+      mockSupabaseQueryBuilder.then.mockImplementationOnce((resolve: (value: unknown) => void) =>
+        resolve({ data: [minimalLesson], error: null, count: 1 })
       );
 
       const request = new NextRequest('http://localhost:3000/api/lessons');
@@ -248,17 +233,15 @@ describe('Lesson API - Main Route', () => {
   });
 
   describe('POST /api/lessons', () => {
-    beforeEach(() => {
-      // Reset mocks for POST tests
-      // Default single implementation for profile check
-      mockSupabaseQueryBuilder.single.mockResolvedValue({ data: mockProfile, error: null });
-    });
+    const mockTeacherProfile = { id: validTeacherId, is_teacher: true };
+    const mockStudentProfile = { id: validStudentId, is_student: true };
+    const mockInsertedLesson = { ...mockLesson, id: validLessonId };
 
-    it('should return unauthorized if user is not authenticated', async () => {
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
+    it('should return 401 when withApiAuth rejects unauthenticated request', async () => {
+      const { withApiAuth } = require('@/lib/auth/withApiAuth');
+      withApiAuth.mockImplementationOnce(() =>
+        Promise.resolve(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+      );
 
       const request = new NextRequest('http://localhost:3000/api/lessons', {
         method: 'POST',
@@ -272,17 +255,22 @@ describe('Lesson API - Main Route', () => {
     });
 
     it('should return forbidden if user is not admin or teacher', async () => {
-      mockSupabaseQueryBuilder.single.mockResolvedValue({
-        data: { ...mockProfile, is_teacher: false, is_admin: false },
-        error: null,
-      });
+      const { withApiAuth } = require('@/lib/auth/withApiAuth');
+      withApiAuth.mockImplementationOnce(
+        (_req: Request, handler: (auth: unknown) => Promise<Response>) =>
+          handler({
+            user: { id: 'mock-user-id', email: 'student@example.com' },
+            roles: { isAdmin: false, isTeacher: false, isStudent: true },
+            flags: { isParent: false, isDevelopment: false },
+          })
+      );
 
       const request = new NextRequest('http://localhost:3000/api/lessons', {
         method: 'POST',
         body: JSON.stringify({
           student_id: validStudentId,
           teacher_id: validTeacherId,
-          date: '2024-01-15',
+          scheduled_at: '2024-01-15T10:00:00Z',
         }),
       });
       const response = await POST(request);
@@ -293,34 +281,21 @@ describe('Lesson API - Main Route', () => {
     });
 
     it('should create a lesson with valid data', async () => {
-      // 1. Profile check
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-      // 2. Next lesson number check
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: { lesson_teacher_number: 0 },
-        error: null,
-      });
-      // 3. Insert result
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockLesson,
-        error: null,
-      });
-
-      const lessonData = {
-        student_id: validStudentId,
-        teacher_id: validTeacherId,
-        title: 'Guitar Basics',
-        notes: 'Introduction to guitar',
-        date: '2024-01-15',
-        start_time: '10:00',
-      };
+      // createLessonHandler: profiles(teacher).single -> profiles(student).single -> lessons.insert.select.single
+      mockSupabaseQueryBuilder.single
+        .mockResolvedValueOnce({ data: mockTeacherProfile, error: null })
+        .mockResolvedValueOnce({ data: mockStudentProfile, error: null })
+        .mockResolvedValueOnce({ data: mockInsertedLesson, error: null });
 
       const request = new NextRequest('http://localhost:3000/api/lessons', {
         method: 'POST',
-        body: JSON.stringify(lessonData),
+        body: JSON.stringify({
+          student_id: validStudentId,
+          teacher_id: validTeacherId,
+          title: 'Guitar Basics',
+          notes: 'Introduction to guitar',
+          scheduled_at: '2024-01-15T10:00:00Z',
+        }),
       });
       const response = await POST(request);
       const data = await response.json();
@@ -335,7 +310,7 @@ describe('Lesson API - Main Route', () => {
         method: 'POST',
         body: JSON.stringify({
           title: 'Guitar Basics',
-          // Missing student_id and teacher_id
+          // Missing student_id, teacher_id, scheduled_at
         }),
       });
       const response = await POST(request);
@@ -351,6 +326,7 @@ describe('Lesson API - Main Route', () => {
         body: JSON.stringify({
           student_id: 'invalid-uuid',
           teacher_id: validTeacherId,
+          scheduled_at: '2024-01-15T10:00:00Z',
         }),
       });
       const response = await POST(request);
@@ -361,28 +337,17 @@ describe('Lesson API - Main Route', () => {
     });
 
     it('should handle database insertion errors', async () => {
-      // 1. Profile check
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-      // 2. Next lesson number check
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: { lesson_teacher_number: 0 },
-        error: null,
-      });
-      // 3. Insert error
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: null,
-        error: { message: 'Database error' },
-      });
+      mockSupabaseQueryBuilder.single
+        .mockResolvedValueOnce({ data: mockTeacherProfile, error: null })
+        .mockResolvedValueOnce({ data: mockStudentProfile, error: null })
+        .mockResolvedValueOnce({ data: null, error: { message: 'Database error' } });
 
       const request = new NextRequest('http://localhost:3000/api/lessons', {
         method: 'POST',
         body: JSON.stringify({
           student_id: validStudentId,
           teacher_id: validTeacherId,
-          date: '2024-01-15',
+          scheduled_at: '2024-01-15T10:00:00Z',
         }),
       });
       const response = await POST(request);
@@ -393,28 +358,20 @@ describe('Lesson API - Main Route', () => {
     });
 
     it('should set default status to SCHEDULED if not provided', async () => {
-      // 1. Profile check
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-      // 2. Next lesson number check
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: { lesson_teacher_number: 0 },
-        error: null,
-      });
-      // 3. Insert result
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: { ...mockLesson, status: 'SCHEDULED' },
-        error: null,
-      });
+      mockSupabaseQueryBuilder.single
+        .mockResolvedValueOnce({ data: mockTeacherProfile, error: null })
+        .mockResolvedValueOnce({ data: mockStudentProfile, error: null })
+        .mockResolvedValueOnce({
+          data: { ...mockInsertedLesson, status: 'SCHEDULED' },
+          error: null,
+        });
 
       const request = new NextRequest('http://localhost:3000/api/lessons', {
         method: 'POST',
         body: JSON.stringify({
           student_id: validStudentId,
           teacher_id: validTeacherId,
-          date: '2024-01-15',
+          scheduled_at: '2024-01-15T10:00:00Z',
         }),
       });
       const response = await POST(request);

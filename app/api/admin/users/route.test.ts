@@ -21,16 +21,22 @@ describe('Admin Users API', () => {
 
   it('returns 401 if not authenticated', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
-    
+
     const res = await GET();
     expect(res.status).toBe(401);
   });
 
   it('returns 403 if not admin', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user1' } }, error: null });
+    // Route checks: profiles.select('is_admin').eq('id', user.id).single()
     mockSupabase.from.mockReturnValue({
       select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ data: [{ role: 'student' }], error: null }),
+        eq: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: { is_admin: false },
+            error: null,
+          }),
+        }),
       }),
     });
 
@@ -39,38 +45,44 @@ describe('Admin Users API', () => {
   });
 
   it('returns users list if admin', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'admin1' } }, error: null });
-    
-    // Mock users fetch
-    const usersQuery = {
-      select: jest.fn().mockReturnValue({
-        order: jest.fn().mockResolvedValue({ 
-          data: [{ id: 'u1', full_name: 'User 1' }], 
-          error: null 
-        }),
-      }),
-    };
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'admin1' } },
+      error: null,
+    });
 
-    mockSupabase.from.mockImplementation((table: string) => {
-      if (table === 'user_roles') {
-        // This is tricky because we call user_roles twice.
-        // First call is with .eq('user_id', user.id)
-        // Second call is just .select('*')
-        // We can distinguish by checking if .eq is called later or return a chainable mock
+    let callCount = 0;
+    mockSupabase.from.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
+        // First call: profiles.select('is_admin').eq('id', user.id).single()
         return {
-          select: jest.fn((cols) => {
-            if (cols === 'role') return {
-              eq: jest.fn().mockResolvedValue({ data: [{ role: 'admin' }], error: null })
-            };
-            return {
-              // This handles the second call .select('*')
-              then: (resolve: (value: { data: { user_id: string; role: string }[]; error: null }) => void) => resolve({ data: [{ user_id: 'u1', role: 'student' }], error: null })
-            };
-          })
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_admin: true },
+                error: null,
+              }),
+            }),
+          }),
         };
       }
-      if (table === 'profiles') return usersQuery;
-      return {};
+      // Second call: profiles.select('id, full_name, ...').order('full_name')
+      return {
+        select: jest.fn().mockReturnValue({
+          order: jest.fn().mockResolvedValue({
+            data: [
+              {
+                id: 'u1',
+                full_name: 'User 1',
+                is_admin: false,
+                is_teacher: false,
+                is_student: true,
+              },
+            ],
+            error: null,
+          }),
+        }),
+      };
     });
 
     const res = await GET();
@@ -82,24 +94,34 @@ describe('Admin Users API', () => {
   });
 
   it('handles database error fetching users', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'admin1' } }, error: null });
-    
-    mockSupabase.from.mockImplementation((table: string) => {
-      if (table === 'user_roles') {
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'admin1' } },
+      error: null,
+    });
+
+    let callCount = 0;
+    mockSupabase.from.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) {
         return {
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ data: [{ role: 'admin' }], error: null })
-          })
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_admin: true },
+                error: null,
+              }),
+            }),
+          }),
         };
       }
-      if (table === 'profiles') {
-        return {
-          select: jest.fn().mockReturnValue({
-            order: jest.fn().mockResolvedValue({ data: null, error: { message: 'DB Error' } })
-          })
-        };
-      }
-      return {};
+      return {
+        select: jest.fn().mockReturnValue({
+          order: jest.fn().mockResolvedValue({
+            data: null,
+            error: { message: 'DB Error' },
+          }),
+        }),
+      };
     });
 
     const res = await GET();
