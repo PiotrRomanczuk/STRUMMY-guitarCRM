@@ -3,11 +3,23 @@
  * Tests for /api/lessons/bulk endpoints (POST, PUT, DELETE)
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { POST, PUT, DELETE } from '@/app/api/lessons/bulk/route';
 import { createClient } from '@/lib/supabase/server';
 
-// Mock Supabase client
+// Mock withApiAuth — bypass real auth; pass through to handler with admin+teacher context
+jest.mock('@/lib/auth/withApiAuth', () => ({
+  withApiAuth: jest.fn(
+    (_request: Request, handler: (auth: unknown) => Promise<Response>, _options?: unknown) =>
+      handler({
+        user: { id: 'mock-user-id', email: 'test@example.com' },
+        roles: { isAdmin: true, isTeacher: true, isStudent: false },
+        flags: { isParent: false, isDevelopment: false },
+      })
+  ),
+}));
+
+// Mock Supabase server client (bulk route uses createClient, not createAdminClient)
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(),
 }));
@@ -20,45 +32,27 @@ describe('Lesson API - Bulk Operations', () => {
   const validLessonId2 = '00000005-0000-4000-a000-000000000005';
   const validLessonId3 = '00000006-0000-4000-a000-000000000006';
 
-  const mockUser = {
-    id: validUserId,
-    email: 'teacher@example.com',
-  };
-
-  const mockProfile = {
-    role: 'teacher',
-    user_id: validUserId,
-  };
-
   const mockLesson = {
     id: validLessonId1,
     student_id: validStudentId,
     teacher_id: validTeacherId,
     creator_user_id: validUserId,
     title: 'Guitar Basics',
-    date: '2024-01-15T10:00:00Z',
+    scheduled_at: '2024-01-15T10:00:00Z',
     status: 'SCHEDULED',
+    lesson_teacher_number: 1,
     created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockSupabaseClient: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let profileBuilder: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let lessonBuilder: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Profile builder mock
-    profileBuilder = {
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: mockProfile, error: null }),
-    };
-
-    // Lesson builder mock
     lessonBuilder = {
       select: jest.fn().mockReturnThis(),
       insert: jest.fn().mockReturnThis(),
@@ -66,36 +60,26 @@ describe('Lesson API - Bulk Operations', () => {
       delete: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockResolvedValue({ data: [] }), // For lesson number check
+      limit: jest.fn().mockResolvedValue({ data: [] }),
       single: jest.fn().mockResolvedValue({ data: mockLesson, error: null }),
-      // For delete/update without select/single, we need to be thenable
-      then: jest.fn((resolve) => resolve({ data: [mockLesson], error: null })),
+      then: jest.fn((resolve: (value: unknown) => void) =>
+        resolve({ data: [mockLesson], error: null })
+      ),
     };
 
-    // Setup client mock
     mockSupabaseClient = {
-      auth: {
-        getUser: jest.fn().mockResolvedValue({
-          data: { user: mockUser },
-          error: null,
-        }),
-      },
-      from: jest.fn((table) => {
-        if (table === 'profiles') return profileBuilder;
-        if (table === 'lessons') return lessonBuilder;
-        return { select: jest.fn().mockReturnThis() };
-      }),
+      from: jest.fn().mockReturnValue(lessonBuilder),
     };
 
     (createClient as jest.Mock).mockResolvedValue(mockSupabaseClient);
   });
 
   describe('POST /api/lessons/bulk (Bulk Create)', () => {
-    it('should return unauthorized if user is not authenticated', async () => {
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
+    it('should return 401 when withApiAuth rejects unauthenticated request', async () => {
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
+      withApiAuth.mockImplementationOnce(() =>
+        Promise.resolve(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+      );
 
       const request = new NextRequest('http://localhost:3000/api/lessons/bulk', {
         method: 'POST',
@@ -109,10 +93,15 @@ describe('Lesson API - Bulk Operations', () => {
     });
 
     it('should return forbidden if user is not admin or teacher', async () => {
-      profileBuilder.single.mockResolvedValue({
-        data: { role: 'student' },
-        error: null,
-      });
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
+      withApiAuth.mockImplementationOnce(
+        (_req: Request, handler: (auth: unknown) => Promise<Response>) =>
+          handler({
+            user: { id: 'mock-user-id', email: 'student@example.com' },
+            roles: { isAdmin: false, isTeacher: false, isStudent: true },
+            flags: { isParent: false, isDevelopment: false },
+          })
+      );
 
       const request = new NextRequest('http://localhost:3000/api/lessons/bulk', {
         method: 'POST',
@@ -167,16 +156,20 @@ describe('Lesson API - Bulk Operations', () => {
     });
 
     it('should create multiple lessons successfully', async () => {
+      lessonBuilder.single
+        .mockResolvedValueOnce({ data: { ...mockLesson, id: validLessonId1 }, error: null })
+        .mockResolvedValueOnce({ data: { ...mockLesson, id: validLessonId2 }, error: null });
+
       const lessons = [
         {
           student_id: validStudentId,
           teacher_id: validTeacherId,
-          date: '2024-01-15T10:00:00Z',
+          scheduled_at: '2024-01-15T10:00:00Z',
         },
         {
           student_id: validStudentId,
           teacher_id: validTeacherId,
-          date: '2024-01-16T10:00:00Z',
+          scheduled_at: '2024-01-16T10:00:00Z',
         },
       ];
 
@@ -194,14 +187,19 @@ describe('Lesson API - Bulk Operations', () => {
     });
 
     it('should handle validation errors for individual lessons', async () => {
+      lessonBuilder.single.mockResolvedValueOnce({
+        data: { ...mockLesson, id: validLessonId1 },
+        error: null,
+      });
+
       const lessons = [
         {
           student_id: validStudentId,
           teacher_id: validTeacherId,
-          date: '2024-01-15T10:00:00Z',
+          scheduled_at: '2024-01-15T10:00:00Z',
         },
         {
-          // Missing required fields (student_id, teacher_id)
+          // Missing required fields (student_id, teacher_id, scheduled_at)
           title: 'Invalid Lesson',
         },
       ];
@@ -219,28 +217,20 @@ describe('Lesson API - Bulk Operations', () => {
     });
 
     it('should handle database errors for individual lessons', async () => {
-      // First lesson succeeds
-      lessonBuilder.single.mockResolvedValueOnce({
-        data: mockLesson,
-        error: null,
-      });
-
-      // Second lesson fails
-      lessonBuilder.single.mockResolvedValueOnce({
-        data: null,
-        error: { message: 'Database error' },
-      });
+      lessonBuilder.single
+        .mockResolvedValueOnce({ data: { ...mockLesson, id: validLessonId1 }, error: null })
+        .mockResolvedValueOnce({ data: null, error: { message: 'Database error' } });
 
       const lessons = [
         {
           student_id: validStudentId,
           teacher_id: validTeacherId,
-          date: '2024-01-15T10:00:00Z',
+          scheduled_at: '2024-01-15T10:00:00Z',
         },
         {
           student_id: validStudentId,
           teacher_id: validTeacherId,
-          date: '2024-01-16T10:00:00Z',
+          scheduled_at: '2024-01-16T10:00:00Z',
         },
       ];
 
@@ -259,15 +249,19 @@ describe('Lesson API - Bulk Operations', () => {
 
   describe('PUT /api/lessons/bulk (Bulk Update)', () => {
     it('should update multiple lessons successfully', async () => {
+      lessonBuilder.single
+        .mockResolvedValueOnce({
+          data: { ...mockLesson, id: validLessonId1, title: 'Updated Title 1' },
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: { ...mockLesson, id: validLessonId2, status: 'COMPLETED' },
+          error: null,
+        });
+
       const updates = [
-        {
-          id: validLessonId1,
-          title: 'Updated Title 1',
-        },
-        {
-          id: validLessonId2,
-          status: 'COMPLETED',
-        },
+        { id: validLessonId1, title: 'Updated Title 1' },
+        { id: validLessonId2, status: 'COMPLETED' },
       ];
 
       const request = new NextRequest('http://localhost:3000/api/lessons/bulk', {
@@ -305,8 +299,12 @@ describe('Lesson API - Bulk Operations', () => {
 
   describe('DELETE /api/lessons/bulk (Bulk Delete)', () => {
     it('should delete multiple lessons successfully', async () => {
-      // Mock delete success
-      lessonBuilder.then = jest.fn((resolve) => resolve({ error: null }));
+      // Soft-delete: update().eq() — awaited via then()
+      lessonBuilder.then = jest
+        .fn()
+        .mockImplementationOnce((resolve: (value: unknown) => void) => resolve({ error: null }))
+        .mockImplementationOnce((resolve: (value: unknown) => void) => resolve({ error: null }))
+        .mockImplementationOnce((resolve: (value: unknown) => void) => resolve({ error: null }));
 
       const lessonIds = [validLessonId1, validLessonId2, validLessonId3];
 
@@ -336,13 +334,13 @@ describe('Lesson API - Bulk Operations', () => {
     });
 
     it('should handle deletion errors for individual lessons', async () => {
-      // Mock delete responses
-      // First two succeed, third fails
       lessonBuilder.then = jest
         .fn()
-        .mockImplementationOnce((resolve) => resolve({ error: null }))
-        .mockImplementationOnce((resolve) => resolve({ error: null }))
-        .mockImplementationOnce((resolve) => resolve({ error: { message: 'Not found' } }));
+        .mockImplementationOnce((resolve: (value: unknown) => void) => resolve({ error: null }))
+        .mockImplementationOnce((resolve: (value: unknown) => void) => resolve({ error: null }))
+        .mockImplementationOnce((resolve: (value: unknown) => void) =>
+          resolve({ error: { message: 'Not found' } })
+        );
 
       const lessonIds = [validLessonId1, validLessonId2, validLessonId3];
 

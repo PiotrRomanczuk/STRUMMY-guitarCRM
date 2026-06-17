@@ -1,172 +1,198 @@
 import { render, screen } from '@testing-library/react';
 import AssignmentDetailPage from '@/app/dashboard/assignments/[id]/page';
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getAssignmentDetail } from '@/lib/services/assignment-detail-queries';
+import { redirect, notFound } from 'next/navigation';
 
-// Mock dependencies
+// Mock CSS import
+jest.mock('@/app/design-preview/editorial-tokens.css', () => ({}), { virtual: true });
+
 jest.mock('next/navigation', () => ({
   redirect: jest.fn(),
+  notFound: jest.fn(),
 }));
 
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn(),
+jest.mock('@/lib/getUserWithRolesSSR', () => ({
+  getUserWithRolesSSR: jest.fn(),
 }));
 
-jest.mock('next/link', () => {
-  const MockLink = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  );
-  MockLink.displayName = 'MockLink';
-  return MockLink;
-});
-
-jest.mock('@/components/shared/StatusBadge', () => ({
-  __esModule: true,
-  default: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-  getStatusVariant: jest.fn(),
-  formatStatus: (status: string) => status,
+jest.mock('@/lib/services/assignment-detail-queries', () => ({
+  getAssignmentDetail: jest.fn(),
 }));
+
+jest.mock('@/components/assignments/editorial/detail/AssignmentDetailEditorial', () => ({
+  AssignmentDetailEditorial: ({
+    assignment,
+    canManage,
+    canAct,
+  }: {
+    assignment: { title: string };
+    canManage: boolean;
+    canAct: boolean;
+  }) => (
+    <div>
+      <span data-testid="assignment-title">{assignment.title}</span>
+      <span data-testid="can-manage">{String(canManage)}</span>
+      <span data-testid="can-act">{String(canAct)}</span>
+    </div>
+  ),
+}));
+
+jest.mock('@/components/_editorial/editorial-fonts', () => ({
+  editorialFontClass: 'editorial-font-class',
+}));
+
+const mockGetUserWithRolesSSR = getUserWithRolesSSR as jest.MockedFunction<
+  typeof getUserWithRolesSSR
+>;
+const mockGetAssignmentDetail = getAssignmentDetail as jest.MockedFunction<
+  typeof getAssignmentDetail
+>;
+
+const mockAssignment = {
+  id: '123',
+  title: 'Test Assignment',
+  description: 'Do this',
+  status: 'pending',
+  dueDate: '2023-01-01',
+  teacherId: 'teacher-1',
+  studentId: 'student-1',
+  studentName: 'Student One',
+  studentEmail: 'student@example.com',
+  teacherName: 'Teacher One',
+  song: { id: 'song-1', title: 'Wonderwall', author: 'Oasis' },
+  lesson: { id: 'lesson-1', scheduledAt: '2023-01-01T10:00:00Z' },
+  createdAt: '2023-01-01T00:00:00Z',
+  updatedAt: '2023-01-01T00:00:00Z',
+};
 
 describe('AssignmentDetailPage', () => {
-  const mockSupabase = {
-    auth: {
-      getUser: jest.fn(),
-    },
-    from: jest.fn(),
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
-    (createClient as jest.Mock).mockResolvedValue(mockSupabase);
   });
 
-  it('redirects to login if no user', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
+  it('redirects to sign-in if no user', async () => {
+    mockGetUserWithRolesSSR.mockResolvedValue({
+      user: null,
+      isAdmin: false,
+      isTeacher: false,
+      isStudent: false,
+      isParent: false,
+      isDevelopment: false,
+    });
 
     const params = Promise.resolve({ id: '123' });
-    const searchParams = Promise.resolve({});
 
     try {
-      await AssignmentDetailPage({ params, searchParams });
+      await AssignmentDetailPage({ params });
     } catch {
-      // redirect throws an error in Next.js
+      // redirect throws in Next.js
     }
 
-    expect(redirect).toHaveBeenCalledWith('/login');
+    expect(redirect).toHaveBeenCalledWith('/sign-in?redirect=/dashboard/assignments/123');
   });
 
-  it('renders assignment details and related songs', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user1' } } });
-
-    const mockAssignment = {
-      id: '123',
-      title: 'Test Assignment',
-      description: 'Do this',
-      status: 'pending',
-      due_date: '2023-01-01',
-      student_id: 's1',
-      student_profile: { id: 's1', full_name: 'Student One' },
-      teacher_profile: { id: 't1', full_name: 'Teacher One' },
-      lesson: {
-        id: 'l1',
-        lesson_teacher_number: 5,
-        lesson_songs: [{ song: { id: 'song1', title: 'Wonderwall', author: 'Oasis' } }],
-      },
-    };
-
-    const mockProfile = {
-      is_admin: true,
-      is_teacher: false,
-      is_student: false,
-    };
-
-    mockSupabase.from.mockImplementation((table: string) => {
-      if (table === 'profiles') {
-        return {
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: mockProfile, error: null }),
-            }),
-          }),
-        };
-      }
-      if (table === 'assignments') {
-        return {
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: mockAssignment, error: null }),
-            }),
-          }),
-        };
-      }
-      return {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: null, error: null }),
-      };
+  it('calls notFound when assignment does not exist', async () => {
+    mockGetUserWithRolesSSR.mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      user: { id: 'user-1', email: 'admin@example.com' } as any,
+      isAdmin: true,
+      isTeacher: false,
+      isStudent: false,
+      isParent: false,
+      isDevelopment: false,
     });
+    mockGetAssignmentDetail.mockResolvedValue(null);
 
-    const params = Promise.resolve({ id: '123' });
-    const searchParams = Promise.resolve({});
+    const params = Promise.resolve({ id: 'nonexistent' });
 
-    const jsx = await AssignmentDetailPage({ params, searchParams });
-    render(jsx);
+    try {
+      await AssignmentDetailPage({ params });
+    } catch {
+      // notFound throws in Next.js
+    }
 
-    expect(screen.getByText('Test Assignment')).toBeInTheDocument();
-    expect(screen.getByText('Student One')).toBeInTheDocument();
-    expect(screen.getByText('Teacher One')).toBeInTheDocument();
-    expect(screen.getByText('Lesson #5')).toBeInTheDocument();
-    expect(screen.getByText('Wonderwall')).toBeInTheDocument();
-    expect(screen.getByText('Oasis')).toBeInTheDocument();
+    expect(notFound).toHaveBeenCalled();
   });
 
-  it('accepts searchParams without error', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user1' } } });
-
-    const mockAssignment = {
-      id: '123',
-      title: 'Test Assignment',
-      status: 'pending',
-      student_id: 's1',
-      lesson: { lesson_songs: [] }, // Add minimal lesson structure
-    };
-
-    const mockProfile = {
-      is_admin: true,
-    };
-
-    mockSupabase.from.mockImplementation((table: string) => {
-      if (table === 'profiles') {
-        return {
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: mockProfile, error: null }),
-            }),
-          }),
-        };
-      }
-      if (table === 'assignments') {
-        return {
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({ data: mockAssignment, error: null }),
-            }),
-          }),
-        };
-      }
-      return {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn().mockResolvedValue({ data: null, error: null }),
-      };
+  it('renders assignment detail for admin', async () => {
+    mockGetUserWithRolesSSR.mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      user: { id: 'admin-1', email: 'admin@example.com' } as any,
+      isAdmin: true,
+      isTeacher: false,
+      isStudent: false,
+      isParent: false,
+      isDevelopment: false,
     });
+    mockGetAssignmentDetail.mockResolvedValue(mockAssignment);
 
     const params = Promise.resolve({ id: '123' });
-    const searchParams = Promise.resolve({ tab: 'history' });
-
-    const jsx = await AssignmentDetailPage({ params, searchParams });
+    const jsx = await AssignmentDetailPage({ params });
     render(jsx);
 
-    expect(screen.getByText('Test Assignment')).toBeInTheDocument();
+    expect(screen.getByTestId('assignment-title')).toHaveTextContent('Test Assignment');
+    expect(screen.getByTestId('can-manage')).toHaveTextContent('true');
+    expect(screen.getByTestId('can-act')).toHaveTextContent('true');
+  });
+
+  it('grants canManage to the owning teacher', async () => {
+    mockGetUserWithRolesSSR.mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      user: { id: 'teacher-1', email: 'teacher@example.com' } as any,
+      isAdmin: false,
+      isTeacher: true,
+      isStudent: false,
+      isParent: false,
+      isDevelopment: false,
+    });
+    mockGetAssignmentDetail.mockResolvedValue(mockAssignment);
+
+    const params = Promise.resolve({ id: '123' });
+    const jsx = await AssignmentDetailPage({ params });
+    render(jsx);
+
+    expect(screen.getByTestId('can-manage')).toHaveTextContent('true');
+    expect(screen.getByTestId('can-act')).toHaveTextContent('true');
+  });
+
+  it('denies canManage to a different teacher', async () => {
+    mockGetUserWithRolesSSR.mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      user: { id: 'other-teacher', email: 'other@example.com' } as any,
+      isAdmin: false,
+      isTeacher: true,
+      isStudent: false,
+      isParent: false,
+      isDevelopment: false,
+    });
+    mockGetAssignmentDetail.mockResolvedValue(mockAssignment);
+
+    const params = Promise.resolve({ id: '123' });
+    const jsx = await AssignmentDetailPage({ params });
+    render(jsx);
+
+    expect(screen.getByTestId('can-manage')).toHaveTextContent('false');
+    expect(screen.getByTestId('can-act')).toHaveTextContent('false');
+  });
+
+  it('grants canAct to the owning student', async () => {
+    mockGetUserWithRolesSSR.mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      user: { id: 'student-1', email: 'student@example.com' } as any,
+      isAdmin: false,
+      isTeacher: false,
+      isStudent: true,
+      isParent: false,
+      isDevelopment: false,
+    });
+    mockGetAssignmentDetail.mockResolvedValue(mockAssignment);
+
+    const params = Promise.resolve({ id: '123' });
+    const jsx = await AssignmentDetailPage({ params });
+    render(jsx);
+
+    expect(screen.getByTestId('can-manage')).toHaveTextContent('false');
+    expect(screen.getByTestId('can-act')).toHaveTextContent('true');
   });
 });

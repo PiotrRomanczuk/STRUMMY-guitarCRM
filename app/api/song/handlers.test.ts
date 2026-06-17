@@ -1,4 +1,3 @@
- 
 import {
   getSongsHandler,
   createSongHandler,
@@ -230,9 +229,11 @@ describe('Song API Handlers', () => {
   });
 
   describe('updateSongHandler', () => {
+    // is_draft: true uses SongDraftSchema which doesn't require level/key
     const updateData = {
       title: 'Updated Title',
       author: 'Updated Artist',
+      is_draft: true,
     };
 
     it('should return 401 if no user', async () => {

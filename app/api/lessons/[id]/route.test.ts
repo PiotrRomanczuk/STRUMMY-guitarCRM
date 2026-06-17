@@ -4,13 +4,32 @@
  * Tests for /api/lessons/[id] endpoints (GET, PUT, DELETE)
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GET, PUT, DELETE } from '@/app/api/lessons/[id]/route';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
-// Mock Supabase client
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn(),
+// Mock withApiAuth — bypass real auth; pass through to handler with admin context
+jest.mock('@/lib/auth/withApiAuth', () => ({
+  withApiAuth: jest.fn(
+    (_request: Request, handler: (auth: unknown) => Promise<Response>, _options?: unknown) =>
+      handler({
+        user: { id: 'mock-user-id', email: 'test@example.com' },
+        roles: { isAdmin: true, isTeacher: false, isStudent: false },
+        flags: { isParent: false, isDevelopment: false },
+      })
+  ),
+}));
+
+// Mock the admin Supabase client used by [id]/route.ts and its handlers
+jest.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: jest.fn(),
+}));
+
+// Mock calendar sync to avoid real side effects
+jest.mock('@/lib/services/calendar-lesson-sync', () => ({
+  syncLessonCreation: jest.fn().mockResolvedValue(undefined),
+  syncLessonUpdate: jest.fn().mockResolvedValue(undefined),
+  syncLessonDeletion: jest.fn().mockResolvedValue(undefined),
 }));
 
 describe('Lesson API - [id] Route', () => {
@@ -18,19 +37,6 @@ describe('Lesson API - [id] Route', () => {
   const validTeacherId = '00000002-0000-4000-a000-000000000002';
   const validUserId = '00000003-0000-4000-a000-000000000003';
   const validLessonId = '00000004-0000-4000-a000-000000000004';
-
-  const mockUser = {
-    id: validUserId,
-    email: 'teacher@example.com',
-  };
-
-  const mockProfile = {
-    id: validUserId,
-    is_admin: true,
-    is_teacher: true,
-    is_student: false,
-    user_id: validUserId,
-  };
 
   const mockLesson = {
     id: validLessonId,
@@ -46,59 +52,40 @@ describe('Lesson API - [id] Route', () => {
     lesson_teacher_number: 1,
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
-    profile: {
-      email: 'student@example.com',
-      first_name: 'John',
-      last_name: 'Doe',
-    },
-    teacher_profile: {
-      email: 'teacher@example.com',
-      first_name: 'Jane',
-      last_name: 'Smith',
-    },
   };
 
-   
   let mockSupabaseClient: any;
-   
   let mockSupabaseQueryBuilder: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Setup query builder mock
     mockSupabaseQueryBuilder = {
       select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockReturnThis(),
       update: jest.fn().mockReturnThis(),
       delete: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
-      single: jest.fn(), // No default implementation
+      is: jest.fn().mockReturnThis(),
+      single: jest.fn(),
       maybeSingle: jest.fn(),
-      // Make the object thenable to simulate query execution
-      then: jest.fn((resolve) => resolve({ data: mockLesson, error: null })),
+      then: jest.fn((resolve: (value: unknown) => void) =>
+        resolve({ data: mockLesson, error: null })
+      ),
     };
 
-    // Setup client mock
     mockSupabaseClient = {
-      auth: {
-        getUser: jest.fn().mockResolvedValue({
-          data: { user: mockUser },
-          error: null,
-        }),
-      },
       from: jest.fn().mockReturnValue(mockSupabaseQueryBuilder),
     };
 
-    (createClient as jest.Mock).mockResolvedValue(mockSupabaseClient);
+    (createAdminClient as jest.Mock).mockReturnValue(mockSupabaseClient);
   });
 
   describe('GET /api/lessons/[id]', () => {
-    it('should return unauthorized if user is not authenticated', async () => {
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
+    it('should return 401 when withApiAuth rejects unauthenticated request', async () => {
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
+      withApiAuth.mockImplementationOnce(() =>
+        Promise.resolve(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+      );
 
       const request = new NextRequest(`http://localhost:3000/api/lessons/${validLessonId}`);
       const params = Promise.resolve({ id: validLessonId });
@@ -110,13 +97,8 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should return a lesson by id', async () => {
-      // 1. Profile fetch
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-      // 2. Lesson fetch
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
+      // GET handler uses maybeSingle()
+      mockSupabaseQueryBuilder.maybeSingle.mockResolvedValueOnce({
         data: mockLesson,
         error: null,
       });
@@ -131,15 +113,9 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should return 404 if lesson is not found', async () => {
-      // 1. Profile fetch
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-      // 2. Lesson fetch (not found)
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
+      mockSupabaseQueryBuilder.maybeSingle.mockResolvedValueOnce({
         data: null,
-        error: { code: 'PGRST116', message: 'No rows returned' },
+        error: null,
       });
 
       const request = new NextRequest(`http://localhost:3000/api/lessons/${validLessonId}`);
@@ -152,13 +128,7 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should handle database errors', async () => {
-      // 1. Profile fetch
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-      // 2. Lesson fetch (error)
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
+      mockSupabaseQueryBuilder.maybeSingle.mockResolvedValueOnce({
         data: null,
         error: { message: 'Database connection failed' },
       });
@@ -174,11 +144,11 @@ describe('Lesson API - [id] Route', () => {
   });
 
   describe('PUT /api/lessons/[id]', () => {
-    it('should return unauthorized if user is not authenticated', async () => {
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
+    it('should return 401 when withApiAuth rejects unauthenticated request', async () => {
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
+      withApiAuth.mockImplementationOnce(() =>
+        Promise.resolve(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+      );
 
       const request = new NextRequest(`http://localhost:3000/api/lessons/${validLessonId}`, {
         method: 'PUT',
@@ -193,11 +163,15 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should return forbidden if user is not admin or teacher', async () => {
-      // 1. Profile fetch (student)
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: { ...mockProfile, is_teacher: false, is_admin: false },
-        error: null,
-      });
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
+      withApiAuth.mockImplementationOnce(
+        (_req: Request, handler: (auth: unknown) => Promise<Response>) =>
+          handler({
+            user: { id: 'mock-user-id', email: 'student@example.com' },
+            roles: { isAdmin: false, isTeacher: false, isStudent: true },
+            flags: { isParent: false, isDevelopment: false },
+          })
+      );
 
       const request = new NextRequest(`http://localhost:3000/api/lessons/${validLessonId}`, {
         method: 'PUT',
@@ -212,12 +186,7 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should update a lesson with valid data', async () => {
-      // 1. Profile fetch
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-      // 2. Update result
+      // updateLessonHandler calls update().eq().select().single()
       mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
         data: { ...mockLesson, title: 'Updated Title' },
         error: null,
@@ -237,14 +206,6 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should return 404 if lesson does not exist', async () => {
-      // 1. Profile fetch
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-      // 2. Update result (not found)
-      // The handler likely uses update().eq().select().single()
-      // If update finds no rows, single() returns PGRST116
       mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
         data: null,
         error: { code: 'PGRST116', message: 'No rows returned' },
@@ -263,12 +224,6 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should return validation error for invalid update data', async () => {
-      // 1. Profile fetch
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-
       const request = new NextRequest(`http://localhost:3000/api/lessons/${validLessonId}`, {
         method: 'PUT',
         body: JSON.stringify({ status: 'INVALID_STATUS' }),
@@ -283,11 +238,11 @@ describe('Lesson API - [id] Route', () => {
   });
 
   describe('DELETE /api/lessons/[id]', () => {
-    it('should return unauthorized if user is not authenticated', async () => {
-      mockSupabaseClient.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
+    it('should return 401 when withApiAuth rejects unauthenticated request', async () => {
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
+      withApiAuth.mockImplementationOnce(() =>
+        Promise.resolve(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+      );
 
       const request = new NextRequest(`http://localhost:3000/api/lessons/${validLessonId}`, {
         method: 'DELETE',
@@ -301,11 +256,15 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should return forbidden if user is not admin or teacher', async () => {
-      // 1. Profile fetch (student)
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: { ...mockProfile, is_teacher: false, is_admin: false },
-        error: null,
-      });
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
+      withApiAuth.mockImplementationOnce(
+        (_req: Request, handler: (auth: unknown) => Promise<Response>) =>
+          handler({
+            user: { id: 'mock-user-id', email: 'student@example.com' },
+            roles: { isAdmin: false, isTeacher: false, isStudent: true },
+            flags: { isParent: false, isDevelopment: false },
+          })
+      );
 
       const request = new NextRequest(`http://localhost:3000/api/lessons/${validLessonId}`, {
         method: 'DELETE',
@@ -319,38 +278,10 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should delete a lesson successfully', async () => {
-      // 1. Profile fetch
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-
-      // 2. Delete result
-      // The handler likely uses delete().eq() and checks error
-      // It might NOT use single() or select() if it just deletes.
-      // But if it returns the deleted lesson, it uses select().single()
-      // Let's assume it just checks for error based on previous test failure analysis (it didn't fail on this step before)
-
-      // However, the previous test passed!
-      // "should delete a lesson successfully" passed.
-      // That means my previous mock setup for DELETE was "good enough" or lucky.
-      // Previous setup:
-      // mockSupabaseQueryBuilder.eq.mockReturnThis();
-      // mockSupabaseQueryBuilder.then = jest.fn((resolve) => resolve({ error: null }));
-
-      // I'll stick to that for DELETE, but I need to handle the profile fetch first.
-
-      // Wait, if I use `mockResolvedValueOnce` for single(), it only affects `single()`.
-      // `delete()` returns the builder. `eq()` returns the builder.
-      // `then()` is called at the end.
-      // If `deleteLessonHandler` calls `single()` (e.g. to return the deleted lesson), I need to mock it.
-      // If it just awaits the query builder, `then()` is called.
-
-      // Let's check `deleteLessonHandler` in `handlers.ts` if possible, or just assume standard Supabase usage.
-      // Usually `delete().eq('id', id)` returns `{ error, count, data }`.
-
-      // I will mock `then` to return success.
-      mockSupabaseQueryBuilder.then = jest.fn((resolve) => resolve({ error: null }));
+      // deleteLessonHandler: syncLessonDeletion then update().eq() (soft delete via thenable)
+      mockSupabaseQueryBuilder.then.mockImplementationOnce((resolve: (value: unknown) => void) =>
+        resolve({ error: null })
+      );
 
       const request = new NextRequest(`http://localhost:3000/api/lessons/${validLessonId}`, {
         method: 'DELETE',
@@ -364,14 +295,7 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should handle database errors', async () => {
-      // 1. Profile fetch
-      mockSupabaseQueryBuilder.single.mockResolvedValueOnce({
-        data: mockProfile,
-        error: null,
-      });
-
-      // 2. Delete error
-      mockSupabaseQueryBuilder.then = jest.fn((resolve) =>
+      mockSupabaseQueryBuilder.then.mockImplementationOnce((resolve: (value: unknown) => void) =>
         resolve({ error: { message: 'Database connection failed' } })
       );
 

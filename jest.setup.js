@@ -98,15 +98,22 @@ jest.mock('next/server', () => {
         return typeof this.body === 'string' ? JSON.parse(this.body) : this.body;
       }
     },
-    NextResponse: {
-      json: (data, init) => {
-        return {
-          ok: true,
-          status: init?.status || 200,
-          json: async () => data,
-          headers: new Headers(init?.headers),
-        };
-      },
+    NextResponse: class MockNextResponse {
+      constructor(body, init) {
+        this.ok = true;
+        this.status = init?.status ?? 200;
+        this._body = body;
+        this.headers = new Headers(init?.headers);
+      }
+      async json() {
+        return typeof this._body === 'string' ? JSON.parse(this._body) : this._body;
+      }
+      static json(data, init) {
+        const res = new MockNextResponse(JSON.stringify(data), init);
+        res._data = data;
+        res.json = async () => data;
+        return res;
+      }
     },
   };
 });

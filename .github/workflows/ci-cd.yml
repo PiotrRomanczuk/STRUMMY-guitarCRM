@@ -88,7 +88,11 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test:ci -- --coverage --testPathIgnorePatterns='integration.test.ts' --testPathIgnorePatterns='database/'
+        # Do NOT pass --testPathIgnorePatterns here: Jest's CLI flag REPLACES the
+        # config array (it does not merge), which wipes out the quarantine list in
+        # jest.config.ts and makes rotted tests run in CI. Integration tests run in
+        # their own step below; the `database/` and integration ignores live in config.
+        run: npm run test:ci
         env:
           CI: true
           SKIP_DB_TESTS: true
