@@ -44,6 +44,7 @@ import {
 } from '@/lib/testing/integration-helpers';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import {
   getStudentRepertoireAction,
   addSongToRepertoireAction,
@@ -74,6 +75,23 @@ function withGt(
 ): ReturnType<typeof createMockQueryBuilder> {
   (builder as Record<string, jest.Mock>).gt = jest.fn().mockReturnValue(builder);
   return builder;
+}
+
+/**
+ * Override the (student-by-default) role mock to a teacher for the NEXT action
+ * call only. `updateRepertoireEntryAction` enforces a column-level guard that
+ * restricts non-staff callers to notes/difficulty; staff-path tests must run as
+ * staff. `mockResolvedValueOnce` self-reverts to the student default afterward.
+ */
+function asTeacherOnce() {
+  (getUserWithRolesSSR as jest.Mock).mockResolvedValueOnce({
+    user: { id: teacherCtx.userId },
+    isAdmin: false,
+    isTeacher: true,
+    isStudent: false,
+    isParent: false,
+    isDevelopment: false,
+  });
 }
 
 /**
@@ -176,9 +194,7 @@ describe('addSongToRepertoireAction', () => {
     const result = await addSongToRepertoireAction(validInput);
     expect(result).toEqual({ success: true, id: REPERTOIRE_ID });
     expect(qb.insert).toHaveBeenCalled();
-    expect(revalidatePath).toHaveBeenCalledWith(
-      `/dashboard/users/${studentCtx.userId}`
-    );
+    expect(revalidatePath).toHaveBeenCalledWith(`/dashboard/users/${studentCtx.userId}`);
   });
 
   it('defaults assigned_by to authenticated user id', async () => {
@@ -233,20 +249,20 @@ describe('updateRepertoireEntryAction', () => {
   it('updates entry and revalidates path', async () => {
     const qb = createMockQueryBuilder({ student_id: studentCtx.userId });
     buildClient(teacherCtx.user, { student_repertoire: qb });
+    asTeacherOnce();
 
     const result = await updateRepertoireEntryAction(REPERTOIRE_ID, {
       teacher_notes: 'Focus on barre chords',
     });
     expect(result).toEqual({ success: true });
     expect(qb.update).toHaveBeenCalled();
-    expect(revalidatePath).toHaveBeenCalledWith(
-      `/dashboard/users/${studentCtx.userId}`
-    );
+    expect(revalidatePath).toHaveBeenCalledWith(`/dashboard/users/${studentCtx.userId}`);
   });
 
   it('auto-sets started_at when status is started', async () => {
     const qb = createMockQueryBuilder({ student_id: studentCtx.userId });
     buildClient(teacherCtx.user, { student_repertoire: qb });
+    asTeacherOnce();
 
     const before = new Date().toISOString();
     await updateRepertoireEntryAction(REPERTOIRE_ID, {
@@ -262,6 +278,7 @@ describe('updateRepertoireEntryAction', () => {
   it('auto-sets mastered_at when status is mastered', async () => {
     const qb = createMockQueryBuilder({ student_id: studentCtx.userId });
     buildClient(teacherCtx.user, { student_repertoire: qb });
+    asTeacherOnce();
 
     await updateRepertoireEntryAction(REPERTOIRE_ID, {
       current_status: 'mastered',
@@ -273,6 +290,7 @@ describe('updateRepertoireEntryAction', () => {
   it('returns not found when entry does not exist', async () => {
     const qb = createMockQueryBuilder(null, { message: 'not found' });
     buildClient(teacherCtx.user, { student_repertoire: qb });
+    asTeacherOnce();
 
     const result = await updateRepertoireEntryAction(REPERTOIRE_ID, {
       teacher_notes: 'test',
@@ -299,9 +317,7 @@ describe('removeFromRepertoireAction', () => {
     const result = await removeFromRepertoireAction(REPERTOIRE_ID);
     expect(result).toEqual({ success: true });
     expect(qb.delete).toHaveBeenCalled();
-    expect(revalidatePath).toHaveBeenCalledWith(
-      `/dashboard/users/${studentCtx.userId}`
-    );
+    expect(revalidatePath).toHaveBeenCalledWith(`/dashboard/users/${studentCtx.userId}`);
   });
 
   it('returns error on DB failure', async () => {
@@ -340,9 +356,7 @@ describe('addSongToNextLessonAction', () => {
   });
 
   it('returns noLesson when no upcoming scheduled lesson exists', async () => {
-    const lessonsQb = withGt(
-      createMockQueryBuilder(null, { message: 'no rows' })
-    );
+    const lessonsQb = withGt(createMockQueryBuilder(null, { message: 'no rows' }));
     buildClient(teacherCtx.user, { lessons: lessonsQb });
 
     const result = await addSongToNextLessonAction(studentCtx.userId, SONG_ID);
@@ -418,12 +432,8 @@ describe('addSongToNextLessonAction', () => {
       lessonId: LESSON_ID,
       scheduledAt,
     });
-    expect(revalidatePath).toHaveBeenCalledWith(
-      `/dashboard/users/${studentCtx.userId}`
-    );
-    expect(revalidatePath).toHaveBeenCalledWith(
-      `/dashboard/lessons/${LESSON_ID}`
-    );
+    expect(revalidatePath).toHaveBeenCalledWith(`/dashboard/users/${studentCtx.userId}`);
+    expect(revalidatePath).toHaveBeenCalledWith(`/dashboard/lessons/${LESSON_ID}`);
   });
 });
 
@@ -438,7 +448,13 @@ describe('searchSongsForRepertoireAction', () => {
     const existingRepertoire = [{ song_id: SONG_ID }];
     const allSongs = [
       { id: SONG_ID, title: 'Already Added', author: 'A', level: null, key: null },
-      { id: '00000000-5555-4000-a000-000000000050', title: 'New Song', author: 'B', level: null, key: null },
+      {
+        id: '00000000-5555-4000-a000-000000000050',
+        title: 'New Song',
+        author: 'B',
+        level: null,
+        key: null,
+      },
     ];
 
     const repertoireQb = createMockQueryBuilder(existingRepertoire);
@@ -466,9 +482,7 @@ describe('searchSongsForRepertoireAction', () => {
   });
 
   it('returns all songs when repertoire is empty', async () => {
-    const songs = [
-      { id: SONG_ID, title: 'Song A', author: 'X', level: 'beginner', key: 'C' },
-    ];
+    const songs = [{ id: SONG_ID, title: 'Song A', author: 'X', level: 'beginner', key: 'C' }];
     const repertoireQb = createMockQueryBuilder([]);
     const songsQb = createMockQueryBuilder(songs);
 
@@ -589,9 +603,7 @@ describe('updateSelfRatingAction', () => {
       })
     );
     expect(revalidatePath).toHaveBeenCalledWith('/dashboard/repertoire');
-    expect(revalidatePath).toHaveBeenCalledWith(
-      `/dashboard/users/${studentCtx.userId}`
-    );
+    expect(revalidatePath).toHaveBeenCalledWith(`/dashboard/users/${studentCtx.userId}`);
   });
 
   it('returns error on update DB failure', async () => {
