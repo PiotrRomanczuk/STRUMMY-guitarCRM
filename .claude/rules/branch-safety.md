@@ -15,16 +15,16 @@ git branch --show-current && git status --short
 1. **Never work on `main` directly.** If on `main`, create a feature branch FIRST.
 2. **If a feature branch already exists for the task**, switch to it before doing anything.
 3. **If there are uncommitted changes on the wrong branch**, stash or commit them before switching.
-4. **Branch naming**: `feature/STRUM-XXX-description` (or `fix/`, `chore/`, `refactor/`).
+4. **Branch naming**: `feature/short-description` (or `fix/`, `chore/`, `refactor/`) — no ticket ID prefix.
 5. **Create the branch BEFORE writing code**, not after.
 
 ```bash
 # Quick reference
 git branch --show-current && git status --short
-git checkout -b feature/STRUM-XXX-description
+git checkout -b feature/short-description
 
 # If you accidentally started on main with uncommitted changes
-git stash && git checkout -b feature/STRUM-XXX-description && git stash pop
+git stash && git checkout -b feature/short-description && git stash pop
 ```
 
 ## Parallel Agent Safety Protocol (MANDATORY when spawning 2+ agents)

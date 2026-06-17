@@ -11,6 +11,7 @@ Review code changes and report findings: **$ARGUMENTS**
 ## Argument Parsing
 
 Parse `$ARGUMENTS`:
+
 - **No args**: Review current branch diff vs `origin/main`
 - **PR number** (integer): Review that PR via `gh pr diff {number}`
 - `--scope quick` — Code quality + security only (Passes 3+4)
@@ -46,6 +47,7 @@ Store the file list and diff for review.
 ### Quick scope (Passes 3+4)
 
 **Pass 3 — Code Quality:**
+
 - No `any` types — must use specific types or `unknown`
 - Files under 200 LOC (warn at 150+, flag at 200+)
 - No dead code, unused imports, or commented-out blocks
@@ -57,6 +59,7 @@ Store the file list and diff for review.
 - No prop drilling through 3+ layers
 
 **Pass 4 — Security:**
+
 - No hardcoded secrets, tokens, or credentials
 - No `NEXT_PUBLIC_` prefix on server-side secrets
 - Tokens masked in log output: `token.slice(0, 6) + '...'`
@@ -76,7 +79,7 @@ Run only the security checks from Pass 4 above.
 
 Run all passes from the pr-reviewer agent:
 
-1. **Linear & Branch Hygiene** — branch naming, PR title has ticket, body references ticket
+1. **Branch Hygiene** — branch naming convention, PR title descriptive, body references Obsidian task
 2. **Quality Gates** — lint, tsc, tests, CI status
 3. **Code Quality** — TypeScript, React/Next.js patterns, error handling
 4. **Security** — secrets, auth, input validation, database
@@ -97,21 +100,26 @@ Skip passes 6–7 if no relevant files were changed.
 ## Code Review: {branch name or PR #number}
 
 ### Scope: {quick|security|full}
+
 ### Files reviewed: {count}
 
 ### Blockers (must fix)
+
 - [ ] file:line — description
 
 ### Suggestions (recommended)
+
 - file:line — description
 
 ### Observations (minor)
+
 - description
 
 ### Verdict: CLEAN | HAS_SUGGESTIONS | HAS_BLOCKERS
 ```
 
 **Verdict rules:**
+
 - `CLEAN` — zero blockers, zero suggestions
 - `HAS_SUGGESTIONS` — zero blockers, one or more suggestions
 - `HAS_BLOCKERS` — one or more blockers (must fix before shipping)

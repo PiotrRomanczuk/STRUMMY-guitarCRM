@@ -1,6 +1,6 @@
 ---
 name: deployment-ops
-description: "Manages Vercel deployments, CI/CD pipelines, cron job health, environment variables, and production incident response. Handles rollbacks, smoke tests, and deployment verification."
+description: 'Manages Vercel deployments, CI/CD pipelines, cron job health, environment variables, and production incident response. Handles rollbacks, smoke tests, and deployment verification.'
 tools:
   - Read
   - Glob
@@ -65,13 +65,13 @@ curl -s -o /dev/null -w "%{http_code}" https://marszal-arts.vercel.app
 
 Verify all 5 cron jobs are running:
 
-| Cron Job | Schedule | Endpoint |
-|----------|----------|----------|
-| Main scheduler | Every minute | `/api/cron/process` |
-| Identity audit | Every 5 min | `/api/cron/identity-audit` |
-| Media health | Every 6 hours | `/api/cron/check-media-health` |
-| Token refresh | Weekly (Sun) | `/api/schedule/refresh-token` |
-| Video processing | Every 5 min | `/api/cron/process-videos` |
+| Cron Job         | Schedule      | Endpoint                       |
+| ---------------- | ------------- | ------------------------------ |
+| Main scheduler   | Every minute  | `/api/cron/process`            |
+| Identity audit   | Every 5 min   | `/api/cron/identity-audit`     |
+| Media health     | Every 6 hours | `/api/cron/check-media-health` |
+| Token refresh    | Weekly (Sun)  | `/api/schedule/refresh-token`  |
+| Video processing | Every 5 min   | `/api/cron/process-videos`     |
 
 ```bash
 # Check cron status via developer debug endpoint
@@ -84,19 +84,19 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://marszal-arts.vercel.app/api
 
 ### Required Variables (Vercel Dashboard)
 
-| Variable | Purpose | Public? |
-|----------|---------|---------|
-| `NEXTAUTH_SECRET` | NextAuth JWT signing | No |
-| `NEXTAUTH_URL` | Auth callback URL | No |
-| `GOOGLE_CLIENT_ID` | Google OAuth | No |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth | No |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase endpoint | Yes |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public key | Yes |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase admin key | No |
-| `CRON_SECRET` | Cron job auth | No |
-| `WEBHOOK_SECRET` | Instagram webhook auth | No |
-| `SENTRY_DSN` | Error tracking | No |
-| `FB_APP_SECRET` | Facebook app secret | No |
+| Variable                        | Purpose                | Public? |
+| ------------------------------- | ---------------------- | ------- |
+| `NEXTAUTH_SECRET`               | NextAuth JWT signing   | No      |
+| `NEXTAUTH_URL`                  | Auth callback URL      | No      |
+| `GOOGLE_CLIENT_ID`              | Google OAuth           | No      |
+| `GOOGLE_CLIENT_SECRET`          | Google OAuth           | No      |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase endpoint      | Yes     |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public key    | Yes     |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase admin key     | No      |
+| `CRON_SECRET`                   | Cron job auth          | No      |
+| `WEBHOOK_SECRET`                | Instagram webhook auth | No      |
+| `SENTRY_DSN`                    | Error tracking         | No      |
+| `FB_APP_SECRET`                 | Facebook app secret    | No      |
 
 ### Variable Verification
 
@@ -159,13 +159,13 @@ gh run rerun <run-id> --failed
 
 ### Common CI Failures
 
-| Failure | Cause | Fix |
-|---------|-------|-----|
-| Lint fails | ESLint errors | Fix lint issues locally |
-| tsc fails | Type errors | Fix TypeScript errors |
-| Tests fail | Test regression | Debug and fix tests |
-| Build fails | Missing env vars | Check Vercel env config |
-| E2E fails | Flaky tests or API issues | Check test logs and retry |
+| Failure     | Cause                     | Fix                       |
+| ----------- | ------------------------- | ------------------------- |
+| Lint fails  | ESLint errors             | Fix lint issues locally   |
+| tsc fails   | Type errors               | Fix TypeScript errors     |
+| Tests fail  | Test regression           | Debug and fix tests       |
+| Build fails | Missing env vars          | Check Vercel env config   |
+| E2E fails   | Flaky tests or API issues | Check test logs and retry |
 
 ---
 
@@ -246,21 +246,21 @@ BASE_URL=https://marszal-arts.vercel.app npx playwright test --config=playwright
 
 ### Severity Levels
 
-| Level | Impact | Response |
-|-------|--------|----------|
-| P0 - Critical | Service down, data loss | Rollback immediately, notify team |
-| P1 - High | Major feature broken | Fix within hours, consider rollback |
-| P2 - Medium | Minor feature broken | Fix in next deploy |
-| P3 - Low | Cosmetic/minor | Schedule for next sprint |
+| Level         | Impact                  | Response                            |
+| ------------- | ----------------------- | ----------------------------------- |
+| P0 - Critical | Service down, data loss | Rollback immediately, notify team   |
+| P1 - High     | Major feature broken    | Fix within hours, consider rollback |
+| P2 - Medium   | Minor feature broken    | Fix in next deploy                  |
+| P3 - Low      | Cosmetic/minor          | Schedule for next sprint            |
 
 ### P0/P1 Response Playbook
 
 1. **Assess**: Check Sentry, Vercel logs, user reports
 2. **Contain**: Rollback if fix isn't obvious
-3. **Fix**: Create hotfix branch `fix/BMS-XXX-incident-description`
+3. **Fix**: Create hotfix branch `fix/incident-description`
 4. **Verify**: Run full test suite + smoke tests
 5. **Deploy**: Push fix to master
-6. **Document**: Create post-mortem in Linear
+6. **Document**: Create post-mortem note in Obsidian vault (`inbox.md`)
 
 ### Key Debugging Commands
 
