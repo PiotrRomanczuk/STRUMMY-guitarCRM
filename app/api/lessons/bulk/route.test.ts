@@ -76,7 +76,7 @@ describe('Lesson API - Bulk Operations', () => {
 
   describe('POST /api/lessons/bulk (Bulk Create)', () => {
     it('should return 401 when withApiAuth rejects unauthenticated request', async () => {
-      const { withApiAuth } = require('@/lib/auth/withApiAuth');
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
       withApiAuth.mockImplementationOnce(() =>
         Promise.resolve(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
       );
@@ -93,7 +93,7 @@ describe('Lesson API - Bulk Operations', () => {
     });
 
     it('should return forbidden if user is not admin or teacher', async () => {
-      const { withApiAuth } = require('@/lib/auth/withApiAuth');
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
       withApiAuth.mockImplementationOnce(
         (_req: Request, handler: (auth: unknown) => Promise<Response>) =>
           handler({

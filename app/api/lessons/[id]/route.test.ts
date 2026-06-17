@@ -82,7 +82,7 @@ describe('Lesson API - [id] Route', () => {
 
   describe('GET /api/lessons/[id]', () => {
     it('should return 401 when withApiAuth rejects unauthenticated request', async () => {
-      const { withApiAuth } = require('@/lib/auth/withApiAuth');
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
       withApiAuth.mockImplementationOnce(() =>
         Promise.resolve(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
       );
@@ -145,7 +145,7 @@ describe('Lesson API - [id] Route', () => {
 
   describe('PUT /api/lessons/[id]', () => {
     it('should return 401 when withApiAuth rejects unauthenticated request', async () => {
-      const { withApiAuth } = require('@/lib/auth/withApiAuth');
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
       withApiAuth.mockImplementationOnce(() =>
         Promise.resolve(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
       );
@@ -163,7 +163,7 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should return forbidden if user is not admin or teacher', async () => {
-      const { withApiAuth } = require('@/lib/auth/withApiAuth');
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
       withApiAuth.mockImplementationOnce(
         (_req: Request, handler: (auth: unknown) => Promise<Response>) =>
           handler({
@@ -239,7 +239,7 @@ describe('Lesson API - [id] Route', () => {
 
   describe('DELETE /api/lessons/[id]', () => {
     it('should return 401 when withApiAuth rejects unauthenticated request', async () => {
-      const { withApiAuth } = require('@/lib/auth/withApiAuth');
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
       withApiAuth.mockImplementationOnce(() =>
         Promise.resolve(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
       );
@@ -256,7 +256,7 @@ describe('Lesson API - [id] Route', () => {
     });
 
     it('should return forbidden if user is not admin or teacher', async () => {
-      const { withApiAuth } = require('@/lib/auth/withApiAuth');
+      const { withApiAuth } = jest.requireMock('@/lib/auth/withApiAuth') as { withApiAuth: jest.Mock };
       withApiAuth.mockImplementationOnce(
         (_req: Request, handler: (auth: unknown) => Promise<Response>) =>
           handler({
