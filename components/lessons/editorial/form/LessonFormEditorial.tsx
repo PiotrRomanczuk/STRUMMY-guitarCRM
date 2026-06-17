@@ -9,6 +9,7 @@ import { createLessonAction, updateLessonAction } from '@/app/actions/lesson-edi
 import type { LessonFormValues } from '@/app/actions/lesson-edit';
 import type { SongOption, StudentOption } from '@/lib/services/lesson-form-data';
 import { LessonFormFields } from './LessonForm.Fields';
+import { LessonNotesAI } from '@/components/lessons/form/LessonNotesAI';
 
 const NEW_STUDENT = '__new__';
 
@@ -48,6 +49,12 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
   const [isSaving, setIsSaving] = useState(false);
 
   const isNewStudent = studentId === NEW_STUDENT;
+
+  const selectedStudent = students.find((stu) => stu.id === studentId);
+  const aiStudentName = isNewStudent ? studentEmail : (selectedStudent?.name ?? '');
+  const aiSongsCovered = songIds
+    .map((id) => songs.find((song) => song.id === id)?.title)
+    .filter((t): t is string => Boolean(t));
 
   const handleSubmit = useCallback(
     async (event: React.FormEvent) => {
@@ -132,6 +139,17 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
           onStatus={setStatus}
           onSongIds={setSongIds}
         />
+
+        <div data-testid="lesson-notes-ai">
+          <LessonNotesAI
+            studentName={aiStudentName}
+            studentId={isNewStudent ? undefined : studentId || undefined}
+            songsCovered={aiSongsCovered}
+            lessonTopic={title}
+            onNotesGenerated={setNotes}
+            disabled={isSaving}
+          />
+        </div>
 
         <div style={s.actions}>
           <button type="submit" style={s.primary} disabled={isSaving}>

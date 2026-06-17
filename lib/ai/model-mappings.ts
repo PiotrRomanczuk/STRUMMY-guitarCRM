@@ -58,6 +58,13 @@ export const FALLBACK_MODELS = {
  * Map an OpenRouter model to its Ollama equivalent
  */
 export function mapToOllamaModel(openrouterModel: string): string {
+  // A local Ollama host only serves the models that are actually pulled. When
+  // OLLAMA_DEFAULT_MODEL is set, honor it for every request — the static
+  // OpenRouter→Ollama table can otherwise resolve to a model that isn't
+  // installed (e.g. llama3.2:3b), causing 404s from Ollama.
+  const envDefault = process.env.OLLAMA_DEFAULT_MODEL;
+  if (envDefault) return envDefault;
+
   const mapping = MODEL_MAPPINGS.find((m) => m.openrouterModel === openrouterModel);
   return mapping?.ollamaModel || FALLBACK_MODELS.ollama;
 }
