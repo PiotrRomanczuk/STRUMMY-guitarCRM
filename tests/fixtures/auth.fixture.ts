@@ -96,15 +96,20 @@ export const test = base.extend<AuthFixtures>({
 
       // Try to use existing session
       try {
-        await page.context().addCookies(
-          JSON.parse(require('fs').readFileSync(storagePath, 'utf-8')).cookies
-        );
+        await page
+          .context()
+          .addCookies(JSON.parse(require('fs').readFileSync(storagePath, 'utf-8')).cookies);
 
-        // Verify session is still valid
+        // Verify the session is still valid. We must check the URL, NOT just that
+        // a <main> element is visible: an expired session redirects /dashboard →
+        // /sign-in, and the sign-in page ALSO renders a <main>, so a visibility
+        // check silently accepts a logged-out session and every test then fails
+        // on the sign-in page. A still-authenticated session stays on /dashboard.
         await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 30000 });
-        const isLoggedIn = await page.locator('main').first().isVisible({ timeout: 10000 });
+        await page.locator('main').first().waitFor({ state: 'visible', timeout: 10000 });
 
-        if (isLoggedIn) {
+        const onDashboard = new URL(page.url()).pathname.startsWith('/dashboard');
+        if (onDashboard) {
           // Session is valid, reuse it
           return;
         }

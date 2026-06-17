@@ -122,3 +122,4 @@ data/JustMeAndGuitar_*.xlsx
 /fallow-*.json
 /fallow-*.err
 /.fallow/
+playwright.local-*.config.ts
