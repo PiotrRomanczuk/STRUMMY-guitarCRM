@@ -24,11 +24,10 @@ test.describe(
       await page.goto('/dashboard/assignments');
       await page.waitForLoadState('networkidle');
 
-      // Verify assignments page loads — V2 mobile shows filter bar + cards, no heading
-      const pageContent = page
-        .locator('button:has-text("All"), [data-testid="assignment-table"]')
-        .first();
-      await expect(pageContent).toBeVisible({ timeout: 15_000 });
+      // Verify the assignments page loads (editorial heading).
+      await expect(page.getByRole('heading', { name: /assignments/i }).first()).toBeVisible({
+        timeout: 15_000,
+      });
 
       // Wait for page content to settle
       await page.waitForTimeout(2000);
