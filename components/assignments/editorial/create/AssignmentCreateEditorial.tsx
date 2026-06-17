@@ -11,6 +11,7 @@ import {
   type AssignmentFormValues,
 } from '@/app/actions/assignment-edit';
 import type { SongOption, StudentOption } from '@/lib/services/lesson-form-data';
+import { AssignmentAI } from '@/components/assignments/form/AssignmentAI';
 
 const toDateInput = (iso: string | null): string => (iso ? iso.slice(0, 10) : '');
 
@@ -28,6 +29,7 @@ type Props = {
   };
 };
 
+// eslint-disable-next-line max-lines-per-function -- single-page editorial form
 export const AssignmentCreateEditorial = ({ mode, students, songs, initial }: Props) => {
   const router = useRouter();
   const [studentId, setStudentId] = useState(initial?.studentId ?? '');
@@ -163,6 +165,21 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, initial }: Pr
             value={description}
             placeholder="What should the student do before next lesson…"
             onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+
+        <div data-testid="assignment-notes-ai">
+          <AssignmentAI
+            studentName={students.find((stu) => stu.id === studentId)?.name ?? ''}
+            studentId={studentId || undefined}
+            studentLevel="beginner"
+            recentSongs={[songs.find((song) => song.id === songId)?.title].filter(
+              (t): t is string => Boolean(t)
+            )}
+            focusArea={title}
+            duration="1 week"
+            onAssignmentGenerated={setDescription}
+            disabled={isSaving}
           />
         </div>
 
