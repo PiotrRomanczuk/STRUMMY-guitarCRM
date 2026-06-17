@@ -14,12 +14,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {
-  getProviderAppropriateModel,
-  generateLessonNotes,
-  generateAssignment,
-  getAvailableModels,
-} from '../ai';
+import { generateLessonNotes, generateAssignment, getAvailableModels } from '../ai';
+import { getProviderAppropriateModel } from '../ai/shared';
 
 // Mock AI provider
 const mockGetAIProvider = jest.fn();
@@ -362,9 +358,7 @@ describe('Authentication enforcement [BMS-107]', () => {
   });
 
   it('should reject unauthenticated generateLessonNotes calls', async () => {
-    mockRequireAIAuth.mockRejectedValue(
-      new Error('Authentication required to use AI features.')
-    );
+    mockRequireAIAuth.mockRejectedValue(new Error('Authentication required to use AI features.'));
 
     const result = await generateLessonNotes({
       studentName: 'Test',
@@ -377,9 +371,7 @@ describe('Authentication enforcement [BMS-107]', () => {
   });
 
   it('should reject unauthenticated generateAssignment calls', async () => {
-    mockRequireAIAuth.mockRejectedValue(
-      new Error('Authentication required to use AI features.')
-    );
+    mockRequireAIAuth.mockRejectedValue(new Error('Authentication required to use AI features.'));
 
     const result = await generateAssignment({
       studentName: 'Test',
@@ -394,9 +386,7 @@ describe('Authentication enforcement [BMS-107]', () => {
   });
 
   it('should reject unauthenticated getAvailableModels calls', async () => {
-    mockRequireAIAuth.mockRejectedValue(
-      new Error('Authentication required to use AI features.')
-    );
+    mockRequireAIAuth.mockRejectedValue(new Error('Authentication required to use AI features.'));
 
     const result = await getAvailableModels();
 
