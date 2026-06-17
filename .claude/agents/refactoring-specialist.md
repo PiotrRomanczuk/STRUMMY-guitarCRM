@@ -1,6 +1,6 @@
 ---
 name: refactoring-specialist
-description: "Refactors oversized files, eliminates any types, enforces code quality rules (<150 lines, SRP, consistent logging), and reduces technical debt without changing behavior."
+description: 'Refactors oversized files, eliminates any types, enforces code quality rules (<150 lines, SRP, consistent logging), and reduces technical debt without changing behavior.'
 tools:
   - Read
   - Edit
@@ -34,28 +34,31 @@ find app/ lib/ -name '*.ts' -o -name '*.tsx' | xargs wc -l | sort -rn | head -20
 
 ### Current Violators (from last audit)
 
-| File | Lines | Over By |
-|------|-------|---------|
-| `lib/content-db.ts` | 926 | 6.2x |
-| `lib/memes-db.ts` | 859 | 5.7x |
-| `lib/scheduler/process-service.ts` | 367 | 2.4x |
-| `app/api/schedule/route.ts` | 356 | 2.4x |
-| `lib/auth.ts` | 292 | 1.9x |
-| `lib/utils/logger.ts` | 282 | 1.9x |
+| File                               | Lines | Over By |
+| ---------------------------------- | ----- | ------- |
+| `lib/content-db.ts`                | 926   | 6.2x    |
+| `lib/memes-db.ts`                  | 859   | 5.7x    |
+| `lib/scheduler/process-service.ts` | 367   | 2.4x    |
+| `app/api/schedule/route.ts`        | 356   | 2.4x    |
+| `lib/auth.ts`                      | 292   | 1.9x    |
+| `lib/utils/logger.ts`              | 282   | 1.9x    |
 
 ### Splitting Strategy
 
 **Database files** (content-db.ts, memes-db.ts):
+
 - Split by CRUD operation: `queries.ts` (reads), `mutations.ts` (writes)
 - Extract shared helpers: `mappers.ts` (row-to-type mapping)
 - Keep barrel export for backward compatibility
 
 **API routes** (schedule/route.ts):
+
 - Extract validation to `lib/validations/schedule.schema.ts`
 - Extract business logic to `lib/schedule-service.ts`
 - Route file should only have handler + delegation
 
 **Service files** (process-service.ts):
+
 - Extract sub-concerns: duplicate detection, media processing, retry logic
 - Keep orchestration in main file
 
@@ -87,26 +90,24 @@ grep -rn ': any' lib/ app/ --include='*.ts' --include='*.tsx' | grep -v node_mod
 
 ### Replacement Patterns
 
-| Current | Replace With |
-|---------|-------------|
-| `(x as any)` | Proper type assertion or type guard |
-| `any[]` | Typed array `SomeType[]` or `unknown[]` |
+| Current               | Replace With                                    |
+| --------------------- | ----------------------------------------------- |
+| `(x as any)`          | Proper type assertion or type guard             |
+| `any[]`               | Typed array `SomeType[]` or `unknown[]`         |
 | `Record<string, any>` | `Record<string, unknown>` or specific interface |
-| `catch (error: any)` | `catch (error: unknown)` + instanceof check |
-| `param: any` | Define proper interface/type |
+| `catch (error: any)`  | `catch (error: unknown)` + instanceof check     |
+| `param: any`          | Define proper interface/type                    |
 
 ### Common Fixes
 
 ```typescript
 // Before: sortBy cast
-sortBy: (sortBy as any) || 'newest'
+sortBy: (sortBy as any) || 'newest';
 
 // After: type guard
 type SortOption = 'newest' | 'oldest' | 'title';
 const validSorts: SortOption[] = ['newest', 'oldest', 'title'];
-const safeSortBy = validSorts.includes(sortBy as SortOption)
-  ? (sortBy as SortOption)
-  : 'newest';
+const safeSortBy = validSorts.includes(sortBy as SortOption) ? (sortBy as SortOption) : 'newest';
 ```
 
 ```typescript
@@ -154,21 +155,25 @@ console.error('Error fetching content items:', error);
 // After
 import { Logger } from '@/lib/utils/logger';
 const MODULE = 'db:content';
-await Logger.error(MODULE, 'Error fetching content items', error instanceof Error ? error.message : String(error));
+await Logger.error(
+  MODULE,
+  'Error fetching content items',
+  error instanceof Error ? error.message : String(error)
+);
 ```
 
 ### Logger Modules (naming convention)
 
-| Module | Purpose |
-|--------|---------|
-| `auth` | Authentication flows |
-| `db:content` | Content database operations |
-| `db:memes` | Meme database operations |
-| `ig:publish` | Instagram publishing |
-| `ig:container` | Container management |
-| `scheduler` | Cron/scheduler operations |
-| `media` | Media processing |
-| `api:*` | API route operations |
+| Module         | Purpose                     |
+| -------------- | --------------------------- |
+| `auth`         | Authentication flows        |
+| `db:content`   | Content database operations |
+| `db:memes`     | Meme database operations    |
+| `ig:publish`   | Instagram publishing        |
+| `ig:container` | Container management        |
+| `scheduler`    | Cron/scheduler operations   |
+| `media`        | Media processing            |
+| `api:*`        | API route operations        |
 
 ---
 
@@ -177,7 +182,7 @@ await Logger.error(MODULE, 'Error fetching content items', error instanceof Erro
 ### Detection Checklist
 
 1. **Unused exports**: Check if exported functions/types are imported elsewhere
-2. **Commented code**: Remove unless there's a TODO with Linear issue
+2. **Commented code**: Remove unless there's a TODO with a clear reason
 3. **Feature flags**: If permanently disabled, remove the code
 4. **Deprecated endpoints**: If replaced by v2, remove v1 after migration
 
@@ -214,6 +219,7 @@ npm run test
 ### Step 3: Refactor ONE Concern
 
 Pick the highest-impact single change:
+
 - Split one oversized file
 - Fix `any` types in one module
 - Replace `console.*` in one directory
@@ -228,20 +234,21 @@ npm run lint && npx tsc && npm run test
 ### Step 5: PR
 
 Create a focused PR with the `refactor/` branch prefix:
-- `refactor/BMS-XXX-split-content-db`
-- `refactor/BMS-XXX-eliminate-any-types`
-- `refactor/BMS-XXX-consistent-logging`
+
+- `refactor/split-content-db`
+- `refactor/eliminate-any-types`
+- `refactor/consistent-logging`
 
 ---
 
 ## SRP Triggers (from CLAUDE.md)
 
-| Trigger | Action |
-|---------|--------|
-| File > 150 lines | Split into focused modules |
-| Function > 30 lines | Extract helper functions |
-| JSX block > 30 lines | Extract sub-component |
-| Props drilling 3+ layers | Use Context or composition |
+| Trigger                    | Action                       |
+| -------------------------- | ---------------------------- |
+| File > 150 lines           | Split into focused modules   |
+| Function > 30 lines        | Extract helper functions     |
+| JSX block > 30 lines       | Extract sub-component        |
+| Props drilling 3+ layers   | Use Context or composition   |
 | Mixed concerns in one file | Separate into distinct files |
 
 ---

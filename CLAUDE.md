@@ -49,16 +49,16 @@ git branch --show-current && git status --short
 1. **Never work on `main` directly.** If on `main`, create a feature branch FIRST.
 2. **If a feature branch already exists for the task**, switch to it before doing anything.
 3. **If there are uncommitted changes on the wrong branch**, stash or commit them before switching.
-4. **Branch naming**: `feature/STRUM-XXX-description` (or `fix/`, `chore/`, `refactor/`).
+4. **Branch naming**: `feature/short-description` (or `fix/`, `chore/`, `refactor/`).
 5. **Create the branch BEFORE writing code**, not after.
 
 ```bash
 # Quick reference
 git branch --show-current && git status --short
-git checkout -b feature/STRUM-XXX-description
+git checkout -b feature/short-description
 
 # If you accidentally started on main with uncommitted changes
-git stash && git checkout -b feature/STRUM-XXX-description && git stash pop
+git stash && git checkout -b feature/short-description && git stash pop
 ```
 
 ### Parallel Agent Safety Protocol (MANDATORY when spawning 2+ agents)
@@ -82,11 +82,11 @@ Task(subagent_type="test-engineer", prompt="...")
 1. **Ensure clean state**: `git status --short` must be empty. If not: commit first, don't stash.
 2. **Create ALL branches upfront** (sequential, in orchestrator):
    ```bash
-   git checkout -b feature/STRUM-101-thing-a && git checkout main
-   git checkout -b feature/STRUM-102-thing-b && git checkout main
+   git checkout -b feature/thing-a && git checkout main
+   git checkout -b feature/thing-b && git checkout main
    ```
 3. **Spawn agents with explicit branch names** in the prompt:
-   > "Your pre-created branch is `feature/STRUM-101-thing-a`. Run `git checkout feature/STRUM-101-thing-a` as your FIRST action. Do NOT create branches or run git stash."
+   > "Your pre-created branch is `feature/thing-a`. Run `git checkout feature/thing-a` as your FIRST action. Do NOT create branches or run git stash."
 
 **Parallel agents MUST NOT**:
 
@@ -98,12 +98,12 @@ Task(subagent_type="test-engineer", prompt="...")
 
 > Full details: `.claude/agents/git-workflow.md`
 
-1. **Start with a Linear ticket** -- all work tracked as `STRUM-XXX`
-2. **Branch from `main`** -- `feature/STRUM-XXX-description`, `fix/...`, `refactor/...`
-3. **Commit format** -- `type(scope): description [STRUM-XXX]`
+1. **Check vault before starting** -- open `~/Obsidian/MainCV-Planner/projects/guitar-crm.md` Now list; mark task WIP before starting
+2. **Branch from `main`** -- `feature/short-description`, `fix/short-description`, `refactor/short-description`
+3. **Commit format** -- `type(scope): description`
 4. **Test before push** -- `npm run lint && npm test`
 5. **Version bumps automatically on merge** -- patch (fix), minor (feature), major (label override)
-6. **Create PR** -- title `[STRUM-XXX] Description`, link Linear ticket
+6. **Create PR** -- descriptive title, reference Obsidian task in body
 7. **Squash and Merge** to `main` → verify on Preview → merge to `production`
 
 ### Release Documentation (IMPORTANT)
@@ -174,7 +174,7 @@ Specialized AI agents live in `.claude/agents/`. Each agent has a focused respon
 | **UI Engineer**            | `ui-engineer.md`            | UI: shadcn/ui, Radix UI, Tailwind CSS 4, Framer Motion, mobile-first         |
 | **Refactoring Specialist** | `refactoring-specialist.md` | Split oversized files, eliminate `any` types, enforce SRP                    |
 | **Test Engineer**          | `test-engineer.md`          | Unit (Jest), integration (Jest), E2E (Playwright)                            |
-| **Git Workflow**           | `git-workflow.md`           | Branching, commits, Linear linking, versioning, PR lifecycle                 |
+| **Git Workflow**           | `git-workflow.md`           | Branching, commits, Obsidian vault sync, versioning, PR lifecycle            |
 
 #### Database & Supabase
 
@@ -189,7 +189,7 @@ Specialized AI agents live in `.claude/agents/`. Each agent has a focused respon
 | Agent                      | File                        | Purpose                                                           |
 | -------------------------- | --------------------------- | ----------------------------------------------------------------- |
 | **Deployment Ops**         | `deployment-ops.md`         | Vercel deployments, CI/CD, cron health, incident response (P0-P3) |
-| **PR Manager**             | `pr-manager.md`             | Creates PRs, links to Linear, quality gates, version bumps        |
+| **PR Manager**             | `pr-manager.md`             | Creates PRs, updates Obsidian vault, quality gates, version bumps |
 | **PR Reviewer**            | `pr-reviewer.md`            | 10-pass code review: quality, security, testing, performance      |
 | **Security Reviewer**      | `security-reviewer.md`      | Security audits, auth flows, secret detection, RLS review         |
 | **Observability Engineer** | `observability-engineer.md` | Monitoring, logging, Sentry, health checks, Vercel Analytics      |
@@ -198,7 +198,7 @@ Specialized AI agents live in `.claude/agents/`. Each agent has a focused respon
 
 | Agent                        | File                          | Purpose                                                |
 | ---------------------------- | ----------------------------- | ------------------------------------------------------ |
-| **Linear Coordinator**       | `linear-coordinator.md`       | Issue lifecycle, sprint planning, milestone tracking   |
+| **Obsidian Coordinator**     | `obsidian-coordinator.md`     | Vault sync: mark tasks WIP/done, triage Now/Next/Later |
 | **Instagram API Specialist** | `instagram-api-specialist.md` | Instagram Graph API, publishing flow, token management |
 
 ### Agent Selection Guide
@@ -215,14 +215,14 @@ Security concern?       → security-reviewer
 Deploy/CI issue?        → deployment-ops
 Monitoring/logging?     → observability-engineer
 Realtime subscriptions? → supabase-realtime-optimizer
-Linear tickets/sprints? → linear-coordinator
+Task triage/vault sync? → obsidian-coordinator
 Instagram API?          → instagram-api-specialist
 ```
 
 ### Agent Conventions
 
 - All agents enforce **<150 LOC per file** and **no `any` types**
-- All agents follow the Linear ticket workflow (`[STRUM-XXX]` in commits)
+- All agents update the Obsidian vault (mark WIP before starting, Done after merging)
 - Database agents enforce **RLS on all tables**
 - All agents require **tests before merging** (70% coverage minimum)
 

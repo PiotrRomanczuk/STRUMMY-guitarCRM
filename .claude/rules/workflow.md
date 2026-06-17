@@ -1,17 +1,17 @@
 ---
-description: Development workflow — Linear tickets, commit format, PR conventions, release documentation
+description: Development workflow — Obsidian vault task tracking, commit format, PR conventions, release documentation
 ---
 
 ## Development Workflow
 
 > Full details: `.claude/agents/git-workflow.md`
 
-1. **Start with a Linear ticket** -- all work tracked as `STRUM-XXX`
-2. **Branch from `main`** -- `feature/STRUM-XXX-description`, `fix/...`, `refactor/...`
-3. **Commit format** -- `type(scope): description [STRUM-XXX]`
+1. **Check vault before starting** -- open `~/Obsidian/MainCV-Planner/projects/guitar-crm.md` Now list; mark task WIP before starting
+2. **Branch from `main`** -- `feature/short-description`, `fix/short-description`, `refactor/short-description`
+3. **Commit format** -- `type(scope): description`
 4. **Test before push** -- `npm run lint && npm test`
 5. **Version bumps automatically on merge** -- patch (fix), minor (feature), major (label override)
-6. **Create PR** -- title `[STRUM-XXX] Description`, link Linear ticket
+6. **Create PR** -- descriptive title, reference Obsidian task in body
 7. **Squash and Merge** to `main` → verify on Preview → merge to `production`
 
 ## Release Documentation (IMPORTANT)

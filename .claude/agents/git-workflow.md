@@ -1,6 +1,6 @@
 ---
 name: git-workflow
-description: "Manages git branching, commit conventions, Linear ticket linking, version bumping, PR lifecycle, and common development workflows (feature, bug fix, refactor, hotfix, release)."
+description: 'Manages git branching, commit conventions, Obsidian vault task tracking, version bumping, PR lifecycle, and common development workflows (feature, bug fix, refactor, hotfix, release).'
 tools:
   - Read
   - Glob
@@ -13,7 +13,7 @@ tools:
 ## Core Principles
 
 1. **NEVER commit directly to `main` or `production`** -- always use feature branches
-2. **ALWAYS link to Linear** -- every commit and PR must reference a `STRUM-XXX` ticket
+2. **ALWAYS update Obsidian vault** -- mark task WIP before starting, Done after merge (`~/Obsidian/MainCV-Planner/projects/guitar-crm.md`)
 3. **ALWAYS test before committing** -- `npm run lint && npm test`
 4. **Version is bumped automatically post-merge** -- a GitHub Action bumps patch/minor/major based on branch prefix or PR labels
 
@@ -22,19 +22,20 @@ tools:
 ## Branch Naming Convention
 
 ```
-feature/STRUM-XXX-short-description    # New features
-fix/STRUM-XXX-short-description        # Bug fixes
-refactor/STRUM-XXX-short-description   # Code refactoring
-test/STRUM-XXX-short-description       # Test improvements
-docs/STRUM-XXX-short-description       # Documentation
-chore/STRUM-XXX-short-description      # Maintenance tasks
+feature/short-description    # New features
+fix/short-description        # Bug fixes
+refactor/short-description   # Code refactoring
+test/short-description       # Test improvements
+docs/short-description       # Documentation
+chore/short-description      # Maintenance tasks
 ```
 
 Examples:
+
 ```bash
-git checkout -b feature/STRUM-123-add-lesson-reminders
-git checkout -b fix/STRUM-124-song-progress-calculation
-git checkout -b refactor/STRUM-125-user-service-cleanup
+git checkout -b feature/add-lesson-reminders
+git checkout -b fix/song-progress-calculation
+git checkout -b refactor/user-service-cleanup
 ```
 
 ### Branch Protection Rules
@@ -47,12 +48,12 @@ git checkout -b refactor/STRUM-125-user-service-cleanup
 
 ## Commit Message Format
 
-Format: `type(scope): description [TICKET-ID]`
+Format: `type(scope): description`
 
 ```bash
-git commit -m "feat(lessons): add email reminders [STRUM-123]"
-git commit -m "fix(songs): correct progress calculation [STRUM-124]"
-git commit -m "refactor(users): simplify service layer [STRUM-125]"
+git commit -m "feat(lessons): add email reminders"
+git commit -m "fix(songs): correct progress calculation"
+git commit -m "refactor(users): simplify service layer"
 ```
 
 Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `style`
@@ -63,11 +64,11 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `style`
 
 Version bumping is handled automatically by a GitHub Action (`version-bump.yml`) that runs after each PR is merged to `main`. **Do not run `npm version` manually on feature branches.**
 
-| Change Type | Bump | Trigger |
-|---|---|---|
+| Change Type                          | Bump  | Trigger                                                                |
+| ------------------------------------ | ----- | ---------------------------------------------------------------------- |
 | Bug fix, small improvement, refactor | patch | `fix/`, `refactor/`, `chore/`, `test/`, `docs/`, `perf/` branch prefix |
-| New feature, new component | minor | `feature/` or `feat/` branch prefix |
-| Breaking change, major rewrite | major | Add `version:major` label to PR |
+| New feature, new component           | minor | `feature/` or `feat/` branch prefix                                    |
+| Breaking change, major rewrite       | major | Add `version:major` label to PR                                        |
 
 Override with PR labels: `version:major`, `version:minor`, `version:patch`.
 
@@ -80,12 +81,14 @@ Override with PR labels: `version:major`, `version:minor`, `version:patch`.
 3. **GitHub Release** with full PR body as release notes
 
 **IMPORTANT for agents**: This is now automatic via GitHub Actions. You do NOT need to manually create tags or releases. The workflow handles:
+
 - ✅ Version bump in package.json
 - ✅ Git tag creation with PR context
 - ✅ GitHub Release with changelog links
 - ✅ Tag push to origin
 
 If working on a hotfix or manual release, follow the pattern:
+
 ```bash
 # Create tag with descriptive message
 git tag -a v0.X.Y -m "Release v0.X.Y: <Feature description>"
@@ -101,36 +104,16 @@ gh release create v0.X.Y \
 
 ```markdown
 ## [0.66.0] - 2026-02-09
+
 ### Added
-- Lesson reminder email system [STRUM-123]
-- User notification preferences [STRUM-123]
+
+- Lesson reminder email system
+- User notification preferences
 
 ### Fixed
-- Song progress calculation bug [STRUM-124]
+
+- Song progress calculation bug
 ```
-
----
-
-## Working with Linear
-
-### Ticket States (must follow)
-
-**Backlog** → **Todo** → **In Progress** → **In Review** → **Done**
-
-### Linear Updates at Each Stage
-
-| Event | Linear Action |
-|---|---|
-| Start working | Move to "In Progress", add branch name to description |
-| PR created | Move to "In Review", add PR link |
-| PR merged | Move to "Done" |
-| PR closed without merge | Move back to "Backlog" + comment why |
-
-### Auto-Linking
-
-- Linear auto-links commits containing `[STRUM-XXX]`
-- PR descriptions with `Closes STRUM-XXX` auto-close tickets
-- Use Linear's GitHub integration for automatic updates
 
 ---
 
@@ -138,29 +121,34 @@ gh release create v0.X.Y \
 
 ### PR Title Format
 
-`[STRUM-123] Add lesson reminder system`
+`Add lesson reminder system`
 
 ### PR Description Template
 
 ```markdown
-## Linear Ticket
-Closes STRUM-123
+## Obsidian Task
+
+Task: projects/guitar-crm.md › Now — <task title>
 
 ## Changes
+
 - Added email reminder service
 - Created notification scheduler
 - Added reminder preferences to user settings
 
 ## Testing
+
 - [ ] Unit tests added and passing
 - [ ] E2E tests added and passing
 - [ ] Manually tested on local environment
 - [ ] Tested on mobile devices
 
 ## Screenshots
+
 [If UI changes, add screenshots]
 
 ## Version
+
 - Bumped from 0.65.0 → 0.66.0
 ```
 
@@ -180,7 +168,7 @@ Closes STRUM-123
 
 ### After Merge
 
-- Update Linear ticket status to "Done"
+- Check off task in Obsidian vault (`projects/guitar-crm.md`)
 - Delete feature branch
 - Monitor deployment in Vercel
 - Verify feature in production
@@ -203,11 +191,11 @@ npm run pre-commit              # Full pre-commit checks
 ### Starting a New Feature
 
 ```bash
-# 1. Create Linear ticket (or get assigned one): STRUM-XXX
+# 1. Check vault Now list, mark task WIP in ~/Obsidian/MainCV-Planner/projects/guitar-crm.md
 # 2. Create and checkout feature branch
 git checkout main
 git pull origin main
-git checkout -b feature/STRUM-XXX-add-lesson-reminders
+git checkout -b feature/add-lesson-reminders
 
 # 3. Make your changes (follow TDD!)
 npm test -- --watch
@@ -221,20 +209,20 @@ npm run test:smoke
 
 # 6. Commit with proper format
 git add .
-git commit -m "feat(lessons): add email reminder system [STRUM-XXX]"
+git commit -m "feat(lessons): add email reminder system"
 
 # 7. Push and create PR
-git push origin feature/STRUM-XXX-add-lesson-reminders
+git push origin feature/add-lesson-reminders
 
 # 8. After merge, clean up
 git checkout main && git pull origin main
-git branch -d feature/STRUM-XXX-add-lesson-reminders
+git branch -d feature/add-lesson-reminders
 ```
 
 ### Fixing a Bug
 
 ```bash
-git checkout -b fix/STRUM-XXX-song-progress-calculation
+git checkout -b fix/song-progress-calculation
 
 # Write failing test first (TDD!)
 npm test -- SongProgress --watch
@@ -246,14 +234,14 @@ npm test && npm run test:smoke
 
 # Commit and push
 git add .
-git commit -m "fix(songs): correct progress calculation logic [STRUM-XXX]"
-git push origin fix/STRUM-XXX-song-progress-calculation
+git commit -m "fix(songs): correct progress calculation logic"
+git push origin fix/song-progress-calculation
 ```
 
 ### Refactoring Code
 
 ```bash
-git checkout -b refactor/STRUM-XXX-simplify-user-service
+git checkout -b refactor/simplify-user-service
 
 # Ensure all existing tests pass BEFORE refactoring
 npm test
@@ -265,8 +253,8 @@ npm test
 # Version bump happens automatically after merge to main
 
 git add .
-git commit -m "refactor(users): simplify service layer [STRUM-XXX]"
-git push origin refactor/STRUM-XXX-simplify-user-service
+git commit -m "refactor(users): simplify service layer"
+git push origin refactor/simplify-user-service
 ```
 
 ### Hotfix to Production
@@ -275,7 +263,7 @@ git push origin refactor/STRUM-XXX-simplify-user-service
 # Create hotfix from production branch
 git checkout production
 git pull origin production
-git checkout -b fix/STRUM-XXX-critical-auth-bug
+git checkout -b fix/critical-auth-bug
 
 # Write test, fix bug, verify
 npm test && npm run test:smoke
@@ -285,9 +273,9 @@ npm test && npm run test:smoke
 # npm version patch --no-git-tag-version
 
 git add .
-git commit -m "fix(auth)!: resolve critical security bug [STRUM-XXX]"
-git push origin fix/STRUM-XXX-critical-auth-bug
-# Create PR: fix/STRUM-XXX → production
+git commit -m "fix(auth)!: resolve critical security bug"
+git push origin fix/critical-auth-bug
+# Create PR: fix/critical-auth-bug → production
 # After merge, also merge production → main to sync
 ```
 
@@ -306,8 +294,6 @@ git push origin production
 # Tag the release
 git tag -a v0.66.0 -m "Release v0.66.0: Lesson reminders and notifications"
 git push origin v0.66.0
-
-# Update Linear tickets to "Done"
 ```
 
 ---
@@ -317,7 +303,7 @@ git push origin v0.66.0
 - [ ] All tests passing (unit + E2E)
 - [ ] Version bumped automatically post-merge
 - [ ] CHANGELOG.md updated
-- [ ] Linear ticket linked in PR
+- [ ] Obsidian task marked Done in vault (`projects/guitar-crm.md`)
 - [ ] Code reviewed and approved
 - [ ] Feature verified on Preview
 - [ ] No errors in Vercel logs
@@ -331,14 +317,14 @@ git push origin v0.66.0
 ```bash
 # Full workflow in one go
 git checkout main && git pull origin main
-git checkout -b feature/STRUM-XXX-description
+git checkout -b feature/short-description
 # ... make changes ...
 npm test && npm run lint
 git add .
-git commit -m "feat(scope): description [STRUM-XXX]"
-git push origin feature/STRUM-XXX-description
+git commit -m "feat(scope): description"
+git push origin feature/short-description
 # ... create PR on GitHub ...
 # ... after merge ...
 git checkout main && git pull
-git branch -d feature/STRUM-XXX-description
+git branch -d feature/short-description
 ```

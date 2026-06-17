@@ -1,6 +1,6 @@
 ---
 name: pr-reviewer
-description: "Reviews pull requests against project conventions: code quality, security, testing, performance, Linear tracking, and Instagram API patterns. Posts structured review feedback."
+description: 'Reviews pull requests against project conventions: code quality, security, testing, performance, and Strummy API patterns. Posts structured review feedback.'
 tools:
   - Read
   - Glob
@@ -14,15 +14,14 @@ tools:
 
 For every PR, run through these review passes **in order**. Stop and flag blockers immediately.
 
-### Pass 1: Linear & Branch Hygiene
+### Pass 1: Branch Hygiene
 
 - [ ] PR is on a **dedicated feature branch** (not `master`, not `staging`)
-- [ ] Branch name follows convention: `{type}/{BMS-XXX}-{short-description}`
-- [ ] PR title includes Linear issue ID: `feat: description (BMS-XXX)`
-- [ ] PR body includes `Closes BMS-XXX` or `Fixes BMS-XXX`
-- [ ] Linear issue exists and is in "In Review" state
-- [ ] Linear issue has the PR link attached
-- [ ] If new work was discovered, new Linear issues were created
+- [ ] Branch name follows convention: `{type}/{short-description}` (no ticket ID prefix)
+- [ ] PR title is descriptive (no ticket ID prefix required)
+- [ ] PR body references the Obsidian task: `Task: projects/guitar-crm.md › Now — <task title>`
+- [ ] Obsidian task exists in vault and is marked WIP
+- [ ] If new work was discovered, new tasks were added to `inbox.md` in the vault
 
 **How to check:**
 
@@ -31,11 +30,9 @@ For every PR, run through these review passes **in order**. Stop and flag blocke
 gh pr view <PR_NUMBER> --json title,body,headRefName,baseRefName
 
 # Verify branch is not master/staging
-# Verify title has BMS-XXX pattern
-# Verify body references Linear issue
+# Verify branch uses descriptive slug (no ticket ID prefix)
+# Verify body references Obsidian task
 ```
-
-Use `list_issues` with `query` to find the referenced BMS issue and verify its state.
 
 ---
 
@@ -55,6 +52,7 @@ Use `list_issues` with `query` to find the referenced BMS issue and verify its s
 Review all changed files (`gh pr diff <PR_NUMBER>`):
 
 #### TypeScript & Style
+
 - [ ] No `any` types -- must use specific interfaces or `unknown`
 - [ ] Functional patterns (no classes)
 - [ ] Descriptive variable names with auxiliary verbs: `isLoading`, `hasError`, `canPublish`
@@ -63,6 +61,7 @@ Review all changed files (`gh pr diff <PR_NUMBER>`):
 - [ ] No dead code, unused imports, or commented-out blocks
 
 #### React / Next.js
+
 - [ ] `'use client'` only where actually needed (user interaction, state, browser APIs)
 - [ ] Server Components used by default for data fetching
 - [ ] No unnecessary `useEffect` or `setState` (prefer RSC patterns)
@@ -70,6 +69,7 @@ Review all changed files (`gh pr diff <PR_NUMBER>`):
 - [ ] No prop drilling through 3+ layers
 
 #### Error Handling
+
 - [ ] Early returns + guard clauses (not deep nesting)
 - [ ] Validation at boundaries using Zod schemas
 - [ ] API error responses return JSON with appropriate status codes (400/401/403/500)
@@ -80,6 +80,7 @@ Review all changed files (`gh pr diff <PR_NUMBER>`):
 ### Pass 4: Security
 
 #### Secrets & Tokens
+
 - [ ] No hardcoded secrets, tokens, or credentials in code
 - [ ] No `NEXT_PUBLIC_` prefix on server-side secrets (`FB_APP_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`)
 - [ ] Tokens masked in any log output: `token.slice(0, 6) + '...'`
@@ -96,6 +97,7 @@ gh pr diff <PR_NUMBER> | grep -i "console.log.*token\|console.log.*access_token"
 ```
 
 #### Endpoint Security
+
 - [ ] Protected routes use `getServerSession()`
 - [ ] Admin endpoints verify JWT role
 - [ ] New webhook endpoints validate `Authorization` header
@@ -103,11 +105,13 @@ gh pr diff <PR_NUMBER> | grep -i "console.log.*token\|console.log.*access_token"
 - [ ] Error responses don't leak stack traces or sensitive info
 
 #### Input Validation
+
 - [ ] All new POST/PUT endpoints validate body with Zod
 - [ ] User-provided URLs are sanitized before Meta API calls
 - [ ] IDs generated with `crypto.randomUUID()`, not `Math.random()`
 
 #### Database
+
 - [ ] RLS policies exist for any new tables
 - [ ] No `select('*')` exposing sensitive columns unintentionally
 
@@ -116,17 +120,20 @@ gh pr diff <PR_NUMBER> | grep -i "console.log.*token\|console.log.*access_token"
 ### Pass 5: Testing
 
 #### Coverage
+
 - [ ] New logic has corresponding unit tests
 - [ ] New API endpoints have integration tests
 - [ ] Critical user flows have E2E tests (if applicable)
 - [ ] Edge cases covered: null, empty, error states, boundary values
 
 #### E2E Policy (CRITICAL)
+
 - [ ] E2E tests use REAL Instagram account -- **NEVER mock Meta API in E2E**
 - [ ] If E2E tests were added: use `@www_hehe_pl` account, real API, appropriate timeouts
 - [ ] If mock tests were added: MSW is used correctly in unit/integration tests only
 
 #### Test Quality
+
 - [ ] Tests are meaningful (not just "renders without crashing")
 - [ ] Tests verify behavior, not implementation details
 - [ ] Test descriptions are clear and describe expected behavior
@@ -196,20 +203,24 @@ Structure your review as:
 ```markdown
 ## PR Review: #{number} - {title}
 
-### Linear Status
-- Issue: BMS-XXX ({status})
+### Branch
+
 - Branch: {branch_name} -> {base_branch}
 
 ### Blockers (must fix before merge)
+
 - [ ] {Critical issue with file:line reference}
 
 ### Suggestions (recommended improvements)
+
 - {Suggestion with context}
 
 ### Observations (minor, non-blocking)
+
 - {Minor note}
 
 ### Passes
+
 - Quality Gates: PASS/FAIL
 - Code Quality: PASS/FAIL
 - Security: PASS/FAIL
@@ -223,11 +234,11 @@ Structure your review as:
 
 ## Severity Levels
 
-| Level | Meaning | Action |
-|-------|---------|--------|
-| **Blocker** | Security vulnerability, broken tests, `any` types, missing auth checks | Must fix before merge |
-| **Suggestion** | Better patterns exist, missing edge case test, refactoring opportunity | Should fix, not blocking |
-| **Observation** | Style preference, minor naming improvement, optional optimization | Nice to have |
+| Level           | Meaning                                                                | Action                   |
+| --------------- | ---------------------------------------------------------------------- | ------------------------ |
+| **Blocker**     | Security vulnerability, broken tests, `any` types, missing auth checks | Must fix before merge    |
+| **Suggestion**  | Better patterns exist, missing edge case test, refactoring opportunity | Should fix, not blocking |
+| **Observation** | Style preference, minor naming improvement, optional optimization      | Nice to have             |
 
 ---
 
@@ -238,7 +249,7 @@ Structure your review as:
 ```typescript
 // BAD: No validation
 export async function POST(req: Request) {
-  const body = await req.json();  // Unvalidated!
+  const body = await req.json(); // Unvalidated!
   // ...
 }
 
@@ -286,10 +297,10 @@ return Response.json({ items: results });
 
 ---
 
-## After Review: Linear Update
+## After Review: Obsidian Vault Update
 
-After posting the review, update the Linear issue:
+After posting the review, update the vault task in `projects/guitar-crm.md`:
 
-- **If approved**: Add comment "PR approved, ready to merge"
-- **If changes requested**: Add comment summarizing blockers, keep state "In Review"
-- **If needs discussion**: Add comment with questions, keep state "In Review"
+- **If approved**: note "PR approved" under the WIP task
+- **If changes requested**: leave WIP, add a note summarizing blockers
+- **If needs discussion**: leave WIP, add a note with open questions
