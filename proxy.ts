@@ -11,12 +11,13 @@ const CSP_HEADER = [
   "default-src 'self'",
   // Scripts: self + Next.js inline bootstrap
   "script-src 'self' 'unsafe-inline'",
-  // Styles: self + Tailwind requires unsafe-inline for runtime styles
-  "style-src 'self' 'unsafe-inline'",
+  // Styles: self + Tailwind requires unsafe-inline for runtime styles;
+  // Google Fonts stylesheet for Material Symbols Outlined (loaded in app/layout.tsx)
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   // Images: self, data URIs, Supabase storage, Spotify CDN
   "img-src 'self' data: https://*.supabase.co https://i.scdn.co",
-  // Fonts: self only
-  "font-src 'self'",
+  // Fonts: self + Google Fonts file host (gstatic) for Material Symbols glyphs
+  "font-src 'self' https://fonts.gstatic.com",
   // API connections: self, Supabase REST + realtime (WSS), Google OAuth, Sentry
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://sentry.io https://*.sentry.io https://us.i.posthog.com https://us-assets.i.posthog.com",
   // Frames: deny all (also enforced via X-Frame-Options)

@@ -104,9 +104,10 @@ test.describe('🔍 Smoke Tests - Critical Path Verification', { tag: '@smoke' }
   test('should have responsive design basics', async ({ page }) => {
     await page.goto('/');
 
-    // Identify a meaningful element to check at each viewport.
-    // The page should have at least a heading or a prominent link.
-    const meaningfulLocator = page.locator('h1, h2, a[href*="sign-in"], a[href*="dashboard"], [role="banner"]').first();
+    // Identify a meaningful element to check at each viewport. Use the hero
+    // heading (h1/h2) rather than nav links — nav links collapse into a hamburger
+    // menu at mobile widths and resolve to a hidden element, making this flaky.
+    const meaningfulLocator = page.locator('h1, h2').first();
 
     // Test mobile viewport
     await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE
