@@ -98,6 +98,7 @@ const config: Config = {
     '/node_modules/',
     '/.next/',
     '/cypress/',
+    '/database/',
     worktreeIgnorePattern,
     '.integration.test.',
     '.e2e.test.',
