@@ -17,11 +17,11 @@ describe('verifyCronSecret', () => {
   });
 
   function makeRequest(authHeader?: string): Request {
-    const headers = new Headers();
-    if (authHeader) {
-      headers.set('authorization', authHeader);
-    }
-    return new Request('http://localhost/api/cron/test', { headers });
+    return {
+      headers: {
+        get: (name: string) => (name === 'authorization' ? (authHeader ?? null) : null),
+      },
+    } as unknown as Request;
   }
 
   it('should return null (authorized) for valid secret', () => {
