@@ -1,5 +1,7 @@
 import { google, drive_v3 } from 'googleapis';
 import { getGoogleClient } from '@/lib/google';
+import { hasGoogleIntegration } from '@/lib/services/calendar-lesson-sync';
+import { createClient } from '@/lib/supabase/server';
 import { withRetry, AI_PROVIDER_RETRY_CONFIG } from '@/lib/ai/retry';
 import { createLogger } from '@/lib/logger';
 
@@ -7,8 +9,34 @@ const log = createLogger('GoogleDrive');
 
 const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || '';
 
+/** Thrown when a Drive operation is attempted without a connected Google account. */
+export class GoogleNotConnectedError extends Error {
+  constructor() {
+    super(
+      'Google account not connected. Connect Google in Settings → Integrations to use video features.'
+    );
+    this.name = 'GoogleNotConnectedError';
+  }
+}
+
 function getDriveClient(auth: Awaited<ReturnType<typeof getGoogleClient>>): drive_v3.Drive {
   return google.drive({ version: 'v3', auth });
+}
+
+/**
+ * Resolve an authenticated Drive client for a user after confirming the user
+ * has a connected Google integration. Gating here lets video features degrade
+ * with a clear, user-actionable error instead of surfacing a raw
+ * "Google integration not found" throw from the OAuth client — mirroring the
+ * `hasGoogleIntegration` gate used by calendar lesson sync.
+ */
+async function getAuthedDrive(userId: string): Promise<drive_v3.Drive> {
+  const supabase = await createClient();
+  if (!(await hasGoogleIntegration(supabase, userId))) {
+    throw new GoogleNotConnectedError();
+  }
+  const auth = await getGoogleClient(userId);
+  return getDriveClient(auth);
 }
 
 /**
@@ -20,8 +48,7 @@ export async function createFolderInDrive(
   folderName: string,
   parentFolderId?: string
 ): Promise<string> {
-  const auth = await getGoogleClient(userId);
-  const drive = getDriveClient(auth);
+  const drive = await getAuthedDrive(userId);
 
   // First, check if folder already exists
   const searchQuery = parentFolderId
@@ -67,8 +94,7 @@ export async function createResumableUploadUrl(
   mimeType: string,
   fileSizeBytes?: number
 ): Promise<{ uploadUrl: string; folderId: string }> {
-  const auth = await getGoogleClient(userId);
-  const drive = getDriveClient(auth);
+  const drive = await getAuthedDrive(userId);
   const folderId = DRIVE_FOLDER_ID;
 
   const res = await withRetry(async () => {
@@ -116,8 +142,7 @@ export async function getVideoMetadata(
   size: number;
   thumbnailLink: string | null;
 }> {
-  const auth = await getGoogleClient(userId);
-  const drive = getDriveClient(auth);
+  const drive = await getAuthedDrive(userId);
 
   const res = await withRetry(async () => {
     return drive.files.get({
@@ -139,12 +164,8 @@ export async function getVideoMetadata(
  * Get a short-lived download/stream URL for a Drive file.
  * Uses webContentLink for direct download access.
  */
-export async function getVideoStreamUrl(
-  userId: string,
-  fileId: string
-): Promise<string> {
-  const auth = await getGoogleClient(userId);
-  const drive = getDriveClient(auth);
+export async function getVideoStreamUrl(userId: string, fileId: string): Promise<string> {
+  const drive = await getAuthedDrive(userId);
 
   const res = await withRetry(async () => {
     return drive.files.get({
@@ -164,22 +185,18 @@ export async function getVideoStreamUrl(
 /**
  * Delete a file from Google Drive.
  */
-export async function deleteVideoFromDrive(
-  userId: string,
-  fileId: string
-): Promise<void> {
-  const auth = await getGoogleClient(userId);
-  const drive = getDriveClient(auth);
+export async function deleteVideoFromDrive(userId: string, fileId: string): Promise<void> {
+  const drive = await getAuthedDrive(userId);
 
-  await withRetry(async () => {
-    await drive.files.delete({ fileId });
-  }, {
-    ...AI_PROVIDER_RETRY_CONFIG,
-    retryableErrors: [
-      ...(AI_PROVIDER_RETRY_CONFIG.retryableErrors || []),
-      '404',
-    ],
-  });
+  await withRetry(
+    async () => {
+      await drive.files.delete({ fileId });
+    },
+    {
+      ...AI_PROVIDER_RETRY_CONFIG,
+      retryableErrors: [...(AI_PROVIDER_RETRY_CONFIG.retryableErrors || []), '404'],
+    }
+  );
 
   log.info('Deleted video from Drive', { fileId });
 }
@@ -187,12 +204,8 @@ export async function deleteVideoFromDrive(
 /**
  * Make a Drive file viewable by anyone with the link (for streaming).
  */
-export async function setFilePublicReadable(
-  userId: string,
-  fileId: string
-): Promise<void> {
-  const auth = await getGoogleClient(userId);
-  const drive = getDriveClient(auth);
+export async function setFilePublicReadable(userId: string, fileId: string): Promise<void> {
+  const drive = await getAuthedDrive(userId);
 
   await withRetry(async () => {
     await drive.permissions.create({
