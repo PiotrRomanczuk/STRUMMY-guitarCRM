@@ -30,10 +30,6 @@
     {
       "path": "/api/cron/cleanup-auth-events",
       "schedule": "30 3 * * *"
-    },
-    {
-      "path": "/api/cron/calendar-sync",
-      "schedule": "0 */6 * * *"
     }
   ]
 }

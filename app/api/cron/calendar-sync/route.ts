@@ -1,10 +1,12 @@
 /**
- * Dedicated calendar-sync cron — polls all teachers' Google Calendars every 6 h.
- * Covers teachers who never enable the webhook subscription (the only freshness
- * path for them). The dispatcher already calls syncAllTeacherCalendars() daily;
- * this route adds a higher-frequency dedicated schedule.
+ * Calendar-sync endpoint — polls all teachers' Google Calendars via
+ * syncAllTeacherCalendars(), covering teachers who never enable the webhook.
  *
- * Schedule (vercel.json): 0 *\/6 * * *  (every 6 hours)
+ * NOT registered as a dedicated Vercel cron (spec 07.3 option a): an every-6h
+ * entry exceeded the project's Vercel cron limit and failed the deploy, so the
+ * scheduled polling runs through the existing dispatcher cron
+ * (app/api/cron/dispatcher 'sync-calendars-and-update-status' step) instead.
+ * This route is retained for manual / on-demand invocation, secret-guarded.
  */
 
 import { NextResponse } from 'next/server';
