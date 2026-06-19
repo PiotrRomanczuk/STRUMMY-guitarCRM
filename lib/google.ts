@@ -331,6 +331,29 @@ export async function updateGoogleCalendarEvent(
 }
 
 /**
+ * Swap the attendee on a Google Calendar event to a single email address.
+ * Used by shadow-link calendar reconciliation (spec 06.3): after a shadow
+ * student claims their account, their future events must carry the real
+ * email as attendee, not the placeholder.
+ */
+export async function reconcileEventAttendee(
+  userId: string,
+  googleEventId: string,
+  attendeeEmail: string
+): Promise<void> {
+  const client = await getGoogleClient(userId);
+  const calendar = google.calendar({ version: 'v3', auth: client });
+
+  await withRetry(async () => {
+    await calendar.events.patch({
+      calendarId: 'primary',
+      eventId: googleEventId,
+      requestBody: { attendees: [{ email: attendeeEmail }] },
+    });
+  }, AI_PROVIDER_RETRY_CONFIG);
+}
+
+/**
  * Delete a Google Calendar event
  */
 export async function deleteGoogleCalendarEvent(

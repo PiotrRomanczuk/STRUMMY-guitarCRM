@@ -43,7 +43,7 @@ export function PostLessonSummaryAI({
     params: Record<string, unknown>,
     _signal?: AbortSignal
   ) {
-    yield* generatePostLessonSummaryStream(
+    yield* await generatePostLessonSummaryStream(
       params as Parameters<typeof generatePostLessonSummaryStream>[0]
     );
   }, []);

@@ -8,7 +8,10 @@ import { AIStreamingStatus } from '@/components/ai';
 import type { SongFormData } from './helpers';
 
 interface Props {
-  songData: Pick<SongFormData, 'title' | 'author' | 'level' | 'key' | 'chords' | 'tempo' | 'strumming_pattern' | 'capo_fret'>;
+  songData: Pick<
+    SongFormData,
+    'title' | 'author' | 'level' | 'key' | 'chords' | 'tempo' | 'strumming_pattern' | 'capo_fret'
+  >;
   currentNotes: string;
   onNotesGenerated: (notes: string) => void;
   disabled?: boolean;
@@ -27,12 +30,12 @@ export function SongNotesAI({ songData, currentNotes, onNotesGenerated, disabled
   };
 
   // Generate from scratch
-  const generateStream = useCallback(
-    async function* (params: Record<string, unknown>, _signal?: AbortSignal) {
-      yield* generateSongNotesStream(params as Parameters<typeof generateSongNotesStream>[0]);
-    },
-    []
-  );
+  const generateStream = useCallback(async function* (
+    params: Record<string, unknown>,
+    _signal?: AbortSignal
+  ) {
+    yield* await generateSongNotesStream(params as Parameters<typeof generateSongNotesStream>[0]);
+  }, []);
 
   const generateAI = useAIStream(generateStream, {
     onChunk: (content) => onNotesGenerated(content),
@@ -40,12 +43,12 @@ export function SongNotesAI({ songData, currentNotes, onNotesGenerated, disabled
   });
 
   // Enhance existing notes
-  const enhanceStream = useCallback(
-    async function* (params: Record<string, unknown>, _signal?: AbortSignal) {
-      yield* enhanceSongNotesStream(params as Parameters<typeof enhanceSongNotesStream>[0]);
-    },
-    []
-  );
+  const enhanceStream = useCallback(async function* (
+    params: Record<string, unknown>,
+    _signal?: AbortSignal
+  ) {
+    yield* await enhanceSongNotesStream(params as Parameters<typeof enhanceSongNotesStream>[0]);
+  }, []);
 
   const enhanceAI = useAIStream(enhanceStream, {
     onChunk: (content) => onNotesGenerated(content),

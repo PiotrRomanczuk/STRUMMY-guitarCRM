@@ -31,12 +31,12 @@ export function AssignmentAI({
   disabled = false,
 }: Props) {
   // Streaming action wrapper
-  const streamAction = useCallback(
-    async function* (params: Record<string, unknown>, _signal?: AbortSignal) {
-      yield* generateAssignmentStream(params as Parameters<typeof generateAssignmentStream>[0]);
-    },
-    []
-  );
+  const streamAction = useCallback(async function* (
+    params: Record<string, unknown>,
+    _signal?: AbortSignal
+  ) {
+    yield* await generateAssignmentStream(params as Parameters<typeof generateAssignmentStream>[0]);
+  }, []);
 
   // AI streaming hook
   const aiStream = useAIStream(streamAction, {

@@ -22,9 +22,16 @@ const adminStats = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockStream.mockImplementation(async function* () {
-    return;
-  });
+  // Real streaming server actions resolve to the async iterable across the
+  // network boundary, so the mock returns a Promise (not a bare generator) to
+  // guard against consuming the result without awaiting it.
+  mockStream.mockImplementation(() =>
+    Promise.resolve(
+      (async function* () {
+        yield 'Streamed insight';
+      })()
+    )
+  );
 });
 
 describe('AdminDashboardInsights', () => {
@@ -38,5 +45,11 @@ describe('AdminDashboardInsights', () => {
     render(<AdminDashboardInsights adminStats={adminStats} />);
     fireEvent.click(screen.getByRole('button', { name: /generate ai insights/i }));
     await waitFor(() => expect(mockStream).toHaveBeenCalled());
+  });
+
+  it('renders streamed chunks (awaits the promised async iterable)', async () => {
+    render(<AdminDashboardInsights adminStats={adminStats} />);
+    fireEvent.click(screen.getByRole('button', { name: /generate ai insights/i }));
+    await waitFor(() => expect(screen.getByText('Streamed insight')).toBeInTheDocument());
   });
 });

@@ -4,6 +4,8 @@ import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { createLogger } from '@/lib/logger';
 import { parseBody, validatePreconditions } from './validate-link-request';
 import { transferShadowReferences } from './transfer-shadow-references';
+import { logAuthEvent } from '@/lib/auth/auth-event-logger';
+import { reconcileCalendarForStudent } from '@/lib/services/calendar-reconcile';
 
 const log = createLogger('link-shadow-user');
 
@@ -56,6 +58,24 @@ export async function POST(request: Request) {
         transferred: result.counts,
       });
 
+      // Spec 06.3 — audit the lifecycle event with the transfer counts.
+      await logAuthEvent({
+        eventType: 'shadow_link_completed',
+        userId: realUserId,
+        userEmail: validation.realUserEmail,
+        success: true,
+        metadata: { transfer_counts: result.counts },
+      });
+
+      // Spec 06.3 — reconcile future calendar events to the real attendee email.
+      // Best-effort: the link is already committed; reconcile failures are
+      // logged (system_logs) but never roll back the link or fail the request.
+      try {
+        await reconcileCalendarForStudent(realUserId);
+      } catch (reconcileError) {
+        log.error('Post-link calendar reconcile failed', reconcileError, { realUserId });
+      }
+
       return NextResponse.json(
         { profile: result.updatedProfile, transferred: result.counts },
         { status: 200 }
@@ -63,6 +83,13 @@ export async function POST(request: Request) {
     } catch (error) {
       log.error('Failed to link shadow user', error, { shadowProfileId, realUserId });
       const message = error instanceof Error ? error.message : 'Unknown error';
+      await logAuthEvent({
+        eventType: 'shadow_link_failed',
+        userId: realUserId,
+        success: false,
+        errorMessage: message,
+        metadata: { shadowProfileId },
+      });
       return NextResponse.json({ error: `Transfer failed: ${message}` }, { status: 500 });
     }
   });

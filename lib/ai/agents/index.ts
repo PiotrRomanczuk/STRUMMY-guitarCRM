@@ -13,6 +13,7 @@ import { progressInsightsAgent, adminInsightsAgent } from './analytics';
 import { songNormalizationAgent } from './song-normalization';
 import { chatAssistantAgent } from './chat';
 import { songNotesAgent } from './song-notes';
+import { songNotesEnhancerAgent } from './song-notes-enhancer';
 
 // Register all agents
 export function registerAllAgents(): void {
@@ -36,6 +37,7 @@ export function registerAllAgents(): void {
 
   // Song content agents
   registerAgent(songNotesAgent);
+  registerAgent(songNotesEnhancerAgent);
 
   // All agents registered
 }
@@ -62,6 +64,7 @@ export {
 
   // Song content
   songNotesAgent,
+  songNotesEnhancerAgent,
 };
 
 // Export agent categories for organized access
@@ -88,4 +91,10 @@ export const systemAgents = {
 // Export assistant agents for chat
 export const assistantAgents = {
   chatAssistantAgent,
+};
+
+// Export song content agents for the song create/edit forms
+export const songContentAgents = {
+  songNotesAgent,
+  songNotesEnhancerAgent,
 };

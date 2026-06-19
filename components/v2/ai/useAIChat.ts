@@ -23,22 +23,24 @@ export function useAIChat() {
 
   const conversation = useAIConversation();
 
-  const streamAction = useCallback(
-    async function* (
-      params: { prompt: string; model: string; conversationId?: string },
-      signal?: AbortSignal,
-    ) {
-      yield* generateAIResponseStream(params.prompt, params.model, params.conversationId, signal);
-    },
-    [],
-  );
+  const streamAction = useCallback(async function* (
+    params: { prompt: string; model: string; conversationId?: string },
+    signal?: AbortSignal
+  ) {
+    yield* await generateAIResponseStream(
+      params.prompt,
+      params.model,
+      params.conversationId,
+      signal
+    );
+  }, []);
 
   const aiStream = useAIStream(streamAction, {
     onChunk: (content) => {
       setMessages((prev) =>
         prev.map((msg, i) =>
-          i === prev.length - 1 && msg.role === 'assistant' ? { ...msg, content } : msg,
-        ),
+          i === prev.length - 1 && msg.role === 'assistant' ? { ...msg, content } : msg
+        )
       );
     },
     onComplete: () => {
@@ -73,7 +75,7 @@ export function useAIChat() {
         conversationId: activeConvId,
       });
     },
-    [aiStream, conversation, selectedModel],
+    [aiStream, conversation, selectedModel]
   );
 
   const clearChat = useCallback(() => {
@@ -90,7 +92,7 @@ export function useAIChat() {
       }
       aiStream.reset();
     },
-    [conversation, aiStream],
+    [conversation, aiStream]
   );
 
   return {

@@ -1,10 +1,12 @@
 ---
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 feature: Auth & Shadow Users
 phase: 2
-status: not-started
+status: partial
 ---
+
+> **Status (2026-06-19):** ~90% done — only the optional cron remains. **Done:** 6.1 shadow invite (set+send + `InviteShadowButton` UI + events), 6.2 deliverable-email chokepoint (`getDeliverableEmail` wired into notification pipeline), 6.5 Google sign-in (built + callback separated), **6.4 MFA fully removed** (branch + orphaned files deleted — branch `feature/auth-shadow-06`), **6.6 admin lockout visibility** (`app/actions/admin/lockout.ts` `getLockedAccounts`/`unlockAccount` + `LockedAccountsSection` widget on the admin dashboard, 6 tests), **6.3 calendar reconcile on link** (`shadow_link_completed`/`shadow_link_failed` logged in `link-shadow-user`; `reconcileCalendarForStudent` swaps future-event attendees via new `reconcileEventAttendee`, best-effort + system_logs dead-letter, 3 tests). **Remaining:** 6.7 stale-shadow cleanup cron (optional). **Follow-ups:** durable-retry queue for reconcile (currently best-effort); `handle_new_user` trigger-path link logging (DB-side).
 
 # Spec 06 — Auth & Shadow Users
 

@@ -53,8 +53,10 @@ FORMAT GUIDELINES:
   temperature: 0.7,
   maxTokens: 600,
 
-  requiredContext: ['title', 'author'],
-  optionalContext: ['level', 'key', 'chords', 'tempo', 'strumming_pattern', 'capo_fret'],
+  // All song details arrive as validated input fields (see inputValidation.allowedFields)
+  // and are injected via buildUserMessage — no DB-backed context is fetched for this agent.
+  requiredContext: [],
+  optionalContext: [],
 
   dataAccess: {
     tables: ['songs'],

@@ -78,12 +78,17 @@ export function AIAssistantCard({ firstName }: AIAssistantCardProps) {
   } = useAIConversation();
 
   // Streaming action wrapper
-  const streamAction = useCallback(
-    async function* (params: { prompt: string; model: string; conversationId?: string }, signal?: AbortSignal) {
-      yield* generateAIResponseStream(params.prompt, params.model, params.conversationId, signal);
-    },
-    []
-  );
+  const streamAction = useCallback(async function* (
+    params: { prompt: string; model: string; conversationId?: string },
+    signal?: AbortSignal
+  ) {
+    yield* await generateAIResponseStream(
+      params.prompt,
+      params.model,
+      params.conversationId,
+      signal
+    );
+  }, []);
 
   // AI streaming hook
   const aiStream = useAIStream(streamAction, {
@@ -91,9 +96,7 @@ export function AIAssistantCard({ firstName }: AIAssistantCardProps) {
       // Update the last assistant message with streaming content
       setMessages((prev) =>
         prev.map((msg, i) =>
-          i === prev.length - 1 && msg.role === 'assistant'
-            ? { ...msg, content }
-            : msg
+          i === prev.length - 1 && msg.role === 'assistant' ? { ...msg, content } : msg
         )
       );
     },
