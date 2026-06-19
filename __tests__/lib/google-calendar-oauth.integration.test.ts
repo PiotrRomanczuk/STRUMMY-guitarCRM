@@ -63,13 +63,13 @@ describe('Google Calendar OAuth (Journey 5)', () => {
         from: jest.fn().mockReturnThis(), select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
         single: jest.fn().mockResolvedValue({
-          data: { access_token: 'access-abc', refresh_token: 'refresh-xyz', expires_at: 9999999999 }, error: null,
+          data: { access_token: 'access-abc', refresh_token: 'refresh-xyz', expires_at: 9999999999999 }, error: null,
         }),
       };
       (createClient as jest.Mock).mockResolvedValue(mockSupabase);
       await getGoogleClient('user-1');
       expect(mockSetCredentials).toHaveBeenCalledWith({
-        access_token: 'access-abc', refresh_token: 'refresh-xyz', expiry_date: 9999999999,
+        access_token: 'access-abc', refresh_token: 'refresh-xyz', expiry_date: 9999999999999,
       });
     });
 
@@ -90,7 +90,7 @@ describe('Google Calendar OAuth (Journey 5)', () => {
         from: jest.fn().mockReturnThis(), select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
         single: jest.fn().mockResolvedValue({
-          data: { access_token: 'token', refresh_token: 'refresh', expires_at: 9999999999 }, error: null,
+          data: { access_token: 'token', refresh_token: 'refresh', expires_at: 9999999999999 }, error: null,
         }),
       };
       (createClient as jest.Mock).mockResolvedValue(mockSupabase);
