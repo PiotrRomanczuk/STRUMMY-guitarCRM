@@ -93,9 +93,7 @@ async function syncTeacherCalendar(
     orderBy: 'startTime',
   });
 
-  const events = (data.items || []).filter(
-    (e) => isGuitarLesson(e) && e.id && e.start?.dateTime
-  );
+  const events = (data.items || []).filter((e) => isGuitarLesson(e) && e.id && e.start?.dateTime);
 
   // Look up teacher email to exclude from attendees
   const { data: teacherProfile } = await admin
@@ -119,7 +117,10 @@ async function syncTeacherCalendar(
       continue;
     }
 
-    // Deduplicate by google_event_id
+    // Deduplicate by per-instance google_event_id.
+    // singleEvents:true causes Google to return expanded instances whose ids
+    // are "<baseId>_<startTimestamp>" — each instance is unique, so this check
+    // correctly allows N lessons from a weekly recurring event series.
     const { data: existing } = await admin
       .from('lessons')
       .select('id')

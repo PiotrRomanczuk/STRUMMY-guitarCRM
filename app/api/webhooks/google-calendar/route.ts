@@ -6,12 +6,23 @@ import { logger } from '@/lib/logger';
 function validateToken(req: NextRequest): boolean {
   const secret = process.env.GOOGLE_CALENDAR_WEBHOOK_SECRET;
   if (!secret) {
-    if (process.env.NODE_ENV === 'development') return true;
+    // Allow skip only when an explicit dev flag is set — never silently in dev.
+    if (process.env.CALENDAR_WEBHOOK_SKIP_TOKEN === 'true') {
+      logger.warn('[Webhook] Token validation skipped (CALENDAR_WEBHOOK_SKIP_TOKEN=true)');
+      return true;
+    }
     logger.error('[Webhook] GOOGLE_CALENDAR_WEBHOOK_SECRET not configured');
     return false;
   }
   const token = req.headers.get('x-goog-channel-token');
   return token === secret;
+}
+
+type ResourceState = 'sync' | 'exists' | 'not_exists';
+
+function parseResourceState(value: string | null): ResourceState | null {
+  if (value === 'sync' || value === 'exists' || value === 'not_exists') return value;
+  return null;
 }
 
 export async function POST(req: NextRequest) {
@@ -35,12 +46,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Handle sync verification
-  if (resourceState === 'sync') {
+  // Validate and branch on x-goog-resource-state
+  const state = parseResourceState(resourceState);
+
+  if (state === 'sync') {
     logger.info('[Webhook] Sync verification acknowledged');
     return NextResponse.json({ status: 'ok' });
   }
 
+  if (state === null) {
+    logger.warn('[Webhook] Unknown resource-state, ignoring', { resourceState });
+    return NextResponse.json({ status: 'ignored' });
+  }
+
+  // state is 'exists' | 'not_exists' — proceed with sync
   // Use admin client — webhook POSTs carry no Supabase session cookies
   const supabase = createAdminClient();
 
@@ -53,7 +72,11 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error || !subscription) {
-    logger.error('[Webhook] Subscription not found:', { channelId, resourceId, error: error?.message });
+    logger.error('[Webhook] Subscription not found:', {
+      channelId,
+      resourceId,
+      error: error?.message,
+    });
     // Return 200 to stop Google from retrying if it's an invalid channel
     return NextResponse.json({ status: 'ignored' });
   }

@@ -42,11 +42,48 @@ export interface CalendarEvent {
   attendees?: Array<{ email: string; displayName?: string }>;
 }
 
+/**
+ * Shared helper: if the token is expired (or expiring within 60 s), refresh it
+ * and persist the new credentials using the provided updater function.
+ * Returns the refreshed credentials on success; throws on failure.
+ */
+async function refreshTokenIfExpired(
+  oauth2Client: InstanceType<typeof google.auth.OAuth2>,
+  expiresAt: number | null,
+  userId: string,
+  persist: (patch: {
+    access_token: string | null | undefined;
+    expires_at: number | null | undefined;
+    refresh_token?: string | null;
+  }) => Promise<void>
+): Promise<void> {
+  const bufferMs = 60_000; // refresh 60 s before actual expiry
+  if (!expiresAt || expiresAt - bufferMs > Date.now()) return;
+
+  try {
+    const { credentials } = await oauth2Client.refreshAccessToken();
+    await persist({
+      access_token: credentials.access_token,
+      expires_at: credentials.expiry_date,
+      ...(credentials.refresh_token ? { refresh_token: credentials.refresh_token } : {}),
+    });
+    oauth2Client.setCredentials(credentials);
+    logger.info('[GoogleClient] Refreshed expired token for user', { userId });
+  } catch (refreshError) {
+    logger.error('[GoogleClient] Token refresh failed:', refreshError);
+    throw new Error('Failed to refresh Google access token');
+  }
+}
+
+/**
+ * User-session Google OAuth2 client. Reads tokens via the RLS-scoped Supabase
+ * client so only the owner can see them. Refreshes transparently when expired.
+ */
 export const getGoogleClient = async (userId: string) => {
   const supabase = await createClient();
   const { data: integration, error } = await supabase
     .from('user_integrations')
-    .select('*')
+    .select('access_token, refresh_token, expires_at')
     .eq('user_id', userId)
     .eq('provider', 'google')
     .single();
@@ -56,11 +93,18 @@ export const getGoogleClient = async (userId: string) => {
   }
 
   const oauth2Client = getGoogleOAuth2Client();
-
   oauth2Client.setCredentials({
     access_token: integration.access_token,
     refresh_token: integration.refresh_token,
     expiry_date: integration.expires_at,
+  });
+
+  await refreshTokenIfExpired(oauth2Client, integration.expires_at, userId, async (patch) => {
+    await supabase
+      .from('user_integrations')
+      .update({ ...patch, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('provider', 'google');
   });
 
   return oauth2Client;
@@ -109,28 +153,13 @@ export async function getGoogleClientAdmin(userId: string) {
     expiry_date: integration.expires_at,
   });
 
-  // Check token expiry and refresh if needed
-  const now = Date.now();
-  if (integration.expires_at && integration.expires_at < now) {
-    try {
-      const { credentials } = await oauth2Client.refreshAccessToken();
-      await admin
-        .from('user_integrations')
-        .update({
-          access_token: credentials.access_token,
-          expires_at: credentials.expiry_date,
-          updated_at: new Date().toISOString(),
-          ...(credentials.refresh_token && { refresh_token: credentials.refresh_token }),
-        })
-        .eq('user_id', userId)
-        .eq('provider', 'google');
-      oauth2Client.setCredentials(credentials);
-      logger.info('[GoogleClient] Refreshed expired token for user', { userId });
-    } catch (refreshError) {
-      logger.error('[GoogleClient] Token refresh failed:', refreshError);
-      throw new Error('Failed to refresh Google access token');
-    }
-  }
+  await refreshTokenIfExpired(oauth2Client, integration.expires_at, userId, async (patch) => {
+    await admin
+      .from('user_integrations')
+      .update({ ...patch, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('provider', 'google');
+  });
 
   return oauth2Client;
 }
@@ -280,9 +309,7 @@ export async function updateGoogleCalendarEvent(
 
   if (updates.scheduled_at !== undefined) {
     const startTime = new Date(updates.scheduled_at);
-    const endTime = new Date(
-      startTime.getTime() + (updates.duration_minutes || 60) * 60 * 1000
-    );
+    const endTime = new Date(startTime.getTime() + (updates.duration_minutes || 60) * 60 * 1000);
 
     requestBody.start = {
       dateTime: startTime.toISOString(),

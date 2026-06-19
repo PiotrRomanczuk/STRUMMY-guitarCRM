@@ -11,9 +11,10 @@ import { logger } from '@/lib/logger';
 import { revalidatePath } from 'next/cache';
 
 /**
- * Disconnect Google: stop any active webhook watches, then drop the stored
- * OAuth tokens and webhook subscriptions for the current user. Webhook teardown
- * is best-effort — token removal always proceeds.
+ * Disconnect Google: revoke the OAuth token with Google, stop any active
+ * webhook watches, then delete the user_integrations and webhook_subscriptions
+ * rows. Each step is best-effort — row deletion always proceeds even if
+ * revoking or stopping the channel fails (e.g. already expired).
  */
 export async function disconnectGoogle() {
   const supabase = await createClient();
@@ -22,6 +23,28 @@ export async function disconnectGoogle() {
   } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Unauthorized' };
 
+  // Fetch integration to get the access token for revocation
+  const { data: integration } = await supabase
+    .from('user_integrations')
+    .select('access_token')
+    .eq('user_id', user.id)
+    .eq('provider', 'google')
+    .single();
+
+  // Step 1: Revoke the token with Google (best-effort)
+  if (integration?.access_token) {
+    try {
+      const oauth2Client = getGoogleOAuth2Client();
+      await oauth2Client.revokeToken(integration.access_token);
+      logger.info('[disconnectGoogle] Token revoked', { userId: user.id });
+    } catch (err) {
+      logger.warn('[disconnectGoogle] Token revocation failed (continuing)', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  // Step 2: Stop any active webhook channels (best-effort)
   const { data: subscriptions } = await supabase
     .from('webhook_subscriptions')
     .select('channel_id, resource_id')
@@ -38,12 +61,14 @@ export async function disconnectGoogle() {
     }
   }
 
+  // Step 3: Delete webhook_subscriptions row
   await supabase
     .from('webhook_subscriptions')
     .delete()
     .eq('user_id', user.id)
     .eq('provider', 'google_calendar');
 
+  // Step 4: Delete user_integrations row
   const { error } = await supabase
     .from('user_integrations')
     .delete()
@@ -56,6 +81,7 @@ export async function disconnectGoogle() {
   }
 
   revalidatePath('/dashboard/settings');
+  revalidatePath('/dashboard/calendar');
   return { success: true };
 }
 
