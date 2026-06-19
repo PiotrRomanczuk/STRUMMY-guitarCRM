@@ -114,7 +114,7 @@ describe('Google Library', () => {
           data: {
             access_token: 'mock-access-token',
             refresh_token: 'mock-refresh-token',
-            expires_at: 1234567890,
+            expires_at: 9999999999999,
           },
           error: null,
         }),
@@ -126,7 +126,7 @@ describe('Google Library', () => {
       expect(client.setCredentials).toHaveBeenCalledWith({
         access_token: 'mock-access-token',
         refresh_token: 'mock-refresh-token',
-        expiry_date: 1234567890,
+        expiry_date: 9999999999999,
       });
     });
 
@@ -202,7 +202,7 @@ describe('Google Library', () => {
         data: {
           access_token: 'mock-access-token',
           refresh_token: 'mock-refresh-token',
-          expires_at: 1234567890,
+          expires_at: 9999999999999,
         },
         error: null,
       }),
@@ -301,7 +301,7 @@ describe('Google Library', () => {
         data: {
           access_token: 'mock-access-token',
           refresh_token: 'mock-refresh-token',
-          expires_at: 1234567890,
+          expires_at: 9999999999999,
         },
         error: null,
       }),
@@ -394,7 +394,7 @@ describe('Google Library', () => {
         data: {
           access_token: 'mock-access-token',
           refresh_token: 'mock-refresh-token',
-          expires_at: 1234567890,
+          expires_at: 9999999999999,
         },
         error: null,
       }),
@@ -429,7 +429,7 @@ describe('Google Library', () => {
         data: {
           access_token: 'mock-access-token',
           refresh_token: 'mock-refresh-token',
-          expires_at: 1234567890,
+          expires_at: 9999999999999,
         },
         error: null,
       }),
