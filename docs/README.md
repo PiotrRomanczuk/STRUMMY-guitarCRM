@@ -13,12 +13,12 @@ Documentation is organized in four layers. When they conflict, the deeper layer 
 
 ### Plan & decisions (the spine)
 
-| Doc                                  | What                                                                                                                                                                                     |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`../CONTEXT.md`](../CONTEXT.md)     | **Domain model / ubiquitous language.** What the words mean (Profile, Role, Teaches, Repertoire, Progress…). Deepest layer.                                                              |
-| [`MASTER_SPEC.md`](./MASTER_SPEC.md) | **The plan.** Single source of truth for "Strummy → 100%": Phase 0, feature index (§2), cross-cutting concerns, sequencing, decision ledger.                                             |
-| [`specs/`](./specs)                  | **Per-feature implementation specs.** One code-grounded, agent-ready file per feature (00 Phase 0 + 01–10, plus 11 Testing & CI/CD). MASTER_SPEC §2 indexes them; the detail lives here. |
-| [`adr/`](./adr)                      | **Settled architectural decisions.** 0001 RLS is the security boundary · 0002 Shadow students are first-class · 0003 Unified Pino logger.                                                |
+| Doc                                  | What                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`../CONTEXT.md`](../CONTEXT.md)     | **Domain model / ubiquitous language.** What the words mean (Profile, Role, Teaches, Repertoire, Progress…). Deepest layer.                                                                                                                                                                                       |
+| [`MASTER_SPEC.md`](./MASTER_SPEC.md) | **Whole-application master spec + the plan.** §0–§4 specify every functional domain (purpose, roles, entities, behaviors, integrations, status) with links to the per-feature specs; §5–§6 hold the cross-cutting concerns and the "Strummy → 100%" remediation plan (Phase 0, DoD, sequencing, decision ledger). |
+| [`specs/`](./specs)                  | **Per-feature implementation specs.** One code-grounded, agent-ready file per feature (00 Phase 0 + 01–10, plus 11 Testing & CI/CD). MASTER_SPEC §2 indexes them; the detail lives here.                                                                                                                          |
+| [`adr/`](./adr)                      | **Settled architectural decisions.** 0001 RLS is the security boundary · 0002 Shadow students are first-class · 0003 Unified Pino logger.                                                                                                                                                                         |
 
 ### Reference (how the system works — living)
 
