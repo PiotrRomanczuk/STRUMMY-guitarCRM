@@ -31,12 +31,14 @@ export function LessonNotesAI({
   disabled = false,
 }: Props) {
   // Streaming action wrapper
-  const streamAction = useCallback(
-    async function* (params: Record<string, unknown>, _signal?: AbortSignal) {
-      yield* generateLessonNotesStream(params as Parameters<typeof generateLessonNotesStream>[0]);
-    },
-    []
-  );
+  const streamAction = useCallback(async function* (
+    params: Record<string, unknown>,
+    _signal?: AbortSignal
+  ) {
+    yield* await generateLessonNotesStream(
+      params as Parameters<typeof generateLessonNotesStream>[0]
+    );
+  }, []);
 
   // AI streaming hook
   const aiStream = useAIStream(streamAction, {

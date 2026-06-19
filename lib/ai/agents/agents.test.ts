@@ -15,11 +15,14 @@ import {
   adminInsightsAgent,
   songNormalizationAgent,
   chatAssistantAgent,
+  songNotesAgent,
+  songNotesEnhancerAgent,
   communicationAgents,
   contentAgents,
   analyticsAgents,
   systemAgents,
   assistantAgents,
+  songContentAgents,
 } from './index';
 
 import {
@@ -78,12 +81,8 @@ describe('AI Agents', () => {
       });
 
       it('should have communication use cases', () => {
-        expect(emailDraftAgent.useCases).toContainEqual(
-          expect.stringContaining('reminder')
-        );
-        expect(emailDraftAgent.useCases).toContainEqual(
-          expect.stringContaining('progress')
-        );
+        expect(emailDraftAgent.useCases).toContainEqual(expect.stringContaining('reminder'));
+        expect(emailDraftAgent.useCases).toContainEqual(expect.stringContaining('progress'));
       });
 
       it('should have reasonable temperature for emails', () => {
@@ -292,6 +291,96 @@ describe('AI Agents', () => {
         expect(chatAssistantAgent.inputValidation.allowedFields).toContain('model');
       });
     });
+
+    describe('songNotesAgent', () => {
+      it('should have correct id', () => {
+        expect(songNotesAgent.id).toBe('song-notes-assistant');
+      });
+
+      it('should target admin and teacher', () => {
+        expect(songNotesAgent.targetUsers).toEqual(['admin', 'teacher']);
+      });
+
+      it('should have content UI category', () => {
+        expect(songNotesAgent.uiConfig.category).toBe('content');
+      });
+
+      it('should read from the songs table only', () => {
+        expect(songNotesAgent.dataAccess.tables).toEqual(['songs']);
+        expect(songNotesAgent.dataAccess.permissions).toContain('read');
+        expect(songNotesAgent.dataAccess.permissions).not.toContain('write');
+      });
+
+      it('should expose song detail fields as allowed input', () => {
+        expect(songNotesAgent.inputValidation.allowedFields).toContain('title');
+        expect(songNotesAgent.inputValidation.allowedFields).toContain('author');
+        expect(songNotesAgent.inputValidation.allowedFields).toContain('chords');
+      });
+
+      it('should not fetch DB-backed context (inputs arrive as allowed fields)', () => {
+        // Regression guard: title/author/etc. are input fields, NOT context keys.
+        // Listing them in requiredContext made prepareContext throw on an unknown
+        // context key and broke generation. They must stay out of the context arrays.
+        expect(songNotesAgent.requiredContext).toEqual([]);
+        expect(songNotesAgent.optionalContext).toEqual([]);
+      });
+
+      it('should have guitar-specific system prompt', () => {
+        expect(songNotesAgent.systemPrompt).toContain('barre');
+        expect(songNotesAgent.systemPrompt).toContain('BPM');
+        expect(songNotesAgent.systemPrompt).toContain('fingering');
+      });
+
+      it('should have two output sections in the prompt', () => {
+        expect(songNotesAgent.systemPrompt).toContain('Teaching Tips');
+        expect(songNotesAgent.systemPrompt).toContain('Practice Suggestions');
+      });
+    });
+
+    describe('songNotesEnhancerAgent', () => {
+      it('should have correct id', () => {
+        expect(songNotesEnhancerAgent.id).toBe('song-notes-enhancer');
+      });
+
+      it('should target admin and teacher', () => {
+        expect(songNotesEnhancerAgent.targetUsers).toEqual(['admin', 'teacher']);
+      });
+
+      it('should have content UI category', () => {
+        expect(songNotesEnhancerAgent.uiConfig.category).toBe('content');
+      });
+
+      it('should accept rough notes as a required input field', () => {
+        expect(songNotesEnhancerAgent.inputValidation.allowedFields).toContain('roughNotes');
+        expect(songNotesEnhancerAgent.inputValidation.allowedFields).toContain('title');
+        expect(songNotesEnhancerAgent.inputValidation.allowedFields).toContain('author');
+      });
+
+      it('should not fetch DB-backed context (inputs arrive as allowed fields)', () => {
+        // roughNotes/title/author are input fields injected into the user message,
+        // not context keys — keep them out of the context arrays so prepareContext
+        // does not throw on an unknown key.
+        expect(songNotesEnhancerAgent.requiredContext).toEqual([]);
+        expect(songNotesEnhancerAgent.optionalContext).toEqual([]);
+      });
+
+      it('should instruct preserving all of the teacher notes', () => {
+        expect(songNotesEnhancerAgent.systemPrompt).toContain('Preserve ALL');
+        expect(songNotesEnhancerAgent.systemPrompt).toContain('rough notes');
+      });
+
+      it('should have a lower temperature than the from-scratch notes agent', () => {
+        // Enhancing should stay faithful to the teacher's input, so it runs cooler.
+        expect(songNotesEnhancerAgent.temperature).toBeLessThan(songNotesAgent.temperature);
+      });
+
+      it('should allow longer input than the from-scratch notes agent', () => {
+        // It must fit the teacher's rough notes plus song metadata.
+        expect(songNotesEnhancerAgent.inputValidation.maxLength).toBeGreaterThan(
+          songNotesAgent.inputValidation.maxLength
+        );
+      });
+    });
   });
 
   describe('Agent Categories', () => {
@@ -317,6 +406,11 @@ describe('AI Agents', () => {
     it('should export assistantAgents', () => {
       expect(assistantAgents).toHaveProperty('chatAssistantAgent');
     });
+
+    it('should export songContentAgents', () => {
+      expect(songContentAgents).toHaveProperty('songNotesAgent');
+      expect(songContentAgents).toHaveProperty('songNotesEnhancerAgent');
+    });
   });
 
   describe('Agent Specification Validation', () => {
@@ -327,6 +421,8 @@ describe('AI Agents', () => {
       progressInsightsAgent,
       adminInsightsAgent,
       chatAssistantAgent,
+      songNotesAgent,
+      songNotesEnhancerAgent,
     ];
 
     const allAgents = [
@@ -337,6 +433,8 @@ describe('AI Agents', () => {
       adminInsightsAgent,
       songNormalizationAgent,
       chatAssistantAgent,
+      songNotesAgent,
+      songNotesEnhancerAgent,
     ];
 
     allAgents.forEach((agent) => {
@@ -443,6 +541,12 @@ describe('AI Agents', () => {
     it('should register assistant agents', () => {
       registerAllAgents();
       expect(hasAgent('chat-assistant')).toBe(true);
+    });
+
+    it('should register song content agents', () => {
+      registerAllAgents();
+      expect(hasAgent('song-notes-assistant')).toBe(true);
+      expect(hasAgent('song-notes-enhancer')).toBe(true);
     });
   });
 });
@@ -589,6 +693,8 @@ describe('Agent Execution', () => {
     registerAgent(emailDraftAgent);
     registerAgent(lessonNotesAgent);
     registerAgent(chatAssistantAgent);
+    registerAgent(songNotesAgent);
+    registerAgent(songNotesEnhancerAgent);
   });
 
   const mockContext: Partial<AgentContext> = {
@@ -598,11 +704,7 @@ describe('Agent Execution', () => {
   };
 
   it('should return error for non-existent agent', async () => {
-    const result = await executeAgent(
-      'non-existent-agent',
-      { message: 'test' },
-      mockContext
-    );
+    const result = await executeAgent('non-existent-agent', { message: 'test' }, mockContext);
 
     expect(result.success).toBe(false);
     expect(result.error?.code).toBe('AGENT_NOT_FOUND');
@@ -631,6 +733,35 @@ describe('Agent Execution', () => {
     expect(result.metadata.agentId).toBe('chat-assistant');
   });
 
+  it('should execute song-notes-assistant without a context-fetch failure', async () => {
+    // Regression: title/author were previously in requiredContext, so prepareContext
+    // threw "Unknown context key: title" and generation always errored. With the
+    // context arrays empty, the agent runs end-to-end against the mocked provider.
+    const result = await executeAgent(
+      'song-notes-assistant',
+      { title: 'Wonderwall', author: 'Oasis', key: 'F#m', chords: 'Em7 G Dsus4 A7sus4' },
+      mockContext
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.metadata.agentId).toBe('song-notes-assistant');
+  });
+
+  it('should execute song-notes-enhancer without a context-fetch failure', async () => {
+    const result = await executeAgent(
+      'song-notes-enhancer',
+      {
+        roughNotes: 'tricky barre chord, slow strum, watch tempo',
+        title: 'Wonderwall',
+        author: 'Oasis',
+      },
+      mockContext
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.metadata.agentId).toBe('song-notes-enhancer');
+  });
+
   it('should include execution metadata', async () => {
     const result = await executeAgent(
       'email-draft-generator',
@@ -647,11 +778,7 @@ describe('Agent Execution', () => {
   it('should check rate limits', async () => {
     const { checkRateLimit } = require('../rate-limiter');
 
-    await executeAgent(
-      'email-draft-generator',
-      { template_type: 'test' },
-      mockContext
-    );
+    await executeAgent('email-draft-generator', { template_type: 'test' }, mockContext);
 
     expect(checkRateLimit).toHaveBeenCalled();
   });

@@ -56,7 +56,9 @@ export function AdminDashboardInsights({ adminStats }: Props) {
       // Popular songs (mock data - in real app, fetch from lessons)
       const popularSongs = ['Wonderwall', 'Hotel California', 'Stairway to Heaven', 'Blackbird'];
 
-      const streamGenerator = generateAdminInsightsStream({
+      // A streaming server action returns a Promise resolving to the async
+      // iterable (the network round-trip), so it must be awaited before iterating.
+      const streamGenerator = await generateAdminInsightsStream({
         dashboardData: {
           totalStudents: adminStats.totalStudents,
           newStudents: newStudentsThisMonth,

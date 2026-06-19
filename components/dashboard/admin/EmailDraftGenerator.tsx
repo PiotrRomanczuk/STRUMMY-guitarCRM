@@ -48,12 +48,12 @@ export function EmailDraftGenerator({ students }: Props) {
   const [achievement, setAchievement] = useState('');
 
   // Streaming action wrapper
-  const streamAction = useCallback(
-    async function* (params: Record<string, unknown>, _signal?: AbortSignal) {
-      yield* generateEmailDraftStream(params as Parameters<typeof generateEmailDraftStream>[0]);
-    },
-    []
-  );
+  const streamAction = useCallback(async function* (
+    params: Record<string, unknown>,
+    _signal?: AbortSignal
+  ) {
+    yield* await generateEmailDraftStream(params as Parameters<typeof generateEmailDraftStream>[0]);
+  }, []);
 
   // AI streaming hook
   const aiStream = useAIStream(streamAction, {
@@ -177,7 +177,16 @@ export function EmailDraftGenerator({ students }: Props) {
 
           <div className="space-y-2">
             <Label>Email Type</Label>
-            <Select value={templateType} onValueChange={(value: 'lesson_reminder' | 'progress_report' | 'payment_reminder' | 'milestone_celebration') => setTemplateType(value)}>
+            <Select
+              value={templateType}
+              onValueChange={(
+                value:
+                  | 'lesson_reminder'
+                  | 'progress_report'
+                  | 'payment_reminder'
+                  | 'milestone_celebration'
+              ) => setTemplateType(value)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -320,12 +329,7 @@ export function EmailDraftGenerator({ students }: Props) {
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Body:</Label>
-                <Textarea
-                  value={body}
-                  readOnly
-                  rows={8}
-                  className="resize-none bg-background"
-                />
+                <Textarea value={body} readOnly rows={8} className="resize-none bg-background" />
               </div>
             </div>
           </div>

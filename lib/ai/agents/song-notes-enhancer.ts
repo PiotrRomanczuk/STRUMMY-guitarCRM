@@ -51,8 +51,11 @@ The teacher's rough notes will be provided in the user message. Expand them fait
   temperature: 0.5,
   maxTokens: 600,
 
-  requiredContext: ['roughNotes', 'title', 'author'],
-  optionalContext: ['level', 'key', 'chords', 'tempo', 'strumming_pattern', 'capo_fret'],
+  // Rough notes and all song details arrive as validated input fields
+  // (see inputValidation.allowedFields) and are injected via buildUserMessage —
+  // no DB-backed context is fetched for this agent.
+  requiredContext: [],
+  optionalContext: [],
 
   dataAccess: {
     tables: ['songs'],

@@ -38,14 +38,16 @@ export function StudentProgressInsights({ students }: Props) {
     setInsights(''); // Clear previous insights
 
     try {
-      const streamGenerator = analyzeStudentProgressStream({
+      // Streaming server action returns a Promise resolving to the async
+      // iterable, so it must be awaited before iterating.
+      const streamGenerator = await analyzeStudentProgressStream({
         studentData: { studentId: selectedStudent },
         timePeriod:
           timePeriod === 'last_30_days'
             ? 'Last 30 days'
             : timePeriod === 'last_90_days'
-            ? 'Last 90 days'
-            : 'All time',
+              ? 'Last 90 days'
+              : 'All time',
       });
 
       for await (const chunk of streamGenerator) {
