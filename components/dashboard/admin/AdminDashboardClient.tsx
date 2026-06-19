@@ -11,6 +11,7 @@ import { NotificationsAlertsSection } from '@/components/dashboard/Notifications
 import { HealthSummaryWidget } from '@/components/dashboard/health/HealthSummaryWidget';
 import { GlobalSearch } from '@/components/dashboard/GlobalSearch';
 import { AuditLogSection } from '@/components/dashboard/admin/AuditLogSection';
+import { LockedAccountsSection } from '@/components/dashboard/admin/LockedAccountsSection';
 import { ServicesStatusWidget } from '@/components/dashboard/admin/ServicesStatusWidget';
 import { SongOfTheWeekCard } from '@/components/song-of-the-week';
 import type { SongOfTheWeekWithSong } from '@/types/SongOfTheWeek';
@@ -169,6 +170,11 @@ export function AdminDashboardClient({
               <AdminActionLink href="/dashboard/logs" icon={FileText} label="Activity Logs" />
             </CardContent>
           </Card>
+
+          {/* Locked Accounts (spec 06.6) */}
+          <div className="lg:col-span-3">
+            <LockedAccountsSection />
+          </div>
         </div>
 
         {/* Song of the Week Management */}
