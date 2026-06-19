@@ -1,10 +1,12 @@
 ---
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-06-19
 feature: Auth & Shadow Users
 phase: 2
-status: not-started
+status: partial
 ---
+
+> **Status (verified against code 2026-06-19):** ~55% done. **Done:** 6.1 shadow invite (set+send + `InviteShadowButton` UI + `shadow_invite_email_set`/`shadow_invite_sent` logged), 6.2 deliverable-email chokepoint (`lib/email/recipient.ts` `getDeliverableEmail` wired into notification-service + queue-processor), 6.5 Google sign-in (built + callback separated), 6.4 MFA branch removed from `signIn`/sign-in/profile. **Remaining:** 6.4 delete orphaned dead files (`app/actions/mfa.ts`, `components/auth/MFAChallengeDialog.tsx`, `components/profile/MFASetup.tsx`); 6.3 calendar reconcile on link (NOT logged in `link-shadow-user` route; no reconcile task/handler); 6.6 admin lockout visibility (no `getLockedAccounts`/`unlockAccount`, no widget); 6.7 stale-shadow cron (optional, not built).
 
 # Spec 06 — Auth & Shadow Users
 
