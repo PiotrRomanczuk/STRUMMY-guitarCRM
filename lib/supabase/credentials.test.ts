@@ -69,22 +69,24 @@ describe('Development Credentials Authentication Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Default mock implementation for auth
-    (supabase.auth.signInWithPassword as jest.Mock).mockImplementation(async ({ email, password }) => {
-      const user = testUsers.find(u => u.email === email);
-      if (user && user.password === password) {
-        currentRole = user.role;
+    (supabase.auth.signInWithPassword as jest.Mock).mockImplementation(
+      async ({ email, password }) => {
+        const user = testUsers.find((u) => u.email === email);
+        if (user && user.password === password) {
+          currentRole = user.role;
+          return {
+            data: { user: { email, id: 'test-user-id' }, session: {} },
+            error: null,
+          };
+        }
         return {
-          data: { user: { email, id: 'test-user-id' }, session: {} },
-          error: null,
+          data: { user: null, session: null },
+          error: { message: 'Invalid login credentials' },
         };
       }
-      return {
-        data: { user: null, session: null },
-        error: { message: 'Invalid login credentials' },
-      };
-    });
+    );
 
     // Default mock implementation for from
     (supabase.from as jest.Mock).mockImplementation((table) => {
@@ -94,29 +96,31 @@ describe('Development Credentials Authentication Tests', () => {
         eq: jest.fn().mockReturnThis(),
         single: jest.fn().mockReturnThis(),
         then: jest.fn().mockImplementation((resolve) => {
-          // Logic based on table and currentRole
-          if (table === 'task_management') {
+          // Logic based on table and currentRole.
+          // audit_log is an admin-only table (RLS: is_admin()), used here to
+          // assert that only admins can read admin-scoped data.
+          if (table === 'audit_log') {
             if (currentRole?.isAdmin) {
               resolve({ data: [{ id: 1 }], error: null });
             } else {
               resolve({ data: null, error: { message: 'Permission denied' } });
             }
           } else if (table === 'lessons') {
-             resolve({ data: [{ id: 1 }], error: null });
+            resolve({ data: [{ id: 1 }], error: null });
           } else if (table === 'profiles') {
-             // Return profile based on currentRole
-             if (currentRole) {
-               resolve({ 
-                 data: { 
-                   is_admin: currentRole.isAdmin, 
-                   is_teacher: currentRole.isTeacher, 
-                   is_student: currentRole.isStudent 
-                 }, 
-                 error: null 
-               });
-             } else {
-               resolve({ data: null, error: { message: 'No profile' } });
-             }
+            // Return profile based on currentRole
+            if (currentRole) {
+              resolve({
+                data: {
+                  is_admin: currentRole.isAdmin,
+                  is_teacher: currentRole.isTeacher,
+                  is_student: currentRole.isStudent,
+                },
+                error: null,
+              });
+            } else {
+              resolve({ data: null, error: { message: 'No profile' } });
+            }
           } else {
             resolve({ data: [], error: null });
           }
@@ -199,7 +203,7 @@ describe('Development Credentials Authentication Tests', () => {
       });
 
       // Try to access admin-only data
-      const { data: tasks, error } = await supabase.from('task_management').select('*').limit(1);
+      const { data: tasks, error } = await supabase.from('audit_log').select('*').limit(1);
 
       expect(error).toBeNull();
       expect(tasks).not.toBeNull();
@@ -229,7 +233,7 @@ describe('Development Credentials Authentication Tests', () => {
       });
 
       // Try to access admin-only data
-      const { data: tasks, error } = await supabase.from('task_management').select('*').limit(1);
+      const { data: tasks, error } = await supabase.from('audit_log').select('*').limit(1);
 
       expect(error).not.toBeNull();
       expect(tasks).toBeNull();
