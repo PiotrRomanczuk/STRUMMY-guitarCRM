@@ -1,4 +1,4 @@
-import type { ChatMessage } from '@/components/v2/ai/ai-chat.types';
+import type { ChatMessage } from '@/components/ai/chat/ai-chat.types';
 
 export const DEMO_AI_MESSAGES: ChatMessage[] = [
   {
@@ -64,6 +64,16 @@ Carlos has completed **3 lessons** and is at an intermediate level. Here's what 
 ];
 
 export const DEMO_AI_CONVERSATIONS = [
-  { id: 'demo-1', title: 'Emma Johnson progress review', preview: 'How is Emma Johnson progressing?', updatedAt: new Date() },
-  { id: 'demo-2', title: 'Carlos lesson planning', preview: 'What should I focus on with Carlos?', updatedAt: new Date() },
+  {
+    id: 'demo-1',
+    title: 'Emma Johnson progress review',
+    preview: 'How is Emma Johnson progressing?',
+    updatedAt: new Date(),
+  },
+  {
+    id: 'demo-2',
+    title: 'Carlos lesson planning',
+    preview: 'What should I focus on with Carlos?',
+    updatedAt: new Date(),
+  },
 ];

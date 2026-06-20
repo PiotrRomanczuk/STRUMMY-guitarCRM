@@ -3,7 +3,7 @@
  * useAIStream and the server action; assert the real chat state machine.
  */
 import { renderHook, act } from '@testing-library/react';
-import { useAIChat } from '@/components/v2/ai/useAIChat';
+import { useAIChat } from '@/components/ai/chat/useAIChat';
 
 const mockStart = jest.fn();
 const mockStartNewConversation = jest.fn();

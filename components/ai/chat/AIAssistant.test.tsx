@@ -4,7 +4,7 @@
  */
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { AIAssistant } from '@/components/v2/ai/AIAssistant';
+import { AIAssistant } from '@/components/ai/chat/AIAssistant';
 
 const mockUseLayoutMode = jest.fn();
 jest.mock('@/hooks/use-is-widescreen', () => ({
@@ -12,7 +12,7 @@ jest.mock('@/hooks/use-is-widescreen', () => ({
 }));
 
 const refreshConversations = jest.fn();
-jest.mock('@/components/v2/ai/useAIChat', () => ({
+jest.mock('@/components/ai/chat/useAIChat', () => ({
   useAIChat: () => ({
     messages: [],
     isStreaming: false,
@@ -28,10 +28,10 @@ jest.mock('@/components/v2/ai/useAIChat', () => ({
   }),
 }));
 
-jest.mock('@/components/v2/ai/AIAssistant.Mobile', () => ({
+jest.mock('@/components/ai/chat/AIAssistant.Mobile', () => ({
   AIAssistantMobile: () => <div data-testid="mobile-layout">mobile</div>,
 }));
-jest.mock('@/components/v2/ai/AIAssistant.Desktop', () => ({
+jest.mock('@/components/ai/chat/AIAssistant.Desktop', () => ({
   __esModule: true,
   default: () => <div data-testid="desktop-layout">desktop</div>,
 }));
