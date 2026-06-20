@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation';
 
 import { VALID_STATUS_TRANSITIONS, type AssignmentStatus } from '@/schemas/AssignmentSchema';
 import { updateAssignmentStatusAction } from '@/app/actions/assignment-status';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const LABELS: Record<string, string> = {
   in_progress: 'Start working',
@@ -66,12 +77,11 @@ export const AssignmentStatusActions = ({ assignmentId, currentStatus, canManage
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {targets.map((next) => {
           const isPrimary = next === 'completed' || next === 'in_progress';
-          return (
+          const buttonEl = (
             <button
-              key={next}
               type="button"
               disabled={busy !== null}
-              onClick={() => onClick(next)}
+              onClick={next !== 'cancelled' ? () => onClick(next) : undefined}
               style={{
                 border: isPrimary ? 'none' : '1px solid var(--rule)',
                 background: isPrimary ? 'var(--ink)' : 'transparent',
@@ -90,6 +100,30 @@ export const AssignmentStatusActions = ({ assignmentId, currentStatus, canManage
               {busy === next ? 'Saving…' : (LABELS[next] ?? next)}
             </button>
           );
+
+          if (next === 'cancelled') {
+            return (
+              <AlertDialog key={next}>
+                <AlertDialogTrigger asChild>{buttonEl}</AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel this assignment?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to cancel this assignment? This can&apos;t be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onClick('cancelled')}>
+                      Yes, cancel
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            );
+          }
+
+          return <span key={next}>{buttonEl}</span>;
         })}
       </div>
       {error && (

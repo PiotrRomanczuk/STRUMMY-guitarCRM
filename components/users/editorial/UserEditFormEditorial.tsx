@@ -3,6 +3,16 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export type EditableUser = {
   id: string;
@@ -56,6 +66,7 @@ export const UserEditFormEditorial = ({ user }: { user: EditableUser }) => {
   const [isTeacher, setIsTeacher] = useState(user.isTeacher);
   const [isStudent, setIsStudent] = useState(user.isStudent);
   const [isActive, setIsActive] = useState(user.isActive);
+  const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
@@ -151,8 +162,40 @@ export const UserEditFormEditorial = ({ user }: { user: EditableUser }) => {
 
           <div>
             <div style={fieldLabelStyle}>Account</div>
-            <Toggle label="Active (login enabled)" checked={isActive} onChange={setIsActive} />
+            <Toggle
+              label="Active (login enabled)"
+              checked={isActive}
+              onChange={(v) => {
+                if (!v && isActive) {
+                  setShowDeactivateDialog(true);
+                } else {
+                  setIsActive(v);
+                }
+              }}
+            />
           </div>
+
+          <AlertDialog open={showDeactivateDialog} onOpenChange={setShowDeactivateDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Deactivate this student?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  They won&apos;t be able to log in until reactivated.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    setIsActive(false);
+                    setShowDeactivateDialog(false);
+                  }}
+                >
+                  Deactivate
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           {error && (
             <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--danger)' }}>

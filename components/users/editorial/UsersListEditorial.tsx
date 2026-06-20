@@ -145,9 +145,8 @@ export const UsersListEditorial = ({ rows, filters, canEdit }: Props) => (
         rows.map((r, i) => (
           <div
             key={r.id}
+            className="grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_150px_120px_90px]"
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0,1.6fr) 150px 120px 90px',
               gap: 14,
               padding: '14px 20px',
               borderBottom: i < rows.length - 1 ? '1px solid var(--rule)' : 'none',

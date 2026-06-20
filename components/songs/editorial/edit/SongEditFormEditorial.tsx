@@ -120,8 +120,9 @@ export const SongEditFormEditorial = ({ song }: { song: Song }) => {
           maxLength={200}
           defaultValue={song.title ?? ''}
           style={inputStyle}
+          aria-describedby={state.errors?.title ? 'error-title' : undefined}
         />
-        {state.errors?.title && <Error msg={state.errors.title} />}
+        {state.errors?.title && <Error id="error-title" msg={state.errors.title} />}
       </div>
       <div>
         <Label>Author</Label>
@@ -131,10 +132,11 @@ export const SongEditFormEditorial = ({ song }: { song: Song }) => {
           maxLength={100}
           defaultValue={song.author ?? ''}
           style={inputStyle}
+          aria-describedby={state.errors?.author ? 'error-author' : undefined}
         />
-        {state.errors?.author && <Error msg={state.errors.author} />}
+        {state.errors?.author && <Error id="error-author" msg={state.errors.author} />}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
         <div>
           <Label>Level</Label>
           <select name="level" required defaultValue={song.level ?? 'beginner'} style={inputStyle}>
@@ -156,7 +158,7 @@ export const SongEditFormEditorial = ({ song }: { song: Song }) => {
           </select>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
         <div>
           <Label optional>Capo (fret)</Label>
           <input
@@ -198,8 +200,11 @@ export const SongEditFormEditorial = ({ song }: { song: Song }) => {
           defaultValue={song.lyrics_with_chords ?? ''}
           placeholder={'[Verse 1]\nC        G\nLyrics line one…'}
           style={textareaStyle}
+          aria-describedby={state.errors?.lyrics_with_chords ? 'error-lyrics' : undefined}
         />
-        {state.errors?.lyrics_with_chords && <Error msg={state.errors.lyrics_with_chords} />}
+        {state.errors?.lyrics_with_chords && (
+          <Error id="error-lyrics" msg={state.errors.lyrics_with_chords} />
+        )}
       </div>
 
       {state.errors?._form && (
@@ -240,8 +245,11 @@ export const SongEditFormEditorial = ({ song }: { song: Song }) => {
   );
 };
 
-const Error = ({ msg }: { msg: string }) => (
-  <div style={{ marginTop: 4, fontSize: 11, color: 'var(--danger)', fontFamily: 'var(--mono)' }}>
+const Error = ({ id, msg }: { id?: string; msg: string }) => (
+  <div
+    id={id}
+    style={{ marginTop: 4, fontSize: 11, color: 'var(--danger)', fontFamily: 'var(--mono)' }}
+  >
     {msg}
   </div>
 );

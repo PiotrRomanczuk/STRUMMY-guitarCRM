@@ -47,7 +47,9 @@ type Props = {
 
 export const AssignmentsListEditorial = ({ rows, counts, asStudent, canCreate }: Props) => {
   const showStudentColumn = !asStudent;
-  const cols = showStudentColumn ? '150px 1fr 160px 140px' : '150px 1fr 140px';
+  const colsClass = showStudentColumn
+    ? 'grid grid-cols-1 md:grid-cols-[150px_1fr_160px_140px]'
+    : 'grid grid-cols-1 md:grid-cols-[150px_1fr_140px]';
 
   return (
     <div
@@ -145,9 +147,8 @@ export const AssignmentsListEditorial = ({ rows, counts, asStudent, canCreate }:
         ) : (
           <>
             <div
+              className={`hidden md:grid ${colsClass}`}
               style={{
-                display: 'grid',
-                gridTemplateColumns: cols,
                 gap: 14,
                 padding: '12px 20px',
                 borderBottom: '1px solid var(--rule)',
@@ -170,9 +171,8 @@ export const AssignmentsListEditorial = ({ rows, counts, asStudent, canCreate }:
                 <Link
                   key={r.id}
                   href={`/dashboard/assignments/${r.id}`}
+                  className={colsClass}
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: cols,
                     gap: 14,
                     padding: '14px 20px',
                     borderBottom: i < rows.length - 1 ? '1px solid var(--rule)' : 'none',

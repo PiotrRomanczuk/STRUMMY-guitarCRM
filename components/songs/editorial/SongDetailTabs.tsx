@@ -59,15 +59,20 @@ export const SongDetailTabs = ({ songId, overview }: Props) => {
         >
           Overview
         </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'production'}
-          onClick={() => setTab('production')}
-          style={tabButtonStyle(tab === 'production')}
-        >
-          Production
-        </button>
+        {/* Production tab hidden: content_posts tables not yet live in prod
+            (pending migration 20260427120000_content_production.sql).
+            Re-enable when Phase 0.1 is deployed. */}
+        {false && (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'production'}
+            onClick={() => setTab('production')}
+            style={tabButtonStyle(tab === 'production')}
+          >
+            Production
+          </button>
+        )}
       </div>
 
       {tab === 'overview' ? (

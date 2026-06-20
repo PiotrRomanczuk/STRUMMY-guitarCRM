@@ -41,18 +41,16 @@ export const SongHeroEditorial = ({ song, chordTokens }: Props) => {
   return (
     <div style={{ padding: '24px 32px 0' }}>
       <div
+        className="grid grid-cols-1 md:grid-cols-[160px_1fr]"
         style={{
-          display: 'grid',
-          gridTemplateColumns: '160px 1fr',
           gap: 28,
           alignItems: 'flex-end',
         }}
       >
         <div
+          className="w-[100px] h-[100px] md:w-[160px] md:h-[160px]"
           style={{
             position: 'relative',
-            width: 160,
-            height: 160,
             borderRadius: 8,
             overflow: 'hidden',
             boxShadow: 'inset 0 -3px 0 rgba(0,0,0,.2), 0 12px 24px -10px rgba(0,0,0,.3)',

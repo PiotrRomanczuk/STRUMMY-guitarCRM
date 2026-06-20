@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2, Music, Clock, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { deletePracticeSession, type PracticeSessionWithSong } from '@/app/actions/practice';
 
 interface PracticeHistoryListProps {
@@ -68,16 +79,29 @@ function PracticeRow({
         )}
       </div>
       {allowUndo && session.canUndo && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={isPending}
-          onClick={handleUndo}
-          className="shrink-0 text-destructive hover:text-destructive"
-        >
-          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Remove'}
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={isPending}
+              className="shrink-0 text-destructive hover:text-destructive"
+            >
+              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Remove'}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove this practice session?</AlertDialogTitle>
+              <AlertDialogDescription>You won&apos;t be able to undo this.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep</AlertDialogCancel>
+              <AlertDialogAction onClick={handleUndo}>Remove</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </li>
   );

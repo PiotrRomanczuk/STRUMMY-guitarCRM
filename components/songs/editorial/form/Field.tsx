@@ -4,10 +4,12 @@ type Props = {
   label: string;
   error?: string;
   optional?: boolean;
+  /** Used to link the error message to its field via aria-describedby. */
+  fieldId?: string;
   children: ReactNode;
 };
 
-export const Field = ({ label, error, optional, children }: Props) => (
+export const Field = ({ label, error, optional, fieldId, children }: Props) => (
   <div>
     <div
       style={{
@@ -45,6 +47,7 @@ export const Field = ({ label, error, optional, children }: Props) => (
     {children}
     {error && (
       <div
+        id={fieldId ? `error-${fieldId}` : undefined}
         style={{
           marginTop: 4,
           fontSize: 11,

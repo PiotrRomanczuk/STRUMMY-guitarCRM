@@ -96,7 +96,7 @@ export const SongFormEditorial = () => {
         gap: 16,
       }}
     >
-      <Field label="Title" error={state.errors?.title}>
+      <Field label="Title" error={state.errors?.title} fieldId="title">
         <input
           name="title"
           required
@@ -105,9 +105,10 @@ export const SongFormEditorial = () => {
           style={inputStyle}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          aria-describedby={state.errors?.title ? 'error-title' : undefined}
         />
       </Field>
-      <Field label="Author" error={state.errors?.author}>
+      <Field label="Author" error={state.errors?.author} fieldId="author">
         <input
           name="author"
           required
@@ -116,16 +117,18 @@ export const SongFormEditorial = () => {
           style={inputStyle}
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
+          aria-describedby={state.errors?.author ? 'error-author' : undefined}
         />
       </Field>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-        <Field label="Level" error={state.errors?.level}>
+      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
+        <Field label="Level" error={state.errors?.level} fieldId="level">
           <select
             name="level"
             required
             style={inputStyle}
             value={level}
             onChange={(e) => setLevel(e.target.value as Level)}
+            aria-describedby={state.errors?.level ? 'error-level' : undefined}
           >
             {LEVELS.map((l) => (
               <option key={l} value={l}>
@@ -134,13 +137,14 @@ export const SongFormEditorial = () => {
             ))}
           </select>
         </Field>
-        <Field label="Key" error={state.errors?.key}>
+        <Field label="Key" error={state.errors?.key} fieldId="key">
           <select
             name="key"
             required
             style={inputStyle}
             value={key}
             onChange={(e) => setKey(e.target.value)}
+            aria-describedby={state.errors?.key ? 'error-key' : undefined}
           >
             {KEYS.map((k) => (
               <option key={k} value={k}>
@@ -150,7 +154,7 @@ export const SongFormEditorial = () => {
           </select>
         </Field>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
         <Field label="Capo (fret)" error={state.errors?.capo_fret} optional>
           <input
             name="capo_fret"

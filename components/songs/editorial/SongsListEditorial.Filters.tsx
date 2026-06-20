@@ -116,6 +116,8 @@ export const SongsListFiltersBar = ({ total, canCreate, breakdown, filters }: Pr
           <Link
             key={lvl}
             href={buildHref({ level: active ? undefined : lvl }, filters)}
+            role="button"
+            aria-pressed={active}
             style={chipStyle(active)}
           >
             {levelLabel(lvl)}
@@ -134,7 +136,13 @@ export const SongsListFiltersBar = ({ total, canCreate, breakdown, filters }: Pr
       })}
       <span style={{ flex: 1, minWidth: 12 }} />
       {SORTS.map((s) => (
-        <Link key={s} href={buildHref({ sort: s }, filters)} style={chipStyle(filters.sort === s)}>
+        <Link
+          key={s}
+          href={buildHref({ sort: s }, filters)}
+          role="button"
+          aria-pressed={filters.sort === s}
+          style={chipStyle(filters.sort === s)}
+        >
           {SORT_LABEL[s]}
         </Link>
       ))}

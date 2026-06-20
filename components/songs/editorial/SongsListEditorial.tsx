@@ -18,11 +18,9 @@ type Props = {
   filters: SongsListFilters;
 };
 
-const COLUMNS = '1fr 200px 100px 90px';
+const COLUMNS_CLASS = 'grid grid-cols-1 md:grid-cols-[1fr_200px_100px_90px]';
 
 const headerCellStyle = {
-  display: 'grid',
-  gridTemplateColumns: COLUMNS,
   gap: 14,
   padding: '12px 20px',
   borderBottom: '1px solid var(--rule)',
@@ -36,9 +34,8 @@ const headerCellStyle = {
 const SongRow = ({ song }: { song: Song }) => (
   <Link
     href={`/dashboard/songs/${song.id}`}
+    className={COLUMNS_CLASS}
     style={{
-      display: 'grid',
-      gridTemplateColumns: COLUMNS,
       gap: 14,
       padding: '14px 20px',
       borderBottom: '1px solid var(--rule)',
@@ -140,7 +137,7 @@ export const SongsListEditorial = ({
         <EmptyState filters={filters} />
       ) : (
         <div>
-          <div style={headerCellStyle}>
+          <div className={`hidden md:grid ${COLUMNS_CLASS}`} style={headerCellStyle}>
             <span>Title</span>
             <span>Author</span>
             <span>Level</span>

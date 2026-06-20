@@ -93,6 +93,8 @@ export function RepertoireCard({ entry, canEdit }: RepertoireCardProps) {
                   key={n}
                   type="button"
                   onClick={() => setDifficulty(n)}
+                  aria-label={`Set difficulty to ${n}`}
+                  aria-pressed={difficulty === n}
                   className={cn(
                     'h-8 w-8 rounded-full border text-sm transition-colors',
                     difficulty === n

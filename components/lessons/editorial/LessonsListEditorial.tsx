@@ -141,6 +141,8 @@ const Header = ({
           <Link
             key={k}
             href={buildFilterHref(activeStatuses, k, activeSort)}
+            role="button"
+            aria-pressed={active}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -203,7 +205,9 @@ export const LessonsListEditorial = ({
   activeStatuses,
   activeSort,
 }: Props) => {
-  const tableColumns = showStudentColumn ? '160px 1fr 130px 130px' : '160px 1fr 130px';
+  const tableColClass = showStudentColumn
+    ? 'grid grid-cols-1 md:grid-cols-[160px_1fr_130px_130px]'
+    : 'grid grid-cols-1 md:grid-cols-[160px_1fr_130px]';
 
   return (
     <div
@@ -241,9 +245,8 @@ export const LessonsListEditorial = ({
         ) : (
           <div>
             <div
+              className={`hidden md:grid ${tableColClass}`}
               style={{
-                display: 'grid',
-                gridTemplateColumns: tableColumns,
                 gap: 14,
                 padding: '12px 20px',
                 borderBottom: '1px solid var(--rule)',
@@ -267,9 +270,8 @@ export const LessonsListEditorial = ({
                 <Link
                   key={l.id}
                   href={`/dashboard/lessons/${l.id}`}
+                  className={tableColClass}
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: tableColumns,
                     gap: 14,
                     padding: '14px 20px',
                     borderBottom: '1px solid var(--rule)',
