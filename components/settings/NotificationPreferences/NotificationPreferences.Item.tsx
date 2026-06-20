@@ -26,7 +26,7 @@ export function NotificationPreferencesItem({
 
   if (!info) return null;
 
-  const deliveryChannel = preference.delivery_channel || 'email';
+  const deliveryChannel = 'email';
 
   const channelConfig = {
     email: {

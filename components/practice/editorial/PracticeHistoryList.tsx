@@ -3,13 +3,12 @@
 import { useCallback, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Loader2, Music, Clock } from 'lucide-react';
+import { Loader2, Music, Clock, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { deletePracticeSession, type PracticeSessionWithSong } from '@/app/actions/practice';
 
 interface PracticeHistoryListProps {
   sessions: PracticeSessionWithSong[];
-  /** Hide the undo affordance entirely (e.g. teacher viewing a student). */
   canUndo?: boolean;
 }
 
@@ -51,11 +50,17 @@ function PracticeRow({
           <Music className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span className="truncate">{session.song?.title ?? 'General technique'}</span>
         </div>
-        <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="mt-0.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Clock className="h-3 w-3" />
             {session.duration_minutes}m
           </span>
+          {session.bpm_practiced != null && (
+            <span className="inline-flex items-center gap-1 font-medium text-primary">
+              <Gauge className="h-3 w-3" />
+              {session.bpm_practiced} BPM
+            </span>
+          )}
           <span>{formatDate(session.created_at)}</span>
         </div>
         {session.notes && (

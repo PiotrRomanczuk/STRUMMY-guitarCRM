@@ -17,10 +17,15 @@ import { test, expect } from '../../fixtures';
  */
 
 test.describe('Fretboard Explorer', { tag: ['@teacher', '@fretboard'] }, () => {
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ loginAs, page }) => {
+    // Serial mode prevents parallel dev-server overload; generous timeout for
+    // first-compile + auth roundtrip under the full parallel suite.
+    test.setTimeout(90_000);
     await loginAs('admin');
     await page.goto('/dashboard/fretboard');
-    await expect(page.locator('[data-testid="fb-board"]')).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('[data-testid="fb-board"]')).toBeVisible({ timeout: 45_000 });
   });
 
   test('loads with the default A pentatonic minor view and a root highlight', async ({ page }) => {

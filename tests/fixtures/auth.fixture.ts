@@ -4,6 +4,30 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
+ * Decode the expires_at timestamp from a Supabase SSR auth cookie.
+ * Supports both split-cookie format (sb-*-auth-token.0) and single-cookie
+ * format (sb-*-auth-token), which depends on the Supabase SSR version and
+ * session payload size.
+ * Returns null if the file is missing, malformed, or doesn't contain a token.
+ */
+function getSessionExpiresAt(storagePath: string): number | null {
+  try {
+    const data = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
+    const cookies: { name: string; value: string }[] = data.cookies ?? [];
+    // Prefer the split-cookie .0 part; fall back to single-cookie format
+    const tokenCookie =
+      cookies.find((c) => /sb-.*-auth-token\.0$/.test(c.name)) ??
+      cookies.find((c) => /sb-.*-auth-token$/.test(c.name));
+    if (!tokenCookie) return null;
+    const raw = Buffer.from(tokenCookie.value.replace(/^base64-/, ''), 'base64').toString('utf8');
+    const m = raw.match(/"expires_at"\s*:\s*(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Authentication Fixture
  *
  * Provides session-cached authentication for fast test execution.
@@ -94,30 +118,56 @@ export const test = base.extend<AuthFixtures>({
     const loginFn = async (role: Role) => {
       const storagePath = getStoragePath(role);
 
-      // Try to use existing session
-      try {
-        await page
-          .context()
-          .addCookies(JSON.parse(require('fs').readFileSync(storagePath, 'utf-8')).cookies);
+      // Check if the cached access token is still valid (with a 60-second buffer).
+      // Without this check, an expired token reaches the server, which may refresh
+      // it silently but cannot persist the new token (no middleware), so the browser
+      // client ends up with a null session — breaking client-side auth even when the
+      // server-rendered page appears fine.
+      const expiresAt = getSessionExpiresAt(storagePath);
+      const nowSec = Math.floor(Date.now() / 1000);
+      const tokenFresh = expiresAt !== null && expiresAt > nowSec + 60;
 
-        // Verify the session is still valid. We must check the URL, NOT just that
-        // a <main> element is visible: an expired session redirects /dashboard →
-        // /sign-in, and the sign-in page ALSO renders a <main>, so a visibility
-        // check silently accepts a logged-out session and every test then fails
-        // on the sign-in page. A still-authenticated session stays on /dashboard.
-        await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 30000 });
-        await page.locator('main').first().waitFor({ state: 'visible', timeout: 10000 });
+      if (tokenFresh) {
+        // Try to use existing session
+        try {
+          await page
+            .context()
+            .addCookies(JSON.parse(require('fs').readFileSync(storagePath, 'utf-8')).cookies);
 
-        const onDashboard = new URL(page.url()).pathname.startsWith('/dashboard');
-        if (onDashboard) {
-          // Session is valid, reuse it
-          return;
+          // Verify the session is still valid. We must check the URL, NOT just that
+          // a <main> element is visible: an expired session redirects /dashboard →
+          // /sign-in, and the sign-in page ALSO renders a <main>, so a visibility
+          // check silently accepts a logged-out session and every test then fails
+          // on the sign-in page. A still-authenticated session stays on /dashboard.
+          await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 30000 });
+          await page.locator('main').first().waitFor({ state: 'visible', timeout: 10000 });
+
+          const onDashboard = new URL(page.url()).pathname.startsWith('/dashboard');
+          if (onDashboard) {
+            // Session is valid, reuse it
+            return;
+          }
+        } catch {
+          // Session file doesn't exist or is invalid — fall through to fresh login
         }
-      } catch {
-        // Session file doesn't exist or is invalid, perform fresh login
       }
 
-      // Perform fresh login
+      // Clear any stale cookies AND localStorage before doing a fresh login.
+      // The Supabase browser client reads from localStorage (not just cookies) and
+      // will call the Supabase API to validate/refresh the cached token, causing the
+      // sign-in page's isChecking=true spinner to block the email form for 8-9 seconds.
+      // Clearing both guarantees the client starts cold and shows the form immediately.
+      await page.context().clearCookies();
+      try {
+        // Only works when a page is loaded; ignore if on about:blank
+        if (page.url().startsWith('http')) {
+          await page.evaluate(() => localStorage.clear());
+        }
+      } catch {
+        // ignore
+      }
+
+      // Perform fresh login (token expired or cache miss)
       await performLogin(page, role);
     };
 

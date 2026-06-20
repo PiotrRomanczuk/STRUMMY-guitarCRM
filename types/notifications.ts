@@ -35,12 +35,12 @@ export type NotificationType =
   | 'admin_error_alert';
 
 export type NotificationStatus =
-  | 'pending'      // Queued, not yet sent
-  | 'sent'         // Successfully delivered
-  | 'failed'       // Delivery failed, will retry
-  | 'bounced'      // Email bounced, user email invalid
-  | 'skipped'      // Skipped due to user preference
-  | 'cancelled';   // Cancelled before sending
+  | 'pending' // Queued, not yet sent
+  | 'sent' // Successfully delivered
+  | 'failed' // Delivery failed, will retry
+  | 'bounced' // Email bounced, user email invalid
+  | 'skipped' // Skipped due to user preference
+  | 'cancelled'; // Cancelled before sending
 
 // ============================================================================
 // CATEGORY GROUPINGS
@@ -59,23 +59,10 @@ export const NOTIFICATION_CATEGORIES = {
     'assignment_overdue_alert',
     'assignment_completed',
   ] as const,
-  achievements: [
-    'song_mastery_achievement',
-    'milestone_reached',
-  ] as const,
-  lifecycle: [
-    'student_welcome',
-    'trial_ending_reminder',
-  ] as const,
-  digests: [
-    'teacher_daily_summary',
-    'weekly_progress_digest',
-  ] as const,
-  system: [
-    'calendar_conflict_alert',
-    'webhook_expiration_notice',
-    'admin_error_alert',
-  ] as const,
+  achievements: ['song_mastery_achievement', 'milestone_reached'] as const,
+  lifecycle: ['student_welcome', 'trial_ending_reminder'] as const,
+  digests: ['teacher_daily_summary', 'weekly_progress_digest'] as const,
+  system: ['calendar_conflict_alert', 'webhook_expiration_notice', 'admin_error_alert'] as const,
 } as const;
 
 export type NotificationCategory = keyof typeof NOTIFICATION_CATEGORIES;
@@ -91,7 +78,6 @@ export interface NotificationPreference {
   user_id: string;
   notification_type: NotificationType;
   enabled: boolean;
-  delivery_channel: NotificationDeliveryChannel;
   created_at: string;
   updated_at: string;
 }

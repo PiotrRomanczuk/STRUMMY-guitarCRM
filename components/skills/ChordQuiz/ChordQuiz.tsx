@@ -1,19 +1,37 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { submitChordQuizSession } from '@/app/actions/chord-quiz';
 import { type ChordQuizAttemptInput, QUIZ_SESSION_LENGTH } from '@/schemas/ChordQuizAttemptSchema';
+import { CHORD_VOICINGS } from '@/lib/music-theory/chord-voicings';
 import { ChordQuizQuestion } from './ChordQuiz.Question';
 import { ChordQuizResults } from './ChordQuiz.Results';
 import { useChordQuiz } from './useChordQuiz';
 
 type SubmitState = 'idle' | 'submitting' | 'saved' | 'error';
+type QuizMode = 'random' | 'review';
 
-export function ChordQuiz() {
-  const quiz = useChordQuiz({ questionCount: QUIZ_SESSION_LENGTH });
+interface ChordQuizProps {
+  /** Chord IDs due for SRS review. When non-empty a Review Mode toggle is shown. */
+  dueChordIds?: string[];
+}
+
+export function ChordQuiz({ dueChordIds = [] }: ChordQuizProps) {
+  const [mode, setMode] = useState<QuizMode>(dueChordIds.length > 0 ? 'review' : 'random');
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const submittedRef = useRef(false);
+
+  const reviewPool = useMemo(
+    () => CHORD_VOICINGS.filter((v) => dueChordIds.includes(v.id)),
+    [dueChordIds]
+  );
+
+  const activePool = mode === 'review' && reviewPool.length > 0 ? reviewPool : undefined;
+  const questionCount =
+    activePool != null ? Math.min(activePool.length, QUIZ_SESSION_LENGTH) : QUIZ_SESSION_LENGTH;
+
+  const quiz = useChordQuiz({ questionCount, pool: activePool });
 
   const submitSession = useCallback((attempts: ChordQuizAttemptInput[]) => {
     if (submittedRef.current || attempts.length === 0) return;
@@ -23,12 +41,8 @@ export function ChordQuiz() {
 
     submitChordQuizSession(attempts)
       .then((result) => {
-        if ('error' in result) {
-          setSubmitState('error');
-          setSubmitError(result.error);
-        } else {
-          setSubmitState('saved');
-        }
+        setSubmitState('error' in result ? 'error' : 'saved');
+        if ('error' in result) setSubmitError(result.error);
       })
       .catch((err: unknown) => {
         setSubmitState('error');
@@ -39,10 +53,7 @@ export function ChordQuiz() {
   const handleNext = useCallback(() => {
     const isLast = quiz.currentIndex + 1 >= quiz.questions.length;
     quiz.next();
-    if (isLast) {
-      // Use the just-collected attempts including the final one set in selectAnswer.
-      submitSession(quiz.attempts);
-    }
+    if (isLast) submitSession(quiz.attempts);
   }, [quiz, submitSession]);
 
   const handleRestart = useCallback(() => {
@@ -52,12 +63,41 @@ export function ChordQuiz() {
     quiz.restart();
   }, [quiz]);
 
+  const handleModeChange = useCallback(
+    (next: QuizMode) => {
+      setMode(next);
+      submittedRef.current = false;
+      setSubmitState('idle');
+      setSubmitError(null);
+      quiz.restart();
+    },
+    [quiz]
+  );
+
   return (
     <section className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
       <header className="text-center">
         <h1 className="text-2xl font-semibold tracking-tight">Chord Quiz</h1>
         <p className="text-sm text-muted-foreground">Name the chord shown in the diagram.</p>
       </header>
+
+      {dueChordIds.length > 0 && (
+        <div className="flex justify-center gap-2">
+          {(['random', 'review'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => handleModeChange(m)}
+              className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+                mode === m
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border hover:bg-muted'
+              }`}
+            >
+              {m === 'random' ? 'Random' : `Review (${dueChordIds.length} due)`}
+            </button>
+          ))}
+        </div>
+      )}
 
       {quiz.phase !== 'finished' && quiz.current && (
         <ChordQuizQuestion

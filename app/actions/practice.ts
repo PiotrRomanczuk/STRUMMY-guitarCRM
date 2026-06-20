@@ -20,6 +20,7 @@ export interface PracticeSessionWithSong {
   song_id: string | null;
   song: { id: string; title: string; author: string | null } | null;
   duration_minutes: number;
+  bpm_practiced: number | null;
   notes: string | null;
   created_at: string;
   /** True only when the session was logged today (same-day undo eligible). */
@@ -30,6 +31,7 @@ interface PracticeSessionRow {
   id: string;
   song_id: string | null;
   duration_minutes: number;
+  bpm_practiced: number | null;
   notes: string | null;
   created_at: string;
   song:
@@ -84,6 +86,7 @@ export async function logPracticeSession(
       student_id: user.id,
       song_id: parsed.data.song_id ?? null,
       duration_minutes: parsed.data.duration_minutes,
+      bpm_practiced: parsed.data.bpm_practiced ?? null,
       notes: parsed.data.notes ?? null,
     })
     .select('id')
@@ -162,7 +165,9 @@ export async function getPracticeSessions(
 
   const { data, error } = await supabase
     .from('practice_sessions')
-    .select('id, song_id, duration_minutes, notes, created_at, song:songs(id, title, author)')
+    .select(
+      'id, song_id, duration_minutes, bpm_practiced, notes, created_at, song:songs(id, title, author)'
+    )
     .eq('student_id', targetId)
     .order('created_at', { ascending: false })
     .limit(50);
@@ -180,6 +185,7 @@ export async function getPracticeSessions(
         song_id: row.song_id,
         song: song ?? null,
         duration_minutes: row.duration_minutes,
+        bpm_practiced: row.bpm_practiced,
         notes: row.notes,
         created_at: row.created_at,
         canUndo: isLoggedToday(row.created_at),

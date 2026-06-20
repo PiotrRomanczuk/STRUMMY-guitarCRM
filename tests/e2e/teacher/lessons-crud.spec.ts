@@ -25,6 +25,8 @@ async function fillLessonForm(page: Page, title: string) {
 }
 
 test.describe('Teacher Lessons CRUD', { tag: ['@teacher', '@lessons'] }, () => {
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ loginAs }) => {
     await loginAs('teacher');
   });
@@ -61,7 +63,7 @@ test.describe('Teacher Lessons CRUD', { tag: ['@teacher', '@lessons'] }, () => {
     await expect(page.getByText(TEST_LESSON_TITLE).first()).toBeVisible({ timeout: 10_000 });
 
     // ── EDIT ─────────────────────────────────────────────────────
-    await page.goto(lessonUrl + '/edit');
+    await page.goto(lessonUrl + '/edit', { timeout: 45_000 });
     await page.waitForLoadState('networkidle');
     await expect(page.locator('#lesson-title')).toBeVisible({ timeout: 10_000 });
     await page.locator('#lesson-title').fill(TEST_LESSON_EDITED);

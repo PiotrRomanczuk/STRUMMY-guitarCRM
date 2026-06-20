@@ -11,10 +11,13 @@ export const PracticeSessionInputSchema = z.object({
     .int('Duration must be a whole number')
     .min(1, 'Duration must be at least 1 minute')
     .max(480, 'Duration cannot exceed 8 hours'),
-  notes: z
-    .string()
-    .max(500, 'Notes cannot exceed 500 characters')
+  bpm_practiced: z
+    .number()
+    .int('BPM must be a whole number')
+    .min(20, 'BPM must be at least 20')
+    .max(300, 'BPM cannot exceed 300')
     .optional(),
+  notes: z.string().max(500, 'Notes cannot exceed 500 characters').optional(),
 });
 
 export type PracticeSessionInput = z.infer<typeof PracticeSessionInputSchema>;

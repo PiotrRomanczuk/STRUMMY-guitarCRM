@@ -45,22 +45,10 @@ export default function LessonListHeader({ role = 'admin' }: LessonListHeaderPro
                 Import
               </Button>
             </Link>
-            <Link href="/dashboard/lessons/new">
-              <Button className="gap-2" data-testid="create-lesson-button">
-                <Plus className="w-4 h-4" />
-                Create New Lesson
-              </Button>
-            </Link>
           </div>
 
           {/* Mobile: primary CTA + dropdown for secondary */}
           <div className="flex sm:hidden gap-2">
-            <Link href="/dashboard/lessons/new" className="flex-1">
-              <Button className="gap-2 w-full" data-testid="create-lesson-button-mobile">
-                <Plus className="w-4 h-4" />
-                New Lesson
-              </Button>
-            </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon">

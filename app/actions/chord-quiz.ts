@@ -6,6 +6,7 @@ import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { guardTestAccountMutation } from '@/lib/auth/test-account-guard';
 import { ChordQuizSessionSchema } from '@/schemas/ChordQuizAttemptSchema';
 import { createLogger } from '@/lib/logger';
+import { updateChordSRSBatch } from './chord-srs';
 
 const log = createLogger('chord-quiz-actions');
 
@@ -51,6 +52,14 @@ export async function submitChordQuizSession(input: unknown): Promise<SubmitResu
       error,
     });
     return { error: error.message };
+  }
+
+  // Update SRS state — non-blocking; quiz save already succeeded above.
+  const srsResult = await updateChordSRSBatch(
+    parsed.data.map((a) => ({ chord_id: a.chord_id, is_correct: a.is_correct }))
+  );
+  if ('error' in srsResult) {
+    log.warn('SRS update failed after quiz submit', { userId: user.id, error: srsResult.error });
   }
 
   revalidatePath('/dashboard/skills/chord-quiz');

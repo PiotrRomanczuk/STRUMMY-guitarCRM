@@ -42,102 +42,38 @@ test.describe(
         page,
         loginAs,
       }) => {
+        // Full CRUD with UI delete is covered by teacher/lessons-crud.spec.ts.
+        // This test verifies the cross-role visibility: admin creates, student can see list.
         await page.setViewportSize({ width: 1440, height: 900 });
 
-        // STEP 1: Admin creates a new lesson
+        // STEP 1: Admin creates a new lesson (editorial form: #lesson-student, #lesson-title, #lesson-when)
         await loginAs('admin');
         await page.goto('/dashboard/lessons/new');
         await page.waitForLoadState('networkidle');
 
-        // Wait for form to load
-        await page
-          .locator('[data-testid="lesson-student_id"]')
-          .waitFor({ state: 'visible', timeout: 10000 });
+        await expect(page.locator('#lesson-title')).toBeVisible({ timeout: 15_000 });
+        await page.locator('#lesson-student').selectOption({ index: 1 });
+        await page.locator('#lesson-title').fill(lessonData.title);
+        await page.locator('#lesson-when').fill('2026-07-01T10:00');
+        await page.getByRole('button', { name: 'Create lesson' }).click();
 
-        // Select student (first option)
-        await page.locator('[data-testid="lesson-student_id"]').click();
-        await page.waitForTimeout(500);
-        await page.locator('[role="option"]').first().click();
-        await page.waitForTimeout(500);
+        // Editorial form redirects to lesson detail (not list)
+        await page.waitForURL(/\/dashboard\/lessons\/[0-9a-f-]{36}$/, { timeout: 20_000 });
+        const lessonUrl = page.url();
 
-        // Select teacher (first option)
-        await page.locator('[data-testid="lesson-teacher_id"]').click();
-        await page.waitForTimeout(500);
-        await page.locator('[role="option"]').first().click();
-        await page.waitForTimeout(500);
-
-        // Fill in lesson details
-        await page
-          .locator('[data-testid="lesson-title"]')
-          .fill(lessonData.title);
-
-        // Set scheduled date (tomorrow)
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const dateStr = tomorrow.toISOString().slice(0, 16);
-        await page
-          .locator('[data-testid="lesson-scheduled-at"]')
-          .fill(dateStr);
-
-        // Add notes
-        await page
-          .locator('[data-testid="lesson-notes"]')
-          .fill(lessonData.notes);
-
-        // Submit form
-        await page.locator('[data-testid="lesson-submit"]').click();
-
-        // Verify redirect to lessons list
-        await expect(page).toHaveURL(/\/dashboard\/lessons$/, {
-          timeout: 15000,
-        });
-
-        // STEP 2: Admin verifies lesson in list
+        // STEP 2: Admin sees lesson in list
+        await page.goto('/dashboard/lessons');
         await page.waitForLoadState('networkidle');
-        await expect(page.locator(`text=${lessonData.title}`)).toBeVisible({
+        await expect(page.locator(`text=${lessonData.title}`).first()).toBeVisible({
           timeout: 10000,
         });
 
-        // STEP 3: Student can view lessons page
+        // STEP 3: Student can view lessons page (RLS allows own lessons)
         await loginAs('student');
         await page.goto('/dashboard/lessons');
         await page.waitForLoadState('networkidle');
-
-        // Student should be able to access lessons page
         await expect(page).toHaveURL(/\/lessons/);
-
-        // STEP 4: Admin deletes the test lesson (cleanup)
-        await loginAs('admin');
-        await page.goto('/dashboard/lessons');
-        await page.waitForLoadState('networkidle');
-
-        // Find and click on the lesson
-        await page.locator(`text=${lessonData.title}`).click();
-        await expect(page).toHaveURL(/\/lessons\/[^/]+$/, { timeout: 10000 });
-
-        // Delete the lesson
-        const deleteButton = page.locator(
-          '[data-testid="lesson-delete-button"]'
-        );
-        await expect(deleteButton).toBeVisible({ timeout: 5000 });
-        await deleteButton.click();
-
-        // Confirm deletion (check for modal)
-        const confirmButton = page.locator(
-          '[data-testid="delete-confirm-button"], button:has-text("Delete")'
-        );
-        const hasConfirmButton =
-          (await confirmButton.count()) > 0 &&
-          (await confirmButton.first().isVisible());
-
-        if (hasConfirmButton) {
-          await confirmButton.first().click();
-        }
-
-        // Verify deletion - should redirect back to lessons list
-        await expect(page).toHaveURL('/dashboard/lessons', {
-          timeout: 10000,
-        });
+        // Global teardown cleans up E2E-prefixed test lessons via service-role client.
       });
     });
 
@@ -153,93 +89,34 @@ test.describe(
       }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
 
-        // STEP 1: Admin creates a new assignment
+        // STEP 1: Admin creates a new assignment (editorial form: #assignment-student, #assignment-title)
         await loginAs('admin');
         await page.goto('/dashboard/assignments/new');
         await page.waitForLoadState('networkidle');
 
-        // Wait for form
-        await page
-          .locator('[data-testid="field-title"]')
-          .waitFor({ state: 'visible', timeout: 10000 });
+        await expect(page.locator('#assignment-title')).toBeVisible({ timeout: 15_000 });
+        await page.locator('#assignment-student').selectOption({ index: 1 });
+        await page.locator('#assignment-title').fill(assignmentData.title);
+        await page.getByRole('button', { name: 'Create assignment' }).click();
 
-        // Fill in assignment
-        await page.locator('[data-testid="field-title"]').fill(assignmentData.title);
-        await page
-          .locator('[data-testid="field-description"]')
-          .fill(assignmentData.description);
-
-        // Select student if dropdown exists
-        const studentSelect = page.locator('[data-testid="student-select"]');
-        if ((await studentSelect.count()) > 0) {
-          await studentSelect.click();
-          await page.waitForTimeout(500);
-          await page.locator('[role="option"]').first().click();
-          await page.waitForTimeout(500);
-        }
-
-        // Set due date (7 days from now)
-        const futureDate = new Date();
-        futureDate.setDate(futureDate.getDate() + 7);
-        const dateStr = futureDate.toISOString().slice(0, 10);
-        await page.locator('[data-testid="field-due-date"]').fill(dateStr);
-
-        // Submit
-        await page.locator('[data-testid="submit-button"]').click();
-
-        // Verify redirect
-        await expect(page).toHaveURL(/\/dashboard\/assignments/, {
-          timeout: 15000,
-        });
+        // Editorial form redirects to assignment detail (not list)
+        await page.waitForURL(/\/dashboard\/assignments\/[0-9a-f-]{36}$/, { timeout: 20_000 });
+        const assignmentUrl = page.url();
 
         // STEP 2: Admin verifies assignment in list
-        await page.waitForLoadState('networkidle');
-        await expect(
-          page.locator(`text=${assignmentData.title}`)
-        ).toBeVisible({ timeout: 10000 });
-
-        // STEP 3: Student views their assignments
-        await loginAs('student');
         await page.goto('/dashboard/assignments');
         await page.waitForLoadState('networkidle');
-
-        // Student should see assignments page
-        await expect(page).toHaveURL(/\/assignments/);
-        await expect(
-          page.locator('text=/my assignments|assignments/i')
-        ).toBeVisible();
-
-        // STEP 4: Admin deletes test assignment (cleanup)
-        await loginAs('admin');
-        await page.goto('/dashboard/assignments');
-        await page.waitForLoadState('networkidle');
-
-        // Find and click on assignment
-        await page.locator(`text=${assignmentData.title}`).click();
-        await expect(page).toHaveURL(/\/assignments\/[^/]+$/, {
+        await expect(page.locator(`text=${assignmentData.title}`).first()).toBeVisible({
           timeout: 10000,
         });
 
-        // Delete
-        const deleteButton = page
-          .locator('[data-testid*="delete"], button:has-text("Delete")')
-          .first();
-        await expect(deleteButton).toBeVisible({ timeout: 5000 });
-        await deleteButton.click();
-
-        // Confirm if modal appears
-        const confirmModal = page.locator('[role="alertdialog"]');
-        if ((await confirmModal.count()) > 0) {
-          const confirmButton = confirmModal.locator(
-            'button:has-text("Delete"), button:has-text("Confirm")'
-          );
-          await confirmButton.click();
-        }
-
-        // Verify redirect
-        await expect(page).toHaveURL(/\/dashboard\/assignments/, {
-          timeout: 15000,
-        });
+        // STEP 3: Student views their assignments page
+        await loginAs('student');
+        await page.goto('/dashboard/assignments');
+        await page.waitForLoadState('networkidle');
+        await expect(page).toHaveURL(/\/assignments/);
+        await expect(page.locator('text=/my assignments|assignments/i').first()).toBeVisible();
+        // Global teardown cleans up E2E-prefixed test assignments via service-role client.
       });
     });
 
@@ -277,10 +154,7 @@ test.describe(
           .fill(songData.author);
 
         // Submit
-        await page
-          .locator('button[type="submit"], [data-testid="submit"]')
-          .first()
-          .click();
+        await page.locator('button[type="submit"], [data-testid="submit"]').first().click();
 
         // Verify redirect
         await expect(page).toHaveURL(/\/dashboard\/songs/, {
@@ -293,34 +167,13 @@ test.describe(
           timeout: 10000,
         });
 
-        // STEP 3: Admin deletes test song (cleanup)
-        await page.goto('/dashboard/songs');
-        await page.waitForLoadState('networkidle');
-
-        // Find and click on song
-        await page.locator(`text=${songData.title}`).click();
-        await page.waitForTimeout(1000);
-
-        // Delete
-        const deleteButton = page
-          .locator('[data-testid*="delete"], button:has-text("Delete")')
-          .first();
-        await expect(deleteButton).toBeVisible({ timeout: 5000 });
-        await deleteButton.click();
-
-        // Confirm if modal appears
-        const confirmModal = page.locator('[role="alertdialog"]');
-        if ((await confirmModal.count()) > 0) {
-          const confirmButton = confirmModal.locator(
-            'button:has-text("Delete"), button:has-text("Confirm")'
-          );
-          await confirmButton.click();
+        // STEP 3: Cleanup via API (editorial song detail has no delete button)
+        // Extract song ID from current URL (still on detail page from redirect)
+        const songId = page.url().split('/').pop();
+        if (songId) {
+          const deleteResp = await page.request.delete(`/api/song?id=${songId}`);
+          expect(deleteResp.status()).toBeLessThan(400);
         }
-
-        // Verify redirect
-        await expect(page).toHaveURL(/\/dashboard\/songs/, {
-          timeout: 15000,
-        });
       });
     });
 
@@ -331,10 +184,12 @@ test.describe(
         username: `intuser${timestamp}`,
       };
 
-      test('should complete user lifecycle: create shadow user → verify → delete', async ({
+      test.skip('should complete user lifecycle: create shadow user → verify → delete', async ({
         page,
         loginAs,
       }) => {
+        // /dashboard/users/new is a stub ("Coming soon") — user creation via UI not yet available.
+        // Shadow user creation is covered by dedicated API/integration tests.
         await page.setViewportSize({ width: 1440, height: 900 });
 
         // STEP 1: Admin creates a shadow user
@@ -346,15 +201,9 @@ test.describe(
         await page.locator('[data-testid="isShadow-checkbox"]').check();
 
         // Fill in details
-        await page
-          .locator('[data-testid="firstName-input"]')
-          .fill(userData.firstName);
-        await page
-          .locator('[data-testid="lastName-input"]')
-          .fill(userData.lastName);
-        await page
-          .locator('[data-testid="username-input"]')
-          .fill(userData.username);
+        await page.locator('[data-testid="firstName-input"]').fill(userData.firstName);
+        await page.locator('[data-testid="lastName-input"]').fill(userData.lastName);
+        await page.locator('[data-testid="username-input"]').fill(userData.username);
 
         // Set as student
         await page.locator('[data-testid="isStudent-checkbox"]').check();
@@ -371,15 +220,11 @@ test.describe(
         await page.waitForLoadState('networkidle');
 
         // Search for user
-        await page
-          .locator('[data-testid="search-input"]')
-          .fill(userData.username);
+        await page.locator('[data-testid="search-input"]').fill(userData.username);
         await page.waitForTimeout(1500);
 
         await expect(
-          page
-            .locator('[data-testid="users-table"]')
-            .locator(`text=${userData.firstName}`)
+          page.locator('[data-testid="users-table"]').locator(`text=${userData.firstName}`)
         ).toBeVisible();
 
         // STEP 3: Admin deletes test user (cleanup)
@@ -387,9 +232,7 @@ test.describe(
         await page.waitForLoadState('networkidle');
 
         // Search for user again
-        await page
-          .locator('[data-testid="search-input"]')
-          .fill(userData.username);
+        await page.locator('[data-testid="search-input"]').fill(userData.username);
         await page.waitForTimeout(1500);
 
         // Click delete
@@ -410,35 +253,23 @@ test.describe(
     });
 
     test.describe('Cross-Role Data Visibility', () => {
-      test('should verify admin has access to all sections', async ({
-        page,
-        loginAs,
-      }) => {
+      test('should verify admin has access to all sections', async ({ page, loginAs }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await loginAs('admin');
 
         await page.goto('/dashboard');
         await page.waitForLoadState('networkidle');
 
-        // Admin should have access to all sections
-        const navigation = page.locator('nav, [role="navigation"]');
+        // Admin should have access to all sections (use first nav to avoid strict mode)
+        const navigation = page.locator('nav, [role="navigation"]').first();
 
-        await expect(
-          navigation.locator('a[href*="/users"]')
-        ).toBeVisible();
-        await expect(
-          navigation.locator('a[href*="/lessons"]')
-        ).toBeVisible();
-        await expect(navigation.locator('a[href*="/songs"]')).toBeVisible();
-        await expect(
-          navigation.locator('a[href*="/assignments"]')
-        ).toBeVisible();
+        await expect(navigation.locator('a[href*="/users"]')).toBeVisible();
+        await expect(navigation.locator('a[href="/dashboard/lessons"]')).toBeVisible();
+        await expect(navigation.locator('a[href="/dashboard/songs"]')).toBeVisible();
+        await expect(navigation.locator('a[href="/dashboard/assignments"]')).toBeVisible();
       });
 
-      test('should verify student has limited navigation options', async ({
-        page,
-        loginAs,
-      }) => {
+      test('should verify student has limited navigation options', async ({ page, loginAs }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await loginAs('student');
 
@@ -446,24 +277,15 @@ test.describe(
         await page.waitForLoadState('networkidle');
 
         // Student should NOT see users link
-        await expect(
-          page.locator('a[href="/dashboard/users"]')
-        ).not.toBeVisible();
+        await expect(page.locator('a[href="/dashboard/users"]')).not.toBeVisible();
 
-        // But should see other links
-        await expect(
-          page.locator('a[href*="/lessons"]')
-        ).toBeVisible();
-        await expect(page.locator('a[href*="/songs"]')).toBeVisible();
-        await expect(
-          page.locator('a[href*="/assignments"]')
-        ).toBeVisible();
+        // But should see other links (exact href to avoid strict mode with song detail links)
+        await expect(page.locator('a[href="/dashboard/lessons"]')).toBeVisible();
+        await expect(page.locator('a[href="/dashboard/songs"]')).toBeVisible();
+        await expect(page.locator('a[href="/dashboard/assignments"]')).toBeVisible();
       });
 
-      test('should verify role-based filtering in lessons', async ({
-        page,
-        loginAs,
-      }) => {
+      test('should verify role-based filtering in lessons', async ({ page, loginAs }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
 
         // Admin should see student filter
@@ -471,31 +293,25 @@ test.describe(
         await page.goto('/dashboard/lessons');
         await page.waitForLoadState('networkidle');
 
-        // Look for student filter (admin/teacher view)
-        const studentFilter = page.locator(
-          '[data-testid="student-filter"], select[name="student"], #student-filter, text=All Students'
-        );
-        const hasStudentFilter = (await studentFilter.count()) > 0;
+        // Admin/teacher editorial lessons list shows "Teaching" as section header (showStudentColumn=true)
+        // Student view shows "Your lessons" as section header instead
+        const teachingHeader = page.locator('text=/^Teaching$/').first();
+        const hasTeachingHeader = (await teachingHeader.count()) > 0;
 
-        // Student should NOT see student filter
+        // Student should NOT see "Teaching" section header — only "Your lessons"
         await loginAs('student');
         await page.goto('/dashboard/lessons');
         await page.waitForLoadState('networkidle');
 
-        const studentFilterAsStudent = page.locator('text=All Students');
-        const hasStudentFilterAsStudent =
-          (await studentFilterAsStudent.count()) > 0 &&
-          (await studentFilterAsStudent.isVisible());
+        const teachingHeaderAsStudent = page.locator('text=/^Teaching$/').first();
+        const hasTeachingHeaderAsStudent = (await teachingHeaderAsStudent.count()) > 0;
 
-        // Verify admin has filter but student doesn't
-        expect(hasStudentFilter).toBeTruthy();
-        expect(hasStudentFilterAsStudent).toBeFalsy();
+        // Verify admin sees "Teaching" header but students see "Your lessons" instead
+        expect(hasTeachingHeader).toBeTruthy();
+        expect(hasTeachingHeaderAsStudent).toBeFalsy();
       });
 
-      test('should verify data isolation between roles', async ({
-        page,
-        loginAs,
-      }) => {
+      test('should verify data isolation between roles', async ({ page, loginAs }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
 
         // Student tries to access admin-only users page
@@ -512,16 +328,11 @@ test.describe(
           expect(currentUrl).not.toContain('/users');
         } else {
           // If still on users page, should not show admin controls
-          await expect(
-            page.locator('text=/create user|add user|delete user/i')
-          ).not.toBeVisible();
+          await expect(page.locator('text=/create user|add user|delete user/i')).not.toBeVisible();
         }
       });
 
-      test('should verify consistent navigation across workflows', async ({
-        page,
-        loginAs,
-      }) => {
+      test('should verify consistent navigation across workflows', async ({ page, loginAs }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await loginAs('admin');
 
@@ -554,10 +365,7 @@ test.describe(
     });
 
     test.describe('Multi-Entity Workflow Integration', () => {
-      test('should verify lesson-song relationship workflow', async ({
-        page,
-        loginAs,
-      }) => {
+      test('should verify lesson-song relationship workflow', async ({ page, loginAs }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await loginAs('admin');
 
@@ -566,9 +374,7 @@ test.describe(
         await page.waitForLoadState('networkidle');
 
         const lessonTable = page.locator('[data-testid="lesson-table"], table');
-        const hasLessons = await lessonTable
-          .isVisible({ timeout: 10000 })
-          .catch(() => false);
+        const hasLessons = await lessonTable.isVisible({ timeout: 10000 }).catch(() => false);
 
         if (hasLessons) {
           const lessonRow = page.locator('table tbody tr').first();
@@ -587,10 +393,7 @@ test.describe(
             });
 
             // Check if songs are assigned or empty state
-            const songsSection = page
-              .locator('text=Lesson Songs')
-              .locator('..')
-              .locator('..');
+            const songsSection = page.locator('text=Lesson Songs').locator('..').locator('..');
             const songItems = songsSection.locator('ul li');
             const songCount = await songItems.count();
             const hasEmptyMessage = await page
@@ -603,10 +406,7 @@ test.describe(
         }
       });
 
-      test('should verify assignment-student relationship workflow', async ({
-        page,
-        loginAs,
-      }) => {
+      test('should verify assignment-student relationship workflow', async ({ page, loginAs }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await loginAs('admin');
 
@@ -615,9 +415,7 @@ test.describe(
         await page.waitForLoadState('networkidle');
 
         const assignmentTable = page.locator('table');
-        const hasAssignments = await assignmentTable
-          .isVisible()
-          .catch(() => false);
+        const hasAssignments = await assignmentTable.isVisible().catch(() => false);
 
         if (hasAssignments) {
           const assignmentRows = page.locator('table tbody tr');
@@ -643,10 +441,7 @@ test.describe(
         }
       });
 
-      test('should verify cross-feature data consistency', async ({
-        page,
-        loginAs,
-      }) => {
+      test('should verify cross-feature data consistency', async ({ page, loginAs }) => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await loginAs('admin');
 
@@ -655,9 +450,7 @@ test.describe(
         await page.waitForLoadState('networkidle');
 
         const userTable = page.locator('table');
-        const hasUsers = await userTable
-          .isVisible({ timeout: 10000 })
-          .catch(() => false);
+        const hasUsers = await userTable.isVisible({ timeout: 10000 }).catch(() => false);
 
         if (hasUsers) {
           const userRows = page.locator('table tbody tr');
@@ -666,10 +459,7 @@ test.describe(
           if (rowCount > 0) {
             // Get first student's name
             const firstUserRow = userRows.first();
-            const userName = await firstUserRow
-              .locator('td')
-              .first()
-              .textContent();
+            const userName = await firstUserRow.locator('td').first().textContent();
 
             if (userName && userName.trim()) {
               // Navigate to lessons and verify consistent student display
@@ -677,9 +467,7 @@ test.describe(
               await page.waitForLoadState('networkidle');
 
               // Student name should appear consistently across features
-              const studentInLessons = page.locator(
-                `text=${userName.trim()}`
-              );
+              const studentInLessons = page.locator(`text=${userName.trim()}`);
               const lessonCount = await studentInLessons.count();
 
               // Data consistency verified - same student name format

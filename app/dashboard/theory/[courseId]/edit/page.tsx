@@ -1,16 +1,31 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { notFound, redirect } from 'next/navigation';
+import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { CourseFormV2 } from '@/components/v2/theory';
+import { getTheoryCourse } from '@/app/dashboard/theory/actions';
 
-export default function Page() {
+export default async function EditCoursePage({
+  params,
+}: {
+  params: Promise<{ courseId: string }>;
+}) {
+  const { courseId } = await params;
+  const { isAdmin, isTeacher } = await getUserWithRolesSSR();
+  if (!isAdmin && !isTeacher) redirect('/dashboard/theory');
+
+  const course = await getTheoryCourse(courseId);
+  if (!course) notFound();
+
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Coming soon</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          This page is being rebuilt.
-        </CardContent>
-      </Card>
-    </div>
+    <CourseFormV2
+      mode="edit"
+      courseId={courseId}
+      defaultValues={{
+        title: course.title,
+        description: course.description ?? '',
+        cover_image_url: course.cover_image_url ?? '',
+        level: course.level,
+        is_published: course.is_published,
+      }}
+    />
   );
 }

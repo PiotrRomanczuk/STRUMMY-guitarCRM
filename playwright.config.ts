@@ -5,11 +5,24 @@ import * as dotenv from 'dotenv';
 // Load test environment variables from .env.local
 dotenv.config({ path: '.env.local' });
 
-// Check if local Supabase is running on port 54321
-// Mirrors the same logic in next.config.ts so test helpers use the correct DB
+// Check if local Supabase is running — reads the actual host/port from NEXT_PUBLIC_SUPABASE_LOCAL_URL
+// so LAN-hosted stacks (e.g. EliteDesk at 192.168.1.75:54321) are detected correctly.
+// Mirrors the same logic in next.config.ts so test helpers use the correct DB.
 function isLocalSupabaseRunning(): boolean {
+  let host = '127.0.0.1';
+  let port = 54321;
+  const localUrl = process.env.NEXT_PUBLIC_SUPABASE_LOCAL_URL;
+  if (localUrl) {
+    try {
+      const parsed = new URL(localUrl);
+      host = parsed.hostname;
+      port = parsed.port ? Number(parsed.port) : 54321;
+    } catch {
+      // Fall back to defaults on unparseable URL
+    }
+  }
   try {
-    execSync('nc -z 127.0.0.1 54321 2>/dev/null', { timeout: 2000 });
+    execSync(`nc -z ${host} ${port} 2>/dev/null`, { timeout: 2000 });
     return true;
   } catch {
     return false;
@@ -17,7 +30,7 @@ function isLocalSupabaseRunning(): boolean {
 }
 
 if (process.env.NEXT_PUBLIC_SUPABASE_LOCAL_URL && !isLocalSupabaseRunning()) {
-  console.log('[Playwright] Local Supabase not detected on port 54321, using REMOTE configuration');
+  console.log(`[Playwright] Local Supabase not detected, using REMOTE configuration`);
   delete process.env.NEXT_PUBLIC_SUPABASE_LOCAL_URL;
   delete process.env.NEXT_PUBLIC_SUPABASE_LOCAL_ANON_KEY;
   delete process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY;
@@ -83,8 +96,9 @@ export default defineConfig({
   // Retry configuration (matches Cypress)
   retries: process.env.CI ? 2 : 0,
 
-  // Parallel workers (use half of CPU cores in CI)
-  workers: process.env.CI ? '50%' : undefined,
+  // Limit local workers to 2 — the single Next.js dev server gets overwhelmed by
+  // more than 2 concurrent workers running long journey tests.
+  workers: process.env.CI ? '50%' : 2,
 
   // Reporter configuration
   reporter: [

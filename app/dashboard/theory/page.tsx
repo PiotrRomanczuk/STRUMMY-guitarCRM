@@ -1,16 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { CourseListV2 } from '@/components/v2/theory';
+import { getTheoryCourses } from './actions';
 
-export default function Page() {
-  return (
-    <div className="mx-auto max-w-2xl p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Coming soon</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          This page is being rebuilt.
-        </CardContent>
-      </Card>
-    </div>
-  );
+export default async function TheoryPage() {
+  const [courses, { isAdmin, isTeacher }] = await Promise.all([
+    getTheoryCourses(),
+    getUserWithRolesSSR(),
+  ]);
+
+  return <CourseListV2 courses={courses} isStaff={isAdmin || isTeacher} />;
 }

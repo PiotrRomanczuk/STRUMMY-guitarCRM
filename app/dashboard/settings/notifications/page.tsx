@@ -1,18 +1,17 @@
+import { redirect } from 'next/navigation';
+import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { NotificationPreferences } from '@/components/settings/NotificationPreferences';
 
 export const metadata = {
   title: 'Notification preferences',
 };
 
-/**
- * Notification preferences (spec 08). Wires the built `NotificationPreferences`
- * component to `notification_preferences` via its server-action-backed hook.
- *
- * Bucket-A note: `notification_preferences` is restored to prod in Phase 0.1.
- * Until then the action returns an error, which the component surfaces as an
- * inline alert (no silent failure) rather than crashing.
- */
-export default function Page() {
+export default async function Page() {
+  const { user } = await getUserWithRolesSSR();
+  if (!user) {
+    redirect('/sign-in?redirect=/dashboard/settings/notifications');
+  }
+
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-6">
       <div className="mb-6">
@@ -21,7 +20,7 @@ export default function Page() {
           Choose which updates you receive and how.
         </p>
       </div>
-      <NotificationPreferences />
+      <NotificationPreferences userId={user.id} />
     </div>
   );
 }
