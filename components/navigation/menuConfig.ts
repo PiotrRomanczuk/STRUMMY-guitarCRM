@@ -14,6 +14,7 @@ import {
   ListMusic,
   Bell,
   Zap,
+  MessageSquare,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -57,7 +58,12 @@ function getTeacherGroups(isDemoAccount?: boolean): MenuGroup[] {
       items: [
         { id: 'lessons', label: 'Lessons', icon: BookOpen, path: '/dashboard/lessons' },
         { id: 'songs', label: 'Songs', icon: Music, path: '/dashboard/songs' },
-        { id: 'assignments', label: 'Assignments', icon: ClipboardList, path: '/dashboard/assignments' },
+        {
+          id: 'assignments',
+          label: 'Assignments',
+          icon: ClipboardList,
+          path: '/dashboard/assignments',
+        },
         { id: 'theory', label: 'Theory', icon: GraduationCap, path: '/dashboard/theory' },
       ],
     },
@@ -72,9 +78,24 @@ function getTeacherGroups(isDemoAccount?: boolean): MenuGroup[] {
     {
       label: 'Analytics',
       items: [
-        { id: 'song-stats', label: 'Song Stats', icon: BarChart, path: '/dashboard/admin/stats/songs' },
-        { id: 'lesson-stats', label: 'Lesson Stats', icon: BarChart, path: '/dashboard/admin/stats/lessons' },
-        { id: 'chord-analysis', label: 'Chord Analysis', icon: ListMusic, path: '/dashboard/admin/stats/chord-analysis' },
+        {
+          id: 'song-stats',
+          label: 'Song Stats',
+          icon: BarChart,
+          path: '/dashboard/admin/stats/songs',
+        },
+        {
+          id: 'lesson-stats',
+          label: 'Lesson Stats',
+          icon: BarChart,
+          path: '/dashboard/admin/stats/lessons',
+        },
+        {
+          id: 'chord-analysis',
+          label: 'Chord Analysis',
+          icon: ListMusic,
+          path: '/dashboard/admin/stats/chord-analysis',
+        },
         { id: 'cohorts', label: 'Cohorts', icon: Users, path: '/dashboard/cohorts' },
         { id: 'logs', label: 'Logs', icon: FileText, path: '/dashboard/logs' },
       ],
@@ -85,6 +106,7 @@ function getTeacherGroups(isDemoAccount?: boolean): MenuGroup[] {
         { id: 'calendar', label: 'Calendar', icon: CalendarDays, path: '/dashboard/calendar' },
         { id: 'fretboard', label: 'Fretboard', icon: Guitar, path: '/dashboard/fretboard' },
         { id: 'ai', label: 'AI Assistant', icon: Sparkles, path: '/dashboard/ai' },
+        { id: 'ai-chat', label: 'AI Chat', icon: MessageSquare, path: '/dashboard/ai/chat' },
       ],
     },
   ];
@@ -108,7 +130,12 @@ function getStudentGroups(): MenuGroup[] {
       items: [
         { id: 'my-lessons', label: 'My Lessons', icon: BookOpen, path: '/dashboard/lessons' },
         { id: 'my-songs', label: 'My Songs', icon: Music, path: '/dashboard/songs' },
-        { id: 'my-assignments', label: 'My Assignments', icon: ClipboardList, path: '/dashboard/assignments' },
+        {
+          id: 'my-assignments',
+          label: 'My Assignments',
+          icon: ClipboardList,
+          path: '/dashboard/assignments',
+        },
         { id: 'theory', label: 'Theory', icon: GraduationCap, path: '/dashboard/theory' },
       ],
     },
@@ -116,7 +143,12 @@ function getStudentGroups(): MenuGroup[] {
       label: 'Progress',
       items: [
         { id: 'my-stats', label: 'My Stats', icon: BarChart, path: '/dashboard/stats' },
-        { id: 'repertoire', label: 'My Repertoire', icon: ListMusic, path: '/dashboard/repertoire' },
+        {
+          id: 'repertoire',
+          label: 'My Repertoire',
+          icon: ListMusic,
+          path: '/dashboard/repertoire',
+        },
       ],
     },
   ];
@@ -129,7 +161,12 @@ interface RoleFlags {
   isDemoAccount?: boolean;
 }
 
-export function getMenuGroups({ isAdmin, isTeacher, isStudent, isDemoAccount }: RoleFlags): MenuGroup[] {
+export function getMenuGroups({
+  isAdmin,
+  isTeacher,
+  isStudent,
+  isDemoAccount,
+}: RoleFlags): MenuGroup[] {
   if (isAdmin || isTeacher) return getTeacherGroups(isDemoAccount);
   if (isStudent) return getStudentGroups();
   return [];
