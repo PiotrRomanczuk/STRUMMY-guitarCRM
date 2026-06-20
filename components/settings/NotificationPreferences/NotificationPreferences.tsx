@@ -18,9 +18,9 @@ import { NOTIFICATION_CATEGORY_INFO } from '@/types/notifications';
  * Main notification preferences component
  * Displays notification preferences grouped by category with toggle controls
  */
-export default function NotificationPreferences() {
+export default function NotificationPreferences({ userId }: { userId: string }) {
   const { preferences, isLoading, error, togglePreference, toggleAll } =
-    useNotificationPreferences();
+    useNotificationPreferences(userId);
 
   if (isLoading) {
     return (
@@ -65,10 +65,7 @@ export default function NotificationPreferences() {
               <CardTitle>Email Notifications</CardTitle>
             </div>
             <div className="flex items-center gap-3">
-              <Label
-                htmlFor="toggle-all"
-                className="text-sm font-medium cursor-pointer"
-              >
+              <Label htmlFor="toggle-all" className="text-sm font-medium cursor-pointer">
                 {allEnabled ? 'Disable All' : 'Enable All'}
               </Label>
               <Switch
@@ -104,9 +101,7 @@ export default function NotificationPreferences() {
                   <NotificationPreferencesItem
                     key={pref.id}
                     preference={pref}
-                    onToggle={(enabled) =>
-                      togglePreference(pref.notification_type, enabled)
-                    }
+                    onToggle={(enabled) => togglePreference(pref.notification_type, enabled)}
                   />
                 ))}
               </div>

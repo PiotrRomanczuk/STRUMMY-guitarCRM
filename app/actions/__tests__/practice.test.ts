@@ -8,9 +8,7 @@ import { logPracticeSession, getStudentRepertoireSongs } from '../practice';
 
 // Mock getUserWithRolesSSR
 jest.mock('@/lib/getUserWithRolesSSR', () => ({
-  getUserWithRolesSSR: jest.fn(() =>
-    Promise.resolve({ isDevelopment: false })
-  ),
+  getUserWithRolesSSR: jest.fn(() => Promise.resolve({ isDevelopment: false })),
 }));
 
 // Mock chain helpers
@@ -98,6 +96,7 @@ describe('logPracticeSession', () => {
       student_id: 'student-uuid-123',
       song_id: null,
       duration_minutes: 30,
+      bpm_practiced: null,
       notes: null,
     });
   });
@@ -126,6 +125,7 @@ describe('logPracticeSession', () => {
       student_id: 'student-uuid-123',
       song_id: songId,
       duration_minutes: 20,
+      bpm_practiced: null,
       notes: 'Worked on chorus',
     });
   });
@@ -144,9 +144,7 @@ describe('logPracticeSession', () => {
   });
 
   it('should block test account mutations', async () => {
-    const { getUserWithRolesSSR } = jest.requireMock(
-      '@/lib/getUserWithRolesSSR'
-    );
+    const { getUserWithRolesSSR } = jest.requireMock('@/lib/getUserWithRolesSSR');
     getUserWithRolesSSR.mockResolvedValueOnce({ isDevelopment: true });
 
     const result = await logPracticeSession({ duration_minutes: 15 });

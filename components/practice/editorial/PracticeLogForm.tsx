@@ -27,6 +27,7 @@ export function PracticeLogForm({ songs }: PracticeLogFormProps) {
   const router = useRouter();
   const [songId, setSongId] = useState<string>(NO_SONG);
   const [duration, setDuration] = useState<number | ''>('');
+  const [bpm, setBpm] = useState<number | ''>('');
   const [notes, setNotes] = useState('');
   const [isPending, startTransition] = useTransition();
 
@@ -43,6 +44,7 @@ export function PracticeLogForm({ songs }: PracticeLogFormProps) {
         const result = await logPracticeSession({
           duration_minutes: durationNum,
           ...(songId !== NO_SONG && { song_id: songId }),
+          ...(typeof bpm === 'number' && songId !== NO_SONG && { bpm_practiced: bpm }),
           ...(notes.trim() && { notes: notes.trim() }),
         });
 
@@ -54,11 +56,12 @@ export function PracticeLogForm({ songs }: PracticeLogFormProps) {
         toast.success('Practice logged');
         setSongId(NO_SONG);
         setDuration('');
+        setBpm('');
         setNotes('');
         router.refresh();
       });
     },
-    [duration, songId, notes, router]
+    [duration, songId, bpm, notes, router]
   );
 
   return (
@@ -70,7 +73,10 @@ export function PracticeLogForm({ songs }: PracticeLogFormProps) {
         <select
           id="practice-song"
           value={songId}
-          onChange={(e) => setSongId(e.target.value)}
+          onChange={(e) => {
+            setSongId(e.target.value);
+            setBpm('');
+          }}
           className="h-11 w-full rounded-lg border border-border bg-card px-3 text-sm dark:bg-background"
         >
           <option value={NO_SONG}>General technique (no song)</option>
@@ -82,6 +88,25 @@ export function PracticeLogForm({ songs }: PracticeLogFormProps) {
           ))}
         </select>
       </div>
+
+      {songId !== NO_SONG && (
+        <div className="space-y-2">
+          <Label htmlFor="practice-bpm">
+            BPM practiced <span className="font-normal text-muted-foreground">(optional)</span>
+          </Label>
+          <input
+            id="practice-bpm"
+            type="number"
+            min={20}
+            max={300}
+            inputMode="numeric"
+            value={bpm}
+            onChange={(e) => setBpm(e.target.value === '' ? '' : Number(e.target.value))}
+            placeholder="e.g. 80"
+            className="h-9 w-32 rounded-lg border border-border bg-card px-3 text-sm dark:bg-background"
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>Duration (minutes)</Label>

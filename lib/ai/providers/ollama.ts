@@ -17,9 +17,13 @@ import { withRetry, AI_PROVIDER_RETRY_CONFIG } from '../retry';
 import { logger } from '@/lib/logger';
 
 // Default Ollama configuration
+// Local model inference is slower than cloud; larger models (e.g. gemma3:12b)
+// can take well over 60s for an 800-token generation. Honor AI_REQUEST_TIMEOUT
+// so operators can raise the ceiling instead of hitting spurious timeouts.
+const DEFAULT_OLLAMA_TIMEOUT = 60000;
 const createDefaultConfig = (config?: Partial<AIProviderConfig>): AIProviderConfig => ({
   baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
-  timeout: 60000, // Longer timeout for local models
+  timeout: Number(process.env.AI_REQUEST_TIMEOUT) || DEFAULT_OLLAMA_TIMEOUT,
   maxRetries: 2,
   ...config,
 });

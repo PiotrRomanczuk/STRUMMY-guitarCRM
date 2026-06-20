@@ -1,16 +1,34 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { notFound, redirect } from 'next/navigation';
+import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { TheoryLessonForm } from '@/components/theory';
+import { getTheoryLesson } from '@/app/dashboard/theory/actions';
 
-export default function Page() {
+export default async function EditLessonPage({
+  params,
+}: {
+  params: Promise<{ courseId: string; lessonId: string }>;
+}) {
+  const { courseId, lessonId } = await params;
+  const { isAdmin, isTeacher } = await getUserWithRolesSSR();
+  if (!isAdmin && !isTeacher) redirect(`/dashboard/theory/${courseId}/${lessonId}`);
+
+  const lesson = await getTheoryLesson(lessonId);
+  if (!lesson) notFound();
+
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Coming soon</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          This page is being rebuilt.
-        </CardContent>
-      </Card>
+    <div className="max-w-3xl mx-auto px-6 py-8">
+      <h1 className="font-serif text-2xl mb-6">Edit chapter</h1>
+      <TheoryLessonForm
+        courseId={courseId}
+        mode="edit"
+        lessonId={lessonId}
+        defaultValues={{
+          title: lesson.title,
+          content: lesson.content,
+          excerpt: lesson.excerpt ?? '',
+          is_published: lesson.is_published,
+        }}
+      />
     </div>
   );
 }

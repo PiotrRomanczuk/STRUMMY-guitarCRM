@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/components/auth/AuthProvider';
 import {
   getUserNotificationPreferences,
   updateNotificationPreference,
@@ -19,25 +18,20 @@ interface UseNotificationPreferencesReturn {
 }
 
 /**
- * Custom hook for managing notification preferences
+ * Custom hook for managing notification preferences.
+ * userId is supplied by the parent RSC to avoid a dependency on the removed AuthProvider.
  */
-export function useNotificationPreferences(): UseNotificationPreferencesReturn {
-  const { user } = useAuth();
+export function useNotificationPreferences(userId: string): UseNotificationPreferencesReturn {
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPreferences = useCallback(async () => {
-    if (!user?.id) {
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await getUserNotificationPreferences(user.id);
+      const result = await getUserNotificationPreferences(userId);
 
       if (result.success && result.data) {
         setPreferences(result.data);
@@ -49,22 +43,20 @@ export function useNotificationPreferences(): UseNotificationPreferencesReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [userId]);
 
   useEffect(() => {
     fetchPreferences();
   }, [fetchPreferences]);
 
   const togglePreference = async (type: NotificationType, enabled: boolean) => {
-    if (!user?.id) return;
-
     // Optimistic update
     setPreferences((prev) =>
       prev.map((p) => (p.notification_type === type ? { ...p, enabled } : p))
     );
 
     try {
-      const result = await updateNotificationPreference(user.id, type, enabled);
+      const result = await updateNotificationPreference(userId, type, enabled);
 
       if (!result.success) {
         // Revert on error
@@ -83,14 +75,12 @@ export function useNotificationPreferences(): UseNotificationPreferencesReturn {
   };
 
   const toggleAll = async (enabled: boolean) => {
-    if (!user?.id) return;
-
     // Optimistic update
     const previousPreferences = [...preferences];
     setPreferences((prev) => prev.map((p) => ({ ...p, enabled })));
 
     try {
-      const result = await updateAllNotificationPreferences(user.id, enabled);
+      const result = await updateAllNotificationPreferences(userId, enabled);
 
       if (!result.success) {
         // Revert on error

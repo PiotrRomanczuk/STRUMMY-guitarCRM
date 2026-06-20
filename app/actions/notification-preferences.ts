@@ -43,7 +43,7 @@ export async function getUserNotificationPreferences(
   // Fetch preferences with RLS enforcement
   const { data, error } = await supabase
     .from('notification_preferences')
-    .select('id, user_id, notification_type, enabled, delivery_channel, created_at, updated_at')
+    .select('id, user_id, notification_type, enabled, created_at, updated_at')
     .eq('user_id', userId)
     .order('notification_type', { ascending: true });
 
@@ -68,16 +68,9 @@ export async function updateNotificationPreference(
   type: NotificationType,
   enabled: boolean
 ): Promise<ActionResult> {
-  const { isDevelopment } = await getUserWithRolesSSR();
+  const { user, isDevelopment } = await getUserWithRolesSSR();
   const guard = guardTestAccountMutation(isDevelopment);
   if (guard) return guard;
-
-  const supabase = await createClient();
-
-  // Get current authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   if (!user) {
     return { success: false, error: 'Unauthorized' };
@@ -87,6 +80,8 @@ export async function updateNotificationPreference(
   if (user.id !== userId) {
     return { success: false, error: 'Unauthorized: Cannot modify other users preferences' };
   }
+
+  const supabase = await createClient();
 
   // Update preference (RLS ensures user can only update their own)
   const { error } = await supabase
@@ -100,7 +95,6 @@ export async function updateNotificationPreference(
     return { success: false, error: 'Failed to update notification preference' };
   }
 
-  // Revalidate settings page to reflect changes
   revalidatePath('/dashboard/settings');
 
   return { success: true };
@@ -117,16 +111,9 @@ export async function updateAllNotificationPreferences(
   userId: string,
   enabled: boolean
 ): Promise<ActionResult> {
-  const { isDevelopment } = await getUserWithRolesSSR();
+  const { user, isDevelopment } = await getUserWithRolesSSR();
   const guard = guardTestAccountMutation(isDevelopment);
   if (guard) return guard;
-
-  const supabase = await createClient();
-
-  // Get current authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   if (!user) {
     return { success: false, error: 'Unauthorized' };
@@ -136,6 +123,8 @@ export async function updateAllNotificationPreferences(
   if (user.id !== userId) {
     return { success: false, error: 'Unauthorized: Cannot modify other users preferences' };
   }
+
+  const supabase = await createClient();
 
   // Bulk update all preferences (RLS ensures user can only update their own)
   const { error } = await supabase

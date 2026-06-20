@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { SettingsEditorial } from '@/components/settings/editorial/SettingsEditorial';
 import { IntegrationsSection } from '@/components/settings/IntegrationsSection';
+import { ApiKeyManager } from '@/components/settings/ApiKeyManager';
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 
@@ -73,6 +74,9 @@ export default async function SettingsPage() {
           <IntegrationsSection isGoogleConnected={Boolean(googleIntegration)} />
         </div>
       )}
+      <div className="mx-auto mt-8 max-w-2xl px-6 pb-16">
+        <ApiKeyManager />
+      </div>
     </div>
   );
 }

@@ -142,7 +142,7 @@ describe('notification-preferences actions', () => {
 
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('notification_preferences');
       expect(mockSelect).toHaveBeenCalledWith(
-        'id, user_id, notification_type, enabled, delivery_channel, created_at, updated_at'
+        'id, user_id, notification_type, enabled, created_at, updated_at'
       );
       expect(mockEq).toHaveBeenCalledWith('user_id', 'user-123');
       expect(mockOrder).toHaveBeenCalledWith('notification_type', { ascending: true });
@@ -194,7 +194,7 @@ describe('notification-preferences actions', () => {
 
   describe('updateNotificationPreference', () => {
     it('should update preference when user updates their own preference', async () => {
-      mockAuthUser('user-123');
+      mockRolesUser('user-123');
       const { mockUpdate, mockEq1, mockEq2 } = mockUpdateQuery();
 
       const result = await updateNotificationPreference('user-123', 'lesson_reminder_24h', false);
@@ -207,7 +207,7 @@ describe('notification-preferences actions', () => {
     });
 
     it('should enable a previously disabled preference', async () => {
-      mockAuthUser('user-123');
+      mockRolesUser('user-123');
       const { mockUpdate } = mockUpdateQuery();
 
       const result = await updateNotificationPreference('user-123', 'weekly_progress_digest', true);
@@ -217,7 +217,7 @@ describe('notification-preferences actions', () => {
     });
 
     it('should deny user from updating another users preference', async () => {
-      mockAuthUser('user-456');
+      mockRolesUser('user-456');
 
       const result = await updateNotificationPreference('user-123', 'lesson_reminder_24h', false);
 
@@ -229,7 +229,7 @@ describe('notification-preferences actions', () => {
     });
 
     it('should return unauthorized when user is not authenticated', async () => {
-      mockAuthUser(null);
+      mockRolesUser(null);
 
       const result = await updateNotificationPreference('user-123', 'lesson_reminder_24h', false);
 
@@ -238,7 +238,7 @@ describe('notification-preferences actions', () => {
     });
 
     it('should handle database errors', async () => {
-      mockAuthUser('user-123');
+      mockRolesUser('user-123');
       mockUpdateQuery({ message: 'Update failed' });
 
       const result = await updateNotificationPreference('user-123', 'lesson_reminder_24h', false);
@@ -258,7 +258,7 @@ describe('notification-preferences actions', () => {
 
       for (const type of types) {
         jest.clearAllMocks();
-        mockAuthUser('user-123');
+        mockRolesUser('user-123');
         const { mockEq2 } = mockUpdateQuery();
 
         const result = await updateNotificationPreference('user-123', type, true);
@@ -271,7 +271,7 @@ describe('notification-preferences actions', () => {
 
   describe('updateAllNotificationPreferences', () => {
     it('should enable all preferences for user', async () => {
-      mockAuthUser('user-123');
+      mockRolesUser('user-123');
       const { mockUpdate, mockEq } = mockBulkUpdateQuery();
 
       const result = await updateAllNotificationPreferences('user-123', true);
@@ -283,7 +283,7 @@ describe('notification-preferences actions', () => {
     });
 
     it('should disable all preferences for user', async () => {
-      mockAuthUser('user-123');
+      mockRolesUser('user-123');
       const { mockUpdate } = mockBulkUpdateQuery();
 
       const result = await updateAllNotificationPreferences('user-123', false);
@@ -293,7 +293,7 @@ describe('notification-preferences actions', () => {
     });
 
     it('should deny user from updating another users preferences', async () => {
-      mockAuthUser('user-456');
+      mockRolesUser('user-456');
 
       const result = await updateAllNotificationPreferences('user-123', true);
 
@@ -305,7 +305,7 @@ describe('notification-preferences actions', () => {
     });
 
     it('should return unauthorized when user is not authenticated', async () => {
-      mockAuthUser(null);
+      mockRolesUser(null);
 
       const result = await updateAllNotificationPreferences('user-123', true);
 
@@ -314,7 +314,7 @@ describe('notification-preferences actions', () => {
     });
 
     it('should handle database errors', async () => {
-      mockAuthUser('user-123');
+      mockRolesUser('user-123');
       mockBulkUpdateQuery({ message: 'Bulk update failed' });
 
       const result = await updateAllNotificationPreferences('user-123', true);
@@ -326,14 +326,14 @@ describe('notification-preferences actions', () => {
     });
 
     it('should toggle from all enabled to all disabled', async () => {
-      mockAuthUser('user-123');
+      mockRolesUser('user-123');
       const { mockUpdate: mockUpdate1 } = mockBulkUpdateQuery();
 
       const result1 = await updateAllNotificationPreferences('user-123', true);
       expect(result1).toEqual({ success: true });
       expect(mockUpdate1).toHaveBeenCalledWith({ enabled: true });
 
-      mockAuthUser('user-123');
+      mockRolesUser('user-123');
       const { mockUpdate: mockUpdate2 } = mockBulkUpdateQuery();
 
       const result2 = await updateAllNotificationPreferences('user-123', false);

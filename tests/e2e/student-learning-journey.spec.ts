@@ -25,6 +25,8 @@
 import { test, expect } from '../fixtures';
 
 test.describe('Student Learning Journey', { tag: ['@student', '@learning-journey'] }, () => {
+  test.describe.configure({ mode: 'serial' });
+
   test.beforeEach(async ({ page, loginAs }) => {
     // Set viewport to desktop size
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -41,14 +43,13 @@ test.describe('Student Learning Journey', { tag: ['@student', '@learning-journey
       // Verify we're on the dashboard
       await expect(page).toHaveURL(/\/dashboard/);
 
-      // Should see student-specific dashboard content
-      await expect(page.locator('text=/dashboard|overview|welcome/i').first()).toBeVisible({
-        timeout: 10000,
-      });
+      // Editorial dashboard shows a personal h1 greeting (not "Welcome"/"Dashboard")
+      await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 });
 
-      // Check for stat cards (lessons, songs, assignments, etc.)
-      const statCards = page.locator('[data-testid="stat-card"], .stat-card, [class*="card"]');
-      await expect(statCards.first()).toBeVisible();
+      // Editorial student dashboard shows named widget sections
+      const hasDashboardWidgets =
+        (await page.locator('text=/Next lesson|Practice streak|Songs you|Activity/i').count()) > 0;
+      expect(hasDashboardWidgets).toBeTruthy();
     });
 
     test('should show next upcoming lesson', async ({ page }) => {
@@ -149,9 +150,11 @@ test.describe('Student Learning Journey', { tag: ['@student', '@learning-journey
         await expect(spinner).not.toBeVisible({ timeout: 10000 });
       }
 
-      // Check for either songs or empty state
+      // Check for either songs or empty state (editorial shows "No songs in the library yet." or "No songs match")
       const hasSongs = (await page.locator('a[href*="/songs/"]').count()) > 0;
-      const hasEmptyState = (await page.locator('text=/No songs found/i').count()) > 0;
+      const hasEmptyState =
+        (await page.locator('text=/No songs/i').count()) > 0 ||
+        (await page.locator('text=/songs.*yet|songs match/i').count()) > 0;
 
       expect(hasSongs || hasEmptyState).toBeTruthy();
     });
@@ -179,11 +182,15 @@ test.describe('Student Learning Journey', { tag: ['@student', '@learning-journey
       await page.goto('/dashboard/songs');
       await page.waitForLoadState('networkidle');
 
-      // The student songs view displays assigned songs
+      // The student songs view displays assigned songs or an empty state
       await expect(page.locator('text=/My Songs/i')).toBeVisible({
         timeout: 10000,
       });
-      await expect(page.locator('text=/songs you are currently learning|mastered/i')).toBeVisible();
+      // Check for song content or any descriptive text (depends on whether songs are assigned)
+      const hasSongContent =
+        (await page.locator('a[href*="/songs/"]').count()) > 0 ||
+        (await page.locator('text=/No songs|songs.*yet/i').count()) > 0;
+      expect(hasSongContent).toBeTruthy();
     });
   });
 
@@ -216,9 +223,9 @@ test.describe('Student Learning Journey', { tag: ['@student', '@learning-journey
         await expect(spinner).not.toBeVisible({ timeout: 10000 });
       }
 
-      // Check for either assignments or empty state
+      // Check for either assignments or empty state (editorial: "No assignments on your desk. Enjoy the quiet.")
       const hasAssignments = (await page.locator('a[href*="/assignments/"]').count()) > 0;
-      const hasEmptyState = (await page.locator('text=/No assignments found/i').count()) > 0;
+      const hasEmptyState = (await page.locator('text=/No assignments/i').count()) > 0;
 
       expect(hasAssignments || hasEmptyState).toBeTruthy();
     });
@@ -268,13 +275,14 @@ test.describe('Student Learning Journey', { tag: ['@student', '@learning-journey
 
   test.describe('Phase 5: Profile & Settings', () => {
     test('should navigate to profile page', async ({ page }) => {
+      // /dashboard/profile redirects to /dashboard/settings (spec 10)
       await page.goto('/dashboard/profile');
       await page.waitForLoadState('networkidle');
 
-      // Verify we're on the profile page
-      await expect(page).toHaveURL(/\/profile/);
+      // Verify we landed on settings (profile redirects there)
+      await expect(page).toHaveURL(/\/settings|\/profile/);
 
-      // Should see profile content
+      // Should see profile/settings content
       await expect(page.locator('text=/profile|account|settings/i').first()).toBeVisible({
         timeout: 10000,
       });
@@ -285,7 +293,7 @@ test.describe('Student Learning Journey', { tag: ['@student', '@learning-journey
       await page.waitForLoadState('networkidle');
 
       // Profile page shows form fields for first name, last name, etc.
-      await expect(page.locator('form')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('form').first()).toBeVisible({ timeout: 10000 });
 
       // Look for profile-related form fields or labels
       await expect(

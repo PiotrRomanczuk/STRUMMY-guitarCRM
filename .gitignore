@@ -123,3 +123,8 @@ data/JustMeAndGuitar_*.xlsx
 /fallow-*.err
 /.fallow/
 playwright.local-*.config.ts
+
+# Local video recordings and temp configs
+all-journeys.mp4
+test-results-video/
+playwright.video.config.ts

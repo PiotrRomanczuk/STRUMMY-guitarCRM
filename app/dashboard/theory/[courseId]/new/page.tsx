@@ -1,16 +1,16 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { redirect } from 'next/navigation';
+import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { TheoryLessonForm } from '@/components/theory';
 
-export default function Page() {
+export default async function NewLessonPage({ params }: { params: Promise<{ courseId: string }> }) {
+  const { courseId } = await params;
+  const { isAdmin, isTeacher } = await getUserWithRolesSSR();
+  if (!isAdmin && !isTeacher) redirect(`/dashboard/theory/${courseId}`);
+
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Coming soon</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          This page is being rebuilt.
-        </CardContent>
-      </Card>
+    <div className="max-w-3xl mx-auto px-6 py-8">
+      <h1 className="font-serif text-2xl mb-6">New chapter</h1>
+      <TheoryLessonForm courseId={courseId} mode="create" />
     </div>
   );
 }

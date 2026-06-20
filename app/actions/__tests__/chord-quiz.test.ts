@@ -10,7 +10,22 @@ jest.mock('next/cache', () => ({
 
 const mockGetUser = jest.fn();
 const mockInsert = jest.fn();
-const mockFrom = jest.fn();
+const mockUpsert = jest.fn();
+const mockSelect = jest.fn();
+
+// Chainable mock: from('chord_quiz_attempts') → insert; from('chord_srs') → select/upsert chain
+const mockFrom = jest.fn((table: string) => {
+  if (table === 'chord_srs') {
+    const chain = {
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      in: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      upsert: mockUpsert,
+    };
+    return chain;
+  }
+  return { insert: mockInsert, select: mockSelect };
+});
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(() =>
@@ -36,7 +51,19 @@ beforeEach(() => {
     error: null,
   });
   mockInsert.mockResolvedValue({ error: null });
-  mockFrom.mockReturnValue({ insert: mockInsert });
+  mockUpsert.mockResolvedValue({ error: null });
+  // Reset mockFrom to its default table-routing implementation
+  mockFrom.mockImplementation((table: string) => {
+    if (table === 'chord_srs') {
+      return {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        in: jest.fn(() => Promise.resolve({ data: [], error: null })),
+        upsert: mockUpsert,
+      };
+    }
+    return { insert: mockInsert, select: mockSelect };
+  });
 });
 
 describe('submitChordQuizSession', () => {

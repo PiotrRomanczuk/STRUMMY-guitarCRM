@@ -2,6 +2,7 @@ import '@/app/design-preview/editorial-tokens.css';
 
 import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { FretboardEditorial } from '@/components/fretboard/editorial/FretboardEditorial';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
@@ -31,7 +32,9 @@ export default async function FretboardPage() {
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <FretboardEditorial />
+      <Suspense fallback={null}>
+        <FretboardEditorial />
+      </Suspense>
     </div>
   );
 }
