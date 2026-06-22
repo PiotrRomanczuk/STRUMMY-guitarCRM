@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
 import { AppShell } from '@/components/layout/AppShell';
+import { AuthHashErrorBanner } from '@/components/auth/AuthHashErrorBanner';
 import { Providers } from '@/components/providers/QueryProvider';
 import { PostHogProvider } from '@/components/providers/PostHogProvider';
 import { PostHogPageView } from '@/components/providers/PostHogPageView';
@@ -21,7 +22,8 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Strummy - Guitar Teaching Studio',
-  description: 'The premium platform for guitar teachers to manage students, lessons, and track progress',
+  description:
+    'The premium platform for guitar teachers to manage students, lessons, and track progress',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -45,13 +47,18 @@ export default async function RootLayout({
   log.debug('RootLayout rendering');
   const { user, isAdmin, isTeacher, isStudent, isDevelopment } = await getUserWithRolesSSR();
   const uiVersion = await getUIVersion();
-  log.debug('User roles', { userId: user?.id, isAdmin, isTeacher, isStudent, isDevelopment, uiVersion });
+  log.debug('User roles', {
+    userId: user?.id,
+    isAdmin,
+    isTeacher,
+    isStudent,
+    isDevelopment,
+    uiVersion,
+  });
 
   // When dynamic switching is enabled, load all fonts
   // Otherwise, load only the active font scheme
-  const fontClasses = DYNAMIC_FONT_SWITCHING
-    ? getAllFontClasses()
-    : getFontVariableClasses();
+  const fontClasses = DYNAMIC_FONT_SWITCHING ? getAllFontClasses() : getFontVariableClasses();
 
   const content = (
     <PostHogProvider>
@@ -66,7 +73,14 @@ export default async function RootLayout({
         isStudent={isStudent}
       />
       <Providers>
-        <AppShell user={user} isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent} isDevelopment={isDevelopment} uiVersion={uiVersion}>
+        <AppShell
+          user={user}
+          isAdmin={isAdmin}
+          isTeacher={isTeacher}
+          isStudent={isStudent}
+          isDevelopment={isDevelopment}
+          uiVersion={uiVersion}
+        >
           {children}
         </AppShell>
       </Providers>
@@ -82,11 +96,8 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${fontClasses} antialiased`}>
-        {DYNAMIC_FONT_SWITCHING ? (
-          <FontProvider>{content}</FontProvider>
-        ) : (
-          content
-        )}
+        <AuthHashErrorBanner />
+        {DYNAMIC_FONT_SWITCHING ? <FontProvider>{content}</FontProvider> : content}
       </body>
     </html>
   );
