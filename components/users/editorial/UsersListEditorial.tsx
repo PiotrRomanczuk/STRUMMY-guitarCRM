@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import type { UserListRow, UserListFilters } from '@/lib/services/users-list-queries';
+import { InlineInviteButton } from './InlineInviteButton';
 import { ShadowBadge } from './ShadowBadge';
 
 const formatDate = (iso: string | null): string => {
@@ -66,18 +67,38 @@ export const UsersListEditorial = ({ rows, filters, canEdit }: Props) => (
       >
         Studio
       </div>
-      <h1
-        style={{
-          margin: '4px 0 6px',
-          fontFamily: 'var(--serif)',
-          fontWeight: 400,
-          fontSize: 40,
-          letterSpacing: '-0.02em',
-          fontStyle: 'italic',
-        }}
-      >
-        People
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
+        <h1
+          style={{
+            margin: '4px 0 6px',
+            fontFamily: 'var(--serif)',
+            fontWeight: 400,
+            fontSize: 40,
+            letterSpacing: '-0.02em',
+            fontStyle: 'italic',
+          }}
+        >
+          People
+        </h1>
+        <Link
+          href="/dashboard/users/new"
+          style={{
+            marginBottom: 10,
+            padding: '8px 16px',
+            borderRadius: 8,
+            border: 'none',
+            background: 'var(--ink)',
+            color: 'var(--paper)',
+            fontSize: 12,
+            fontWeight: 500,
+            fontFamily: 'var(--sans)',
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          + New student
+        </Link>
+      </div>
       <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>{rows.length} shown</div>
     </div>
 
@@ -227,20 +248,24 @@ export const UsersListEditorial = ({ rows, filters, canEdit }: Props) => (
               {r.isActive ? formatDate(r.createdAt) : 'Deactivated'}
             </span>
             <span style={{ textAlign: 'right' }}>
-              {canEdit && (
-                <Link
-                  href={`/dashboard/users/${r.id}/edit`}
-                  style={{
-                    fontFamily: 'var(--mono)',
-                    fontSize: 11,
-                    color: 'var(--gold-2)',
-                    textDecoration: 'none',
-                    textTransform: 'uppercase',
-                    letterSpacing: '.08em',
-                  }}
-                >
-                  Edit →
-                </Link>
+              {r.isShadow && r.inviteEmail ? (
+                <InlineInviteButton userId={r.id} inviteEmail={r.inviteEmail} />
+              ) : (
+                canEdit && (
+                  <Link
+                    href={`/dashboard/users/${r.id}/edit`}
+                    style={{
+                      fontFamily: 'var(--mono)',
+                      fontSize: 11,
+                      color: 'var(--gold-2)',
+                      textDecoration: 'none',
+                      textTransform: 'uppercase',
+                      letterSpacing: '.08em',
+                    }}
+                  >
+                    Edit →
+                  </Link>
+                )
               )}
             </span>
           </div>

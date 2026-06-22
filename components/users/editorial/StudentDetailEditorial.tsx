@@ -6,8 +6,9 @@ import type {
   StudentRepertoireRow,
 } from '@/lib/services/student-detail-queries';
 import { totalPracticeMinutes } from '@/lib/services/student-detail-queries';
-import { ShadowBadge } from './ShadowBadge';
+import { DeleteShadowButton } from './DeleteShadowButton';
 import { InviteShadowButton } from './InviteShadowButton';
+import { ShadowBadge } from './ShadowBadge';
 
 const STATUS_COLOURS: Record<string, string> = {
   to_learn: 'var(--ink-4)',
@@ -181,11 +182,36 @@ export const StudentDetailEditorial = ({ profile, repertoire, lessons }: Props) 
                 {profile.email}
               </div>
             )}
-            {profile.isShadow && (
-              <div style={{ marginTop: 12 }}>
+            <div
+              style={{
+                marginTop: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
+            >
+              {profile.isShadow && (
                 <InviteShadowButton userId={profile.id} defaultEmail={profile.inviteEmail} />
-              </div>
-            )}
+              )}
+              <a
+                href={`/dashboard/users/${profile.id}/import`}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 8,
+                  border: '1px solid var(--rule)',
+                  background: 'transparent',
+                  color: 'var(--ink)',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  fontFamily: 'var(--sans)',
+                  textDecoration: 'none',
+                }}
+              >
+                Import songs
+              </a>
+              {profile.isShadow && <DeleteShadowButton userId={profile.id} />}
+            </div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 32 }}>
             <Stat label="Songs in progress" value={String(active)} />

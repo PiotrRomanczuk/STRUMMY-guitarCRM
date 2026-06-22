@@ -272,7 +272,15 @@ export async function POST(request: Request) {
         .single();
 
       if (profileError) {
-        return Response.json({ error: 'Internal server error' }, { status: 500 });
+        logger.error('Shadow profile insert error:', {
+          code: profileError.code,
+          message: profileError.message,
+          details: profileError.details,
+        });
+        return Response.json(
+          { error: profileError.message || 'Internal server error' },
+          { status: 500 }
+        );
       }
 
       logShadowUserCreated(finalEmail, user.id, newId);

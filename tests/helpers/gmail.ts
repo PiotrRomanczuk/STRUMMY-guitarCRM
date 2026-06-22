@@ -71,14 +71,14 @@ function decodeBody(part: gmail_v1.Schema$MessagePart): string {
 export async function waitForGmailEmail(
   toAddress: string,
   subjectContains: string,
-  timeoutMs = 30_000,
-  lookbackSeconds = 120
+  timeoutMs = 30_000
 ): Promise<GmailMessage> {
   const auth = buildOAuth2Client();
   const gmail = google.gmail({ version: 'v1', auth });
 
-  const after = Math.floor((Date.now() - lookbackSeconds * 1000) / 1000);
-  const query = `to:${toAddress} subject:"${subjectContains}" after:${after}`;
+  // Gmail search does not support Unix epoch timestamps — newer_than:1d covers any
+  // realistic delivery delay and the subject+to filters keep results specific.
+  const query = `to:${toAddress} subject:"${subjectContains}" newer_than:1d`;
 
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {

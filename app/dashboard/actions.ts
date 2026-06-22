@@ -54,10 +54,13 @@ export async function sendUserInvite(userId: string) {
 
   const supabaseAdmin = createAdminClient();
 
-  // Reset email confirmation so invite flow works on already-confirmed users
-  await supabaseAdmin.auth.admin.updateUserById(userId, {
-    email_confirm: false,
-  });
+  // Reset email confirmation so invite flow works on already-confirmed users.
+  // Skip for shadow profiles — they have no auth.users entry yet.
+  if (!targetProfile.is_shadow) {
+    await supabaseAdmin.auth.admin.updateUserById(userId, {
+      email_confirm: false,
+    });
+  }
 
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
@@ -493,4 +496,36 @@ export async function getAuthEvents(filters: AuthEventFilters = {}): Promise<Aut
   }
 
   return (data ?? []) as unknown as AuthEvent[];
+}
+
+export async function deleteShadowUser(userId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+
+  if (!currentUser) throw new Error('Unauthorized: Authentication required');
+
+  const { data: callerProfile } = await supabase
+    .from('profiles')
+    .select('is_admin, is_teacher')
+    .eq('id', currentUser.id)
+    .single();
+
+  if (!callerProfile?.is_admin && !callerProfile?.is_teacher) {
+    throw new Error('Unauthorized: Only admins and teachers can delete shadow profiles');
+  }
+
+  const { data: target } = await supabase
+    .from('profiles')
+    .select('is_shadow')
+    .eq('id', userId)
+    .single();
+
+  if (!target) throw new Error('Profile not found');
+  if (!target.is_shadow) throw new Error('Only unclaimed (shadow) profiles can be deleted here');
+
+  const { error } = await supabase.from('profiles').delete().eq('id', userId).eq('is_shadow', true);
+
+  if (error) throw new Error(`Failed to delete profile: ${error.message}`);
 }

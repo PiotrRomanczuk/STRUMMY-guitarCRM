@@ -1,10 +1,11 @@
 import '@/app/design-preview/editorial-tokens.css';
 
 import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
-import { CreateStudentForm } from '@/components/users/editorial/CreateStudentForm';
+import { SongImportForm } from '@/components/users/editorial/SongImportForm';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { getStudentProfile } from '@/lib/services/student-detail-queries';
 
 const geist = Geist({
   subsets: ['latin'],
@@ -25,14 +26,23 @@ const fraunces = Fraunces({
   display: 'swap',
 });
 
-export default async function NewStudentPage() {
+type PageProps = { params: Promise<{ id: string }> };
+
+export default async function SongImportPage({ params }: PageProps) {
+  const { id } = await params;
   const { user, isAdmin, isTeacher } = await getUserWithRolesSSR();
-  if (!user) redirect('/sign-in?redirect=/dashboard/users/new');
-  if (!isAdmin && !isTeacher) redirect('/dashboard/users');
+
+  if (!user) redirect(`/sign-in?redirect=/dashboard/users/${id}/import`);
+  if (!isAdmin && !isTeacher) redirect(`/dashboard/users/${id}`);
+
+  const profile = await getStudentProfile(id);
+  if (!profile) notFound();
+
+  const studentName = profile.fullName ?? profile.email ?? 'Student';
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <CreateStudentForm />
+      <SongImportForm studentId={id} studentName={studentName} />
     </div>
   );
 }

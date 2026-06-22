@@ -68,26 +68,33 @@ Sweet Child O' Mine, Guns N' Roses, 30.05.2026
 Falling Slowly, Glen Hansard, 05.06.2026
 Dust in the Wind, Kansas, 09.06.2026`;
 
-const isRemote = (process.env.PLAYWRIGHT_BASE_URL ?? '').includes('vercel.app');
+// Remote = pointed at a Vercel deployment, OR explicitly running with real SMTP
+// (local dev server configured to use remote Supabase, E2E_REAL_EMAIL=true).
+const isRemote =
+  (process.env.PLAYWRIGHT_BASE_URL ?? '').includes('vercel.app') ||
+  process.env.E2E_REAL_EMAIL === 'true';
 
 function adminClient() {
   // When running against preview/prod, use remote Supabase service role.
   // When running against localhost, use local Supabase.
   const url = isRemote
-    ? (process.env.NEXT_PUBLIC_SUPABASE_REMOTE_URL ?? 'https://zmlluqqqwrfhygvpfqka.supabase.co')
+    ? (process.env.NEXT_PUBLIC_SUPABASE_URL ??
+      process.env.NEXT_PUBLIC_SUPABASE_REMOTE_URL ??
+      'https://strummy-db.marszal-arts.online')
     : (process.env.NEXT_PUBLIC_SUPABASE_LOCAL_URL ?? 'http://192.168.1.75:54321');
   const key = isRemote
-    ? (process.env.SUPABASE_REMOTE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? '')
-    : (process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ?? 'sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz');
+    ? (process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_REMOTE_SERVICE_ROLE_KEY ?? '')
+    : (process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? '');
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
 }
 
 test.describe('Kuba Spiridono — manual onboarding', () => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
 
   test.beforeAll(async () => {
-    // Clean up any Kuba profiles left from interrupted previous runs
     const db = adminClient();
+
+    // Clean up any Kuba profiles left from interrupted previous runs
     const { data } = await db
       .from('profiles')
       .select('id')
@@ -97,6 +104,17 @@ test.describe('Kuba Spiridono — manual onboarding', () => {
       const ids = data.map((r) => r.id);
       await db.from('profiles').delete().in('id', ids);
       console.log(`Cleaned up ${ids.length} existing Kuba shadow profile(s): ${ids.join(', ')}`);
+    }
+
+    // Delete any existing auth user for the invite email so inviteUserByEmail can
+    // create a fresh invited account. This address may have been registered by a
+    // prior test run or manual signup — without cleanup the invite fails with
+    // "A user with this email address has already been registered".
+    const { data: existingUser } = await db.auth.admin.listUsers();
+    const target = existingUser?.users?.find((u) => u.email === INVITE_EMAIL);
+    if (target) {
+      await db.auth.admin.deleteUser(target.id);
+      console.log(`Cleaned up existing auth user for ${INVITE_EMAIL}: ${target.id}`);
     }
   });
 
@@ -146,14 +164,14 @@ test.describe('Kuba Spiridono — manual onboarding', () => {
     await expect(importBtn).toBeVisible({ timeout: 5_000 });
     await importBtn.click();
 
-    // Wait for import result summary
+    // Wait for import result summary (41 songs × fuzzy RPC may take >30 s on cold DB)
     await expect(
       page
         .locator('text=imported')
         .or(page.locator('text=created'))
         .or(page.locator('text=lessons'))
         .first()
-    ).toBeVisible({ timeout: 30_000 });
+    ).toBeVisible({ timeout: 60_000 });
 
     await page.screenshot({ path: 'test-results/kuba-05-import-result.png' });
 
@@ -186,7 +204,7 @@ test.describe('Kuba Spiridono — manual onboarding', () => {
     if (isRemote) {
       // Remote run: real SMTP → check the actual Gmail inbox.
       // Requires GMAIL_TEST_REFRESH_TOKEN in env (run scripts/setup-gmail-test-token.ts once).
-      const email = await waitForGmailEmail(INVITE_EMAIL, "You've been invited to Strummy", 30_000);
+      const email = await waitForGmailEmail(INVITE_EMAIL, "You've been invited to Strummy", 90_000);
       expect(email.subject).toBe("You've been invited to Strummy");
       expect(email.from).toContain('p.romanczuk@gmail.com');
       console.log(`  ✓ Email in Gmail: "${email.subject}" → ${INVITE_EMAIL}`);

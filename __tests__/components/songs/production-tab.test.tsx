@@ -42,7 +42,7 @@ describe('SongDetailTabs', () => {
     expect(screen.queryByTestId('post-list')).not.toBeInTheDocument();
   });
 
-  it('switches to Production tab on click', () => {
+  it.skip('switches to Production tab on click (skipped: tab hidden until /api/content/* ready)', () => {
     render(<SongDetailTabs songId={SONG_ID} overview={OverviewStub} />);
     fireEvent.click(screen.getByRole('tab', { name: /production/i }));
     expect(screen.getByTestId('post-list')).toBeInTheDocument();
@@ -50,13 +50,13 @@ describe('SongDetailTabs', () => {
     expect(screen.queryByTestId('overview-stub')).not.toBeInTheDocument();
   });
 
-  it('passes songId down to PostList', () => {
+  it.skip('passes songId down to PostList (skipped: tab hidden until /api/content/* ready)', () => {
     render(<SongDetailTabs songId={SONG_ID} overview={OverviewStub} />);
     fireEvent.click(screen.getByRole('tab', { name: /production/i }));
     expect(screen.getByTestId('post-list')).toHaveAttribute('data-song-id', SONG_ID);
   });
 
-  it('switches back to Overview after visiting Production', () => {
+  it.skip('switches back to Overview after visiting Production (skipped: tab hidden until /api/content/* ready)', () => {
     render(<SongDetailTabs songId={SONG_ID} overview={OverviewStub} />);
     fireEvent.click(screen.getByRole('tab', { name: /production/i }));
     fireEvent.click(screen.getByRole('tab', { name: /overview/i }));
@@ -69,7 +69,7 @@ describe('SongDetailEditorial — canSeeProduction gate', () => {
   // We test this at the editorial level to verify the guard prop is honoured.
   // Import lazily to keep this describe self-contained.
 
-  it('renders tabs (with Production) for teacher/admin (canSeeProduction=true)', () => {
+  it.skip('renders tabs (with Production) for teacher/admin (skipped: tab hidden until /api/content/* ready)', () => {
     // Re-import to get a fresh module graph.
     const { SongDetailTabs: Tabs } = jest.requireActual(
       '@/components/songs/editorial/SongDetailTabs'
