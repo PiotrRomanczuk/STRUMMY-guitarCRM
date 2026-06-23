@@ -13,12 +13,6 @@ concurrency:
 
 env:
   NODE_VERSION: '20'
-  # Vercel CLI uses these to identify the project on `vercel pull/build/deploy`.
-  # Without them it falls back to directory-name autodetect, which rejects the
-  # uppercase repo name (STRUMMY-guitarCRM) after the rename — breaks the
-  # deploy-preview job. See issue #325. Matches the pattern in deploy.yml.
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'mock-key' }}
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'mock-key' }}
@@ -411,52 +405,3 @@ jobs:
         run: supabase db push --dry-run && supabase db push
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-
-  # Deploy Preview (for PRs only — production deploys are manual via deploy.yml)
-  deploy-preview:
-    name: Deploy Preview (PR)
-    runs-on: ubuntu-latest
-    needs: [quality-gate]
-    if: github.event_name == 'pull_request'
-    permissions:
-      pull-requests: write
-      issues: write
-    environment:
-      name: preview
-      url: ${{ steps.deploy.outputs.url }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN_GITHUB_ACTIONS }}
-
-      - name: Build Project Artifacts
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN_GITHUB_ACTIONS }}
-
-      - name: Deploy Preview to Vercel
-        id: deploy
-        run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN_GITHUB_ACTIONS }})
-          echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          echo "Deployed preview to: $DEPLOYMENT_URL"
-
-      - name: Comment preview URL on PR
-        uses: actions/github-script@v9
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '🔍 Preview deployment ready: ${{ steps.deploy.outputs.url }}'
-            })
