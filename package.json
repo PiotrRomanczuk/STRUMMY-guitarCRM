@@ -158,7 +158,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
-    "@types/node": "^25",
+    "@types/node": "^26",
     "@types/nodemailer": "^7.0.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
