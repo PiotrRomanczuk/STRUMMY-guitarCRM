@@ -83,6 +83,13 @@ export async function signIn(email: string, password: string) {
           'Invalid email or password. If you haven\'t set a password yet, please use "Forgot password?" to create one.',
       };
     }
+    if (error.message === 'Email not confirmed') {
+      return {
+        error:
+          'Please confirm your email before signing in — check your inbox (and spam) for the confirmation link.',
+        emailNotConfirmed: true,
+      };
+    }
     return { error: error.message };
   }
 
@@ -151,7 +158,7 @@ export async function signUp(
     ) {
       return {
         error:
-          'This email is already registered. Please sign in or use "Forgot Password" to reset your password.',
+          'This email already has an account or a pending invitation. If you were invited, check your email for the invitation link — otherwise sign in or use "Forgot Password" to reset your password.',
       };
     }
     return { error: error.message };

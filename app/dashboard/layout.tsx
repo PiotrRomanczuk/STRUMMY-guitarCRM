@@ -10,6 +10,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/sign-in?redirect=/dashboard');
   }
 
+  // Onboarding gate: a user with no role hasn't finished onboarding. The
+  // /auth/callback route only enforces this for the OAuth/email-code flow, so
+  // password sign-ins would otherwise reach the dashboard role-less. Centralize
+  // the gate here so every entry path is covered.
+  if (!isAdmin && !isTeacher && !isStudent) {
+    redirect('/onboarding');
+  }
+
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from('profiles')

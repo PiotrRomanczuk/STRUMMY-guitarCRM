@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { SignInSchema } from '@/schemas/AuthSchema';
-import { signIn as signInAction } from '@/app/auth/actions';
+import { signIn as signInAction, resendVerificationEmail } from '@/app/auth/actions';
 import { AuthLayout, AuthHeader, AuthDivider, GoogleAuthButton } from '@/components/auth';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,8 @@ export default function SignInPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [touched, setTouched] = useState({ email: false, password: false });
 
   useEffect(() => {
@@ -83,6 +85,8 @@ export default function SignInPage() {
 
     setLoading(true);
     setError(null);
+    setEmailNotConfirmed(false);
+    setResendStatus(null);
 
     const signInResult = await signInAction(email, password);
 
@@ -90,6 +94,7 @@ export default function SignInPage() {
 
     if (signInResult.error) {
       setError(signInResult.error);
+      setEmailNotConfirmed('emailNotConfirmed' in signInResult && !!signInResult.emailNotConfirmed);
       return;
     }
 
@@ -113,6 +118,16 @@ export default function SignInPage() {
       setError(error.message);
       setLoading(false);
     }
+  };
+
+  const handleResend = async () => {
+    setLoading(true);
+    setResendStatus(null);
+    const result = await resendVerificationEmail(email);
+    setLoading(false);
+    setResendStatus(
+      result.error ? result.error : 'Confirmation email sent — check your inbox (and spam).'
+    );
   };
 
   if (isChecking) {
@@ -185,6 +200,24 @@ export default function SignInPage() {
 
         {/* Form Error */}
         {error && <FormAlert type="error" message={error} />}
+
+        {/* Resend confirmation when the account exists but isn't confirmed yet */}
+        {emailNotConfirmed && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={loading}
+            onClick={handleResend}
+            className="w-full"
+          >
+            Resend confirmation email
+          </Button>
+        )}
+        {resendStatus && (
+          <p className="text-sm text-center text-muted-foreground" role="status">
+            {resendStatus}
+          </p>
+        )}
 
         {/* Submit Button - gold gradient */}
         <Button
