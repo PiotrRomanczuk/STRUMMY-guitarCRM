@@ -27,8 +27,7 @@ Comprehensive continuous integration and deployment workflow that runs on push a
 5. **E2E Tests** - Cypress tests with remote Supabase database
 6. **Security Audit** - npm audit and secret scanning
 7. **Quality Gate** - Aggregates all results
-8. **Deploy Production** - Deploys to Vercel on main branch
-9. **Deploy Preview** - Deploys preview for pull requests
+8. **Deploy** - `main` auto-deploys to **production** via Vercel's Git integration. PR **preview deployments are disabled** (`vercel.json` `ignoreCommand` builds production only); manual deploys via `deploy.yml`.
 
 **Important**: Database Quality runs BEFORE E2E tests to validate the database state without modifying it. See [Database CI/CD Guide](/docs/DATABASE_CI_CD_GUIDE.md) for details.
 
@@ -64,12 +63,14 @@ lint-and-typecheck ─┐
                     ├─→ build ─→ database-quality ─→ e2e-tests ─┐
 unit-tests ─────────┤                                            │
                     │                                            ├─→ deploy-production
-                    ├─→ quality-gate ──────────────────────────┤
-security-audit ─────┘                                            │
-                                                                 └─→ deploy-preview (PRs only)
+                    ├─→ quality-gate
+security-audit ─────┘
+
+(production deploys happen via Vercel's Git integration on `main`; PR previews are disabled)
 ```
 
 **Key Changes from Previous Version**:
+
 - Database Quality now runs BEFORE E2E tests (validates state without modifying)
 - Removed automatic `supabase db reset` from E2E tests
 - Database schema validation is informational (non-blocking)
@@ -97,6 +98,7 @@ The workflow now:
 **Database migrations must be applied manually** before pushing code that depends on them.
 
 See the [Database CI/CD Guide](/docs/DATABASE_CI_CD_GUIDE.md) for complete details on:
+
 - Why we don't auto-reset databases
 - How to apply migrations manually
 - Troubleshooting database issues
@@ -254,6 +256,7 @@ Check that:
 4. All required Supabase secrets are configured correctly
 
 **If database quality check fails:**
+
 ```bash
 # Apply migrations manually to test database
 supabase link --project-ref YOUR_TEST_PROJECT_REF
