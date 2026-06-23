@@ -188,6 +188,22 @@ otp_expiry = 3600
 subject = "You've been invited to Strummy"
 content_path = "./supabase/templates/invite.html"
 
+[auth.email.template.confirmation]
+subject = "Confirm your Strummy account"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Your Strummy sign-in link"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.recovery]
+subject = "Reset your Strummy password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new Strummy email"
+content_path = "./supabase/templates/email_change.html"
+
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.
 enable_signup = false
