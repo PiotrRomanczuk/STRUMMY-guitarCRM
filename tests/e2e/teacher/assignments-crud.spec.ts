@@ -45,10 +45,6 @@ test.describe('Teacher Assignments CRUD', { tag: ['@teacher', '@assignments'] },
   });
 
   test('assignment CRUD lifecycle: create → view → edit → delete', async ({ page }) => {
-    test.skip(
-      true,
-      'Assignment create/edit forms are Coming Soon stubs — unskip when routes are built'
-    );
     test.setTimeout(120_000);
 
     // ── CREATE ───────────────────────────────────────────────────

@@ -139,13 +139,7 @@ export const AssignmentDetailEditorial = ({ assignment, canManage, canAct }: Pro
           </div>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
-            gap: 20,
-          }}
-        >
+        <div className="grid gap-5 grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <Card title="Brief">
             <div
               style={{
