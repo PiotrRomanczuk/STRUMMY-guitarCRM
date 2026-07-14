@@ -335,6 +335,11 @@ export async function updateGoogleCalendarEvent(
  * Used by shadow-link calendar reconciliation (spec 06.3): after a shadow
  * student claims their account, their future events must carry the real
  * email as attendee, not the placeholder.
+ *
+ * INVARIANT: the PATCH full-replaces the attendee list, which makes this call
+ * idempotent — sweepShadowClaimReconciles relies on that to tolerate
+ * overlapping cron runs. If this ever becomes an append/merge, the sweep
+ * needs its own claim/lock first.
  */
 export async function reconcileEventAttendee(
   userId: string,

@@ -28,9 +28,14 @@ const SWEEP_WINDOW_DAYS = 14;
  * real email.
  *
  * Idempotent: reconcile is a no-op when attendees are already correct, and
- * each processed event is stamped so it is not re-scanned. Admin-path links
- * (which already reconcile synchronously in the route) get at most one
- * redundant no-op pass here.
+ * each fully-successful event is stamped so it is not re-scanned; partial
+ * failures stay unstamped and retry next sweep. Admin-path links (which
+ * already reconcile synchronously in the route) get at most one redundant
+ * no-op pass here.
+ *
+ * No claim/lock before processing: overlapping runs may reconcile the same
+ * event twice, which is safe ONLY because reconcileEventAttendee's PATCH is
+ * a full-replace (see its INVARIANT comment in lib/google.ts).
  */
 export async function sweepShadowClaimReconciles(limit = 20): Promise<SweepResult> {
   const admin = createAdminClient();

@@ -50,6 +50,14 @@ ALTER TYPE auth_event_type ADD VALUE IF NOT EXISTS 'shadow_invite_sent';
 ALTER TYPE auth_event_type ADD VALUE IF NOT EXISTS 'shadow_link_completed';
 ALTER TYPE auth_event_type ADD VALUE IF NOT EXISTS 'shadow_link_failed';
 
+-- Cloud-drift columns referenced by claim_shadow_profile below: they exist on
+-- Cloud/live stacks only via out-of-band DDL (see supabase/baseline/
+-- cloud_schema_2026-06-22.sql) and no repo migration creates them. Without
+-- these, a from-scratch replay of the migration chain would make every claim
+-- throw 'column does not exist' at runtime.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS spotify_playlist_url TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS confirmed_active_at TIMESTAMPTZ;
+
 -- ============================================================================
 -- 1. Extend transfer_shadow_profile_references with the four missed tables
 -- ============================================================================
@@ -65,6 +73,7 @@ SET search_path = public
 AS $$
 DECLARE
   v_count INTEGER;
+  v_dropped INTEGER;
   v_result JSONB := '{}'::JSONB;
 BEGIN
   IF p_old_id IS NULL OR p_new_id IS NULL THEN
@@ -96,9 +105,13 @@ BEGIN
     AND song_id IN (
       SELECT song_id FROM student_repertoire WHERE student_id = p_new_id
     );
+  GET DIAGNOSTICS v_dropped = ROW_COUNT;
   UPDATE student_repertoire SET student_id = p_new_id WHERE student_id = p_old_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   v_result := v_result || jsonb_build_object('student_repertoire', v_count);
+  IF v_dropped > 0 THEN
+    v_result := v_result || jsonb_build_object('student_repertoire_dropped_duplicate', v_dropped);
+  END IF;
 
   UPDATE practice_sessions SET student_id = p_new_id WHERE student_id = p_old_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
@@ -114,6 +127,14 @@ BEGIN
   GET DIAGNOSTICS v_count = ROW_COUNT;
   v_result := v_result || jsonb_build_object('song_requests_student', v_count);
 
+  -- NEW 2026-07-14 (review): song-mastery audit trail — student_id has an
+  -- ON DELETE CASCADE FK to profiles(id) on live stacks.
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'song_status_history' AND table_schema = 'public') THEN
+    UPDATE song_status_history SET student_id = p_new_id WHERE student_id = p_old_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    v_result := v_result || jsonb_build_object('song_status_history', v_count);
+  END IF;
+
   -- NEW 2026-07-14: chord trainer (tables added after the 2026-04-25 function)
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'chord_quiz_attempts' AND table_schema = 'public') THEN
     UPDATE chord_quiz_attempts SET student_id = p_new_id WHERE student_id = p_old_id;
@@ -125,9 +146,13 @@ BEGIN
     -- unique (student_id, chord_id): keep the real user's row on collision
     DELETE FROM chord_srs WHERE student_id = p_old_id
       AND chord_id IN (SELECT chord_id FROM chord_srs WHERE student_id = p_new_id);
+    GET DIAGNOSTICS v_dropped = ROW_COUNT;
     UPDATE chord_srs SET student_id = p_new_id WHERE student_id = p_old_id;
     GET DIAGNOSTICS v_count = ROW_COUNT;
     v_result := v_result || jsonb_build_object('chord_srs', v_count);
+    IF v_dropped > 0 THEN
+      v_result := v_result || jsonb_build_object('chord_srs_dropped_duplicate', v_dropped);
+    END IF;
   END IF;
 
   -- TEACHER / ADMIN DATA -----------------------------------------------------
@@ -167,9 +192,13 @@ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_roles' AND table_schema = 'public') THEN
     DELETE FROM user_roles WHERE user_id = p_old_id
       AND role IN (SELECT role FROM user_roles WHERE user_id = p_new_id);
+    GET DIAGNOSTICS v_dropped = ROW_COUNT;
     UPDATE user_roles SET user_id = p_new_id WHERE user_id = p_old_id;
     GET DIAGNOSTICS v_count = ROW_COUNT;
     v_result := v_result || jsonb_build_object('user_roles', v_count);
+    IF v_dropped > 0 THEN
+      v_result := v_result || jsonb_build_object('user_roles_dropped_duplicate', v_dropped);
+    END IF;
   END IF;
 
   -- NEW 2026-07-14: task_management — never covered.
@@ -182,17 +211,25 @@ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_settings' AND table_schema = 'public') THEN
     DELETE FROM user_settings WHERE user_id = p_old_id
       AND EXISTS (SELECT 1 FROM user_settings WHERE user_id = p_new_id);
+    GET DIAGNOSTICS v_dropped = ROW_COUNT;
     UPDATE user_settings SET user_id = p_new_id WHERE user_id = p_old_id;
     GET DIAGNOSTICS v_count = ROW_COUNT;
     v_result := v_result || jsonb_build_object('user_settings', v_count);
+    IF v_dropped > 0 THEN
+      v_result := v_result || jsonb_build_object('user_settings_dropped_duplicate', v_dropped);
+    END IF;
   END IF;
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_preferences' AND table_schema = 'public') THEN
     DELETE FROM user_preferences WHERE user_id = p_old_id
       AND EXISTS (SELECT 1 FROM user_preferences WHERE user_id = p_new_id);
+    GET DIAGNOSTICS v_dropped = ROW_COUNT;
     UPDATE user_preferences SET user_id = p_new_id WHERE user_id = p_old_id;
     GET DIAGNOSTICS v_count = ROW_COUNT;
     v_result := v_result || jsonb_build_object('user_preferences', v_count);
+    IF v_dropped > 0 THEN
+      v_result := v_result || jsonb_build_object('user_preferences_dropped_duplicate', v_dropped);
+    END IF;
   END IF;
 
   UPDATE in_app_notifications SET user_id = p_new_id WHERE user_id = p_old_id;
@@ -200,6 +237,24 @@ BEGIN
   v_result := v_result || jsonb_build_object('in_app_notifications', v_count);
 
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'notification_preferences' AND table_schema = 'public') THEN
+    -- tr_initialize_notification_preferences seeds ALL types for a profile the
+    -- moment it is inserted — which claim_shadow_profile() does in the same
+    -- transaction, right before calling this function. A plain dedup would
+    -- therefore always discard the old profile's explicit choices in favor of
+    -- freshly-seeded defaults. Copy the old profile's `enabled` onto colliding
+    -- target rows first (old explicit choice wins over a just-seeded default),
+    -- then dedup and move the rest.
+    UPDATE notification_preferences tgt
+    SET enabled = src.enabled, updated_at = now()
+    FROM notification_preferences src
+    WHERE tgt.user_id = p_new_id
+      AND src.user_id = p_old_id
+      AND tgt.notification_type = src.notification_type
+      AND tgt.enabled IS DISTINCT FROM src.enabled;
+    GET DIAGNOSTICS v_dropped = ROW_COUNT;
+    IF v_dropped > 0 THEN
+      v_result := v_result || jsonb_build_object('notification_preferences_overwritten', v_dropped);
+    END IF;
     DELETE FROM notification_preferences WHERE user_id = p_old_id
       AND notification_type IN (
         SELECT notification_type FROM notification_preferences WHERE user_id = p_new_id
@@ -241,9 +296,13 @@ BEGIN
     AND course_id IN (
       SELECT course_id FROM theoretical_course_access WHERE user_id = p_new_id
     );
+  GET DIAGNOSTICS v_dropped = ROW_COUNT;
   UPDATE theoretical_course_access SET user_id = p_new_id WHERE user_id = p_old_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   v_result := v_result || jsonb_build_object('theoretical_course_access_user', v_count);
+  IF v_dropped > 0 THEN
+    v_result := v_result || jsonb_build_object('theoretical_course_access_dropped_duplicate', v_dropped);
+  END IF;
 
   UPDATE theoretical_course_access SET granted_by = p_new_id WHERE granted_by = p_old_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
@@ -265,6 +324,33 @@ BEGIN
   GET DIAGNOSTICS v_count = ROW_COUNT;
   v_result := v_result || jsonb_build_object('ai_prompt_templates', v_count);
 
+  -- NEW 2026-07-14 (review): remaining SET NULL audit columns, for parity
+  -- with audit_log.actor_id. Shadows rarely author changes, but a claimed
+  -- teacher/orphaned profile can.
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'lesson_history' AND column_name = 'changed_by' AND table_schema = 'public') THEN
+    UPDATE lesson_history SET changed_by = p_new_id WHERE changed_by = p_old_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    v_result := v_result || jsonb_build_object('lesson_history_changed_by', v_count);
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'assignment_history' AND column_name = 'changed_by' AND table_schema = 'public') THEN
+    UPDATE assignment_history SET changed_by = p_new_id WHERE changed_by = p_old_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    v_result := v_result || jsonb_build_object('assignment_history_changed_by', v_count);
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_history' AND column_name = 'changed_by' AND table_schema = 'public') THEN
+    UPDATE user_history SET changed_by = p_new_id WHERE changed_by = p_old_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    v_result := v_result || jsonb_build_object('user_history_changed_by', v_count);
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'system_logs' AND column_name = 'user_id' AND table_schema = 'public') THEN
+    UPDATE system_logs SET user_id = p_new_id WHERE user_id = p_old_id;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    v_result := v_result || jsonb_build_object('system_logs_user', v_count);
+  END IF;
+
   -- SELF-REFERENCING ---------------------------------------------------------
 
   UPDATE profiles SET parent_id = p_new_id WHERE parent_id = p_old_id;
@@ -276,7 +362,15 @@ END;
 $$;
 
 COMMENT ON FUNCTION transfer_shadow_profile_references(UUID, UUID) IS
-  'Transfers all FK references from one profile ID to another. Used during shadow user linking. Returns JSONB with row counts per table. Extended 2026-07-14 with user_roles, task_management, chord_quiz_attempts, chord_srs.';
+  'Transfers all FK references from one profile ID to another. Used during shadow user linking. Returns JSONB with row counts per table (plus *_dropped_duplicate/_overwritten counts when dedup discards rows). Extended 2026-07-14 with user_roles, task_management, chord_quiz_attempts, chord_srs, song_status_history and audit changed_by columns.';
+
+-- SECURITY DEFINER with zero internal authz — it moves arbitrary FK references
+-- between any two profiles. Supabase default privileges grant EXECUTE to
+-- anon/authenticated on public functions (verified live on both stacks), which
+-- exposed this as an unauthenticated-reachable PostgREST RPC. Server-side
+-- callers only.
+REVOKE ALL ON FUNCTION transfer_shadow_profile_references(UUID, UUID) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION transfer_shadow_profile_references(UUID, UUID) TO service_role;
 
 -- ============================================================================
 -- 2. Atomic claim function — single source of truth for BOTH claim paths
@@ -366,7 +460,9 @@ BEGIN
     COALESCE(old_profile.is_teacher, false),
     COALESCE(old_profile.is_student, true),
     COALESCE(old_profile.is_development, false),
-    COALESCE(old_profile.is_active, true),
+    -- Always active: a freshly-claimed signup must never inherit a prior
+    -- soft-deactivation of the placeholder and start life locked out.
+    true,
     old_profile.student_status, old_profile.status_changed_at,
     old_profile.confirmed_active_at,
     old_profile.lead_source, old_profile.spotify_playlist_url,
