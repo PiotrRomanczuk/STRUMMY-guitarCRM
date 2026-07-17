@@ -1,20 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from '@/components/navigation/Header';
-import { HorizontalNav } from '@/components/navigation/HorizontalNav';
-import { AppSidebar } from '@/components/navigation/AppSidebar';
 import { Toaster } from 'sonner';
 import { getSupabaseConfig } from '@/lib/supabase/config';
-import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
-import { MobileMoreMenu } from '@/components/navigation/MobileMoreMenu';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { useLayoutMode } from '@/hooks/use-is-widescreen';
 import { useKeyboardViewport } from '@/hooks/use-keyboard-viewport';
-import { NotificationBell } from '@/components/notifications';
 import { logger } from '@/lib/logger';
-import type { UIVersion } from '@/lib/ui-version';
 import { AppShellV2 } from '@/components/v2/navigation';
 
 interface AppShellProps {
@@ -24,7 +15,6 @@ interface AppShellProps {
   isTeacher: boolean;
   isStudent: boolean;
   isDevelopment?: boolean;
-  uiVersion?: UIVersion;
 }
 
 export function AppShell({
@@ -34,44 +24,26 @@ export function AppShell({
   isTeacher,
   isStudent,
   isDevelopment = false,
-  uiVersion = 'v1',
 }: AppShellProps) {
   const pathname = usePathname();
-  const layoutMode = useLayoutMode();
   useKeyboardViewport();
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-  const openMoreMenu = useCallback(() => setMoreMenuOpen(true), []);
 
-  // Hide sidebar on auth pages even if user data is present (e.g. stale state during logout)
+  // Hide chrome on auth pages even if stale user data is present (e.g. during logout).
   const isAuthPage = ['/sign-in', '/sign-up', '/auth/login', '/auth/register'].includes(
     pathname || ''
   );
-  // /dashboard/* owns its own shell (Sidebar + Topbar) via app/dashboard/layout.tsx —
-  // AppShell should pass through without injecting its legacy chrome.
+  // /dashboard/* owns its own shell (Sidebar + Topbar) via app/dashboard/layout.tsx.
   const isDashboardPage = (pathname || '').startsWith('/dashboard');
-  // /design-preview/* hosts editorial-design mockups that bring their own chrome.
-  const isDesignPreview = (pathname || '').startsWith('/design-preview');
-  const showNavigation = !!user && !isAuthPage && !isDashboardPage && !isDesignPreview;
-
-  const useSidebar = showNavigation && (layoutMode === 'widescreen' || layoutMode === 'tablet');
-  const _useMobileNav = showNavigation && layoutMode === 'mobile';
 
   const { isLocal } = getSupabaseConfig();
   logger.info('AppShell:', {
     pathname,
     hasUser: !!user,
     isAuthPage,
-    showNavigation,
-    layoutMode,
     db: isLocal ? 'local' : 'remote',
   });
 
-  // Design preview mockups own their own chrome — pass through with no header.
-  if (isDesignPreview) {
-    return <>{children}</>;
-  }
-
-  // Auth pages - no navigation
+  // Auth pages (or logged-out) — no navigation.
   if (isAuthPage || !user) {
     return (
       <>
@@ -82,7 +54,7 @@ export function AppShell({
     );
   }
 
-  // Dashboard rebuild owns its own chrome — just pass children through.
+  // Dashboard owns its own chrome — pass children through.
   if (isDashboardPage) {
     return (
       <>
@@ -92,81 +64,16 @@ export function AppShell({
     );
   }
 
-  // v2 shell: dedicated navigation with responsive mobile/desktop layout
-  if (uiVersion === 'v2') {
-    return (
-      <AppShellV2
-        user={user}
-        isAdmin={isAdmin}
-        isTeacher={isTeacher}
-        isStudent={isStudent}
-        isDevelopment={isDevelopment}
-      >
-        {children}
-      </AppShellV2>
-    );
-  }
-
-  // Widescreen and tablet displays with sidebar (collapsed by default on tablet)
-  if (useSidebar) {
-    return (
-      <SidebarProvider defaultOpen={layoutMode === 'widescreen'}>
-        <AppSidebar isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent} />
-        <SidebarInset className="overflow-x-hidden">
-          <header className="flex h-16 shrink-0 items-center justify-between border-b px-6">
-            <h2 className="text-lg font-semibold">
-              {(() => {
-                if (pathname === '/dashboard') return 'Dashboard';
-
-                const segments = pathname?.split('/') || [];
-                const lastSegment = segments.pop() || 'Page';
-
-                // Check if last segment is a UUID (contains 5 hyphens and is 36 chars)
-                const isUUID = lastSegment.length === 36 && lastSegment.split('-').length === 5;
-
-                if (isUUID) {
-                  // Get the parent segment for context
-                  const parentSegment = segments.pop();
-                  return parentSegment
-                    ? parentSegment.replace(/-/g, ' ').replace(/^\w/, (c) => c.toUpperCase())
-                    : 'Details';
-                }
-
-                return lastSegment.replace(/-/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
-              })()}
-            </h2>
-            <NotificationBell userId={user?.id} />
-          </header>
-          <main className="flex-1 bg-background p-3 sm:p-4 md:p-6 lg:p-8 ultrawide:p-10 overflow-x-hidden w-full max-w-full">
-            {children}
-          </main>
-        </SidebarInset>
-        <Toaster />
-      </SidebarProvider>
-    );
-  }
-
-  // Mobile displays with top horizontal nav + bottom nav
+  // Peripheral authenticated pages (/ai, /onboarding, /unsubscribe) — the app shell.
   return (
-    <>
-      <HorizontalNav user={user} isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent} />
-      <main className="pt-16 pb-16 md:pb-0 min-h-screen bg-background px-4 sm:px-6 md:px-8">
-        {children}
-      </main>
-      <MobileBottomNav
-        isAdmin={isAdmin}
-        isTeacher={isTeacher}
-        isStudent={isStudent}
-        onOpenSidebar={openMoreMenu}
-      />
-      <MobileMoreMenu
-        open={moreMenuOpen}
-        onOpenChange={setMoreMenuOpen}
-        isAdmin={isAdmin}
-        isTeacher={isTeacher}
-        isStudent={isStudent}
-      />
-      <Toaster />
-    </>
+    <AppShellV2
+      user={user}
+      isAdmin={isAdmin}
+      isTeacher={isTeacher}
+      isStudent={isStudent}
+      isDevelopment={isDevelopment}
+    >
+      {children}
+    </AppShellV2>
   );
 }

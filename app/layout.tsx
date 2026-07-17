@@ -10,7 +10,6 @@ import { PostHogIdentify } from '@/components/providers/PostHogIdentify';
 
 import './globals.css';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
-import { getUIVersion } from '@/lib/ui-version.server';
 import { createLogger } from '@/lib/logger';
 import { getFontVariableClasses, getAllFontClasses } from '@/lib/fonts';
 import { FontProvider } from '@/lib/fonts/FontProvider';
@@ -46,14 +45,12 @@ export default async function RootLayout({
 }>) {
   log.debug('RootLayout rendering');
   const { user, isAdmin, isTeacher, isStudent, isDevelopment } = await getUserWithRolesSSR();
-  const uiVersion = await getUIVersion();
   log.debug('User roles', {
     userId: user?.id,
     isAdmin,
     isTeacher,
     isStudent,
     isDevelopment,
-    uiVersion,
   });
 
   // When dynamic switching is enabled, load all fonts
@@ -79,7 +76,6 @@ export default async function RootLayout({
           isTeacher={isTeacher}
           isStudent={isStudent}
           isDevelopment={isDevelopment}
-          uiVersion={uiVersion}
         >
           {children}
         </AppShell>
