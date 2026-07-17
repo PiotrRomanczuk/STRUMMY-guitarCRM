@@ -34,8 +34,6 @@
   "exclude": [
     "node_modules",
     ".claude/**/*",
-    "cypress.config.ts",
-    "cypress/**/*",
     "mcp/**/*",
     "scripts/**/*",
     "tests/e2e/**/*",

@@ -22,7 +22,6 @@ const eslintConfig = defineConfig([
     'scripts/history/**',
     // Test infrastructure dirs
     'tests/**',
-    'cypress/**',
     // Claude Code agent worktrees (isolated copies for parallel agents)
     '.claude/**',
   ]),

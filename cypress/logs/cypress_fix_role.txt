@@ -1,5 +1,0 @@
-Gtk-Message: 14:10:03.098: Failed to load module "xapp-gtk3-module"
-Gtk-Message: 14:10:03.098: Failed to load module "appmenu-gtk-module"
-
-DevTools listening on ws://127.0.0.1:40917/devtools/browser/006b30a8-0ba1-45d2-bba8-2b3165855910
-Missing baseUrl in compilerOptions. tsconfig-paths will be skipped

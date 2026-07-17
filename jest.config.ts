@@ -71,7 +71,6 @@ const config: Config = {
     '!**/node_modules/**',
     '!**/.next/**',
     '!**/coverage/**',
-    '!**/cypress/**',
     '!**/*.config.{js,ts}',
     '!**/middleware.ts',
     '!app/layout.tsx',
@@ -97,7 +96,6 @@ const config: Config = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/.next/',
-    '/cypress/',
     '/database/',
     worktreeIgnorePattern,
     '.integration.test.',

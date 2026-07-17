@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Confirm your Strummy account</title>
+  </head>
+  <body style="margin: 0; padding: 0; background: #f5f3ef; font-family: Georgia, serif">
+    <!-- Outer wrapper -->
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="background: #f5f3ef; padding: 48px 16px"
+    >
+      <tr>
+        <td align="center">
+          <!-- Card -->
+          <table
+            width="560"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="
+              max-width: 560px;
+              width: 100%;
+              background: #ffffff;
+              border-radius: 12px;
+              overflow: hidden;
+              border: 1px solid #e4e0d8;
+            "
+          >
+            <!-- Header band -->
+            <tr>
+              <td style="background: #1a1a1a; padding: 28px 36px">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td>
+                      <!-- Logo / wordmark -->
+                      <span
+                        style="
+                          font-family: Georgia, serif;
+                          font-size: 22px;
+                          font-weight: 400;
+                          color: #f5f3ef;
+                          letter-spacing: -0.02em;
+                          font-style: italic;
+                        "
+                      >
+                        Strummy
+                      </span>
+                    </td>
+                    <td align="right">
+                      <span
+                        style="
+                          font-family: 'Courier New', monospace;
+                          font-size: 10px;
+                          color: #7a7a72;
+                          text-transform: uppercase;
+                          letter-spacing: 0.14em;
+                        "
+                      >
+                        Guitar · Lessons
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Gold rule -->
+            <tr>
+              <td style="background: #c9a84c; height: 3px; line-height: 3px; font-size: 0">
+                &nbsp;
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding: 40px 36px 32px">
+                <!-- Eyebrow -->
+                <p
+                  style="
+                    margin: 0 0 8px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 11px;
+                    color: #9a9589;
+                    text-transform: uppercase;
+                    letter-spacing: 0.16em;
+                  "
+                >
+                  Confirm your email
+                </p>
+
+                <!-- Headline -->
+                <h1
+                  style="
+                    margin: 0 0 20px;
+                    font-family: Georgia, serif;
+                    font-size: 36px;
+                    font-weight: 400;
+                    color: #1a1a1a;
+                    letter-spacing: -0.02em;
+                    font-style: italic;
+                    line-height: 1.15;
+                  "
+                >
+                  One last<br />step
+                </h1>
+
+                <!-- Body copy -->
+                <p
+                  style="
+                    margin: 0 0 28px;
+                    font-family: Georgia, serif;
+                    font-size: 15px;
+                    color: #4a4a42;
+                    line-height: 1.65;
+                  "
+                >
+                  Thanks for signing up to Strummy. Confirm your email address to activate your
+                  account and start managing your students, lessons, and repertoire.
+                </p>
+
+                <!-- CTA button -->
+                <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 32px">
+                  <tr>
+                    <td style="background: #1a1a1a; border-radius: 8px">
+                      <a
+                        href="{{ .ConfirmationURL }}"
+                        style="
+                          display: inline-block;
+                          padding: 14px 32px;
+                          font-family: 'Courier New', monospace;
+                          font-size: 13px;
+                          font-weight: 600;
+                          color: #f5f3ef;
+                          text-decoration: none;
+                          letter-spacing: 0.04em;
+                          text-transform: uppercase;
+                        "
+                      >
+                        Confirm email &rarr;
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Divider -->
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="margin-bottom: 28px"
+                >
+                  <tr>
+                    <td style="border-top: 1px solid #e4e0d8"></td>
+                  </tr>
+                </table>
+
+                <!-- OTP code -->
+                <p
+                  style="
+                    margin: 0 0 6px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 10px;
+                    color: #9a9589;
+                    text-transform: uppercase;
+                    letter-spacing: 0.14em;
+                  "
+                >
+                  Or enter this code manually
+                </p>
+                <p
+                  style="
+                    margin: 0 0 28px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 28px;
+                    font-weight: 700;
+                    color: #1a1a1a;
+                    letter-spacing: 0.18em;
+                  "
+                >
+                  {{ .Token }}
+                </p>
+
+                <!-- Link fallback -->
+                <p
+                  style="
+                    margin: 0;
+                    font-family: 'Courier New', monospace;
+                    font-size: 11px;
+                    color: #9a9589;
+                    line-height: 1.6;
+                  "
+                >
+                  If the button above doesn't work, copy and paste this link:<br />
+                  <a href="{{ .ConfirmationURL }}" style="color: #c9a84c; word-break: break-all">
+                    {{ .ConfirmationURL }}
+                  </a>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="background: #f5f3ef; padding: 20px 36px; border-top: 1px solid #e4e0d8">
+                <p
+                  style="
+                    margin: 0;
+                    font-family: 'Courier New', monospace;
+                    font-size: 10px;
+                    color: #b0aa9e;
+                    text-transform: uppercase;
+                    letter-spacing: 0.12em;
+                    line-height: 1.8;
+                  "
+                >
+                  This confirmation was sent to {{ .Email }}&nbsp;&middot;&nbsp; If you didn't
+                  create a Strummy account, you can safely ignore it.
+                </p>
+              </td>
+            </tr>
+          </table>
+          <!-- /Card -->
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
