@@ -119,7 +119,6 @@ const config: Config = {
     'app/api/spotify/sync/route\\.test\\.ts',
 
     // ── Medium fixes: stale assertions / missing mocks ───────────────────────
-    '__tests__/components/admin/index\\.test\\.tsx',
     '__tests__/lib/getUserWithRolesSSR\\.test\\.ts',
     '__tests__/orphan-profile-cleanup\\.test\\.ts',
     '__tests__/shadow-users\\.test\\.ts',
@@ -131,20 +130,11 @@ const config: Config = {
     // Component forms: ESM fixed (lucide-react/react-markdown now mocked), but
     // real assertion failures remain (missing QueryClientProvider wrapper,
     // UI text drift). Need targeted test fixes before unquarantining.
-    'components/assignments/form/AssignmentForm\\.test\\.tsx',
-    'components/lessons/form/LessonForm\\.test\\.tsx',
-    'components/songs/form/SongForm\\.test\\.tsx',
     // Other component failures under investigation
     'app/dashboard/songs/page\\.test\\.tsx',
-    'components/assignments/shared/__tests__/AssignmentStatusActions\\.test\\.tsx',
-    'components/dashboard/admin/SongStatsTable\\.test\\.tsx',
-    'components/dashboard/calendar/CalendarEventsList\\.test\\.tsx',
-    'components/lessons/hooks/__tests__/useStudentSongProgress\\.test\\.ts',
 
     // ── Newly discovered failures (2026-06-16 triage) ────────────────────────
     // Cannot find module — component moved or deleted
-    '__tests__/components/profile/ProfileComponents\\.test\\.tsx',
-    '__tests__/components/profile/ProfileFormFields\\.test\\.tsx',
     // Circuit breaker test reliably exceeds 5000ms timeout
     'lib/__tests__/spotify-error-handling\\.test\\.ts',
   ],
