@@ -32,6 +32,7 @@ export const InviteShadowButton = ({ userId, defaultEmail }: Props) => {
   if (sent) {
     return (
       <span
+        data-testid="invite-shadow-sent"
         style={{
           fontFamily: 'var(--mono)',
           fontSize: 11,
@@ -49,6 +50,7 @@ export const InviteShadowButton = ({ userId, defaultEmail }: Props) => {
     return (
       <button
         type="button"
+        data-testid="invite-shadow-open"
         onClick={() => setIsOpen(true)}
         style={{
           padding: '8px 16px',
@@ -72,6 +74,7 @@ export const InviteShadowButton = ({ userId, defaultEmail }: Props) => {
       <div style={{ display: 'flex', gap: 8 }}>
         <input
           type="email"
+          data-testid="invite-shadow-email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="student@email.com"
@@ -88,6 +91,7 @@ export const InviteShadowButton = ({ userId, defaultEmail }: Props) => {
         />
         <button
           type="button"
+          data-testid="invite-shadow-send"
           onClick={handleSend}
           disabled={isPending}
           style={{
@@ -106,7 +110,10 @@ export const InviteShadowButton = ({ userId, defaultEmail }: Props) => {
         </button>
       </div>
       {error && (
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--danger)' }}>
+        <div
+          data-testid="invite-shadow-error"
+          style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--danger)' }}
+        >
           {error}
         </div>
       )}
