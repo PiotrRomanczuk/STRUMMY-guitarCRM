@@ -134,4 +134,3 @@ playwright.video.config.ts
 .claude/agents/
 
 # Self-referencing symlink foot-gun (recursion trap for tools that follow symlinks)
-/guitar-crm
