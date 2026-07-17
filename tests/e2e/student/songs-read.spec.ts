@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures';
 import { createClient } from '@supabase/supabase-js';
+import { getStudentId, getTeacherId } from '../../helpers/seed-ids';
 
 /**
  * Student Songs Read-Only E2E Tests
@@ -11,8 +12,9 @@ import { createClient } from '@supabase/supabase-js';
  * against guaranteed data regardless of DB state.
  */
 
-const STUDENT_ID = '2fb4575e-bb80-486f-a8d9-3553fd84316d';
-const TEACHER_ID = 'e8cfbe9a-b9ab-4530-a588-3efa26d1f849';
+// Resolved at runtime from the configured test-account emails (see beforeAll).
+let STUDENT_ID = '';
+let TEACHER_ID = '';
 
 function adminClient() {
   const url =
@@ -29,6 +31,8 @@ let seededLessonSongId: string | null = null;
 test.describe('Student Songs (Read-Only)', { tag: ['@student', '@songs'] }, () => {
   test.beforeAll(async () => {
     const db = adminClient();
+    STUDENT_ID = await getStudentId(db);
+    TEACHER_ID = await getTeacherId(db);
 
     // Remove any leftover E2E songs from previous runs
     await db.from('songs').delete().eq('title', 'E2E Test Song Read');
@@ -108,17 +112,13 @@ test.describe('Student Songs (Read-Only)', { tag: ['@student', '@songs'] }, () =
   test('view song detail @mobile', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/dashboard/songs');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
-    // Wait for content to load
-    await page.waitForTimeout(2000);
-
-    const songLinks = page.locator('a[href*="/dashboard/songs/"]');
-    await expect(songLinks.first()).toBeVisible({ timeout: 10_000 });
-
-    // Click the first song
-    await songLinks.first().click();
-    await page.waitForLoadState('networkidle');
+    // Navigate to the song this suite seeded (not `.first()`, which races with
+    // other student specs seeding songs for the same test student).
+    const songLink = page.locator(`a[href*="/dashboard/songs/${seededSongId}"]`);
+    await expect(songLink.first()).toBeVisible({ timeout: 15_000 });
+    await songLink.first().click();
 
     await expect(page).toHaveURL(/\/dashboard\/songs\/[a-zA-Z0-9-]+/);
 
@@ -134,16 +134,12 @@ test.describe('Student Songs (Read-Only)', { tag: ['@student', '@songs'] }, () =
   test('no edit or delete controls on song detail @mobile', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/dashboard/songs');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
-    await page.waitForTimeout(2000);
-
-    const songLinks = page.locator('a[href*="/dashboard/songs/"]');
-    await expect(songLinks.first()).toBeVisible({ timeout: 10_000 });
-
-    // Navigate to song detail
-    await songLinks.first().click();
-    await page.waitForLoadState('networkidle');
+    // Navigate to the seeded song (deterministic; avoids cross-spec `.first()` race).
+    const songLink = page.locator(`a[href*="/dashboard/songs/${seededSongId}"]`);
+    await expect(songLink.first()).toBeVisible({ timeout: 15_000 });
+    await songLink.first().click();
 
     await expect(page).toHaveURL(/\/dashboard\/songs\/[a-zA-Z0-9-]+/);
 

@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures';
 import { createClient } from '@supabase/supabase-js';
+import { getStudentId, getTeacherId } from '../../helpers/seed-ids';
 
 /**
  * Student Assignments Interaction E2E Tests
@@ -12,8 +13,9 @@ import { createClient } from '@supabase/supabase-js';
  * beforeAll so every test runs against guaranteed data regardless of DB state.
  */
 
-const STUDENT_ID = '2fb4575e-bb80-486f-a8d9-3553fd84316d';
-const TEACHER_ID = 'e8cfbe9a-b9ab-4530-a588-3efa26d1f849';
+// Resolved at runtime from the configured test-account emails (see beforeAll).
+let STUDENT_ID = '';
+let TEACHER_ID = '';
 
 function adminClient() {
   const url =
@@ -31,6 +33,8 @@ test.describe(
   () => {
     test.beforeAll(async () => {
       const db = adminClient();
+      STUDENT_ID = await getStudentId(db);
+      TEACHER_ID = await getTeacherId(db);
 
       // Remove any leftover E2E assignments from previous runs
       await db

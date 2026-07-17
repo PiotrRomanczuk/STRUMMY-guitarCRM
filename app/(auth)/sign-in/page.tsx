@@ -29,11 +29,19 @@ export default function SignInPage() {
   const [touched, setTouched] = useState({ email: false, password: false });
 
   useEffect(() => {
+    let cancelled = false;
     const checkUser = async () => {
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      // getUser() can hang (supabase-js navigator.locks contention, common under
+      // dev HMR) — never strand the user on the loading screen. Race it against a
+      // timeout and fall through to the form on hang/error.
+      const resolveUser = supabase.auth
+        .getUser()
+        .then((res) => res.data.user)
+        .catch(() => null);
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
+      const user = await Promise.race([resolveUser, timeout]);
+      if (cancelled) return;
       if (user) {
         router.push('/dashboard');
       } else {
@@ -41,6 +49,9 @@ export default function SignInPage() {
       }
     };
     checkUser();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   // Auto-fill demo credentials when ?demo=true

@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures';
 import { createClient } from '@supabase/supabase-js';
+import { getStudentId, getAdminId } from '../../helpers/seed-ids';
 
 /**
  * Student Lessons Read-Only E2E Tests
@@ -11,8 +12,9 @@ import { createClient } from '@supabase/supabase-js';
  * against guaranteed data regardless of DB state.
  */
 
-const STUDENT_ID = '2fb4575e-bb80-486f-a8d9-3553fd84316d';
-const TEACHER_ID = 'e8cfbe9a-b9ab-4530-a588-3efa26d1f849';
+// Resolved at runtime from the configured test-account emails (see beforeAll).
+let STUDENT_ID = '';
+let TEACHER_ID = '';
 
 function adminClient() {
   const url =
@@ -27,6 +29,10 @@ let seededLessonId: string | null = null;
 test.describe('Student Lessons (Read-Only)', { tag: ['@student', '@lessons'] }, () => {
   test.beforeAll(async () => {
     const db = adminClient();
+    STUDENT_ID = await getStudentId(db);
+    // Use the admin-teacher here so this suite's lesson seed doesn't collide with
+    // songs-read (teacher@example.com) on the per-(teacher,student) lesson number.
+    TEACHER_ID = await getAdminId(db);
 
     // Remove any leftover E2E lessons from previous runs
     await db
@@ -89,14 +95,11 @@ test.describe('Student Lessons (Read-Only)', { tag: ['@student', '@lessons'] }, 
     // Wait for content to load
     await page.waitForTimeout(2000);
 
-    const lessonLinks = page
-      .locator('a[href*="/dashboard/lessons/"]')
-      .filter({ hasNotText: /new|edit|import/i });
-    await expect(lessonLinks.first()).toBeVisible({ timeout: 10_000 });
-
-    // Click the first lesson
-    await lessonLinks.first().click();
-    await page.waitForLoadState('networkidle');
+    // Open the lesson this suite seeded (not `.first()`, which races with other
+    // student specs seeding lessons for the same test student).
+    const lessonLink = page.locator(`a[href*="/dashboard/lessons/${seededLessonId}"]`);
+    await expect(lessonLink.first()).toBeVisible({ timeout: 15_000 });
+    await lessonLink.first().click();
 
     await expect(page).toHaveURL(/\/dashboard\/lessons\/[a-zA-Z0-9-]+/);
 
@@ -130,14 +133,10 @@ test.describe('Student Lessons (Read-Only)', { tag: ['@student', '@lessons'] }, 
 
     await page.waitForTimeout(2000);
 
-    const lessonLinks = page
-      .locator('a[href*="/dashboard/lessons/"]')
-      .filter({ hasNotText: /new|edit|import/i });
-    await expect(lessonLinks.first()).toBeVisible({ timeout: 10_000 });
-
-    // Navigate to lesson detail
-    await lessonLinks.first().click();
-    await page.waitForLoadState('networkidle');
+    // Open the seeded lesson (deterministic; avoids cross-spec `.first()` race).
+    const lessonLink = page.locator(`a[href*="/dashboard/lessons/${seededLessonId}"]`);
+    await expect(lessonLink.first()).toBeVisible({ timeout: 15_000 });
+    await lessonLink.first().click();
 
     await expect(page).toHaveURL(/\/dashboard\/lessons\/[a-zA-Z0-9-]+/);
 
@@ -164,14 +163,10 @@ test.describe('Student Lessons (Read-Only)', { tag: ['@student', '@lessons'] }, 
 
     await page.waitForTimeout(2000);
 
-    const lessonLinks = page
-      .locator('a[href*="/dashboard/lessons/"]')
-      .filter({ hasNotText: /new|edit|import/i });
-    await expect(lessonLinks.first()).toBeVisible({ timeout: 10_000 });
-
-    // Navigate to lesson detail
-    await lessonLinks.first().click();
-    await page.waitForLoadState('networkidle');
+    // Open the seeded lesson (deterministic; avoids cross-spec `.first()` race).
+    const lessonLink = page.locator(`a[href*="/dashboard/lessons/${seededLessonId}"]`);
+    await expect(lessonLink.first()).toBeVisible({ timeout: 15_000 });
+    await lessonLink.first().click();
 
     await expect(page).toHaveURL(/\/dashboard\/lessons\/[a-zA-Z0-9-]+/);
 

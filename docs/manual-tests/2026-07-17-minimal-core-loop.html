@@ -1,0 +1,286 @@
+<meta charset="utf-8" />
+<title>Strummy — Minimal Core Loop (2026-07-17)</title>
+<style>
+  :root {
+    color-scheme: light dark;
+  }
+  body {
+    font:
+      15px/1.6 -apple-system,
+      system-ui,
+      sans-serif;
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1.25rem;
+    color: #1a1a1a;
+    background: #faf9f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    body {
+      background: #16150f;
+      color: #e9e6dc;
+    }
+    code,
+    pre {
+      background: #26241c;
+    }
+    th {
+      background: #26241c;
+    }
+  }
+  h1 {
+    font-size: 1.7rem;
+    margin-bottom: 0.2rem;
+  }
+  h2 {
+    margin-top: 2rem;
+    border-bottom: 2px solid #c9a84c;
+    padding-bottom: 0.3rem;
+  }
+  .meta {
+    color: #777;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  code {
+    background: #efece3;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+  pre {
+    background: #efece3;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+  }
+  th,
+  td {
+    border: 1px solid #d8d3c4;
+    padding: 0.5rem 0.7rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #f0ede4;
+  }
+  .ok {
+    color: #2e7d32;
+    font-weight: 600;
+  }
+  .warn {
+    color: #b26a00;
+    font-weight: 600;
+  }
+  ol.j > li {
+    margin: 0.3rem 0;
+  }
+  .box {
+    background: #fff;
+    border: 1px solid #e4e0d8;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+  }
+  @media (prefers-color-scheme: dark) {
+    .box {
+      background: #1e1c15;
+      border-color: #3a372c;
+    }
+    code,
+    pre,
+    th {
+      background: #26241c;
+    }
+    td,
+    th {
+      border-color: #3a372c;
+    }
+  }
+</style>
+
+<h1>Strummy — Minimal Working Core Loop</h1>
+<div class="meta">
+  <strong>Date:</strong> 2026-07-17 · <strong>Branch:</strong> feature/minimal-core-loop ·
+  <strong>Author:</strong> Claude
+</div>
+
+<p>
+  A <strong>trust pass</strong>, not a feature pass: prove the basic core loop works reliably on the
+  local database for two real actors (Piotr as admin/teacher + one student), shrink the visible
+  surface to just that loop, and back it with green end-to-end tests. Everything else is hidden from
+  the sidebar (not deleted) until proven, step by step.
+</p>
+
+<h2>What was actually done</h2>
+<table>
+  <tr>
+    <th>Area</th>
+    <th>Change &amp; resulting behavior</th>
+  </tr>
+  <tr>
+    <td><strong>Sidebar trimmed</strong></td>
+    <td>
+      <code>components/navigation/menuConfig.ts</code> — an always-on
+      <code>CORE_LOOP_HIDDEN_ITEMS</code> filter reduces the nav to
+      <strong>Dashboard · Lessons · Songs · Assignments · Students · Settings</strong> for
+      teacher/admin, and
+      <strong>Dashboard · My Lessons · My Songs · My Assignments · Settings</strong> for students.
+      Theory, Skills, Health, Analytics, Calendar, Fretboard, AI, Stats, Repertoire are hidden from
+      nav (routes still reachable by URL — nav-only, reversible).
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Sign-in strand fix</strong></td>
+    <td>
+      <code>app/(auth)/sign-in/page.tsx</code> — the initial auth check awaited
+      <code>supabase.auth.getUser()</code> with no timeout/catch, so a hung call (supabase-js
+      <code>navigator.locks</code>, common under dev HMR) stranded the page on "Loading…" forever.
+      Now races a 3s timeout and falls through to the form on any hang/error.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Shadow lifecycle proven</strong></td>
+    <td>
+      Admin creates a student as an <em>unclaimed shadow</em> at <code>/dashboard/users/new</code> →
+      "Invite to claim" → the <code>handle_new_user</code> trigger migrates the student's lessons +
+      assignments onto the real account, deletes the shadow row, keeps one profile. Verified
+      end-to-end (UI + DB). Real invite email delivered to Gmail with a
+      <code>redirect_to=localhost:3000/accept-invitation</code> link.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Realistic seed data</strong></td>
+    <td>
+      Parsed a WhatsApp lesson export into 10 dated lessons + 20 songs and seeded them onto the test
+      student (<code>romanczukpiotr95</code>), deduping songs against the existing library. The
+      student now shows a real Dec 2025 → Mar 2026 history.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>E2E hardening</strong></td>
+    <td>
+      New <code>tests/helpers/seed-ids.ts</code> resolves student/teacher/admin ids from the
+      configured emails at runtime (replacing stale hard-coded UUIDs); student specs target the
+      seeded item deterministically instead of <code>.first()</code>. New
+      <code>__tests__/components/navigation/menuConfig.test.ts</code> locks the trimmed nav.
+    </td>
+  </tr>
+</table>
+
+<h2>The core-loop journeys (all verified)</h2>
+<ol class="j">
+  <li>
+    <strong>Auth</strong> — admin/teacher sign-in, student sign-in, sign-out, page refresh (no
+    loop).
+  </li>
+  <li>
+    <strong>Shadow → invite → claim</strong> — admin creates shadow; attaches lesson + assignment;
+    invites; student sets password + logs in; references migrate onto the real account; shadow row
+    gone; one profile per email.
+  </li>
+  <li>
+    <strong>Songs CRUD (teacher)</strong> — create → view → edit → soft-delete (repertoire cascade).
+  </li>
+  <li>
+    <strong>Lessons CRUD (teacher)</strong> — create (attach a song) → view → edit → soft-delete.
+  </li>
+  <li><strong>Assignments CRUD (teacher)</strong> — create → view → edit → soft-delete.</li>
+  <li>
+    <strong>Student surface</strong> — sees only their own lessons/songs/assignments; updates
+    assignment status; cannot read another student's data (RLS).
+  </li>
+  <li><strong>Scope</strong> — sidebar shows only the core items per role.</li>
+</ol>
+
+<h2>How to run &amp; manually test</h2>
+<div class="box">
+  <strong>Prerequisites</strong> (Piotr's setup, on the Orange LAN):
+  <ol>
+    <li>
+      Local Supabase (StudentManager stack) is up on <code>uwh</code>. It's reachable
+      <strong>LAN-direct</strong> — no Tailscale, no SSH tunnel needed. Node <code>fetch</code> to
+      <code>http://192.168.1.75:54321</code> works.
+    </li>
+    <li>
+      <code>.env.local</code> has
+      <code>NEXT_PUBLIC_SUPABASE_LOCAL_URL=http://192.168.1.75:54321</code> + the local anon &amp;
+      service-role keys.
+    </li>
+    <li>
+      Build once and run the <strong>production</strong> server (dev/Turbopack HMR is flaky on this
+      repo's slow filesystem):
+      <pre>npm run build &amp;&amp; PORT=3000 npm run start</pre>
+      Confirm <code>db: "local"</code> in the logs.
+    </li>
+  </ol>
+</div>
+
+<div class="box">
+  <strong>Manual walk-through</strong>
+  <ol>
+    <li>
+      Open <code>http://localhost:3000/sign-in</code>. Sign in as
+      <code>p.romanczuk@gmail.com</code> / <code>test123_admin</code>. Confirm the "Local DB" badge
+      and the trimmed sidebar (Dashboard, Lessons, Songs, Assignments, Students, Settings only).
+    </li>
+    <li>
+      Create a student: <strong>Students → + New student</strong>, enter name + invite email → the
+      student appears as <em>Unclaimed</em>.
+    </li>
+    <li>
+      Create a song (<strong>Songs → New</strong>), a lesson (<strong>Lessons → New</strong>, attach
+      the song), and an assignment (<strong>Assignments → New</strong>) for that student. Edit and
+      delete each to confirm the full CRUD cycle.
+    </li>
+    <li>
+      On the student detail page, click <strong>Invite to claim → Send</strong>. The shadow's data
+      migrates to the real account.
+    </li>
+    <li>
+      Sign out, sign in as the student, and confirm they see their lessons/assignments and the
+      minimal student sidebar.
+    </li>
+  </ol>
+</div>
+
+<div class="box">
+  <strong>Automated (E2E) — run serially</strong>
+  <pre>
+npx playwright test tests/e2e/dashboard/sidebar.spec.ts \
+  tests/e2e/auth/role-login.spec.ts tests/e2e/auth/sign-out.spec.ts \
+  tests/e2e/teacher/{songs,lessons,assignments}-crud.spec.ts \
+  tests/e2e/student/{songs-read,lessons-read,assignments-interact}.spec.ts \
+  --project="Desktop Chrome" --workers=1</pre>
+  Expected: <span class="ok">25 passed / 0 failed / 5 skipped</span>. Plus the simplest sanity
+  check:
+  <pre>
+curl -s "$BASE/rest/v1/lessons?student_id=eq.&lt;id&gt;&amp;select=title,status,scheduled_at" -H "apikey: $SRV" -H "Authorization: Bearer $SRV"</pre>
+</div>
+
+<h2>Known limitations (out of scope for this pass)</h2>
+<ul>
+  <li class="warn">
+    E2E suite needs <code>--workers=1</code> / session reuse: it shares a single test student, so
+    parallel runs collide on the per-(teacher,student) lesson-number trigger, and rapid re-logins
+    trip the auth rate limiter. Making it parallel-safe (per-worker students) is a follow-up.
+  </li>
+  <li class="warn">
+    <code>tests/e2e/auth/sign-up-complete.spec.ts</code> has 10 stale-selector failures (self-signup
+    form) — not a core journey (students arrive by invite); left for a separate pass.
+  </li>
+  <li class="warn">
+    Hidden features are nav-only; their routes are still reachable by direct URL (no route-guarding,
+    by design).
+  </li>
+  <li class="warn">
+    Local GoTrue (StudentManager) uses real Gmail SMTP; the emailed claim link verifies via the
+    Cloudflare tunnel to the same stack then redirects to <code>localhost:3000</code>. Local claim
+    via the emailed link works; automated tests set the password via the admin API.
+  </li>
+</ul>

@@ -51,6 +51,42 @@ export const NOTIFICATION_ITEM: NotificationItem = {
 
 const DEMO_HIDDEN_ITEMS = ['skills', 'health', 'logs', 'cohorts', 'chord-analysis'];
 
+// Minimal core-loop scope: hide every non-core feature from the sidebar until it
+// is individually proven. Core loop = Dashboard, Lessons, Songs, Assignments,
+// Students (+ Home/Settings, which render separately). Hiding is nav-only — the
+// routes remain reachable by direct URL. Remove ids from this list to reveal a
+// feature once it's ready.
+const CORE_LOOP_HIDDEN_ITEMS = [
+  // Teaching
+  'theory',
+  // Students group extras
+  'skills',
+  'health',
+  // Analytics group (all)
+  'song-stats',
+  'lesson-stats',
+  'chord-analysis',
+  'cohorts',
+  'logs',
+  // Tools group (all)
+  'calendar',
+  'fretboard',
+  'ai',
+  'ai-chat',
+  // Student Progress group (all)
+  'my-stats',
+  'repertoire',
+];
+
+function hideNonCore(groups: MenuGroup[]): MenuGroup[] {
+  return groups
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((item) => !CORE_LOOP_HIDDEN_ITEMS.includes(item.id)),
+    }))
+    .filter((g) => g.items.length > 0);
+}
+
 function getTeacherGroups(isDemoAccount?: boolean): MenuGroup[] {
   const groups: MenuGroup[] = [
     {
@@ -167,7 +203,7 @@ export function getMenuGroups({
   isStudent,
   isDemoAccount,
 }: RoleFlags): MenuGroup[] {
-  if (isAdmin || isTeacher) return getTeacherGroups(isDemoAccount);
-  if (isStudent) return getStudentGroups();
+  if (isAdmin || isTeacher) return hideNonCore(getTeacherGroups(isDemoAccount));
+  if (isStudent) return hideNonCore(getStudentGroups());
   return [];
 }
