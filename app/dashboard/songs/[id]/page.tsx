@@ -1,4 +1,4 @@
-import '@/app/design-preview/editorial-tokens.css';
+import '@/app/editorial-tokens.css';
 
 import { notFound } from 'next/navigation';
 import { Fraunces, Geist, Geist_Mono } from 'next/font/google';

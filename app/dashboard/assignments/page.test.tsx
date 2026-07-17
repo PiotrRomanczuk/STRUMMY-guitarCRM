@@ -5,7 +5,7 @@ import { getAssignmentDetail } from '@/lib/services/assignment-detail-queries';
 import { redirect, notFound } from 'next/navigation';
 
 // Mock CSS import
-jest.mock('@/app/design-preview/editorial-tokens.css', () => ({}), { virtual: true });
+jest.mock('@/app/editorial-tokens.css', () => ({}), { virtual: true });
 
 jest.mock('next/navigation', () => ({
   redirect: jest.fn(),

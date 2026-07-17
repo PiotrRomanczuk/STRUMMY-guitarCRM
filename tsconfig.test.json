@@ -19,5 +19,5 @@
 		}
 	},
 	"include": ["__tests__/**/*", "jest.setup.js", "types/jest.d.ts"],
-	"exclude": ["cypress", "cypress.config.ts", "node_modules"]
+	"exclude": ["node_modules"]
 }
