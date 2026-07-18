@@ -29,6 +29,10 @@ All of these, no exceptions:
 7. Both login paths (password + Google) reach a dashboard
 8. RLS cross-read test green **against StrummyProd** (not dev — see
    [91-testing-strategy.md](91-testing-strategy.md#rls-testing))
+9. Practice triggers fixed (PRA-1, [04-practice-progress.md](04-practice-progress.md)) —
+   undo of a song-linked session must not error, aggregates must accrue (promoted to hard
+   gate in grill 2026-07-18: practice logging is the one student write surface in the core
+   loop; shipping it broken violates the trust pass)
 
 ## P3 — Harden self-host (remaining items)
 

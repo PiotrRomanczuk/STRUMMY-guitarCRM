@@ -142,8 +142,9 @@ cutover-critical need.
 
 ## Open questions
 
-- After cutover, does the dispatcher stay (Hobby single-cron constraint) or do the 7 direct
-  `vercel.json` schedules become systemd timers on uwh? Affects where cron observability lives.
+- ~~Dispatcher vs systemd timers post-cutover~~ — **resolved 2026-07-18: dispatcher stays.**
+  The app remains on Vercel after cutover (only the DB moves), so Vercel cron keeps working
+  unchanged. Revisit only if the app itself ever moves off Vercel.
 - Formal retention policy for `system_logs` (currently unbounded growth; no cleanup cron).
 
 ## References

@@ -142,19 +142,12 @@ teacher/student; surface per-date failures. If the owner declines, delete
 lessons with correct dates + numbers (integration test over the action); Google-connected
 teacher gets 4 events; unchecked box behaves exactly as today.
 
-### CAL-1 — Calendar visual view (grid/agenda)
+### CAL-1 — Calendar visual view · **CUT (decision 2026-07-18)**
 
-**Missing**: `/dashboard/calendar` shows sync _controls_ but no calendar — there is no
-month/week/agenda rendering of lessons anywhere (the old `v2/calendar` tree was deleted).
-Teachers see lessons only as a list. **Approach**: decide scope in a grill session first
-(see Open questions — a week-agenda of `lessons` needs no Google at all). If built: a
-read-only editorial week/agenda component under `components/lessons/editorial/calendar/`
-fed by a `getLessonsInRange(teacherId, from, to)` query, mounted above the sync controls on
-the calendar page; lesson chips link to detail. No drag-reschedule in v1. **Files**: new
-component + `lib/services/lessons-queries` range query, `app/dashboard/calendar/page.tsx`.
-**Accept**: current week renders the seeded lessons in correct slots/order; navigation
-prev/next week; student role never reaches the page (route already teacher-gated); E2E
-A8.1-adjacent spec added under `tests/e2e/teacher/`.
+**Decided in grill**: Strummy gets no in-app visual calendar. **Google IS the calendar UI** —
+every lesson syncs there, and the single teacher lives in Google Calendar already. The in-app
+surface stays lessons-list + sync controls + conflicts; CAL-1 collapses into "keep sync
+excellent". Revisit only if a second teacher (who may not use Google) ever onboards.
 
 ### CAL-2 — Un-hide the calendar entry + prove the conflict loop
 
@@ -199,10 +192,7 @@ remains.
 
 ## Open questions
 
-1. **Does Strummy need a visual calendar at all** (CAL-1)? A single teacher with ~10 weekly
-   slots may be fully served by the list + Google Calendar itself as the visual surface. If
-   Google is the calendar UI, CAL-1 collapses into "keep sync excellent" and the page stays
-   controls-only.
+1. ~~Does Strummy need a visual calendar at all~~ — **resolved 2026-07-18: no** (see CAL-1).
 2. **Webhook vs polling as the blessed path**: both exist; webhook channels expire and need
    renewal, polling is simpler but laggy. For the 5-student launch, is webhook worth its
    operational surface, or should polling-only be the documented default (webhook stays

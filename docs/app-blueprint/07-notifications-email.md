@@ -104,9 +104,11 @@ today, but the code path is dead weight and blocks ever offering channel choice.
 
 - **Files**: `lib/services/notification-helpers.ts`, `app/actions/notification-preferences.ts`,
   `components/settings/NotificationPreferences.tsx`, new migration on StrummyProd.
-- **Approach** (pick one, decide at implementation): (a) add
-  `delivery_channel text NOT NULL DEFAULT 'default'` migration + surface a channel picker in the
-  prefs UI; or (b) delete the `delivery_channel` select and keep defaults-only (simpler, honest).
+- **Approach** (decided in grill 2026-07-18): add
+  `delivery_channel text NOT NULL DEFAULT 'email'` migration — **email-only defaults at launch**
+  for all types (delivery guarantees ride on the proven Gmail SMTP chain; the in-app bell still
+  shows items on login). Surface the channel picker in the prefs UI. Revisit `both` for
+  reminders after observing student login frequency.
 - **Acceptance**: unit test on `getDeliveryChannel` no longer relies on a swallowed error;
   `tests/e2e/notifications/prefs.spec.ts` still green.
 
@@ -136,8 +138,8 @@ Fold onto one service (`app/actions/in-app-notifications.ts` is the more complet
 
 ## Open questions
 
-- Should `lesson_reminder_24h` default to `both` (email + in-app) once real students are on the
-  clean stack? Currently in-app only unless a preference row says otherwise.
+- ~~Should `lesson_reminder_24h` default to `both`?~~ — **resolved 2026-07-18: email-only at
+  launch** (see NOT-1); revisit after observing login frequency.
 
 ## References
 

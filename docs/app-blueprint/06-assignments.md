@@ -75,22 +75,16 @@ cancelled`; `overdue → in_progress | completed | cancelled`; `completed`/`canc
 
 ## Gaps & planned work
 
-### ASG-1 — Assignment templates: build the minimal loop or delete the surface
+### ASG-1 — Delete the template stub routes · **decided 2026-07-18: cut stubs, keep schema**
 
-**Missing**: three reachable "Coming soon" stubs under `/dashboard/assignments/templates*`,
-while `app/actions/assignment-templates.ts` (create/update/delete, tested) and the table +
-RLS sit unconsumed; the create form has no template picker, so templates deliver zero value
-today. **Approach**: decide build-vs-cut (Open question 1). If build: (a) one editorial
-templates page (list + inline create/edit/delete) mounting the existing actions — collapse
-`/new` and `/[id]` into it and delete those routes; (b) a "start from template" select on
-`AssignmentCreateEditorial` that prefills title/description (needs a small
-`listAssignmentTemplates` read, currently absent). If cut: delete the three routes, the
-actions, and drop the table in the next schema pass; record it dormant here. **Files**:
-`app/dashboard/assignments/templates/*`, `app/actions/assignment-templates.ts`,
-`components/assignments/editorial/create/AssignmentCreateEditorial.tsx`. **Accept** (build
-path): teacher creates a template, uses it in the create form, resulting assignment carries
-the prefilled fields (E2E — journey A5.3 in `docs/E2E_JOURNEYS.md`, currently uncovered);
-templates RLS test: teacher A cannot read teacher B's templates.
+**Decided in grill**: no usage evidence justifies templates for a solo teacher. Delete the
+three "Coming soon" stub routes (`/dashboard/assignments/templates`, `/templates/new`,
+`/templates/[id]`) — joins the T2 honesty-hygiene batch with LES-1/LES-2/IDA-5. The table,
+RLS, and tested actions (`app/actions/assignment-templates.ts`) stay **dormant** — if real
+usage shows repeated assignment text, resurrect cheaply in v1.1 (one editorial list page +
+a "start from template" select on `AssignmentCreateEditorial`). **Files**:
+`app/dashboard/assignments/templates/*` (delete). **Accept**: routes 404; nav has no
+dangling links; actions and table untouched; build + lint green.
 
 ### ASG-2 — Surface `assignment_history` as a detail timeline
 
@@ -143,9 +137,8 @@ illegal transition (`not_started → completed`) rejected; teacher/admin paths u
 
 ## Open questions
 
-1. **Templates: worth existing?** One teacher, recurring homework patterns ("practice
-   chord changes 10 min/day") — is a template picker genuinely faster than retyping, or is
-   this premature multi-teacher infrastructure? Decides ASG-1's build-vs-cut fork.
+1. ~~Templates: worth existing?~~ — **resolved 2026-07-18: cut stubs, keep schema dormant**
+   (see ASG-1).
 2. **`overdue` as data vs derivation**: today `overdue` is computed at read time and also a
    writable enum value; no cron writes it. Standardize on derivation-only (and stop
    exposing it as a transition source in `VALID_STATUS_TRANSITIONS`?) or add a nightly

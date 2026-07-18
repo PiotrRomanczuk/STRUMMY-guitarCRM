@@ -89,7 +89,7 @@ chart directly from `practice_sessions` (Mon–Sun) — unaffected by the broken
 
 ## Gaps & planned work
 
-### PRA-1 · Repair the practice→repertoire metric triggers (v1 — the only v1 gap in docs 03–05)
+### PRA-1 · Repair the practice→repertoire metric triggers — **HARD LAUNCH GATE** (runbook gate 9, grill 2026-07-18)
 
 **Problem** (verified against the baseline, see Behavior above): logging never increments the
 repertoire aggregates, and same-day undo of a song-linked session fails outright with a trigger

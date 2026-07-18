@@ -103,22 +103,16 @@ Notable constraints/indexes: `ix_profiles_email_lower` (unique, case-insensitive
 
 ## Gaps & planned work
 
-### IDA-1 — Mount the `user_settings` panel (or retire the table)
+### IDA-1 — Retire `user_settings` · **decided 2026-07-18: retire (T4 debt)**
 
-**Missing**: `user_settings` (theme/language/timezone/visibility/font) has a complete
-server-action pair (`app/actions/settings.ts`: `getUserSettings` upserting defaults,
-`saveUserSettings`) but zero UI consumers; the table is write-never in practice.
-**Approach**: decide scope first — for the trust pass, `theme` alone may be enough (the app
-already renders dark variants; today theme is device-driven). Add a "Preferences" card to
-`components/settings/editorial/SettingsEditorial.tsx` with theme (light/dark/system) and
-timezone selects wired to the existing actions; leave language/visibility unrendered until
-i18n/visibility mean something. Alternatively, if no field will be honored soon, drop the
-card idea and record the table as dormant in this doc.
-**Files**: `components/settings/editorial/SettingsEditorial.tsx`, `app/dashboard/settings/page.tsx`
-(fetch via `getUserSettings`), `app/actions/settings.ts` (already done).
-**Accept**: settings page shows current theme; changing it persists a `user_settings` row and
-the UI honors it after reload; RLS: user A cannot read/write user B's row (extend an existing
-RLS jest config suite).
+**Decided in grill**: no UI will honor these fields soon — theme is client-side, language
+has no i18n, visibility means nothing yet. Retire: delete the unconsumed server-action pair
+(`app/actions/settings.ts`: `getUserSettings`/`saveUserSettings`) and queue a drop migration
+for `user_settings` in the next schema-consolidation pass (T4). If timezone ever matters
+(e.g. notification scheduling), it moves to `profiles` as a single column. **Files**:
+`app/actions/settings.ts` (delete), `supabase/migrations/` (drop), this doc's frontmatter
+`tables:` on completion. **Accept**: no references remain (`grep user_settings` clean in
+app/, components/, lib/); build + tests green; migration applied to StrummyProd.
 
 ### IDA-2 — Avatar upload via storage bucket
 
@@ -145,14 +139,14 @@ reuse the existing actions untouched. **Accept**: seed a locked profile → admi
 lists it; Unlock clears `failed_login_attempts` + `locked_until` and the row disappears;
 non-admin gets nothing (action already guards).
 
-### IDA-4 — Surface `user_preferences` to the teacher (or stop collecting)
+### IDA-4 — Surface `user_preferences` to the teacher · **decided 2026-07-18: build in v1.1**
 
-**Missing**: onboarding writes goals/skill-level/learning-style, but nothing ever reads
-`user_preferences` — the teacher can't see what the student told us. **Approach**: read the
-row in `lib/services/student-detail-queries.ts` and render a compact "About this student"
-line (skill level + goals chips) in `StudentDetailEditorial`; empty state hidden. If the
-owner decides the data isn't useful, instead delete the onboarding questions that feed it
-(honesty rule: don't collect what we won't use). **Files**:
+**Decided in grill**: keep collecting at onboarding; surface to the teacher (real first-lesson
+prep value). v1.1 — after the 5 students onboard. **Missing**: onboarding writes
+goals/skill-level/learning-style, but nothing ever reads `user_preferences` — the teacher
+can't see what the student told us. **Approach**: read the row in
+`lib/services/student-detail-queries.ts` and render a compact "About this student" line
+(skill level + goals chips) in `StudentDetailEditorial`; empty state hidden. **Files**:
 `lib/services/student-detail-queries.ts`, `components/users/editorial/StudentDetailEditorial.tsx`.
 **Accept**: a student who completed onboarding shows their skill level on the teacher's
 detail view; a student without a row renders no empty section; RLS: teacher can read their
@@ -188,10 +182,7 @@ at it.
 
 ## Open questions
 
-1. **`user_settings` honor-or-drop** (feeds IDA-1): is a theme/timezone panel worth building
-   pre-launch, or should the table be declared dormant until a second real user asks? Five
-   fields (language, visibility, show_email, show_last_seen, font_scheme) have no consuming
-   feature at all.
+1. ~~`user_settings` honor-or-drop~~ — **resolved 2026-07-18: retire** (see IDA-1).
 2. **Account-deletion request flow**: `deletion_requested_at`/`deletion_scheduled_for` and
    `app/actions/account.ts` exist, but there is no cron that executes scheduled deletions and
    no settings UI to request one. Is self-service deletion a launch requirement (GDPR posture
