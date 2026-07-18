@@ -27,14 +27,14 @@ export function AIAssistantMobile({ messages, isStreaming, onSend }: AIAssistant
   const hasUserMessages = messages.some((m) => m.role === 'user');
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div data-testid="ai-assistant-card" className="flex flex-col h-full bg-background">
       {/* Header */}
       <header
         className={cn(
           'sticky top-0 z-50',
           'bg-card/80 backdrop-blur-xl',
           'px-4 py-3 flex justify-between items-center',
-          'border-b border-border/30',
+          'border-b border-border/30'
         )}
       >
         <div className="flex items-center gap-3">
@@ -44,9 +44,7 @@ export function AIAssistantMobile({ messages, isStreaming, onSend }: AIAssistant
           >
             <ArrowLeft className="w-5 h-5 text-muted-foreground" />
           </Link>
-          <h1 className="text-foreground font-medium tracking-tight text-lg">
-            AI Assistant
-          </h1>
+          <h1 className="text-foreground font-medium tracking-tight text-lg">AI Assistant</h1>
         </div>
         <div className="w-10 h-10 flex items-center justify-center">
           <Brain className="w-6 h-6 text-primary" />
@@ -56,14 +54,10 @@ export function AIAssistantMobile({ messages, isStreaming, onSend }: AIAssistant
       {/* Messages area */}
       <main ref={scrollRef} className="flex-1 overflow-y-auto pb-32">
         {!hasUserMessages && (
-          <SuggestedPrompts
-            onSelect={onSend}
-            isDisabled={isStreaming}
-            className="mt-4 px-4"
-          />
+          <SuggestedPrompts onSelect={onSend} isDisabled={isStreaming} className="mt-4 px-4" />
         )}
 
-        <section className="px-4 mt-6 space-y-6 max-w-2xl mx-auto w-full">
+        <section data-testid="ai-messages" className="px-4 mt-6 space-y-6 max-w-2xl mx-auto w-full">
           {messages.map((msg, idx) => (
             <ChatBubble
               key={`${msg.role}-${idx}`}

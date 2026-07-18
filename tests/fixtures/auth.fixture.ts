@@ -37,7 +37,7 @@ function getSessionExpiresAt(storagePath: string): number | null {
  * https://playwright.dev/docs/auth
  */
 
-type Role = 'admin' | 'teacher' | 'student';
+type Role = 'admin' | 'teacher' | 'student' | 'demo';
 
 interface AuthCredentials {
   email: string;
@@ -62,6 +62,11 @@ const credentials: Record<Role, AuthCredentials> = {
   student: {
     email: process.env.TEST_STUDENT_EMAIL || 'student@example.com',
     password: process.env.TEST_STUDENT_PASSWORD || 'test123_student',
+  },
+  // Demo teacher account (read-only, mutation-guarded). Used by tests/e2e/demo/*.
+  demo: {
+    email: process.env.TEST_DEMO_EMAIL || 'sarah@strummy.app',
+    password: process.env.TEST_DEMO_PASSWORD || 'Demo2024!',
   },
 };
 

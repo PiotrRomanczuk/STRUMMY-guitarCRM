@@ -22,12 +22,13 @@ export function SuggestedPrompts({ onSelect, isDisabled, className }: SuggestedP
       className={cn(
         'overflow-x-auto flex gap-2.5 pb-1',
         '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
-        className,
+        className
       )}
     >
-      {SUGGESTED_PROMPTS.map((prompt) => (
+      {SUGGESTED_PROMPTS.map((prompt, index) => (
         <button
           key={prompt}
+          data-testid={`ai-suggested-prompt-${index}`}
           onClick={() => onSelect(prompt)}
           disabled={isDisabled}
           className={cn(
@@ -37,7 +38,7 @@ export function SuggestedPrompts({ onSelect, isDisabled, className }: SuggestedP
             'flex items-center justify-center',
             'hover:bg-muted transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed',
-            'shrink-0',
+            'shrink-0'
           )}
         >
           {prompt}

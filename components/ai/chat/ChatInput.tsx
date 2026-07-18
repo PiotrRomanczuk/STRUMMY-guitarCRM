@@ -38,6 +38,7 @@ export function ChatInput({ onSend, isDisabled, className }: ChatInputProps) {
         <div className="flex-1 relative">
           <input
             type="text"
+            data-testid="ai-assistant-input"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -54,6 +55,7 @@ export function ChatInput({ onSend, isDisabled, className }: ChatInputProps) {
 
         <button
           type="button"
+          data-testid="ai-assistant-send"
           onClick={handleSend}
           disabled={isDisabled || !hasContent}
           className={cn(

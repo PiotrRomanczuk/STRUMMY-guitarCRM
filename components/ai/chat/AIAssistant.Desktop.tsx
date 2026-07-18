@@ -45,7 +45,10 @@ export default function AIAssistantDesktop({
   const hasUserMessages = messages.some((m) => m.role === 'user');
 
   return (
-    <div className="flex h-full bg-background rounded-xl overflow-hidden border border-border/30">
+    <div
+      data-testid="ai-assistant-card"
+      className="flex h-full bg-background rounded-xl overflow-hidden border border-border/30"
+    >
       {/* Sidebar */}
       <aside className="w-72 bg-card/50 border-r border-border/30 flex flex-col shrink-0">
         <div className="p-4">
@@ -54,7 +57,7 @@ export default function AIAssistantDesktop({
             className={cn(
               'w-full h-10 rounded-xl flex items-center justify-center gap-2',
               'bg-primary text-primary-foreground font-semibold text-sm',
-              'hover:opacity-90 transition-opacity active:scale-[0.98]',
+              'hover:opacity-90 transition-opacity active:scale-[0.98]'
             )}
           >
             <Plus className="w-4 h-4" />
@@ -93,14 +96,13 @@ export default function AIAssistantDesktop({
       <div className="flex-1 flex flex-col min-w-0">
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
           {!hasUserMessages && (
-            <SuggestedPrompts
-              onSelect={onSend}
-              isDisabled={isStreaming}
-              className="mt-6 px-6"
-            />
+            <SuggestedPrompts onSelect={onSend} isDisabled={isStreaming} className="mt-6 px-6" />
           )}
 
-          <section className="px-6 mt-6 space-y-6 max-w-2xl mx-auto w-full pb-4">
+          <section
+            data-testid="ai-messages"
+            className="px-6 mt-6 space-y-6 max-w-2xl mx-auto w-full pb-4"
+          >
             {messages.map((msg, idx) => (
               <ChatBubble
                 key={`${msg.role}-${idx}`}
@@ -111,11 +113,7 @@ export default function AIAssistantDesktop({
           </section>
         </div>
 
-        <ChatInput
-          onSend={onSend}
-          isDisabled={isStreaming}
-          className="border-t border-border/30"
-        />
+        <ChatInput onSend={onSend} isDisabled={isStreaming} className="border-t border-border/30" />
       </div>
     </div>
   );

@@ -1,4 +1,30 @@
-import { test, expect } from '../../fixtures';
+import { test, expect, type Page } from '../../fixtures';
+
+/**
+ * Assignment AI
+ *
+ * The assignment form was rebuilt as AssignmentCreateEditorial: native <select>/<input>
+ * controls (#assignment-student, #assignment-title, #assignment-notes) and the AI action
+ * wrapped in [data-testid="assignment-notes-ai"]. The AI button is always rendered but
+ * stays disabled until a student + title are set (duration is fixed at "1 week").
+ *
+ * Generation needs a reachable AI provider. Without one, the stream errors and the handler
+ * writes a fallback string into the brief — so the *wiring* is verifiable with just the DB;
+ * only the "meaningful content" assertion is gated behind E2E_AI_PROVIDER.
+ */
+
+const AI_ERROR_FALLBACK = 'Error generating assignment. Please try again.';
+
+/** Select the first real student in the native select. Returns false when none are seeded. */
+async function selectFirstStudent(page: Page): Promise<boolean> {
+  const options = page.locator('#assignment-student option');
+  await options.first().waitFor({ state: 'attached' });
+  if ((await options.count()) <= 1) return false; // only the "Select a student…" placeholder
+  const value = await options.nth(1).getAttribute('value');
+  if (!value) return false;
+  await page.selectOption('#assignment-student', value);
+  return true;
+}
 
 test.describe('Assignment AI', { tag: ['@ai', '@assignments'] }, () => {
   test.beforeEach(async ({ page, loginAs }) => {
@@ -7,108 +33,67 @@ test.describe('Assignment AI', { tag: ['@ai', '@assignments'] }, () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('AI button is not visible when no student or title entered', async ({ page }) => {
-    // With no student selected and no title, AI button should not be visible
-    const aiBtn = page.locator('[data-testid="ai-assignment-btn"]');
-    await expect(aiBtn).not.toBeVisible();
+  test('AI button is disabled before a student and title are provided', async ({ page }) => {
+    const aiBtn = page.getByTestId('assignment-notes-ai').getByRole('button');
+    await expect(aiBtn).toBeVisible();
+    await expect(aiBtn).toBeDisabled();
   });
 
-  test('AI button appears after selecting student and entering title', async ({ page }) => {
-    // Select a student
-    await page.locator('[data-testid="student-select"]').click();
-    await page.waitForTimeout(500);
-    const studentOptions = page.locator('[role="option"]');
-    const studentCount = await studentOptions.count();
-
-    if (studentCount === 0) {
-      test.skip(true, 'No students available in test environment');
+  test('AI button becomes enabled after selecting a student and entering a title', async ({
+    page,
+  }) => {
+    if (!(await selectFirstStudent(page))) {
+      test.skip(true, 'No seeded students available');
       return;
     }
+    await page.fill('#assignment-title', 'Barre Chord Practice');
 
-    await studentOptions.first().click();
-    await page.waitForTimeout(500);
-
-    // Fill assignment title (becomes focusArea)
-    await page.locator('[data-testid="field-title"]').fill('Barre Chord Practice');
-
-    // AI button should now be visible
-    const aiBtn = page.locator('[data-testid="ai-assignment-btn"]');
-    await expect(aiBtn).toBeVisible({ timeout: 5000 });
+    const aiBtn = page.getByTestId('assignment-notes-ai').getByRole('button');
+    await expect(aiBtn).toBeEnabled({ timeout: 5_000 });
   });
 
   test('AI button triggers generation', async ({ page }) => {
     test.slow();
 
-    // Select student
-    await page.locator('[data-testid="student-select"]').click();
-    await page.waitForTimeout(500);
-    const studentOptions = page.locator('[role="option"]');
-    const studentCount = await studentOptions.count();
-
-    if (studentCount === 0) {
-      test.skip(true, 'No students available in test environment');
+    if (!(await selectFirstStudent(page))) {
+      test.skip(true, 'No seeded students available');
       return;
     }
+    await page.fill('#assignment-title', 'Scale Exercises');
 
-    await studentOptions.first().click();
-    await page.waitForTimeout(500);
-
-    // Fill title
-    await page.locator('[data-testid="field-title"]').fill('Scale Exercises');
-
-    // Click AI button
-    const aiBtn = page.locator('[data-testid="ai-assignment-btn"]');
-    await expect(aiBtn).toBeVisible({ timeout: 5000 });
-    await expect(aiBtn).toBeEnabled();
+    const aiBtn = page.getByTestId('assignment-notes-ai').getByRole('button');
+    await expect(aiBtn).toBeEnabled({ timeout: 5_000 });
     await aiBtn.click();
 
-    // Should show "Generating..." state
-    await expect(aiBtn).toContainText('Generating', { timeout: 5000 }).catch(() => {
-      // Generation may complete very quickly
-    });
-
-    // Wait for content in description field or error message
-    const descriptionField = page.locator('[data-testid="field-description"]');
+    // Clicking wires into the brief field: it ends non-empty whether generation succeeds
+    // (real content) or fails (error fallback). Either proves the handler fired.
+    const brief = page.locator('#assignment-notes');
     await expect(async () => {
-      const value = await descriptionField.inputValue();
-      expect(value.length).toBeGreaterThan(0);
-    }).toPass({ timeout: 30000 });
+      expect((await brief.inputValue()).trim().length).toBeGreaterThan(0);
+    }).toPass({ timeout: 30_000 });
   });
 
-  test('generated content populates description field', async ({ page }) => {
+  test('generated content populates the brief field', async ({ page }) => {
     test.slow();
 
-    // Select student
-    await page.locator('[data-testid="student-select"]').click();
-    await page.waitForTimeout(500);
-    const studentOptions = page.locator('[role="option"]');
-    const studentCount = await studentOptions.count();
-
-    if (studentCount === 0) {
-      test.skip(true, 'No students available in test environment');
+    if (!(await selectFirstStudent(page))) {
+      test.skip(true, 'No seeded students available');
       return;
     }
+    await page.fill('#assignment-title', 'Rhythm Training');
 
-    await studentOptions.first().click();
-    await page.waitForTimeout(500);
-
-    // Fill title
-    await page.locator('[data-testid="field-title"]').fill('Rhythm Training');
-
-    // Click AI button
-    const aiBtn = page.locator('[data-testid="ai-assignment-btn"]');
-    await expect(aiBtn).toBeVisible({ timeout: 5000 });
+    const aiBtn = page.getByTestId('assignment-notes-ai').getByRole('button');
+    await expect(aiBtn).toBeEnabled({ timeout: 5_000 });
     await aiBtn.click();
 
-    // Wait for generation to complete
-    const descriptionField = page.locator('[data-testid="field-description"]');
+    const brief = page.locator('#assignment-notes');
     await expect(async () => {
-      const value = await descriptionField.inputValue();
-      expect(value.length).toBeGreaterThan(0);
-    }).toPass({ timeout: 30000 });
+      expect((await brief.inputValue()).trim().length).toBeGreaterThan(0);
+    }).toPass({ timeout: 30_000 });
 
-    // Verify meaningful content was generated
-    const descriptionValue = await descriptionField.inputValue();
-    expect(descriptionValue.trim().length).toBeGreaterThan(0);
+    // Real, non-error content only when a provider is configured.
+    if (process.env.E2E_AI_PROVIDER) {
+      expect((await brief.inputValue()).trim()).not.toBe(AI_ERROR_FALLBACK);
+    }
   });
 });

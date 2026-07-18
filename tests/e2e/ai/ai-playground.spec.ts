@@ -1,145 +1,103 @@
 import { test, expect } from '../../fixtures';
 
-test.describe('AI Assistant Playground', { tag: ['@ai', '@admin'] }, () => {
+/**
+ * AI Assistant Chat
+ *
+ * The conversational assistant moved from /dashboard/ai to /dashboard/ai/chat during
+ * the editorial redesign: /dashboard/ai now renders insight cards + an email draft
+ * generator, while the chat lives at /dashboard/ai/chat (components/ai/chat/*).
+ *
+ * The current chat has no model selector and no minimize/maximize control, so those
+ * two specs were removed rather than asserting UI that no longer exists.
+ *
+ * Send *wiring* (user message echo, input clear, transcript reset) only needs the
+ * database, so it always runs. The assistant's *reply* needs a reachable AI provider,
+ * so that assertion is gated behind E2E_AI_PROVIDER.
+ */
+test.describe('AI Assistant Chat', { tag: ['@ai', '@admin'] }, () => {
   test.beforeEach(async ({ page, loginAs }) => {
     await loginAs('admin');
-    await page.goto('/dashboard/ai');
+    await page.goto('/dashboard/ai/chat');
     await page.waitForLoadState('networkidle');
   });
 
   test('page loads with welcome message', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText('AI Assistant Playground');
-
-    const card = page.locator('[data-testid="ai-assistant-card"]');
+    const card = page.getByTestId('ai-assistant-card');
     await expect(card).toBeVisible();
 
-    // Welcome message should be visible (system message with greeting)
-    const messages = page.locator('[data-testid="ai-messages"]');
+    // The transcript opens with a system welcome message.
+    const messages = page.getByTestId('ai-messages');
     await expect(messages).toBeVisible();
     await expect(messages).toContainText('Strummy AI assistant');
   });
 
   test('chat input and send button are visible', async ({ page }) => {
-    const input = page.locator('[data-testid="ai-assistant-input"]');
+    const input = page.getByTestId('ai-assistant-input');
     await expect(input).toBeVisible();
-    await expect(input).toHaveAttribute('placeholder', 'Ask me anything...');
+    await expect(input).toHaveAttribute('placeholder', 'Ask about students, songs, theory...');
 
-    const sendButton = page.locator('[data-testid="ai-assistant-send"]');
+    const sendButton = page.getByTestId('ai-assistant-send');
     await expect(sendButton).toBeVisible();
-    await expect(sendButton).toBeDisabled(); // disabled when input is empty
+    await expect(sendButton).toBeDisabled(); // disabled when the input is empty
   });
 
-  test('model selector is functional', async ({ page }) => {
-    const modelSelector = page.locator('[data-testid="ai-model-selector"]');
-    await expect(modelSelector).toBeVisible();
-
-    await modelSelector.click();
-    await page.waitForTimeout(500);
-
-    // Verify dropdown options appear
-    const options = page.locator('[role="option"]');
-    const count = await options.count();
-    expect(count).toBeGreaterThan(0);
-
-    // Close by pressing Escape
-    await page.keyboard.press('Escape');
+  test('suggested prompts appear on a fresh conversation', async ({ page }) => {
+    const firstPrompt = page.getByTestId('ai-suggested-prompt-0');
+    await expect(firstPrompt).toBeVisible();
+    await expect(firstPrompt).toBeEnabled();
   });
 
   test('suggested prompt sends a message', async ({ page }) => {
-    test.slow(); // AI responses may take time
+    test.slow();
 
-    const suggestedPrompt = page.locator('[data-testid="ai-suggested-prompt-0"]');
+    const suggestedPrompt = page.getByTestId('ai-suggested-prompt-0');
     await expect(suggestedPrompt).toBeVisible();
+    const promptText = (await suggestedPrompt.textContent())!.trim();
 
-    const promptText = await suggestedPrompt.textContent();
     await suggestedPrompt.click();
 
-    // User message should appear in the messages area
-    const messages = page.locator('[data-testid="ai-messages"]');
-    await expect(messages).toContainText(promptText!, { timeout: 5000 });
-
-    // Should show either a loading spinner or AI response (or error if provider unavailable)
-    const hasResponse = await page
-      .locator('[data-testid="ai-messages"] .bg-muted')
-      .isVisible()
-      .catch(() => false);
-    const hasLoader = await page
-      .locator('[data-testid="ai-messages"] .animate-spin')
-      .isVisible()
-      .catch(() => false);
-    const hasError = await page
-      .locator('.bg-destructive\\/10')
-      .isVisible()
-      .catch(() => false);
-
-    // At least one of these should be true - the UI responded to the click
-    expect(hasResponse || hasLoader || hasError).toBeTruthy();
+    // The user's message is echoed into the transcript (needs only the DB, not a provider).
+    const messages = page.getByTestId('ai-messages');
+    await expect(messages).toContainText(promptText, { timeout: 10_000 });
   });
 
   test('type and send a message', async ({ page }) => {
     test.slow();
 
-    const input = page.locator('[data-testid="ai-assistant-input"]');
-    const sendButton = page.locator('[data-testid="ai-assistant-send"]');
+    const input = page.getByTestId('ai-assistant-input');
+    const sendButton = page.getByTestId('ai-assistant-send');
 
     await input.fill('What is a G major chord?');
     await expect(sendButton).toBeEnabled();
     await sendButton.click();
 
-    // User message should appear
-    const messages = page.locator('[data-testid="ai-messages"]');
-    await expect(messages).toContainText('What is a G major chord?', { timeout: 5000 });
-
-    // Input should be cleared after sending
+    // Send wiring: the user message echoes and the input clears — no AI provider required.
+    const messages = page.getByTestId('ai-messages');
+    await expect(messages).toContainText('What is a G major chord?', { timeout: 10_000 });
     await expect(input).toHaveValue('');
 
-    // Wait for either AI response or error (provider may be unavailable)
-    await expect(async () => {
-      const hasAssistantMsg = await messages.locator('.bg-muted').count();
-      const hasError = await page.locator('.bg-destructive\\/10').count();
-      expect(hasAssistantMsg + hasError).toBeGreaterThan(0);
-    }).toPass({ timeout: 30000 });
+    // The assistant's reply needs a reachable provider; only assert it when one is configured.
+    if (process.env.E2E_AI_PROVIDER) {
+      await expect(messages.getByText('Strummy AI', { exact: true }).first()).toBeVisible({
+        timeout: 30_000,
+      });
+    }
   });
 
-  test('minimize and maximize toggle', async ({ page }) => {
-    const minimizeBtn = page.locator('[data-testid="ai-assistant-minimize"]');
-    await expect(minimizeBtn).toBeVisible();
-
-    // Click minimize - content should hide
-    await minimizeBtn.click();
-    await expect(page.locator('[data-testid="ai-assistant-input"]')).not.toBeVisible();
-    await expect(page.locator('[data-testid="ai-messages"]')).not.toBeVisible();
-
-    // Click maximize - content should restore
-    await minimizeBtn.click();
-    await expect(page.locator('[data-testid="ai-assistant-input"]')).toBeVisible();
-    await expect(page.locator('[data-testid="ai-messages"]')).toBeVisible();
-  });
-
-  test('clear conversation resets to welcome message', async ({ page }) => {
+  test('New Conversation resets the transcript to the welcome message', async ({ page }) => {
     test.slow();
 
-    // Send a message first to have conversation history
-    const input = page.locator('[data-testid="ai-assistant-input"]');
-    await input.fill('Hello');
-    await page.locator('[data-testid="ai-assistant-send"]').click();
+    const input = page.getByTestId('ai-assistant-input');
+    await input.fill('Hello there');
+    await page.getByTestId('ai-assistant-send').click();
 
-    // Wait for user message to appear
-    const messages = page.locator('[data-testid="ai-messages"]');
-    await expect(messages).toContainText('Hello', { timeout: 5000 });
+    const messages = page.getByTestId('ai-messages');
+    await expect(messages).toContainText('Hello there', { timeout: 10_000 });
 
-    // Wait briefly for the response cycle
-    await page.waitForTimeout(2000);
+    // "New Conversation" clears the transcript back to just the welcome message.
+    await page.getByRole('button', { name: /new conversation/i }).click();
 
-    // Click clear
-    const clearBtn = page.locator('[data-testid="ai-assistant-clear"]');
-    await expect(clearBtn).toBeVisible();
-    await clearBtn.click();
-
-    // Should be back to welcome message only (no "You" user messages)
     await expect(messages).toContainText('Strummy AI assistant');
-    await expect(messages.locator('text=You')).not.toBeVisible({ timeout: 3000 }).catch(() => {
-      // The "You" label from user messages should be gone after clearing
-    });
+    await expect(messages).not.toContainText('Hello there');
   });
 });
