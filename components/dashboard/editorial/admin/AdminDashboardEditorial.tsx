@@ -174,7 +174,7 @@ export const AdminDashboardEditorial = ({ pulse, invites, lockedAccounts, now }:
         <LockedAccountsCard accounts={lockedAccounts} />
         <Card>
           <CardHeader eyebrow="Trace" title="Audit log" />
-          <ComingSoonBody note="System events: invites, role changes, deletes. Wires to audit_log table next." />
+          <ComingSoonBody note="System events: invites, role changes, deletes. Tracked per-entity in the *_history tables (lessons, assignments, users) — a unified surface is parked, not planned." />
         </Card>
         <Card>
           <CardHeader eyebrow="Health" title="Services" />
