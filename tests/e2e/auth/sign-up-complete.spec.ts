@@ -70,11 +70,9 @@ test.describe(
       });
 
       test('should display Google sign-up option', async ({ page }) => {
-        // Verify Google OAuth button is present
-        await expect(page.locator('text=/continue with/i')).toBeVisible();
-
-        // Google button should be visible
-        const googleButton = page.locator('button:has-text("Google")');
+        // The Google OAuth button. Note: a plain text=/continue with/i is ambiguous — the
+        // "Or continue with" divider also contains that phrase — so target the button by role.
+        const googleButton = page.getByRole('button', { name: /continue with google/i });
         await expect(googleButton).toBeVisible();
       });
     });
@@ -149,7 +147,9 @@ test.describe(
         await emailInput.blur();
 
         // Should show validation error (wait for React re-render after onBlur sets touched state)
-        await expect(page.locator('text=/valid email|email required/i')).toBeVisible({ timeout: 5000 });
+        await expect(page.locator('text=/valid email|email required/i')).toBeVisible({
+          timeout: 5000,
+        });
       });
 
       test('should validate email format', async ({ page }) => {
@@ -192,13 +192,13 @@ test.describe(
     });
 
     test.describe('Form Validation - Password', () => {
-      test('should show error for password shorter than 6 characters', async ({ page }) => {
+      test('should show error for password shorter than the minimum length', async ({ page }) => {
         const passwordInput = page.locator('#password');
 
-        await passwordInput.fill('12345'); // Only 5 characters
+        await passwordInput.fill('12345'); // below the 8-char minimum
         await passwordInput.blur();
 
-        await expect(page.locator('text=/must be at least 6/i')).toBeVisible();
+        await expect(page.locator('text=/must be at least 8/i')).toBeVisible();
       });
 
       test('should accept password with 6 or more characters', async ({ page }) => {
@@ -254,12 +254,13 @@ test.describe(
         const passwordInput = page.locator('#password');
         const confirmPasswordInput = page.locator('#confirmPassword');
 
-        await passwordInput.fill('test123');
-        await confirmPasswordInput.fill('different123');
+        await passwordInput.fill('Test1234');
+        await confirmPasswordInput.fill('Different1');
         await confirmPasswordInput.blur();
 
-        // Should show mismatch indicator
-        await expect(page.locator('text=/passwords do not match/i')).toBeVisible();
+        // Schema copy is "Passwords don't match"; the inline indicator says "Passwords do not
+        // match" — accept either apostrophe/spelling form.
+        await expect(page.getByText(/passwords (do not|don'?t) match/i)).toBeVisible();
       });
 
       test('should show success indicator when passwords match', async ({ page }) => {
@@ -278,19 +279,19 @@ test.describe(
         const confirmPasswordInput = page.locator('#confirmPassword');
 
         // Create mismatch
-        await passwordInput.fill('test123');
-        await confirmPasswordInput.fill('wrong123');
+        await passwordInput.fill('Test1234');
+        await confirmPasswordInput.fill('Wrong1234');
         await confirmPasswordInput.blur();
 
-        await expect(page.locator('text=/passwords do not match/i')).toBeVisible();
+        await expect(page.getByText(/passwords (do not|don'?t) match/i)).toBeVisible();
 
         // Correct the password
         await confirmPasswordInput.clear();
-        await confirmPasswordInput.fill('test123');
+        await confirmPasswordInput.fill('Test1234');
 
         // Error should be cleared
-        await expect(page.locator('text=/passwords do not match/i')).not.toBeVisible();
-        await expect(page.locator('text=/passwords match/i')).toBeVisible();
+        await expect(page.getByText(/passwords (do not|don'?t) match/i)).not.toBeVisible();
+        await expect(page.getByText(/passwords match/i)).toBeVisible();
       });
     });
 
@@ -326,33 +327,35 @@ test.describe(
       });
 
       test('should show loading state during submission', async ({ page }) => {
-        // Fill form with valid data
+        // Password must satisfy the 8-char + letter + number rule, otherwise submit
+        // short-circuits on validation and never enters the loading state.
         await page.locator('#firstName').fill('Test');
         await page.locator('#lastName').fill('User');
         await page.locator('#email').fill(`test-${Date.now()}@example.com`);
-        await page.locator('#password').fill('test123');
-        await page.locator('#confirmPassword').fill('test123');
+        await page.locator('#password').fill('Test1234');
+        await page.locator('#confirmPassword').fill('Test1234');
 
-        // Submit form
-        await page.locator('button[type="submit"]').click();
-
-        // Button should show loading state
         const submitButton = page.locator('button[type="submit"]');
+        await submitButton.click();
 
-        // Check for loading text or disabled state
-        const buttonText = await submitButton.textContent();
-        const isDisabled = await submitButton.isDisabled();
-
-        expect(
-          buttonText?.includes('Creating') ||
-          buttonText?.includes('...') ||
-          isDisabled
-        ).toBe(true);
+        // Either the button enters its loading/disabled state, or the submission already
+        // resolved to the success screen — both prove the form actually submitted.
+        await expect(async () => {
+          const isDisabled = await submitButton.isDisabled().catch(() => false);
+          const buttonText = (await submitButton.textContent().catch(() => '')) ?? '';
+          const onSuccess = await page
+            .getByText(/check your email/i)
+            .isVisible()
+            .catch(() => false);
+          expect(isDisabled || buttonText.includes('Creating') || onSuccess).toBe(true);
+        }).toPass({ timeout: 10_000 });
       });
     });
 
     test.describe('Successful Sign-Up Flow', () => {
-      test('should successfully create account and show email verification screen', async ({ page }) => {
+      test('should successfully create account and show email verification screen', async ({
+        page,
+      }) => {
         const timestamp = Date.now();
         const testEmail = `newuser-${timestamp}@example.com`;
 
@@ -437,8 +440,8 @@ test.describe(
         await expect(page.locator('text=/check your email/i')).toBeVisible({ timeout: 10000 });
 
         // Wait for resend option to appear (after 5 second delay)
-        await expect(page.locator('text=/resend|didn\'t receive/i')).toBeVisible({
-          timeout: 10000
+        await expect(page.locator("text=/resend|didn't receive/i")).toBeVisible({
+          timeout: 10000,
         });
       });
 
@@ -459,7 +462,9 @@ test.describe(
         // Wait for resend to be available
         await page.waitForTimeout(6000);
 
-        const resendButton = page.locator('button:has-text("Resend"), button:has-text("Didn\'t receive")');
+        const resendButton = page.locator(
+          'button:has-text("Resend"), button:has-text("Didn\'t receive")'
+        );
 
         // Click resend
         if (await resendButton.isVisible()) {
@@ -467,7 +472,7 @@ test.describe(
 
           // Should show countdown or "Sending..." state
           await expect(page.locator('text=/sending|available in|\\ds/i')).toBeVisible({
-            timeout: 5000
+            timeout: 5000,
           });
         }
       });
@@ -479,14 +484,14 @@ test.describe(
         await page.locator('#firstName').fill('Test');
         await page.locator('#lastName').fill('User');
         await page.locator('#email').fill('p.romanczuk@gmail.com'); // Existing admin email
-        await page.locator('#password').fill('test123456');
-        await page.locator('#confirmPassword').fill('test123456');
+        await page.locator('#password').fill('Test1234');
+        await page.locator('#confirmPassword').fill('Test1234');
 
         await page.locator('button[type="submit"]').click();
 
-        // Should show error about email already being registered
-        await expect(page.locator('text=/already registered|already been registered/i')).toBeVisible({
-          timeout: 10000
+        // Current duplicate-email copy: "This email already has an account or a pending invitation…"
+        await expect(page.getByText(/already has an account|pending invitation/i)).toBeVisible({
+          timeout: 10000,
         });
 
         // Should remain on sign-up page
@@ -504,7 +509,7 @@ test.describe(
 
         // Error message should mention "Forgot Password" option
         await expect(page.locator('text=/forgot password|reset/i')).toBeVisible({
-          timeout: 10000
+          timeout: 10000,
         });
       });
     });
@@ -522,17 +527,14 @@ test.describe(
       });
 
       test('should disable form during Google sign-in', async ({ page }) => {
-        const googleButton = page.locator('button:has-text("Google")');
+        // Block the OAuth redirect so the page stays put and we can observe the loading state.
+        await page.route('**/auth/v1/authorize**', (route) => route.abort());
 
-        // Click Google button
+        const googleButton = page.getByRole('button', { name: /continue with google/i });
         await googleButton.click();
 
-        // Form inputs should be disabled (check within reasonable timeout)
-        const submitButton = page.locator('button[type="submit"]');
-
-        // Button might show loading or be disabled
-        const isDisabled = await submitButton.isDisabled();
-        expect(isDisabled).toBe(true);
+        // handleGoogleSignIn sets loading=true, which disables the submit button.
+        await expect(page.locator('button[type="submit"]')).toBeDisabled({ timeout: 5000 });
       });
     });
 
@@ -594,8 +596,9 @@ test.describe(
       });
 
       test('should support keyboard navigation', async ({ page }) => {
-        // Tab through form fields
-        await page.keyboard.press('Tab'); // First name
+        // Focus the first field directly: a "Go back" button now precedes the form, so a bare
+        // first Tab would land there rather than on #firstName.
+        await page.locator('#firstName').focus();
         await expect(page.locator('#firstName')).toBeFocused();
 
         await page.keyboard.press('Tab'); // Last name
@@ -604,11 +607,10 @@ test.describe(
         await page.keyboard.press('Tab'); // Email
         await expect(page.locator('#email')).toBeFocused();
 
-        // Continue through password fields
         await page.keyboard.press('Tab'); // Password
         await expect(page.locator('#password')).toBeFocused();
 
-        await page.keyboard.press('Tab'); // Skip toggle button
+        await page.keyboard.press('Tab'); // Password visibility toggle
         await page.keyboard.press('Tab'); // Confirm password
         await expect(page.locator('#confirmPassword')).toBeFocused();
       });
@@ -632,24 +634,28 @@ test.describe(
     test.describe('Edge Cases', () => {
       test('should handle special characters in name fields', async ({ page }) => {
         // Names with hyphens, apostrophes, accents
-        await page.locator('#firstName').fill("Jean-François");
+        await page.locator('#firstName').fill('Jean-François');
         await page.locator('#lastName').fill("O'Connor-Smith");
 
         // Should accept these characters
-        await expect(page.locator('#firstName')).toHaveValue("Jean-François");
+        await expect(page.locator('#firstName')).toHaveValue('Jean-François');
         await expect(page.locator('#lastName')).toHaveValue("O'Connor-Smith");
 
         // Complete the form
         await page.locator('#email').fill(`special-chars-${Date.now()}@example.com`);
-        await page.locator('#password').fill('test123456');
-        await page.locator('#confirmPassword').fill('test123456');
+        await page.locator('#password').fill('Test1234');
+        await page.locator('#confirmPassword').fill('Test1234');
 
         // Should submit successfully
         await page.locator('button[type="submit"]').click();
 
-        // Should show success or no client-side error
-        const hasClientError = await page.locator('text=/first name|last name/i').isVisible();
-        expect(hasClientError).toBe(false);
+        // No client-side name validation errors. (A bare text=/first name|last name/i is a
+        // strict-mode violation — the field labels also contain "name" — so match error copy
+        // specifically and count it.)
+        const nameErrors = page.getByText(
+          /first name is required|last name is required|name too long/i
+        );
+        expect(await nameErrors.count()).toBe(0);
       });
 
       test('should trim whitespace from inputs', async ({ page }) => {
