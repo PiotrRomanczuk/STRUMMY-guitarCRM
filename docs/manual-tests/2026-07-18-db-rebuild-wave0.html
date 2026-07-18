@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — DB Rebuild Wave 0 (foundation + profiles)</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font:
+          16px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        max-width: 860px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      h1 {
+        font-size: 1.6rem;
+        border-bottom: 2px solid #8884;
+        padding-bottom: 0.4rem;
+      }
+      h2 {
+        font-size: 1.2rem;
+        margin-top: 2rem;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      pre {
+        background: #8881;
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+      }
+      code {
+        background: #8882;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 0.5rem 0;
+      }
+      th,
+      td {
+        border: 1px solid #8884;
+        padding: 0.45rem 0.6rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #8882;
+      }
+      .ok {
+        color: #1a7f37;
+        font-weight: 600;
+      }
+      .pill {
+        display: inline-block;
+        background: #1a7f3722;
+        color: #1a7f37;
+        border: 1px solid #1a7f3755;
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+      }
+      small {
+        color: #8888;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>DB Rebuild — Wave 0 <span class="pill">foundation + profiles</span></h1>
+    <p>
+      <small
+        >2026-07-18 · branch <code>claude/supabase-migration-analysis-fe80fb</code> · plan
+        <code>docs/DATABASE_REBUILD.md</code></small
+      >
+    </p>
+
+    <h2>What was built</h2>
+    <p>
+      The first two migrations of the from-scratch database rebuild. The old
+      <code>supabase/migrations/</code> (three incompatible generations, never runnable on a fresh
+      DB) was moved to <code>supabase/migrations_archive/</code>; the chain now starts clean.
+    </p>
+
+    <table>
+      <tr>
+        <th>File</th>
+        <th>What it creates</th>
+      </tr>
+      <tr>
+        <td><code>20260718090000_foundation.sql</code></td>
+        <td>
+          Extensions <code>citext</code>, <code>pgcrypto</code>. Closed-set enums
+          <code>difficulty_level</code>, <code>lesson_status</code>,
+          <code>assignment_status</code> (5 values — legacy <code>pending</code> dropped),
+          <code>lesson_song_status</code> (unified, includes <code>slow_tempo</code> from day one so
+          app/DB enums never drift). Single <code>set_updated_at()</code> trigger fn.
+        </td>
+      </tr>
+      <tr>
+        <td><code>20260718090100_profiles.sql</code></td>
+        <td>
+          <code>profiles</code> table — independent <code>id</code> PK + nullable
+          <code>user_id</code> FK to <code>auth.users</code> (null = shadow, added later);
+          <code>citext</code> email; role boolean flags. Role helpers
+          <code>is_admin/is_teacher/is_student/is_admin_or_teacher</code> (SECURITY DEFINER,
+          <code>search_path</code> pinned, read via <code>(select auth.uid())</code>). One clean
+          <code>handle_new_user()</code> signup trigger on <code>auth.users</code>. Explicit grants
+          to <code>authenticated</code>/<code>service_role</code>. RLS: self read/update, admin all.
+        </td>
+      </tr>
+    </table>
+
+    <h2>Resulting behavior</h2>
+    <ul>
+      <li>
+        Signing up a new auth user auto-creates a matching <code>profiles</code> row with names
+        pulled from user metadata (full name derived from first/last when not supplied).
+      </li>
+      <li>
+        A signed-in user sees and edits only their own profile; an admin sees all; a student cannot
+        modify another user's row — enforced by RLS, not app code.
+      </li>
+      <li>
+        No <code>user_roles</code> table — the profile boolean flags are the single source of truth
+        (matches what the app already reads).
+      </li>
+    </ul>
+
+    <h2>How to test it</h2>
+    <h3>Automated gate (non-destructive)</h3>
+    <p>
+      Requires the local Supabase Postgres reachable (on Orange LAN:
+      <code>192.168.1.75:54322</code>). Spins up a throwaway scratch DB, applies the migrations over
+      a minimal Supabase shim, runs assertions, drops the scratch DB — the real dev stack is never
+      touched.
+    </p>
+    <pre>
+cd strummy
+./scripts/db/validate-migrations.sh
+# expect: every check row shows pass = t; script ends ">> OK"</pre>
+
+    <p>Assertions covered (all passing as of 2026-07-18):</p>
+    <table>
+      <tr>
+        <th>Group</th>
+        <th>Checks</th>
+        <th>Result</th>
+      </tr>
+      <tr>
+        <td>Step 0</td>
+        <td>
+          4 enums exist; <code>slow_tempo</code> present; <code>pending</code> absent;
+          <code>set_updated_at</code> exists
+        </td>
+        <td class="ok">pass</td>
+      </tr>
+      <tr>
+        <td>Step 1 structure</td>
+        <td>
+          4 role helpers; <code>profiles</code> exists; RLS enabled; signup trigger on
+          <code>auth.users</code>
+        </td>
+        <td class="ok">pass</td>
+      </tr>
+      <tr>
+        <td>Signup</td>
+        <td>
+          inserting <code>auth.users</code> creates a profile; full_name derived from first-only
+        </td>
+        <td class="ok">pass</td>
+      </tr>
+      <tr>
+        <td>RLS</td>
+        <td>student sees only own row; admin sees all; student cannot update admin's row</td>
+        <td class="ok">pass</td>
+      </tr>
+    </table>
+
+    <h3>Manual spot-check via psql</h3>
+    <pre>
+PGPASSWORD=postgres psql -h 192.168.1.75 -p 54322 -U postgres -d postgres \
+  -c "\dT+ public.*"        # inspect enums
+# (the migrations are applied to the real stack only by a full db reset, deferred to Step 6)</pre>
+
+    <h3>What is NOT yet covered</h3>
+    <ul>
+      <li>
+        Real end-to-end signup through the Next.js app — comes after Wave 0 app wiring (expose
+        <code>profile.id</code> for ownership checks).
+      </li>
+      <li>
+        A full <code>supabase db reset</code> against the live stack — deferred to Step 6, once
+        <code>seed.sql</code> is rewritten for the new schema (current seed references the old
+        <code>user_roles</code> table and would fail).
+      </li>
+    </ul>
+  </body>
+</html>
