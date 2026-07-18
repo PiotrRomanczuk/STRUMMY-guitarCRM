@@ -21,7 +21,6 @@ const NON_CORE = [
   'chord-analysis',
   'cohorts',
   'logs',
-  'calendar',
   'fretboard',
   'ai',
   'ai-chat',
@@ -30,14 +29,14 @@ const NON_CORE = [
 ];
 
 describe('menuConfig — minimal core-loop scope', () => {
-  it('teacher/admin sidebar shows only the core teaching + students items', () => {
+  it('teacher/admin sidebar shows the core teaching + students items plus calendar (CAL-2)', () => {
     const ids = itemIds(getMenuGroups({ isAdmin: true, isTeacher: true, isStudent: false }));
-    expect(ids.sort()).toEqual(['assignments', 'lessons', 'songs', 'students'].sort());
+    expect(ids.sort()).toEqual(['assignments', 'calendar', 'lessons', 'songs', 'students'].sort());
   });
 
   it('teacher (non-admin) sees the same core set', () => {
     const ids = itemIds(getMenuGroups({ isAdmin: false, isTeacher: true, isStudent: false }));
-    expect(ids.sort()).toEqual(['assignments', 'lessons', 'songs', 'students'].sort());
+    expect(ids.sort()).toEqual(['assignments', 'calendar', 'lessons', 'songs', 'students'].sort());
   });
 
   it('student sidebar shows only the core learning items', () => {

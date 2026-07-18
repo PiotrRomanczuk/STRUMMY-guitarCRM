@@ -198,15 +198,24 @@ async function storeConflictForReview(
 /**
  * Get pending conflicts for a user
  */
-export async function getPendingConflicts(
-  supabase: SupabaseClient,
-  userId: string
-): Promise<Array<{
+interface PendingConflict {
   id: string;
   lesson_id: string;
   conflict_data: Record<string, unknown>;
   created_at: string;
-}>> {
+  lesson?: {
+    teacher_id: string;
+    title: string;
+    scheduled_at: string;
+    notes: string | null;
+    updated_at: string;
+  };
+}
+
+export async function getPendingConflicts(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<PendingConflict[]> {
   const { data, error } = await supabase
     .from('sync_conflicts')
     .select(
@@ -216,7 +225,11 @@ export async function getPendingConflicts(
       conflict_data,
       created_at,
       lesson:lessons!sync_conflicts_lesson_id_fkey(
-        teacher_id
+        teacher_id,
+        title,
+        scheduled_at,
+        notes,
+        updated_at
       )
     `
     )
@@ -229,7 +242,10 @@ export async function getPendingConflicts(
     return [];
   }
 
-  return data || [];
+  // The `lesson:...!fkey(...)` embed is a to-one relation at runtime (each
+  // conflict has exactly one lesson); the generated types can't express that
+  // cardinality for this FK, so PostgREST's array-shaped inference is cast away.
+  return (data ?? []) as unknown as PendingConflict[];
 }
 
 /**

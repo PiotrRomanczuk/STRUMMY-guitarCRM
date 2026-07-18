@@ -14,7 +14,8 @@ export const WEEK_DAYS_MON = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] a
 export function computePracticeStreakDays(practicedDates: string[]): number {
   if (practicedDates.length === 0) return 0;
 
-  // Normalise to unique YYYY-MM-DD strings in local/UTC date
+  // Normalise to unique YYYY-MM-DD strings — matches toDateStr's UTC basis,
+  // since `practicedDates` are UTC ISO timestamps from the database.
   const uniqueDays = new Set(practicedDates.map((d) => d.slice(0, 10)));
 
   const today = new Date();
@@ -25,7 +26,7 @@ export function computePracticeStreakDays(practicedDates: string[]): number {
     ? today
     : (() => {
         const y = new Date(today);
-        y.setDate(today.getDate() - 1);
+        y.setUTCDate(today.getUTCDate() - 1);
         return y;
       })();
 
@@ -37,17 +38,17 @@ export function computePracticeStreakDays(practicedDates: string[]): number {
 
   while (uniqueDays.has(toDateStr(cursor))) {
     streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
   }
 
   return streak;
 }
 
-/** Format a Date as YYYY-MM-DD using local timezone offset arithmetic. */
+/** Format a Date as YYYY-MM-DD using UTC date components (matches the DB's UTC timestamps). */
 function toDateStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
 
@@ -59,7 +60,7 @@ export function getMonToSunWeekBounds(now: Date = new Date()): {
   weekStart: Date;
   weekEnd: Date;
 } {
-  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon ... 6=Sat
+  const dayOfWeek = now.getUTCDay(); // 0=Sun, 1=Mon ... 6=Sat
   const daysFromMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
   const weekStart = new Date(now);

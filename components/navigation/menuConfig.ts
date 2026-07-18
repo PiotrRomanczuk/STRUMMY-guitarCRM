@@ -68,8 +68,7 @@ const CORE_LOOP_HIDDEN_ITEMS = [
   'chord-analysis',
   'cohorts',
   'logs',
-  // Tools group (all)
-  'calendar',
+  // Tools group
   'fretboard',
   'ai',
   'ai-chat',

@@ -5,7 +5,7 @@ describe('getSidebarGroups', () => {
     const ids = getSidebarGroups({ isAdmin: false, isTeacher: true, isStudent: false }).map(
       (g) => g.id
     );
-    expect(ids).toEqual(['teaching', 'students']);
+    expect(ids).toEqual(['teaching', 'students', 'tools']);
   });
 
   it('returns the core student group (Learning) for student', () => {
@@ -19,7 +19,7 @@ describe('getSidebarGroups', () => {
     const ids = getSidebarGroups({ isAdmin: true, isTeacher: false, isStudent: false }).map(
       (g) => g.id
     );
-    expect(ids).toEqual(['teaching', 'students']);
+    expect(ids).toEqual(['teaching', 'students', 'tools']);
   });
 
   it('returns no groups when no roles', () => {

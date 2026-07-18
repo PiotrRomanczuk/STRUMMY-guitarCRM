@@ -1,6 +1,8 @@
 import type { AdminPendingInvite, PlatformPulse } from '@/lib/services/admin-dashboard-queries';
+import type { LockedAccount } from '@/app/actions/admin/lockout';
 
 import { Card, CardHeader, ComingSoonBody } from '../primitives';
+import { LockedAccountsCard } from './LockedAccountsCard';
 
 const Stat = ({ label, value }: { label: string; value: string }) => (
   <div
@@ -39,6 +41,7 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
 type Props = {
   pulse: PlatformPulse;
   invites: AdminPendingInvite[];
+  lockedAccounts: LockedAccount[];
   now: Date;
 };
 
@@ -50,7 +53,7 @@ const formatRelative = (iso: string, now: Date): string => {
   return then.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-export const AdminDashboardEditorial = ({ pulse, invites, now }: Props) => (
+export const AdminDashboardEditorial = ({ pulse, invites, lockedAccounts, now }: Props) => (
   <div
     style={{
       background: 'var(--ivory)',
@@ -168,6 +171,7 @@ export const AdminDashboardEditorial = ({ pulse, invites, now }: Props) => (
             </div>
           )}
         </Card>
+        <LockedAccountsCard accounts={lockedAccounts} />
         <Card>
           <CardHeader eyebrow="Trace" title="Audit log" />
           <ComingSoonBody note="System events: invites, role changes, deletes. Wires to audit_log table next." />

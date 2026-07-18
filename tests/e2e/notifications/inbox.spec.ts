@@ -84,8 +84,23 @@ test.describe('Notifications Inbox', { tag: ['@admin', '@notifications'] }, () =
 
     await markReadBtn.click();
 
-    // Wait for the server action to complete, then reload for fresh RSC
-    await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+    // Confirm the server action actually persisted the change (avoids racing
+    // reload against revalidation timing — assert the source of truth first).
+    const db = adminClient();
+    await expect
+      .poll(
+        async () => {
+          const { data } = await db
+            .from('in_app_notifications')
+            .select('id')
+            .in('id', insertedIds)
+            .eq('is_read', false);
+          return data?.length ?? -1;
+        },
+        { timeout: 15_000 }
+      )
+      .toBe(countBefore - 1);
+
     await page.reload();
     await page.waitForLoadState('networkidle');
 

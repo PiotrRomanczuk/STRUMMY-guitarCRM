@@ -99,9 +99,12 @@ export async function createInAppNotification(
 }
 
 /**
- * Mark a single notification as read
+ * Mark a single notification as read. `userId` scopes the update to the
+ * caller's own rows — this runs on the admin client (RLS bypassed), so the
+ * ownership filter is the only thing preventing marking another user's
+ * notification as read.
  */
-export async function markAsRead(notificationId: string): Promise<boolean> {
+export async function markAsRead(notificationId: string, userId: string): Promise<boolean> {
   try {
     const supabase = createAdminClient();
 
@@ -111,7 +114,8 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
         is_read: true,
         read_at: new Date().toISOString(),
       })
-      .eq('id', notificationId);
+      .eq('id', notificationId)
+      .eq('user_id', userId);
 
     if (error) {
       logger.error('[in-app-notification-service] Mark as read error:', error);
@@ -192,7 +196,9 @@ export async function getUserNotifications(
 
     let query = supabase
       .from('in_app_notifications')
-      .select('id, user_id, notification_type, title, body, icon, variant, action_url, action_label, entity_type, entity_id, priority, is_read, read_at, created_at, updated_at, expires_at')
+      .select(
+        'id, user_id, notification_type, title, body, icon, variant, action_url, action_label, entity_type, entity_id, priority, is_read, read_at, created_at, updated_at, expires_at'
+      )
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(limit);
