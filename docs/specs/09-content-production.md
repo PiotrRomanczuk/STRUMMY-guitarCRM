@@ -3,8 +3,10 @@ created: 2026-06-16
 updated: 2026-06-16
 feature: Content / Production (tab-only)
 phase: 2
-status: not-started
+status: superseded
 ---
+
+> **Superseded (2026-07-18)** by docs/app-blueprint/09-content-production.md.
 
 # Spec 09 — Content / Production (tab-only)
 

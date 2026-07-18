@@ -3,8 +3,10 @@ created: 2026-06-16
 updated: 2026-06-16
 feature: Testing & CI/CD
 phase: 0.6 / 4
-status: not-started
+status: superseded
 ---
+
+> **Superseded (2026-07-18)** by docs/app-blueprint/91-testing-strategy.md.
 
 # Spec 11 — Testing & CI/CD
 

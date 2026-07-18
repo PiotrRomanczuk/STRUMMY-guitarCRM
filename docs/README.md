@@ -1,6 +1,6 @@
 ---
 created: 2026-06-16
-updated: 2026-06-16
+updated: 2026-07-18
 ---
 
 # Strummy — Documentation Index
@@ -13,12 +13,13 @@ Documentation is organized in four layers. When they conflict, the deeper layer 
 
 ### Plan & decisions (the spine)
 
-| Doc                                  | What                                                                                                                                                                                                                                                                                                              |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`../CONTEXT.md`](../CONTEXT.md)     | **Domain model / ubiquitous language.** What the words mean (Profile, Role, Teaches, Repertoire, Progress…). Deepest layer.                                                                                                                                                                                       |
-| [`MASTER_SPEC.md`](./MASTER_SPEC.md) | **Whole-application master spec + the plan.** §0–§4 specify every functional domain (purpose, roles, entities, behaviors, integrations, status) with links to the per-feature specs; §5–§6 hold the cross-cutting concerns and the "Strummy → 100%" remediation plan (Phase 0, DoD, sequencing, decision ledger). |
-| [`specs/`](./specs)                  | **Per-feature implementation specs.** One code-grounded, agent-ready file per feature (00 Phase 0 + 01–10, plus 11 Testing & CI/CD). MASTER_SPEC §2 indexes them; the detail lives here.                                                                                                                          |
-| [`adr/`](./adr)                      | **Settled architectural decisions.** 0001 RLS is the security boundary · 0002 Shadow students are first-class · 0003 Unified Pino logger.                                                                                                                                                                         |
+| Doc                                           | What                                                                                                                                                                                                                            |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`../CONTEXT.md`](../CONTEXT.md)              | **Domain model / ubiquitous language.** What the words mean (Profile, Role, Teaches, Repertoire, Progress…). Deepest layer.                                                                                                     |
+| [`app-blueprint/`](./app-blueprint/README.md) | **The canonical whole-application blueprint (2026-07-18).** 10 domain docs (schema → behavior → UI → agent-executable gap briefs → test plan) + roadmap + testing strategy + launch runbook. Supersedes MASTER_SPEC and specs/. |
+| [`MASTER_SPEC.md`](./MASTER_SPEC.md)          | Superseded (2026-07-18) by `app-blueprint/` — retained for history.                                                                                                                                                             |
+| [`specs/`](./specs)                           | Superseded (2026-07-18) by `app-blueprint/` — each spec's banner names its absorbing blueprint doc.                                                                                                                             |
+| [`adr/`](./adr)                               | **Settled architectural decisions.** 0001 RLS is the security boundary · 0002 Shadow students are first-class · 0003 Unified Pino logger.                                                                                       |
 
 ### Reference (how the system works — living)
 

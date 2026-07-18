@@ -3,8 +3,10 @@ created: 2026-06-16
 updated: 2026-06-16
 feature: Assignments
 phase: 2
-status: not-started
+status: superseded
 ---
+
+> **Superseded (2026-07-18)** by docs/app-blueprint/06-assignments.md.
 
 # Spec 03 — Assignments
 

@@ -1,9 +1,11 @@
 # Strummy — Master Specification
 
+> **SUPERSEDED (2026-07-18)** by [`docs/app-blueprint/`](./app-blueprint/README.md). Retained for history; do not update. Its own supersession chain (road-to-100-todo, production-plan) terminates here.
+
 **Date**: 2026-06-16 · **Updated**: 2026-06-19
 **Author**: Claude (grilled by Piotr)
 **Scope**: The single, authoritative specification of the **whole working application** — every functional domain (what it is, what it does, who can do it, current state) — **and** the plan to bring it to 100% (functional completeness + component consolidation). Domain summaries link out to the per-feature specs and reference docs; the remediation plan lives in §6.
-**Status**: Living. Updated in place.
+**Status**: Superseded — see banner above.
 
 **Supersedes**: `docs/2026-06-10-road-to-100-todo.md` (absorbed; recover via `git log --all -- docs/2026-06-10-road-to-100-todo.md`) and `tasks/design-preview/production-plan.md` (retained with a "Superseded by" header, unmaintained).
 

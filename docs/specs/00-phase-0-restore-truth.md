@@ -3,8 +3,10 @@ created: 2026-06-16
 updated: 2026-06-19
 feature: Phase 0 — Restore Truth
 phase: 0
-status: complete
+status: superseded
 ---
+
+> **Superseded (2026-07-18)** by docs/app-blueprint/90-roadmap.md.
 
 # Spec 00 — Phase 0: Restore Truth (BLOCKING)
 
