@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>E2E Stale-Test Repair — 2026-07-18</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --card: #171a21;
+        --fg: #e6e8ec;
+        --muted: #9aa3af;
+        --line: #262b34;
+        --green: #3fb950;
+        --amber: #d29922;
+        --red: #f85149;
+        --blue: #58a6ff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 34px 0 10px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+      }
+      h3 {
+        font-size: 16px;
+        margin: 22px 0 8px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      code {
+        background: #20242c;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      pre {
+        background: #0b0d11;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 13px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin: 14px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .pill {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .fixed {
+        background: rgba(63, 185, 80, 0.15);
+        color: var(--green);
+      }
+      .gated {
+        background: rgba(210, 153, 34, 0.15);
+        color: var(--amber);
+      }
+      .seed {
+        background: rgba(88, 166, 255, 0.15);
+        color: var(--blue);
+      }
+      .lead {
+        color: var(--muted);
+      }
+      ul {
+        margin: 6px 0 6px 2px;
+        padding-left: 20px;
+      }
+      li {
+        margin: 3px 0;
+      }
+      .warn {
+        border-left: 3px solid var(--amber);
+      }
+      .ok {
+        border-left: 3px solid var(--green);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>E2E Stale-Test Repair</h1>
+      <div class="meta">
+        <strong>Date:</strong> 2026-07-18 &nbsp;·&nbsp; <strong>Author:</strong> Claude
+        &nbsp;·&nbsp; <strong>Branch:</strong>
+        <code>fix/e2e-desktop-chrome-failures</code> &nbsp;·&nbsp; <strong>Source:</strong>
+        <code>docs/analysis/2026-07-18-e2e-desktop-chrome-run.md</code>
+      </div>
+
+      <div class="card ok">
+        <strong>Headline:</strong> The 50 Playwright failures were <em>not</em> the "AI backend down
+        / DB unseeded" problems the analysis doc claimed. The dominant cause is
+        <strong>stale tests running against a redesigned UI</strong> (editorial dashboards, a moved
+        AI chat, a rebuilt sign-up form). Most were fixed in test code; a genuine residue needs a
+        seeded DB (which you opted not to provision).
+      </div>
+
+      <h2>1. What was actually done</h2>
+
+      <p class="lead">
+        Four commits on <code>fix/e2e-desktop-chrome-failures</code>. Quality gates:
+        <code>tsc --noEmit</code> ✅ 0 errors, <code>eslint</code> ✅ 0 errors, every touched spec
+        compiles under <code>playwright test --list</code>. The full browser suite was
+        <strong>not</strong> executed (needs the prod build + tunnel + optional AI provider — see
+        §2); fixes were verified by matching each spec to the current component source.
+      </p>
+
+      <h3>The redesign the doc missed</h3>
+      <ul>
+        <li>
+          <code>/dashboard/ai</code> was replaced — it now shows insight cards + an email generator.
+          The chat moved to <code>/dashboard/ai/chat</code> with a redesigned, test-id-free DOM.
+        </li>
+        <li>
+          The assignment/lesson forms became <code>AssignmentCreateEditorial</code> /
+          <code>LessonFormEditorial</code> — native <code>&lt;select&gt;/&lt;input&gt;</code> with
+          new ids, not the old shadcn combobox test-ids.
+        </li>
+        <li>
+          The dashboard renders editorial views greeting "Good morning…", not "Welcome"; the old
+          <code>TodayLessons</code>/<code>UpcomingLessons</code> cards are no longer mounted.
+        </li>
+        <li>
+          Sign-up: password minimum is now 8 (+letter+number), mismatch copy is "Passwords don't
+          match", duplicate-email copy changed, and a "Go back" button now precedes the form.
+        </li>
+      </ul>
+
+      <h3>Fixes by category</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Category</th>
+            <th>Outcome</th>
+            <th>What changed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>A</td>
+            <td>AI specs (14)</td>
+            <td><span class="pill fixed">fixed + gated</span></td>
+            <td>
+              Repointed playground to <code>/dashboard/ai/chat</code>; added stable
+              <code>data-testid</code>s to
+              <code>ChatInput</code>/<code>AIAssistant.*</code>/<code>SuggestedPrompts</code>;
+              rewrote the assignment/lesson AI specs for the native-select forms. Assistant-<em
+                >response</em
+              >
+              assertions are gated behind <code>E2E_AI_PROVIDER</code>; send wiring (user echo,
+              input clear) always runs. Removed the model-selector &amp; minimize tests — those
+              controls no longer exist.
+            </td>
+          </tr>
+          <tr>
+            <td>B</td>
+            <td>Sign-up (10)</td>
+            <td><span class="pill fixed">9 fixed</span></td>
+            <td>
+              Disambiguated the Google button locator; updated min-length (6→8) and duplicate-email
+              copy; used valid passwords so submit stops short-circuiting; tolerant mismatch regex;
+              focus <code>#firstName</code>
+              directly for keyboard-nav; replaced a strict-mode-violating name locator with a scoped
+              error count.
+              <em>#379 (verification screen)</em> already matches the current UI — its failure is
+              signup-backend / rate-limiter, not test code.
+            </td>
+          </tr>
+          <tr>
+            <td>C</td>
+            <td>Demo (8)</td>
+            <td><span class="pill fixed">fixed</span></td>
+            <td>
+              Added the missing <code>demo</code> role to
+              <code>tests/fixtures/auth.fixture.ts</code> (<code>sarah@strummy.app</code>) — this
+              was the <code>TypeError: reading 'email'</code>. Repointed the demo AI navigations to
+              <code>/dashboard/ai/chat</code>.
+            </td>
+          </tr>
+          <tr>
+            <td>D</td>
+            <td>Dashboard states (3)</td>
+            <td><span class="pill fixed">fixed</span></td>
+            <td>
+              Assert the editorial greeting <code>/good (morning|afternoon|evening)/i</code> instead
+              of the removed "Welcome".
+            </td>
+          </tr>
+          <tr>
+            <td>D</td>
+            <td>Today/Upcoming cards (4)</td>
+            <td><span class="pill gated">skipped</span></td>
+            <td>
+              Cards are unmounted after the editorial redesign (only in the unreachable
+              <code>LegacyShell</code>). <code>test.describe.skip</code> with a reason; a background
+              task was spawned to remount-or-retire them.
+            </td>
+          </tr>
+          <tr>
+            <td>D</td>
+            <td>Student / teacher / integration (8)</td>
+            <td><span class="pill seed">needs seed</span></td>
+            <td>
+              Correct-as-written but <strong>seed-coupled</strong>: they hardcode UUIDs (<code
+                >STUDENT_ID = '2fb4575e…'</code
+              >) and require the logged-in account to <em>be</em> that seeded student. Not
+              stale-locator bugs — left unchanged; they go green after <code>npm run seed</code>.
+            </td>
+          </tr>
+          <tr>
+            <td>E</td>
+            <td>RLS data-isolation #25</td>
+            <td><span class="pill fixed">fixed — not a leak</span></td>
+            <td>
+              Verified against the live policy: <code>seedPrivateRows</code> links the teacher to
+              student A via a lesson, and the <code>profiles_select_own_teacher</code> policy
+              (2026-07-15) intentionally lets a student read their teacher's profile. The old "every
+              row is mine" assertion was over-strict.
+              <strong>Student A still cannot see student B</strong> — that invariant is preserved;
+              only the teacher's own row is now permitted for <code>profiles</code>.
+            </td>
+          </tr>
+          <tr>
+            <td>E</td>
+            <td>kuba-onboarding #42</td>
+            <td><span class="pill gated">gated</span></td>
+            <td>
+              A manual one-off that creates a real student, imports 41 external songs, and emails a
+              real person. Gated behind <code>E2E_RUN_MANUAL=1</code> so it no longer runs (and
+              <code>fetch failed</code>s) in the automated suite.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>2. How to manually verify</h2>
+
+      <div class="card">
+        <h3>a. Static gates (no server needed — reproduces what I ran)</h3>
+        <pre>
+cd strummy
+npm run typecheck      # expect: 0 errors
+npx eslint components/ai/chat            # expect: clean (chat test-id changes)
+npx playwright test --list &gt;/dev/null &amp;&amp; echo "all specs compile"</pre>
+      </div>
+
+      <div class="card">
+        <h3>b. Run the repaired specs against the local stack</h3>
+        <p class="lead">
+          Same setup as the original run. Categories A/B/C/E and dashboard-states should now pass;
+          the send/response AI assertions run only with a provider.
+        </p>
+        <pre>
+# 1. Tunnel to the local stack on uwh
+ssh -fN -L 54321:localhost:54321 uwh
+
+# 2. Prod build with the tunnel URL baked in
+NEXT_PUBLIC_SUPABASE_LOCAL_URL=http://127.0.0.1:54321 npm run build
+NEXT_PUBLIC_SUPABASE_LOCAL_URL=http://127.0.0.1:54321 npx next start -p 3100
+
+# 3. Run the repaired specs (Desktop Chrome)
+NEXT_PUBLIC_SUPABASE_LOCAL_URL=http://127.0.0.1:54321 PLAYWRIGHT_BASE_URL=http://localhost:3100 \
+  npx playwright test --config=playwright.local-3100.config.ts --project="Desktop Chrome" \
+  tests/e2e/ai tests/e2e/auth/sign-up-complete.spec.ts tests/e2e/demo \
+  tests/e2e/dashboard/states.spec.ts tests/e2e/cross-role/rls-data-isolation.spec.ts \
+  --reporter=line</pre>
+        <p class="lead">Expected: green, except assertions that need optional services (below).</p>
+      </div>
+
+      <div class="card warn">
+        <h3>c. Opt-in gates for the environment-dependent bits</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Flag</th>
+              <th>Unlocks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>E2E_AI_PROVIDER=1</code></td>
+              <td>
+                The assistant-<em>reply</em> assertions in the AI specs (requires a reachable
+                Ollama/OpenRouter). Without it, only the send wiring is asserted.
+              </td>
+            </tr>
+            <tr>
+              <td><code>E2E_RUN_MANUAL=1</code></td>
+              <td>
+                The kuba manual onboarding flow (sends a real email + external song imports). Off by
+                default.
+              </td>
+            </tr>
+            <tr>
+              <td><code>npm run seed</code></td>
+              <td>
+                The 8 seed-coupled student/teacher/integration specs — they need the seeded accounts
+                whose UUIDs the specs hardcode. Per your "no-infra" decision these were left
+                unchanged and are expected to remain red/skipped until the stack is seeded.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>3. Residual / follow-ups</h2>
+      <ul>
+        <li>
+          <span class="pill seed">seed</span> 8 student/teacher/integration specs need
+          <code>npm run seed</code> (hardcoded UUIDs). Not code bugs.
+        </li>
+        <li>
+          <span class="pill gated">decision</span> Background task spawned: remount or delete
+          <code>TodayLessons</code>/<code>UpcomingLessons</code> (and possibly the dead
+          <code>LegacyShell</code>).
+        </li>
+        <li>
+          <span class="pill gated">env</span> Sign-up #379 (verification screen) depends on signup
+          success + the signup rate-limiter; its locators are already correct.
+        </li>
+        <li>
+          The demo specs need the <code>sarah@strummy.app</code> demo account to exist to log in.
+        </li>
+      </ul>
+
+      <p class="meta" style="margin-top: 30px">
+        Files touched: 4 chat components (test-ids), <code>tests/fixtures/auth.fixture.ts</code>,
+        and specs under <code>tests/e2e/{ai,auth,demo,dashboard,cross-role,manual}/</code>. No
+        product copy or behavior changed — only <code>data-testid</code> attributes were added.
+      </p>
+    </div>
+  </body>
+</html>
