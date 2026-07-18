@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Roadmap Tranche 4 — debt cleanup</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --card: #171a21;
+        --fg: #e6e8ec;
+        --muted: #9aa3af;
+        --line: #262b34;
+        --green: #3fb950;
+        --amber: #d29922;
+        --red: #f85149;
+        --blue: #58a6ff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 34px 0 10px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      code {
+        background: #20242c;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      pre {
+        background: #0b0d11;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 13px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin: 14px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .lead {
+        color: var(--muted);
+      }
+      .warn {
+        border-left: 3px solid var(--amber);
+      }
+      .ok {
+        border-left: 3px solid var(--green);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Roadmap Tranche 4 — debt cleanup</h1>
+      <div class="meta">
+        Date: 2026-07-19 &nbsp;·&nbsp; Author: Claude &nbsp;·&nbsp; Branch:
+        <code>claude/docs-plan-implementation-56e7ad</code>
+      </div>
+
+      <h2>What was done</h2>
+      <table>
+        <tr>
+          <th>Item</th>
+          <th>What</th>
+          <th>Proof</th>
+        </tr>
+        <tr>
+          <td>AIA-1</td>
+          <td>
+            Pinned <code>FALLBACK_MODELS.ollama</code> to <code>gemma3:1b</code> (was
+            <code>llama3.2:3b</code>); carried forward the AI E2E repair against the redesigned chat
+            UI
+          </td>
+          <td>
+            16/16 <code>tests/e2e/ai/</code> specs green with
+            <code>E2E_AI_PROVIDER=ollama</code> against the real local Ollama host
+          </td>
+        </tr>
+        <tr>
+          <td>SNG-5</td>
+          <td>
+            Dropped the deprecated, reader-less <code>student_song_progress</code> table (unblocked
+            by PRA-1)
+          </td>
+          <td>PRA-1's own 3 tests + 189 unit suites still green post-drop</td>
+        </tr>
+        <tr>
+          <td>IDA-1</td>
+          <td>Retired <code>user_settings</code> + its unconsumed action pair, grill-decided</td>
+          <td>grep-clean; typecheck/lint/full suite green</td>
+        </tr>
+        <tr>
+          <td>CAL-3</td>
+          <td>Verified the recurring-event import dedupe mechanism against real Postgres</td>
+          <td>2 new tests proving no UNIQUE-collision path remains</td>
+        </tr>
+        <tr>
+          <td>Hooks</td>
+          <td>Already done on this branch — <code>hooks/</code> lints with 0 warnings</td>
+          <td><code>npx eslint hooks/</code> → empty output</td>
+        </tr>
+        <tr>
+          <td>Jest quarantine</td>
+          <td>Drained 6 of 14 quarantined files — each root-caused, not just re-enabled</td>
+          <td>194/194 suites, 2695 tests, 0 failures (up from 189/2675)</td>
+        </tr>
+      </table>
+
+      <h2>Deliberately not done, with reasons</h2>
+      <div class="card warn">
+        <ul>
+          <li>
+            <strong>LES-3</strong> (recurring-lesson generation) — the roadmap itself frames this as
+            "wire, or if the owner declines, delete" — a real product decision for Piotr, not
+            something to pick unilaterally.
+          </li>
+          <li>
+            <strong>Repo / strummy.app domain</strong> — external DNS/registrar action, not code.
+          </li>
+          <li>
+            <strong>Repo / Lighthouse + Bruno audits</strong> — verification tooling runs, not
+            implementation; not attempted this pass.
+          </li>
+          <li>
+            <strong>Cloud project fate</strong> — explicitly blocked on the production cutover
+            proving stable first.
+          </li>
+          <li>
+            <strong>8 remaining quarantined tests</strong> (5 Spotify routes needing
+            <code>cookies()</code>-outside-request-scope mocking, sign-in/sign-up
+            <code>useSearchParams</code> mocking, dashboard/songs page's QueryClientProvider +
+            UI-text drift) — each needs its own focused session; diminishing returns to rush them.
+          </li>
+        </ul>
+      </div>
+
+      <h2>How to manually verify</h2>
+      <pre>
+cd .claude/worktrees/docs-plan-implementation-56e7ad
+npm run typecheck && npx eslint . && npx jest
+# expect: 0 type errors, 0 lint errors, 194/194 suites, 2695 passed / 5 skipped / 0 failed
+
+npx eslint hooks/
+# expect: no output (0 problems)
+
+# AI E2E against real local Ollama (needs LAN access to 192.168.1.10:11434)
+NEXT_PUBLIC_SUPABASE_LOCAL_URL=http://127.0.0.1:54321 PLAYWRIGHT_BASE_URL=http://localhost:3000 \
+AI_PROVIDER=ollama OLLAMA_BASE_URL=http://192.168.1.10:11434 OLLAMA_DEFAULT_MODEL=gemma3:1b \
+E2E_AI_PROVIDER=ollama npx playwright test --config=playwright.local-3000.config.ts \
+  --project="Desktop Chrome" --workers=1 tests/e2e/ai/
+# expect: 16 passed</pre>
+    </div>
+  </body>
+</html>
