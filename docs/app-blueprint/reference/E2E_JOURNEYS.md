@@ -204,12 +204,12 @@ folded into the blueprint domain docs ([`../00-overview.md`](../00-overview.md),
 
 ### B6. Practice (self-service, immutable)
 
-| ID   | Journey                                      | Key assertion         | Cover |
-| ---- | -------------------------------------------- | --------------------- | ----- |
-| B6.1 | Log a practice session (song, minutes, date) | session recorded      | ❌    |
-| B6.2 | Delete same-day entry (undo) succeeds        | entry removed         | ❌    |
-| B6.3 | Past sessions have no edit/delete control    | immutability enforced | ❌    |
-| B6.4 | Cannot see other students' sessions (RLS)    | only own sessions     | ❌    |
+| ID   | Journey                                      | Key assertion         | Cover                                                |
+| ---- | -------------------------------------------- | --------------------- | ---------------------------------------------------- |
+| B6.1 | Log a practice session (song, minutes, date) | session recorded      | ✅ student/practice                                  |
+| B6.2 | Delete same-day entry (undo) succeeds        | entry removed         | ✅ student/practice (incl. song-linked, PRA-1)       |
+| B6.3 | Past sessions have no edit/delete control    | immutability enforced | ✅ student/practice                                  |
+| B6.4 | Cannot see other students' sessions (RLS)    | only own sessions     | ✅ cross-role/rls-data-isolation (practice_sessions) |
 
 ### B7. Repertoire (self-rating only)
 

@@ -5,48 +5,58 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { logger } from '@/lib/logger';
 import type { NotificationType } from '@/types/notifications';
 
 export type DeliveryChannel = 'email' | 'in_app' | 'both';
 
 /**
- * Get delivery channel for a notification type
- * Checks user preference, falls back to default
+ * Get delivery channel for a notification type.
+ * Checks the user's stored preference; falls back to the default when no row
+ * exists yet (a genuine query error is logged, not silently absorbed —
+ * NOT-1: delivery guarantees ride on email at launch, so a swallowed error
+ * here used to be indistinguishable from an intentional in-app-only choice).
  */
 export async function getDeliveryChannel(
   userId: string,
   type: NotificationType
 ): Promise<DeliveryChannel> {
-  try {
-    const supabase = createAdminClient();
+  const supabase = createAdminClient();
 
-    // Note: delivery_channel column exists in DB (migration 038) but may not be in generated types yet
-    const { data } = await supabase
-      .from('notification_preferences')
-      .select('delivery_channel')
-      .eq('user_id', userId)
-      .eq('notification_type', type)
-      .single();
+  // `delivery_channel` postdates the generated types (migration 038); double-cast
+  // mirrors the same pattern used for system_logs until types catch up.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = (await (supabase.from as any)('notification_preferences')
+    .select('delivery_channel')
+    .eq('user_id', userId)
+    .eq('notification_type', type)
+    .maybeSingle()) as {
+    data: { delivery_channel: DeliveryChannel } | null;
+    error: { message: string } | null;
+  };
 
-    if (!data) {
-      return getDefaultDeliveryChannel(type);
-    }
-
-    // Type assertion: delivery_channel is 'email' | 'in_app' | 'both'
-    return (data as unknown as { delivery_channel: DeliveryChannel }).delivery_channel;
-  } catch {
+  if (error) {
+    logger.error('[notification-helpers] Failed to load delivery_channel preference', {
+      error: error.message,
+      userId,
+      type,
+    });
     return getDefaultDeliveryChannel(type);
   }
+
+  return (data?.delivery_channel as DeliveryChannel | undefined) ?? getDefaultDeliveryChannel(type);
 }
 
 /**
- * Get default delivery channel based on notification type
- * Email: student_welcome, lesson_recap
- * In-app: all others (16 types)
+ * Default delivery channel when no preference row exists.
+ *
+ * Decided in grill 2026-07-18 (NOT-1): email-only for ALL notification types
+ * at launch — delivery guarantees ride on the proven Gmail SMTP chain, and
+ * the in-app bell still surfaces items on next login regardless. Revisit
+ * `both` for reminder types after observing real student login frequency.
  */
-export function getDefaultDeliveryChannel(type: NotificationType): DeliveryChannel {
-  const emailOnly: NotificationType[] = ['student_welcome', 'lesson_recap'];
-  return emailOnly.includes(type) ? 'email' : 'in_app';
+export function getDefaultDeliveryChannel(_type: NotificationType): DeliveryChannel {
+  return 'email';
 }
 
 /**

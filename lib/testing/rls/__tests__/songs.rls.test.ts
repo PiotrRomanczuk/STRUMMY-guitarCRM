@@ -82,6 +82,9 @@ describeIfRls('songs RLS — teacher/admin see all; student sees only lesson-lin
     const { error: profileErr } = await service.from('profiles').upsert(
       {
         id: adminId,
+        // PostgREST upsert overwrites every omitted column with its schema
+        // default (NULL for user_id), wiping what handle_new_user just set.
+        user_id: adminId,
         email,
         full_name: 'RLS admin',
         is_admin: true,

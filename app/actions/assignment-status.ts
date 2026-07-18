@@ -17,8 +17,16 @@ const STUDENT_TARGETS: AssignmentStatus[] = ['in_progress', 'completed'];
 
 /**
  * Status-only transition shared by students and teachers/admins.
- * Writes nothing but `status`; RLS enforces row ownership (student-status policy
- * for students, teacher/admin policy otherwise). Column-scope is enforced here.
+ *
+ * ASG-3: a student's write goes through `student_update_assignment_status`,
+ * a SECURITY DEFINER RPC that re-validates ownership + the transition state
+ * machine in SQL and writes only `status` — RLS has no student UPDATE policy
+ * on `assignments` at all anymore, so this RPC is the only student write
+ * path. The checks below stay for fast, specific error messages; the RPC is
+ * the actual security boundary, not app code.
+ *
+ * Teachers/admins are unaffected — they still own the full state machine via
+ * the existing teacher/admin UPDATE policy and go through a plain `.update()`.
  */
 export async function updateAssignmentStatusAction(
   assignmentId: string,
@@ -51,10 +59,13 @@ export async function updateAssignmentStatusAction(
   const transition = validateStatusTransition(assignment.status, newStatus);
   if (!transition.valid) return { error: transition.error ?? 'Invalid status transition' };
 
-  const { error: updateError } = await supabase
-    .from('assignments')
-    .update({ status: newStatus })
-    .eq('id', assignmentId);
+  const useStudentRpc = isOwningStudent && !isAdmin && !isOwningTeacher;
+  const { error: updateError } = useStudentRpc
+    ? await supabase.rpc('student_update_assignment_status', {
+        p_assignment_id: assignmentId,
+        p_new_status: newStatus,
+      })
+    : await supabase.from('assignments').update({ status: newStatus }).eq('id', assignmentId);
   if (updateError) {
     log.error('Failed to update assignment status', {
       assignmentId,

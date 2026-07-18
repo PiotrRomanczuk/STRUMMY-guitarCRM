@@ -53,6 +53,9 @@ describeIfRls('profiles RLS — soft-delete scoping + self-edit', () => {
     const { error: pErr } = await service.from('profiles').upsert(
       {
         id,
+        // PostgREST upsert overwrites every omitted column with its schema
+        // default (NULL for user_id), wiping what handle_new_user just set.
+        user_id: id,
         email,
         full_name: `RLS ${role} ${label}`,
         is_admin: role === 'admin',

@@ -45,9 +45,15 @@ async function createUser(
     throw new Error(`createUser(${email}) failed: ${error?.message ?? 'no user returned'}`);
   }
   const id = data.user.id;
+  // PostgREST upsert is not a partial merge — any column omitted from the
+  // payload gets overwritten with its schema default (NULL for user_id),
+  // wiping out what the handle_new_user trigger just set. user_id must be
+  // included explicitly or every profile-owned FK check (ck_shadow_user_id)
+  // trips on the very next query.
   const { error: profileErr } = await service.from('profiles').upsert(
     {
       id,
+      user_id: id,
       email,
       full_name: `RLS ${role} ${tag}`,
       is_admin: false,

@@ -1,29 +1,22 @@
 import { test, expect } from '../../fixtures';
-import { createClient } from '@supabase/supabase-js';
+import { adminClient, getStudentId } from '../../helpers/seed-ids';
 
 /**
  * Student Practice Log E2E Tests (B6)
  *
  * Journeys tested:
  *  B6.1 — Log a practice session
- *  B6.2 — Delete same-day entry (undo)
+ *  B6.2 — Delete same-day entry (undo), incl. a song-linked session (PRA-1)
  *  B6.3 — Past sessions have no Remove button (immutability)
  *  B6.4 — Page loads for student, only own sessions visible
  *
- * student1@example.com has is_development=false in the local test DB so the
- * mutation guard never fires — no toggle needed.
+ * The E2E student fixture has is_development=false in the local test DB so
+ * the mutation guard never fires — no toggle needed.
  */
 
-const STUDENT_ID = '2fb4575e-bb80-486f-a8d9-3553fd84316d';
-
-function adminClient() {
-  const url =
-    process.env.NEXT_PUBLIC_SUPABASE_LOCAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const key =
-    process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-  return createClient(url, key);
-}
-
+let STUDENT_ID: string;
+let SONG_ID: string;
+let repertoireId: string | null = null;
 let pastSessionId: string | null = null;
 
 test.describe.configure({ mode: 'serial' });
@@ -31,6 +24,7 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Student Practice Log', { tag: ['@student', '@practice'] }, () => {
   test.beforeAll(async () => {
     const db = adminClient();
+    STUDENT_ID = await getStudentId(db);
 
     // Wipe any E2E sessions left from earlier runs (idempotent)
     await db.from('practice_sessions').delete().eq('student_id', STUDENT_ID).like('notes', 'E2E%');
@@ -49,12 +43,39 @@ test.describe('Student Practice Log', { tag: ['@student', '@practice'] }, () => 
       .select('id')
       .single();
     pastSessionId = data?.id ?? null;
+
+    // Seed one repertoire song so the practice-log form's song select (and
+    // the PRA-1 song-linked undo test below) has something to pick from.
+    const { data: song } = await db.from('songs').select('id').limit(1).single();
+    if (song) {
+      SONG_ID = song.id;
+      const { data: rep } = await db
+        .from('student_repertoire')
+        .upsert(
+          {
+            student_id: STUDENT_ID,
+            song_id: SONG_ID,
+            total_practice_minutes: 0,
+            practice_session_count: 0,
+          },
+          { onConflict: 'student_id,song_id' }
+        )
+        .select('id')
+        .single();
+      repertoireId = rep?.id ?? null;
+    }
   });
 
   test.afterAll(async () => {
     const db = adminClient();
     if (pastSessionId) await db.from('practice_sessions').delete().eq('id', pastSessionId);
     await db.from('practice_sessions').delete().eq('student_id', STUDENT_ID).like('notes', 'E2E%');
+    if (repertoireId) {
+      await db
+        .from('student_repertoire')
+        .update({ total_practice_minutes: 0, practice_session_count: 0, last_practiced_at: null })
+        .eq('id', repertoireId);
+    }
   });
 
   test.beforeEach(async ({ loginAs }) => {
@@ -114,8 +135,66 @@ test.describe('Student Practice Log', { tag: ['@student', '@practice'] }, () => 
     const removeBtn = newRow.getByRole('button', { name: 'Remove' });
     await expect(removeBtn).toBeVisible({ timeout: 8_000 });
     await removeBtn.click();
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click();
     await expect(page.locator('text=/Practice session removed/i').first()).toBeVisible({
       timeout: 10_000,
     });
+  });
+
+  test('B6.2 PRA-1 undo a song-linked session (previously raised 42703)', async ({ page }) => {
+    test.skip(!repertoireId, 'No song seeded in beforeAll');
+    await page.goto('/dashboard/practice');
+    await page.waitForLoadState('networkidle');
+
+    await page.locator('button:has-text("10m")').click();
+    await page.locator('#practice-song').selectOption(SONG_ID);
+    await page.locator('textarea#practice-notes').fill('E2E song-linked undo session');
+    await page.getByRole('button', { name: 'Log practice' }).click();
+    await expect(page.locator('text=/Practice logged/i').first()).toBeVisible({ timeout: 10_000 });
+    await page.waitForLoadState('networkidle');
+
+    // The trigger fired on insert: repertoire aggregates incremented.
+    const db = adminClient();
+    await expect
+      .poll(
+        async () => {
+          const { data } = await db
+            .from('student_repertoire')
+            .select('total_practice_minutes, practice_session_count')
+            .eq('id', repertoireId as string)
+            .single();
+          return data;
+        },
+        { timeout: 10_000 }
+      )
+      .toMatchObject({ total_practice_minutes: 10, practice_session_count: 1 });
+
+    // The regression this fixes: undoing a song-linked session used to raise
+    // 42703 (wrong table/column) and the delete silently failed in the UI.
+    const historySection = page.locator('[data-slot="card"]', { hasText: /History/ }).first();
+    const newRow = historySection
+      .locator('li', { hasText: 'E2E song-linked undo session' })
+      .first();
+    const removeBtn = newRow.getByRole('button', { name: 'Remove' });
+    await expect(removeBtn).toBeVisible({ timeout: 8_000 });
+    await removeBtn.click();
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Remove' }).click();
+    await expect(page.locator('text=/Practice session removed/i').first()).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await expect
+      .poll(
+        async () => {
+          const { data } = await db
+            .from('student_repertoire')
+            .select('total_practice_minutes, practice_session_count')
+            .eq('id', repertoireId as string)
+            .single();
+          return data;
+        },
+        { timeout: 10_000 }
+      )
+      .toMatchObject({ total_practice_minutes: 0, practice_session_count: 0 });
   });
 });
