@@ -157,15 +157,31 @@ is_admin_or_teacher()` read `public.profiles`, and Postgres validates SQL functi
   - **Gate test**: teacher creates only for own students; student can change only
     `status`; invalid status transition rejected app-side. _(A3)_
 
-- [ ] **Step 6 — app reconciliation + seed** (code + `seed.sql`, no migration)
-  - Regenerate `types/database.types.generated.ts`; reconcile hand-written Zod enums
-    (`SongStatusEnum`, `AssignmentStatusEnum`) to the DB. _(A3, A4)_
+- [x] **Step 6a — live LOCAL cutover + song restore** (done 2026-07-18)
+  - Ran `scripts/db/local-cutover.sh` (atomic single transaction) against the local
+    uwh stack: dropped the old 73-table public schema, applied all 7 migrations,
+    reseeded. `DROP SCHEMA public CASCADE` was pre-checked safe (only casualty outside
+    `public` was our own `trigger_handle_new_user`; auth/storage/realtime untouched).
+  - **Songs restored losslessly**: the 438-song backup went in via `supabase/seed.sql`.
+    To avoid stranding the 409 songs with rich data, the Phase-4 songs columns were
+    pulled forward as `20260718090600_songs_rich_metadata.sql` and applied at cutover.
+    Data-driven corrections: `category` stays **text** (31 messy free-text genres, not
+    an enum); `priority_bucket` **dropped** (NULL on all rows).
+  - **Profiles backfilled** for all 53 existing auth users (role flags by email);
+    existing logins keep working (auth schema untouched).
+  - **Migration history rewritten**: `supabase_migrations.schema_migrations` truncated
+    and re-seeded with the 7 new versions.
+  - **Verified**: 5 tables, 53 profiles, 438 songs (375 active); RLS proven on the live
+    stack (student sees own profile + shared songs, admin sees all, student song-insert
+    blocked); PostgREST serves the new schema and returns `PGRST205` for dropped
+    `user_roles`. _(M3)_
+- [ ] **Step 6b — app reconciliation** (code, pending)
+  - Regenerate `types/database.types.generated.ts` (blocked: needs Docker for
+    `supabase gen types`, currently down on the Mac — do it on the app-rebuild pass).
+  - Reconcile hand-written Zod enums (`SongStatusEnum`, `AssignmentStatusEnum`). _(A3, A4)_
   - Ownership checks compare `profile.id`.
-  - Rewrite `supabase/seed.sql` for the new schema (no `user_roles`, new columns; a
-    few auth users + profiles + songs + one teacher/student pair). Keep
-    `config.toml` `sql_paths = ["./seed.sql"]`. _(M3)_
-  - **Gate test**: `supabase db reset` runs clean end-to-end; app dev server signs in
-    and lists/creates a song, a lesson, an assignment.
+  - **App is intentionally broken** until per-phase UI is rebuilt — the existing code
+    queries the old full schema (see Housekeeping: deployment freeze).
 
 ---
 
@@ -217,6 +233,9 @@ null`, `is_parent bool default false`, CHECK `no_self_parent (parent_id <> id)`)
   active/archived **default active** (S12), `confirmed_active_at`, `spotify_playlist_url`).
   Extend `handle_new_user` to **link an existing shadow profile by `invite_email = new.email`**
   (set user_id, clear shadow) — the clean single transfer path (S2). Add a parent-reads-children RLS policy.
+  **Constraint**: add a **partial unique index on `invite_email where is_shadow`** (the old schema
+  needed exactly this — `20260518000001_unique_invite_email` — after duplicate invites); on link,
+  update the placeholder email to the real one or the `email citext UNIQUE` collides.
 - **auth_event_types** (lookup, replaces 20-value enum, S7): `code text pk`, `description text`.
 - **auth_events**: `id`, `event_type text → auth_event_types(code)`, `occurred_at default now()`,
   `user_email text`, `user_id uuid`, `actor_id uuid` (both FK-less), `ip_address text`,
@@ -258,12 +277,15 @@ not null 1..480`, `bpm_practiced smallint 20..300`, `notes`, timestamps. Trigger
 
 Unlocks full song editor, SOTW, requests.
 
-- **songs — add columns** (ALTER): `capo_fret int 0..20`, `strumming_pattern`, `tempo int 20..300`,
-  `time_signature int 1..16`, `duration_ms int >0`, `release_year int 1900..2100`, `category`
-  (**enum** song_category), `youtube_url`, `spotify_link_url`, `cover_image_url`, `tiktok_short_url`,
-  `lyrics_with_chords`, `gallery_images text[]`, `audio_files jsonb default '{}'`, `is_draft bool
-default false`, `recording_queued_at`, `recorded_at`, `priority_bucket` (**enum**
-  song_priority_bucket done/may/june/later/backlog), `search_vector tsvector GENERATED ... STORED` + GIN.
+- **songs — add columns** (ALTER) — **already applied at cutover** via
+  `20260718090600_songs_rich_metadata.sql`: `capo_fret int 0..20`, `strumming_pattern`,
+  `tempo int 20..300`, `time_signature int 1..16`, `duration_ms int >0`, `release_year int
+1900..2100`, `category` (**text** — 31 messy free-text genres in the real data; an enum
+  would be permanent churn), `youtube_url`, `spotify_link_url`, `cover_image_url`,
+  `tiktok_short_url`, `lyrics_with_chords`, `gallery_images text[]`, `audio_files jsonb default
+'{}'`, `is_draft bool default false`, `recording_queued_at`, `recorded_at`, `search_vector
+tsvector GENERATED ... STORED` + GIN. **`priority_bucket` NOT rebuilt** (NULL on all 438
+  rows; dated planning artifact). Remaining Phase-4 tables (below) still pending.
 - **song_sections**: `id`; `song_id → songs cascade`; `section_type` (**enum** intro/verse/
   pre_chorus/chorus/bridge/solo/interlude/outro); `section_number int default 1`, `order_position
 int not null`, `chords text[] default '{}'`, `lyrics`, `tab_notation`, `notes`, `created_at`.
@@ -580,10 +602,19 @@ between layers. A `Workflow()` pipeline can automate a single slice to its gate 
 - **End of Phase 1**: full `db reset` clean from empty → app signs in and does basic
   CRUD on all three tables; RLS spot-checked with teacher vs student accounts.
 
-## Housekeeping (confirm at execution)
+## Housekeeping & standing constraints
 
-- Archive the remaining 6 `supabase/migrations/` files (and the already-moved 167 in
-  `supabase/migrations_archive/`) — commit the archive, or delete outright since the
-  baseline dump is the historical record.
-- **No Cloud/prod changes** — this rebuild targets the local stack until a future,
-  separate cutover decision.
+- **Deployment freeze on the rebuild branch**: `main` → preview and `production` → prod
+  both run the current app against prod's _old_ schema. The rebuild branch **must not
+  merge to `main`** until either UI parity is reached or a deliberate prod cutover. Prod
+  keeps running untouched meanwhile — accept the dual-maintenance freeze.
+- **Storage phase (not yet in the catalog)**: the old prod schema has `storage.objects`
+  policies (avatars, song-images buckets). The local stack has no `storage` schema running,
+  so it's a prod-cutover concern, not a local blocker — fold bucket/policy setup into Phase 6
+  so it isn't forgotten.
+- **Prod ETL constraint (record now)**: an eventual lossless prod migration requires
+  **preserving profile ids** — old prod `profiles.id` = the auth user id, and the new schema
+  accepts `id = old value, user_id = same value`. Never generate fresh ids at prod cutover or
+  every lesson/repertoire FK is severed.
+- **No Cloud/prod changes** — this rebuild targets the local stack until a separate cutover decision.
+- Archive already committed: 173 old migrations live in `supabase/migrations_archive/`.
