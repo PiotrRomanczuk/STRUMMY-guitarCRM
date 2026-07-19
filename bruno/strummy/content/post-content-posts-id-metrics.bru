@@ -1,0 +1,26 @@
+meta {
+  name: post-content-posts-id-metrics
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/content/posts/{{sample_id}}/metrics
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "views_count": 1200,
+    "likes_count": 80,
+    "comments_count": 5,
+    "shares_count": 3,
+    "saves_count": 12
+  }
+}
+
+docs {
+  Domain content. Auth user, role:teacher. Appends a metrics snapshot; server computes
+  engagement_rate and defaults captured_at to now.
+}

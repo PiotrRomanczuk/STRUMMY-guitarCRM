@@ -47,10 +47,16 @@ export const MODEL_MAPPINGS: ModelMapping[] = [
 ];
 
 /**
- * Default fallback models for each provider
+ * Default fallback models for each provider.
+ *
+ * AIA-1: ollama previously pointed at 'llama3.2:3b', which crashes the
+ * runner on the home Ollama host (exit status 2) — any unmapped model id
+ * sent to the local provider died at the fallback. 'gemma3:1b' is the only
+ * model confirmed usable at the box's current (CPU-bound) inference speed;
+ * override via OLLAMA_DEFAULT_MODEL once the GPU backend is fixed.
  */
 export const FALLBACK_MODELS = {
-  ollama: 'llama3.2:3b',
+  ollama: 'gemma3:1b',
   openrouter: 'meta-llama/llama-3.2-3b-instruct:free',
 };
 

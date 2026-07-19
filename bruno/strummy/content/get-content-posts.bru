@@ -1,0 +1,15 @@
+meta {
+  name: get-content-posts
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/content/posts
+  auth: inherit
+}
+
+docs {
+  Domain content. Auth user, role:teacher.
+  Query: song_id, platform, status, from, to (all optional).
+}

@@ -18,6 +18,7 @@ jest.mock('@/lib/getUserWithRolesSSR', () => ({
 
 jest.mock('@/lib/services/assignment-detail-queries', () => ({
   getAssignmentDetail: jest.fn(),
+  getAssignmentHistory: jest.fn().mockResolvedValue([]),
 }));
 
 jest.mock('@/components/assignments/editorial/detail/AssignmentDetailEditorial', () => ({

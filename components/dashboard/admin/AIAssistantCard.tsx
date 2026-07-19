@@ -77,17 +77,23 @@ export function AIAssistantCard({ firstName }: AIAssistantCardProps) {
     removeConversation,
   } = useAIConversation();
 
-  // Streaming action wrapper
+  // Streaming action wrapper. generateAIResponseStream takes no AbortSignal
+  // — see its doc comment for why forwarding one crashes Next's Server
+  // Action stream wrapper. Cancellation is handled here instead: stop
+  // yielding once the local signal fires, letting the request finish
+  // server side unobserved.
   const streamAction = useCallback(async function* (
     params: { prompt: string; model: string; conversationId?: string },
     signal?: AbortSignal
   ) {
-    yield* await generateAIResponseStream(
+    for await (const chunk of await generateAIResponseStream(
       params.prompt,
       params.model,
-      params.conversationId,
-      signal
-    );
+      params.conversationId
+    )) {
+      if (signal?.aborted) return;
+      yield chunk;
+    }
   }, []);
 
   // AI streaming hook

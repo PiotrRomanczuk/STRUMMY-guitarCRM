@@ -1,0 +1,14 @@
+meta {
+  name: delete-content-posts-id
+  type: http
+  seq: 10
+}
+
+delete {
+  url: {{baseUrl}}/api/content/posts/{{sample_id}}
+  auth: inherit
+}
+
+docs {
+  Domain content. Auth user, role:teacher.
+}

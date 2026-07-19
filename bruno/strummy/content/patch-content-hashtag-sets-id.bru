@@ -1,0 +1,21 @@
+meta {
+  name: patch-content-hashtag-sets-id
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/content/hashtag-sets/{{sample_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "is_active": false
+  }
+}
+
+docs {
+  Domain content. Auth user, role:teacher.
+}

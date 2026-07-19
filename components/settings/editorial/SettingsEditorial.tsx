@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import Link from 'next/link';
 
 import { updateProfileNameAction, type ProfileSettingsState } from '@/app/actions/profile-settings';
+import { AvatarUpload } from './SettingsEditorial.AvatarUpload';
 
 const INITIAL: ProfileSettingsState = {};
 
@@ -86,6 +87,7 @@ const editableInputStyle: React.CSSProperties = {
 };
 
 type Props = {
+  userId: string;
   email: string;
   fullName: string | null;
   phone: string | null;
@@ -93,7 +95,14 @@ type Props = {
   roleLabel: string;
 };
 
-export const SettingsEditorial = ({ email, fullName, phone, avatarUrl, roleLabel }: Props) => {
+export const SettingsEditorial = ({
+  userId,
+  email,
+  fullName,
+  phone,
+  avatarUrl,
+  roleLabel,
+}: Props) => {
   const [state, formAction, pending] = useActionState(updateProfileNameAction, INITIAL);
 
   return (
@@ -182,14 +191,8 @@ export const SettingsEditorial = ({ email, fullName, phone, avatarUrl, roleLabel
               />
             </div>
             <div>
-              <FieldLabel label="Avatar URL" />
-              <input
-                name="avatar_url"
-                type="url"
-                defaultValue={avatarUrl ?? ''}
-                placeholder="https://…"
-                style={editableInputStyle}
-              />
+              <FieldLabel label="Avatar" />
+              <AvatarUpload userId={userId} initialUrl={avatarUrl} />
               {state.error && (
                 <div
                   style={{

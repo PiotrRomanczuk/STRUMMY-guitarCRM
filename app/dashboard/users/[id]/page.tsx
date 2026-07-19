@@ -6,6 +6,7 @@ import { notFound, redirect } from 'next/navigation';
 import { StudentDetailEditorial } from '@/components/users/editorial/StudentDetailEditorial';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import {
+  getStudentPreferences,
   getStudentProfile,
   getStudentRecentLessons,
   getStudentRepertoire,
@@ -46,14 +47,20 @@ export default async function StudentDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const [repertoire, lessons] = await Promise.all([
+  const [repertoire, lessons, preferences] = await Promise.all([
     getStudentRepertoire(id),
     getStudentRecentLessons(id),
+    getStudentPreferences(id),
   ]);
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <StudentDetailEditorial profile={profile} repertoire={repertoire} lessons={lessons} />
+      <StudentDetailEditorial
+        profile={profile}
+        repertoire={repertoire}
+        lessons={lessons}
+        preferences={preferences}
+      />
     </div>
   );
 }

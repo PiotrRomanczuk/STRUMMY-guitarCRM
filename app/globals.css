@@ -140,7 +140,10 @@
   --card-foreground: hsl(0 0% 12%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(0 0% 12%);
-  --primary: hsl(42 90% 45%);
+  /* L45% (#da9c0b) failed WCAG AA (2.3-2.4:1) as text/button-fill against the
+     light background and white foreground — darkened to L30% (#916808),
+     which clears 4.5:1 against both while keeping the gold hue. */
+  --primary: hsl(42 90% 30%);
   --primary-foreground: hsl(0 0% 100%);
   --secondary: hsl(40 10% 90%);
   --secondary-foreground: hsl(0 0% 15%);

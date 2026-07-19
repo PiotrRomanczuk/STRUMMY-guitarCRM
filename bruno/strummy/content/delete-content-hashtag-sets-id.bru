@@ -1,0 +1,14 @@
+meta {
+  name: delete-content-hashtag-sets-id
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/content/hashtag-sets/{{sample_id}}
+  auth: inherit
+}
+
+docs {
+  Domain content. Auth user, role:teacher.
+}

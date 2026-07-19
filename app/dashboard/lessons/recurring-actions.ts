@@ -7,6 +7,7 @@ import { guardTestAccountMutation } from '@/lib/auth/test-account-guard';
 import { logger } from '@/lib/logger';
 import { RecurringLessonInputSchema } from '@/schemas/RecurringLessonSchema';
 import { generateRecurringDates } from '@/lib/lessons/recurring-dates';
+import { syncLessonCreation } from '@/lib/services/calendar-lesson-sync';
 
 interface RecurringLessonResult {
   created: number;
@@ -63,21 +64,37 @@ export async function generateRecurringLessons(input: {
     student_id: studentId,
     lesson_teacher_number: baseNumber + i + 1,
     scheduled_at: scheduledAt,
-    title: titleTemplate
-      ? titleTemplate.replace('#{n}', String(baseNumber + i + 1))
-      : null,
+    title: titleTemplate ? titleTemplate.replace('#{n}', String(baseNumber + i + 1)) : null,
     status: 'SCHEDULED' as const,
-    creator_user_id: user.id,
   }));
 
   const { data: inserted, error: insertError } = await supabase
     .from('lessons')
     .insert(lessonRows)
-    .select('id, scheduled_at');
+    .select('id, scheduled_at, title, teacher_id, student_id, status');
 
   if (insertError) {
     logger.error('[generateRecurringLessons] Insert error:', insertError);
     return { error: insertError.message };
+  }
+
+  // Best-effort per-date Google Calendar sync, mirroring single-lesson
+  // creation (app/actions/lesson-edit.ts). syncLessonCreation never throws
+  // — it logs and no-ops when the teacher has no integration — so a failed
+  // sync never rolls back the lessons that were already inserted.
+  if (inserted) {
+    await Promise.all(
+      inserted.map((lesson) =>
+        syncLessonCreation(supabase, {
+          id: lesson.id,
+          title: lesson.title ?? '',
+          scheduled_at: lesson.scheduled_at,
+          student_id: lesson.student_id,
+          teacher_id: lesson.teacher_id,
+          status: lesson.status,
+        })
+      )
+    );
   }
 
   // Link songs if provided
@@ -90,9 +107,7 @@ export async function generateRecurringLessons(input: {
       }))
     );
 
-    const { error: songError } = await supabase
-      .from('lesson_songs')
-      .insert(songRows);
+    const { error: songError } = await supabase.from('lesson_songs').insert(songRows);
 
     if (songError) {
       logger.error('[generateRecurringLessons] Song link error:', songError);

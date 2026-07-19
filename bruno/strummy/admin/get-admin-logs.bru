@@ -1,0 +1,14 @@
+meta {
+  name: get-admin-logs
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/admin/logs
+  auth: inherit
+}
+
+docs {
+  Domain admin. Auth user, role:admin. Query: level, prefix, since, page, limit.
+}

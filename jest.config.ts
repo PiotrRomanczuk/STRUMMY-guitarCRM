@@ -110,33 +110,6 @@ const config: Config = {
     // outdated Supabase query builder shapes). Triage backlog — see
     // tasks/test-coverage-analysis.md §3 and §P0. Remove an entry only after
     // the file passes locally.
-
-    // ── Spotify: cookies() called outside Next.js request scope ─────────────
-    'app/api/spotify/features/route\\.test\\.ts',
-    'app/api/spotify/matches/approve/route\\.test\\.ts',
-    'app/api/spotify/matches/reject/route\\.test\\.ts',
-    'app/api/spotify/search/route\\.test\\.ts',
-    'app/api/spotify/sync/route\\.test\\.ts',
-
-    // ── Medium fixes: stale assertions / missing mocks ───────────────────────
-    '__tests__/lib/getUserWithRolesSSR\\.test\\.ts',
-    '__tests__/orphan-profile-cleanup\\.test\\.ts',
-    '__tests__/shadow-users\\.test\\.ts',
-    '__tests__/sync-all-lessons\\.test\\.ts',
-    '__tests__/utils/getUserRolesSSR\\.test\\.ts',
-    // useSearchParams() from next/navigation returns undefined — needs mock
-    'app/\\(auth\\)/sign-in/page\\.test\\.tsx',
-    'app/\\(auth\\)/sign-up/page\\.test\\.tsx',
-    // Component forms: ESM fixed (lucide-react/react-markdown now mocked), but
-    // real assertion failures remain (missing QueryClientProvider wrapper,
-    // UI text drift). Need targeted test fixes before unquarantining.
-    // Other component failures under investigation
-    'app/dashboard/songs/page\\.test\\.tsx',
-
-    // ── Newly discovered failures (2026-06-16 triage) ────────────────────────
-    // Cannot find module — component moved or deleted
-    // Circuit breaker test reliably exceeds 5000ms timeout
-    'lib/__tests__/spotify-error-handling\\.test\\.ts',
   ],
 
   // Transform files

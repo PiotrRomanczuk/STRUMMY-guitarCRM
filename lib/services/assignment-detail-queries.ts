@@ -66,3 +66,54 @@ export async function getAssignmentDetail(assignmentId: string): Promise<Assignm
     updatedAt: data.updated_at as string,
   };
 }
+
+export type AssignmentHistoryEntry = {
+  id: string;
+  changeType: string;
+  label: string;
+  changedAt: string;
+};
+
+function labelForChange(changeType: string, newData: Record<string, unknown> | null): string {
+  const status = (newData?.status as string | undefined) ?? null;
+  if (changeType === 'created') return 'Created';
+  if (changeType === 'status_changed' && status) {
+    return `Status changed to ${status.replace(/_/g, ' ')}`;
+  }
+  return changeType.replace(/_/g, ' ');
+}
+
+/**
+ * Last ~10 history entries for an assignment detail timeline (ASG-2), newest
+ * first. RLS (assignment_history_select_own) scopes this to the owning
+ * teacher/student/admin — a single query, no N+1.
+ */
+export async function getAssignmentHistory(
+  assignmentId: string
+): Promise<AssignmentHistoryEntry[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('assignment_history')
+    .select('id, change_type, new_data, changed_at')
+    .eq('assignment_id', assignmentId)
+    .order('changed_at', { ascending: false })
+    .limit(10);
+
+  if (error) {
+    logger.warn('[assignment-detail-queries] history error', {
+      error: error.message,
+      code: error.code,
+    });
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    changeType: row.change_type as string,
+    label: labelForChange(
+      row.change_type as string,
+      row.new_data as Record<string, unknown> | null
+    ),
+    changedAt: row.changed_at as string,
+  }));
+}

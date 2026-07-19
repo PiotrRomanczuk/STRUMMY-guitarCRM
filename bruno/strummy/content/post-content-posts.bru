@@ -1,0 +1,27 @@
+meta {
+  name: post-content-posts
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/content/posts
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "song_id": "{{sample_song_id}}",
+    "platform": "instagram",
+    "status": "planned",
+    "hook": "Wait for the drop",
+    "caption": "New cover up this week",
+    "hashtag_set_ids": [],
+    "extra_hashtags": ["#guitarcover"]
+  }
+}
+
+docs {
+  Domain content. Auth user, role:teacher. platform/status enums: see types/ContentPost.ts.
+}

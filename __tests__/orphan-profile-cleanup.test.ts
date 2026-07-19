@@ -15,6 +15,19 @@ describe('createShadowUser Orphan Profile Cleanup', () => {
     auth: {
       getUser: jest.fn(),
     },
+    // createShadowUser authorizes the caller (must be admin/teacher) via a
+    // `.from('profiles')` lookup on this cookie-bound client, before ever
+    // touching the admin client the rest of this test exercises.
+    from: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: { is_admin: false, is_teacher: true },
+            error: null,
+          }),
+        }),
+      }),
+    }),
   };
 
   const mockAdminSupabase = {
@@ -62,11 +75,16 @@ describe('createShadowUser Orphan Profile Cleanup', () => {
     // Setup mock behavior
     let upsertCallCount = 0;
     mockUpsert.mockImplementation(async () => {
-        upsertCallCount++;
-        if (upsertCallCount === 1) {
-            return { error: { code: '23505', message: 'duplicate key value violates unique constraint "profiles_email_key"' } };
-        }
-        return { error: null };
+      upsertCallCount++;
+      if (upsertCallCount === 1) {
+        return {
+          error: {
+            code: '23505',
+            message: 'duplicate key value violates unique constraint "profiles_email_key"',
+          },
+        };
+      }
+      return { error: null };
     });
 
     // Select finds orphan profile
@@ -115,21 +133,23 @@ describe('createShadowUser Orphan Profile Cleanup', () => {
     expect(mockUpsert).toHaveBeenCalledTimes(2);
 
     // 2. Select orphan profile called
-    expect(mockSelect).toHaveBeenCalled(); 
-    
+    expect(mockSelect).toHaveBeenCalled();
+
     // 3. Rename orphan profile (update called with temp email)
-    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ email: expect.stringContaining(studentEmail + '_migrated_') }));
-    
-    // 4. Migrate data (lessons, assignments, user_roles)
-    // We expect update calls for these tables. 
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ email: expect.stringContaining(studentEmail + '_migrated_') })
+    );
+
+    // 4. Migrate data (lessons, assignments — migrateOrphanData in
+    // app/dashboard/actions.ts does not touch user_roles).
+    // We expect update calls for these tables.
     // Since we mock 'from' to return the same mockUpdate for all tables, we can check calls to mockUpdate.
     // But we can't easily distinguish which table it was called on with this simple mock setup unless we inspect the 'from' calls.
-    
-    // Verify 'from' was called for all tables
+
+    // Verify 'from' was called for all migrated tables
     expect(mockAdminSupabase.from).toHaveBeenCalledWith('lessons');
     expect(mockAdminSupabase.from).toHaveBeenCalledWith('assignments');
-    expect(mockAdminSupabase.from).toHaveBeenCalledWith('user_roles');
-    
+
     // 5. Delete orphan profile
     expect(mockDelete).toHaveBeenCalled();
   });

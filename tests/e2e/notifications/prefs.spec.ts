@@ -1,5 +1,5 @@
 import { test, expect } from '../../fixtures';
-import { createClient } from '@supabase/supabase-js';
+import { adminClient, getAdminId, getStudentId } from '../../helpers/seed-ids';
 
 /**
  * Notification Preferences E2E Tests (A10.2 / B8.2)
@@ -11,16 +11,8 @@ import { createClient } from '@supabase/supabase-js';
  * We seed them in beforeAll and clean up in afterAll.
  */
 
-const ADMIN_ID = 'db44f596-8ccb-4d71-837d-61de0fc791f7';
-const STUDENT_ID = '2fb4575e-bb80-486f-a8d9-3553fd84316d';
-
-function adminClient() {
-  const url =
-    process.env.NEXT_PUBLIC_SUPABASE_LOCAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const key =
-    process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-  return createClient(url, key);
-}
+let ADMIN_ID: string;
+let STUDENT_ID: string;
 
 const seededIds: string[] = [];
 
@@ -32,6 +24,7 @@ test.describe(
   () => {
     test.beforeAll(async () => {
       const db = adminClient();
+      [ADMIN_ID, STUDENT_ID] = await Promise.all([getAdminId(db), getStudentId(db)]);
 
       // Ensure admin has lesson_reminder_24h pref (upsert to avoid duplicate)
       const { data: adminData } = await db

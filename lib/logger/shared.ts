@@ -2,7 +2,7 @@
  * Runtime-agnostic types and helpers shared by Node + Edge logger backends.
  * No dependencies on Node-only APIs — must work on Vercel Edge runtime.
  *
- * Phase 2 of ADR 0003. See docs/adr/2026-05-17-0003-…
+ * Phase 2 of ADR 0003. See docs/app-blueprint/adr/2026-05-17-0003-…
  */
 
 export type LogContext = Record<string, unknown>;

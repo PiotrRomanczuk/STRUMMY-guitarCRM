@@ -1,6 +1,9 @@
 import Link from 'next/link';
 
-import type { AssignmentDetail } from '@/lib/services/assignment-detail-queries';
+import type {
+  AssignmentDetail,
+  AssignmentHistoryEntry,
+} from '@/lib/services/assignment-detail-queries';
 import { assignmentStatusColour, assignmentStatusLabel } from '@/lib/services/assignments-queries';
 import type { AssignmentStatus } from '@/schemas/AssignmentSchema';
 import { AssignmentStatusActions } from '../status/AssignmentStatusActions';
@@ -14,6 +17,14 @@ const formatDate = (iso: string | null): string => {
     year: 'numeric',
   });
 };
+
+const formatDateTime = (iso: string): string =>
+  new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 
 const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div
@@ -45,9 +56,10 @@ type Props = {
   assignment: AssignmentDetail;
   canManage: boolean; // teacher/admin
   canAct: boolean; // owning student or manager — may change status
+  history: AssignmentHistoryEntry[]; // ASG-2 — teacher/admin view only for now
 };
 
-export const AssignmentDetailEditorial = ({ assignment, canManage, canAct }: Props) => {
+export const AssignmentDetailEditorial = ({ assignment, canManage, canAct, history }: Props) => {
   const colour = assignmentStatusColour(assignment.status);
   const studentDisplay = assignment.studentName ?? assignment.studentEmail ?? 'Student';
 
@@ -194,6 +206,38 @@ export const AssignmentDetailEditorial = ({ assignment, canManage, canAct }: Pro
               </div>
             )}
           </Card>
+
+          {canManage && history.length > 0 && (
+            <Card title="History">
+              <div
+                data-testid="assignment-history-timeline"
+                style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
+              >
+                {history.map((entry) => (
+                  <div
+                    key={entry.id}
+                    style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}
+                  >
+                    <span
+                      style={{ fontSize: 12, color: 'var(--ink-2)', textTransform: 'capitalize' }}
+                    >
+                      {entry.label}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--mono)',
+                        fontSize: 10,
+                        color: 'var(--ink-4)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {formatDateTime(entry.changedAt)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>

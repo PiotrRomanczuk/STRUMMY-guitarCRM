@@ -1,0 +1,15 @@
+meta {
+  name: get-content-calendar
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/content/calendar
+  auth: inherit
+}
+
+docs {
+  Domain content. Auth user, role:teacher. Scheduled content_posts joined with their song.
+  Query: from, to (ISO datetimes, both optional, filter by scheduled_at).
+}

@@ -1,6 +1,6 @@
 # Editorial Production Migration Plan
 
-> **⚠️ Superseded by [`docs/MASTER_SPEC.md`](../../docs/MASTER_SPEC.md) (2026-06-16).** The editorial-migration track was unified into the master spec (§3.2 + per-feature gate 5). Retained for history only — no longer maintained.
+> **⚠️ Superseded by [`docs/app-blueprint/` (originally MASTER_SPEC.md)](../../docs/app-blueprint/README.md) (2026-06-16).** The editorial-migration track was unified into the master spec (§3.2 + per-feature gate 5). Retained for history only — no longer maintained.
 
 **Date**: 2026-06-09
 **Author**: Claude

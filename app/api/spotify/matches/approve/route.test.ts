@@ -1,12 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { POST } from './route';
 import { createClient } from '@/lib/supabase/server';
 
 // Mock dependencies
 jest.mock('@/lib/supabase/server');
 jest.mock('next/server', () => ({
+  NextRequest: class {
+    url: string;
+    method: string;
+    body: unknown;
+    constructor(url: string, init?: { method?: string; body?: unknown }) {
+      this.url = url;
+      this.method = init?.method || 'GET';
+      this.body = init?.body;
+    }
+    async json() {
+      return typeof this.body === 'string' ? JSON.parse(this.body) : this.body;
+    }
+  },
   NextResponse: {
     json: jest.fn((data, init) => ({ data, init })),
   },
@@ -31,7 +44,7 @@ describe('POST /api/spotify/matches/approve', () => {
       error: null,
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/approve', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/approve', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123', songId: 'song-456' }),
     });
@@ -60,7 +73,7 @@ describe('POST /api/spotify/matches/approve', () => {
 
     mockSupabase.from = mockFrom;
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/approve', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/approve', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123', songId: 'song-456' }),
     });
@@ -87,7 +100,7 @@ describe('POST /api/spotify/matches/approve', () => {
       }),
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/approve', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/approve', {
       method: 'POST',
       body: JSON.stringify({ songId: 'song-456' }), // Missing matchId
     });
@@ -117,7 +130,7 @@ describe('POST /api/spotify/matches/approve', () => {
       }),
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/approve', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/approve', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123' }), // Missing songId
     });
@@ -151,8 +164,20 @@ describe('POST /api/spotify/matches/approve', () => {
             }),
           }),
         };
+      } else if (callCount === 2) {
+        // Second call: profiles (test-account guard)
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_development: false },
+                error: null,
+              }),
+            }),
+          }),
+        };
       } else {
-        // Second call: spotify_matches
+        // Third call: spotify_matches
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnThis(),
@@ -165,7 +190,7 @@ describe('POST /api/spotify/matches/approve', () => {
       }
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/approve', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/approve', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'invalid-match', songId: 'song-456' }),
     });
@@ -207,6 +232,18 @@ describe('POST /api/spotify/matches/approve', () => {
           }),
         };
       } else if (callCount === 2) {
+        // profiles (test-account guard)
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_development: false },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      } else if (callCount === 3) {
         // spotify_matches SELECT
         return {
           select: jest.fn().mockReturnValue({
@@ -217,7 +254,7 @@ describe('POST /api/spotify/matches/approve', () => {
             }),
           }),
         };
-      } else if (callCount === 3) {
+      } else if (callCount === 4) {
         // songs UPDATE
         return {
           update: jest.fn().mockReturnValue({
@@ -227,8 +264,16 @@ describe('POST /api/spotify/matches/approve', () => {
             }),
           }),
         };
+      } else if (callCount === 5) {
+        // spotify_matches UPDATE — reject any previous approved match for the same track
+        return {
+          update: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnThis(),
+            neq: jest.fn().mockResolvedValue({ data: null, error: null }),
+          }),
+        };
       } else {
-        // spotify_matches UPDATE
+        // spotify_matches UPDATE — set this match to approved
         return {
           update: jest.fn().mockReturnValue({
             eq: jest.fn().mockResolvedValue({
@@ -240,7 +285,7 @@ describe('POST /api/spotify/matches/approve', () => {
       }
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/approve', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/approve', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123', songId: 'song-456' }),
     });
@@ -280,6 +325,18 @@ describe('POST /api/spotify/matches/approve', () => {
           }),
         };
       } else if (callCount === 2) {
+        // profiles (test-account guard)
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_development: false },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      } else if (callCount === 3) {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnThis(),
@@ -308,7 +365,7 @@ describe('POST /api/spotify/matches/approve', () => {
       }
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/approve', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/approve', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123', songId: 'song-456' }),
     });
@@ -356,6 +413,18 @@ describe('POST /api/spotify/matches/approve', () => {
           }),
         };
       } else if (callCount === 2) {
+        // profiles (test-account guard)
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_development: false },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      } else if (callCount === 3) {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnThis(),
@@ -365,13 +434,21 @@ describe('POST /api/spotify/matches/approve', () => {
             }),
           }),
         };
-      } else if (callCount === 3) {
+      } else if (callCount === 4) {
         return {
           update: jest.fn((data) => {
             capturedUpdate = data;
             return {
               eq: jest.fn().mockResolvedValue({ data: null, error: null }),
             };
+          }),
+        };
+      } else if (callCount === 5) {
+        // spotify_matches UPDATE — reject any previous approved match for the same track
+        return {
+          update: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnThis(),
+            neq: jest.fn().mockResolvedValue({ data: null, error: null }),
           }),
         };
       } else {
@@ -383,7 +460,7 @@ describe('POST /api/spotify/matches/approve', () => {
       }
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/approve', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/approve', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123', songId: 'song-456' }),
     });
@@ -425,6 +502,18 @@ describe('POST /api/spotify/matches/approve', () => {
           }),
         };
       } else if (callCount === 2) {
+        // profiles (test-account guard)
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_development: false },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      } else if (callCount === 3) {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnThis(),
@@ -440,10 +529,19 @@ describe('POST /api/spotify/matches/approve', () => {
             }),
           }),
         };
-      } else if (callCount === 3) {
+      } else if (callCount === 4) {
+        // songs UPDATE
         return {
           update: jest.fn().mockReturnValue({
             eq: jest.fn().mockResolvedValue({ data: null, error: null }),
+          }),
+        };
+      } else if (callCount === 5) {
+        // spotify_matches UPDATE — reject any previous approved match for the same track
+        return {
+          update: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnThis(),
+            neq: jest.fn().mockResolvedValue({ data: null, error: null }),
           }),
         };
       } else {
@@ -458,7 +556,7 @@ describe('POST /api/spotify/matches/approve', () => {
       }
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/approve', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/approve', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123', songId: 'song-456' }),
     });

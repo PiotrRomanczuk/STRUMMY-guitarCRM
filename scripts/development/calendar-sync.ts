@@ -6,7 +6,7 @@
  * Google push webhooks need a public HTTPS endpoint, so they never fire against
  * localhost. This script runs the same admin-side import the webhook would
  * (`fetchAndSyncRecentEvents`), so you can exercise inbound sync locally without
- * a tunnel. See docs/GOOGLE_AUTH_DEV.md.
+ * a tunnel. See docs/app-blueprint/reference/GOOGLE_AUTH_DEV.md.
  *
  * Usage:
  *   npm run dev:calendar-sync                       # default teacher, local Supabase

@@ -1,0 +1,22 @@
+meta {
+  name: patch-content-posts-id
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/api/content/posts/{{sample_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "status": "published",
+    "published_at": "2026-08-01T10:00:00.000Z"
+  }
+}
+
+docs {
+  Domain content. Auth user, role:teacher.
+}

@@ -63,6 +63,7 @@ export default async function SettingsPage() {
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
       <SettingsEditorial
+        userId={user.id}
         email={user.email ?? ''}
         fullName={(data?.full_name as string) ?? null}
         phone={(data?.phone as string) ?? null}

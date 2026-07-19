@@ -1,0 +1,18 @@
+meta {
+  name: get-cron-calendar-sync
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/cron/calendar-sync
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{CRON_SECRET}}
+}
+docs {
+  Domain cron. Auth cron-secret. Manual/on-demand invocation of the polling calendar
+  sync — the scheduled path rides the dispatcher cron instead (Vercel cron-count limit).
+}

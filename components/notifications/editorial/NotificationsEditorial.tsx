@@ -1,9 +1,8 @@
 import {
-  markAllNotificationsReadAction,
-  markNotificationReadAction,
-} from '@/app/actions/notifications';
-import type { NotificationRow } from '@/lib/services/notifications-queries';
-import { countUnread } from '@/lib/services/notifications-queries';
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from '@/app/actions/in-app-notifications';
+import type { InAppNotification } from '@/lib/services/in-app-notification-service';
 
 const VARIANT_COLOURS: Record<string, string> = {
   default: 'var(--ink-3)',
@@ -27,12 +26,18 @@ const formatRelative = (iso: string, now: Date): string => {
 };
 
 type Props = {
-  notifications: NotificationRow[];
+  notifications: InAppNotification[];
+  userId: string;
   now: Date;
 };
 
-export const NotificationsEditorial = ({ notifications, now }: Props) => {
-  const unread = countUnread(notifications);
+export const NotificationsEditorial = ({ notifications, userId, now }: Props) => {
+  const unread = notifications.filter((n) => !n.is_read).length;
+
+  async function markAllReadAction() {
+    'use server';
+    await markAllNotificationsAsRead(userId);
+  }
 
   return (
     <div
@@ -98,7 +103,7 @@ export const NotificationsEditorial = ({ notifications, now }: Props) => {
             </div>
           </div>
           {unread > 0 && (
-            <form action={markAllNotificationsReadAction}>
+            <form action={markAllReadAction}>
               <button
                 type="submit"
                 style={{
@@ -142,7 +147,13 @@ export const NotificationsEditorial = ({ notifications, now }: Props) => {
             </div>
           ) : (
             notifications.map((n, i) => {
-              const accent = VARIANT_COLOURS[n.variant] ?? VARIANT_COLOURS.default;
+              const accent = VARIANT_COLOURS[n.variant ?? 'default'] ?? VARIANT_COLOURS.default;
+
+              async function markThisReadAction() {
+                'use server';
+                await markNotificationAsRead(n.id);
+              }
+
               return (
                 <div
                   key={n.id}
@@ -152,7 +163,7 @@ export const NotificationsEditorial = ({ notifications, now }: Props) => {
                     gap: 14,
                     padding: '16px 22px',
                     borderBottom: i < notifications.length - 1 ? '1px solid var(--rule)' : 'none',
-                    background: n.isRead ? 'var(--card)' : 'rgba(200,149,35,.05)',
+                    background: n.is_read ? 'var(--card)' : 'rgba(200,149,35,.05)',
                   }}
                 >
                   <div
@@ -212,11 +223,10 @@ export const NotificationsEditorial = ({ notifications, now }: Props) => {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {formatRelative(n.createdAt, now)}
+                      {formatRelative(n.created_at, now)}
                     </span>
-                    {!n.isRead && (
-                      <form action={markNotificationReadAction}>
-                        <input type="hidden" name="id" value={n.id} />
+                    {!n.is_read && (
+                      <form action={markThisReadAction}>
                         <button
                           type="submit"
                           style={{

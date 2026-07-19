@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { NotificationsEditorial } from '@/components/notifications/editorial/NotificationsEditorial';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
-import { getRecentNotifications } from '@/lib/services/notifications-queries';
+import { getInAppNotifications } from '@/app/actions/in-app-notifications';
 
 const geist = Geist({
   subsets: ['latin'],
@@ -35,11 +35,11 @@ export default async function NotificationsPage() {
   }
 
   const now = new Date();
-  const notifications = await getRecentNotifications(user.id);
+  const notifications = await getInAppNotifications(user.id, { limit: 30 });
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <NotificationsEditorial notifications={notifications} now={now} />
+      <NotificationsEditorial notifications={notifications} userId={user.id} now={now} />
     </div>
   );
 }

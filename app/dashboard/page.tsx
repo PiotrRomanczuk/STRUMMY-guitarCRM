@@ -9,6 +9,7 @@ import { TeacherDashboardEditorial } from '@/components/dashboard/editorial/teac
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { getPendingInvites, getPlatformPulse } from '@/lib/services/admin-dashboard-queries';
+import { getLockedAccounts } from '@/app/actions/admin/lockout';
 import { getStudentNextLesson, getStudentTopSongs } from '@/lib/services/student-dashboard-queries';
 import {
   calcUtilization,
@@ -96,10 +97,20 @@ async function TeacherEditorialView({ userId, email }: { userId: string; email: 
 
 async function AdminEditorialView() {
   const now = new Date();
-  const [pulse, invites] = await Promise.all([getPlatformPulse(), getPendingInvites()]);
+  const [pulse, invites, lockedAccountsResult] = await Promise.all([
+    getPlatformPulse(),
+    getPendingInvites(),
+    getLockedAccounts(),
+  ]);
+  const lockedAccounts = lockedAccountsResult.success ? (lockedAccountsResult.accounts ?? []) : [];
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <AdminDashboardEditorial pulse={pulse} invites={invites} now={now} />
+      <AdminDashboardEditorial
+        pulse={pulse}
+        invites={invites}
+        lockedAccounts={lockedAccounts}
+        now={now}
+      />
     </div>
   );
 }

@@ -1,12 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { POST } from './route';
 import { createClient } from '@/lib/supabase/server';
 
 // Mock dependencies
 jest.mock('@/lib/supabase/server');
 jest.mock('next/server', () => ({
+  NextRequest: class {
+    url: string;
+    method: string;
+    body: unknown;
+    constructor(url: string, init?: { method?: string; body?: unknown }) {
+      this.url = url;
+      this.method = init?.method || 'GET';
+      this.body = init?.body;
+    }
+    async json() {
+      return typeof this.body === 'string' ? JSON.parse(this.body) : this.body;
+    }
+  },
   NextResponse: {
     json: jest.fn((data, init) => ({ data, init })),
   },
@@ -31,7 +44,7 @@ describe('POST /api/spotify/matches/reject', () => {
       error: null,
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/reject', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/reject', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123' }),
     });
@@ -58,7 +71,7 @@ describe('POST /api/spotify/matches/reject', () => {
       }),
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/reject', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/reject', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123' }),
     });
@@ -85,7 +98,7 @@ describe('POST /api/spotify/matches/reject', () => {
       }),
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/reject', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/reject', {
       method: 'POST',
       body: JSON.stringify({}), // Missing matchId
     });
@@ -122,6 +135,18 @@ describe('POST /api/spotify/matches/reject', () => {
             }),
           }),
         };
+      } else if (callCount === 2) {
+        // profiles (test-account guard)
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_development: false },
+                error: null,
+              }),
+            }),
+          }),
+        };
       } else {
         // spotify_matches UPDATE
         return {
@@ -138,7 +163,7 @@ describe('POST /api/spotify/matches/reject', () => {
       }
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/reject', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/reject', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123' }),
     });
@@ -178,6 +203,18 @@ describe('POST /api/spotify/matches/reject', () => {
             }),
           }),
         };
+      } else if (callCount === 2) {
+        // profiles (test-account guard)
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_development: false },
+                error: null,
+              }),
+            }),
+          }),
+        };
       } else {
         // Database error on update
         return {
@@ -191,7 +228,7 @@ describe('POST /api/spotify/matches/reject', () => {
       }
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/reject', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/reject', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123' }),
     });
@@ -226,6 +263,18 @@ describe('POST /api/spotify/matches/reject', () => {
             }),
           }),
         };
+      } else if (callCount === 2) {
+        // profiles (test-account guard)
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_development: false },
+                error: null,
+              }),
+            }),
+          }),
+        };
       } else {
         return {
           update: jest.fn().mockReturnValue({
@@ -235,7 +284,7 @@ describe('POST /api/spotify/matches/reject', () => {
       }
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/reject', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/reject', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-789' }),
     });
@@ -268,6 +317,18 @@ describe('POST /api/spotify/matches/reject', () => {
             }),
           }),
         };
+      } else if (callCount === 2) {
+        // profiles (test-account guard)
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: { is_development: false },
+                error: null,
+              }),
+            }),
+          }),
+        };
       } else {
         return {
           update: jest.fn().mockReturnValue({
@@ -277,7 +338,7 @@ describe('POST /api/spotify/matches/reject', () => {
       }
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/reject', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/reject', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-999' }),
     });
@@ -307,7 +368,7 @@ describe('POST /api/spotify/matches/reject', () => {
       }),
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/reject', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/reject', {
       method: 'POST',
       body: JSON.stringify({ matchId: 'match-123' }),
     });
@@ -334,7 +395,7 @@ describe('POST /api/spotify/matches/reject', () => {
       }),
     });
 
-    const request = new Request('http://localhost:3000/api/spotify/matches/reject', {
+    const request = new NextRequest('http://localhost:3000/api/spotify/matches/reject', {
       method: 'POST',
       body: 'invalid json{',
     });

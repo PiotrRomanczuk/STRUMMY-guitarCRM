@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Roadmap Tranche 2 — 2026-07-19</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --card: #171a21;
+        --fg: #e6e8ec;
+        --muted: #9aa3af;
+        --line: #262b34;
+        --green: #3fb950;
+        --amber: #d29922;
+        --red: #f85149;
+        --blue: #58a6ff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 34px 0 10px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+      }
+      h3 {
+        font-size: 16px;
+        margin: 22px 0 8px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      code {
+        background: #20242c;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      pre {
+        background: #0b0d11;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 13px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin: 14px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .pill {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .done {
+        background: rgba(63, 185, 80, 0.15);
+        color: var(--green);
+      }
+      .fixed {
+        background: rgba(88, 166, 255, 0.15);
+        color: var(--blue);
+      }
+      .infra {
+        background: rgba(210, 153, 34, 0.15);
+        color: var(--amber);
+      }
+      .lead {
+        color: var(--muted);
+      }
+      ul {
+        margin: 6px 0 6px 2px;
+        padding-left: 20px;
+      }
+      li {
+        margin: 3px 0;
+      }
+      .warn {
+        border-left: 3px solid var(--amber);
+      }
+      .ok {
+        border-left: 3px solid var(--green);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Roadmap Tranche 2 — v1 trust fixes</h1>
+      <div class="meta">
+        Date: 2026-07-19 &nbsp;·&nbsp; Author: Claude &nbsp;·&nbsp; Branch:
+        <code>claude/docs-plan-implementation-56e7ad</code> &nbsp;·&nbsp; Source:
+        <code>docs/app-blueprint/90-roadmap.md</code>
+      </div>
+
+      <p class="lead">
+        Every Tranche 2 item is implemented, E2E-tested against a real local Supabase stack (no
+        mocks), and green. Along the way, testing surfaced and fixed two real product bugs and a set
+        of local dev-environment gaps that were silently blocking most authenticated E2E coverage.
+      </p>
+
+      <h2>1. What was actually done</h2>
+
+      <h3>Tranche 2 roadmap items</h3>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>What</th>
+          <th>Status</th>
+        </tr>
+        <tr>
+          <td>CAL-2</td>
+          <td>
+            Un-hid Calendar from teacher/admin nav; proved the sync-conflict resolution loop
+            end-to-end with a seeded conflict
+          </td>
+          <td><span class="pill done">done + tested</span></td>
+        </tr>
+        <tr>
+          <td>IDA-3</td>
+          <td>Re-mounted the admin lockout widget on the admin dashboard</td>
+          <td><span class="pill done">done + tested</span></td>
+        </tr>
+        <tr>
+          <td>ADM-1</td>
+          <td>
+            <code>/dashboard/logs</code> system_logs viewer (level/prefix filters, admin-gated)
+          </td>
+          <td><span class="pill done">done + tested</span></td>
+        </tr>
+        <tr>
+          <td>LES-1 / LES-2 / IDA-5 / ASG-1</td>
+          <td>
+            Deleted 4 "Coming soon" stub routes (assignment templates ×3, lesson live, lesson
+            import, user invite)
+          </td>
+          <td><span class="pill done">done + tested</span></td>
+        </tr>
+        <tr>
+          <td>NOT-2</td>
+          <td>
+            Unified the inbox/bell notification read paths onto one service; deleted the dead
+            duplicate module
+          </td>
+          <td><span class="pill done">done + tested</span></td>
+        </tr>
+      </table>
+
+      <h3>Real bugs found and fixed while testing</h3>
+      <div class="card ok">
+        <strong>Sync-conflict diff always showed <code>—</code> for the local side.</strong>
+        <code>getPendingConflicts()</code> only ever selected <code>lesson.teacher_id</code> from
+        its join — never title/scheduled_at/notes — so the "Local (Strummy)" column of the
+        conflict-resolution UI was permanently blank, for every conflict, always. Fixed the select;
+        the diff now renders real local-vs-remote data.
+        <div class="meta">File: <code>lib/services/sync-conflict-resolver.ts</code></div>
+      </div>
+      <div class="card ok">
+        <strong
+          >Practice streak / week-bounds broke for ~2 hours a day in non-UTC timezones.</strong
+        >
+        <code>computePracticeStreakDays</code> mixed UTC-normalized practice dates (from the DB)
+        with a locally-computed "today" anchor; <code>getMonToSunWeekBounds</code> read
+        <code>now.getDay()</code> (local) but did all its arithmetic in UTC. Both broke whenever
+        local and UTC disagreed on the calendar day (e.g. it's after midnight locally but not yet
+        midnight UTC) — reproduced live during this session. Made both functions consistently
+        UTC-based.
+        <div class="meta">File: <code>app/actions/student/dashboard.helpers.ts</code></div>
+      </div>
+
+      <h3>Local dev-environment gaps found and fixed (StudentManager stack on uwh)</h3>
+      <div class="card warn">
+        <p>
+          <strong>The dev DB was missing most of the schema</strong> — 7 tables existed against the
+          repo's ~62. Ran the full <code>supabase/migrations/</code> set against it:
+          <strong>7 → 67 tables</strong>. Fixed missing grants on newly-created tables and added
+          default privileges so this doesn't recur.
+        </p>
+        <p>
+          <strong
+            >52 profiles (including the teacher/admin/student E2E fixture accounts) had
+            <code>profiles.id ≠ profiles.user_id</code></strong
+          >
+          — a stale shadow-claim artifact that silently broke <code>loadAuthedProfile()</code> (the
+          function gating every <code>/dashboard/*</code> page) into a permanent
+          dashboard↔onboarding redirect loop. Fixed via the FK's <code>ON UPDATE CASCADE</code> for
+          all 52 rows.
+        </p>
+        <p>
+          Residual, not fixed (flagged, out of scope for Tranche 2): <code>lesson_status</code> enum
+          is lowercase-only with no <code>rescheduled</code> value (blocks ~7 reporting views); no
+          <code>storage-api</code> container (file uploads won't work locally); migration
+          bookkeeping (<code>schema_migrations</code>) wasn't back-filled for the bulk replay.
+        </p>
+      </div>
+
+      <h2>2. How to manually verify</h2>
+
+      <h3>a. Static gates (no server needed)</h3>
+      <pre>
+cd .claude/worktrees/docs-plan-implementation-56e7ad
+npm run typecheck   # expect: 0 errors
+npx eslint .         # expect: 0 errors (warnings are pre-existing size-limit debt)
+npx jest             # expect: 189/189 suites, 2682 passed, 5 skipped, 0 failed</pre>
+
+      <h3>b. Full E2E run against the real local stack</h3>
+      <pre>
+# 1. Tunnel to the local Supabase stack on uwh
+ssh -fN -L 54321:localhost:54321 uwh
+
+# 2. Build + start (NEXT_PUBLIC_ vars are baked at build time)
+NODE_OPTIONS="--max-old-space-size=8192" npm run build
+npx next start -p 3000
+
+# 3. Run the Tranche 2 E2E slice
+NEXT_PUBLIC_SUPABASE_LOCAL_URL=http://127.0.0.1:54321 PLAYWRIGHT_BASE_URL=http://localhost:3000 \
+  npx playwright test --config=playwright.local-3000.config.ts --project="Desktop Chrome" --workers=1 \
+  tests/e2e/teacher/calendar-conflicts.spec.ts \
+  tests/e2e/teacher/deleted-stub-routes.spec.ts \
+  tests/e2e/admin/ \
+  tests/e2e/notifications/
+# expect: 18 passed</pre>
+      <p class="meta">
+        Note: <code>playwright.local-3000.config.ts</code> is gitignored (matches the existing
+        <code>playwright.local-*.config.ts</code> pattern) — create it locally per
+        <code>docs/analysis/2026-07-18-e2e-desktop-chrome-run.md</code>'s reproduce section, just on
+        port 3000 instead of 3100.
+      </p>
+
+      <h3>c. Manual click-through (5 min)</h3>
+      <ul>
+        <li>
+          <strong>Calendar</strong>: sign in as teacher → "Calendar" now appears in the sidebar →
+          <code>/dashboard/calendar</code> shows connect/disconnect status →
+          <code>/dashboard/calendar/conflicts</code> shows an empty state when clean.
+        </li>
+        <li>
+          <strong>Locked accounts</strong>: as admin, <code>/dashboard?view=admin</code> — a "Locked
+          accounts" card appears only when a profile has <code>locked_until &gt; now()</code>;
+          Unlock clears it and the row disappears.
+        </li>
+        <li>
+          <strong>System logs</strong>: as admin, <code>/dashboard/logs</code> shows the latest 100
+          rows with level/prefix filters; teacher/student hitting the URL get redirected to
+          <code>/dashboard</code>.
+        </li>
+        <li>
+          <strong>Deleted routes</strong>: <code>/dashboard/assignments/templates</code>,
+          <code>/lessons/import</code>, <code>/users/invite</code>,
+          <code>/lessons/&lt;id&gt;/live</code> all render "Page not found".
+        </li>
+        <li>
+          <strong>Notifications</strong>: <code>/dashboard/notifications</code> — "Mark read" clears
+          a single item, "Mark all read" clears everything; toggling a per-type preference in
+          <code>/dashboard/settings/notifications</code> persists across reload.
+        </li>
+      </ul>
+
+      <h2>3. Edge cases worth knowing about</h2>
+      <ul>
+        <li>
+          The local Supabase login rate-limiter (15-min lockout after repeated failed/rapid logins)
+          will trip if you re-run the full E2E suite many times back-to-back. Reset via:
+          <code>DELETE FROM auth_rate_limits</code> +
+          <code>UPDATE profiles SET failed_login_attempts=0, locked_until=null</code> for the
+          affected account.
+        </li>
+        <li>
+          Two pre-existing E2E specs (<code>notifications/prefs.spec.ts</code>, seeding a hardcoded
+          student UUID that didn't match the actual fixture account) were fixed to resolve ids
+          dynamically via <code>tests/helpers/seed-ids.ts</code>, consistent with the rest of the
+          suite.
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>

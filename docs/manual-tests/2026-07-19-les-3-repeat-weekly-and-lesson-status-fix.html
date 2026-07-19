@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>LES-3 repeat-weekly lessons + lesson_status enum casing fix</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --card: #171a21;
+        --fg: #e6e8ec;
+        --muted: #9aa3af;
+        --line: #262b34;
+        --green: #3fb950;
+        --amber: #d29922;
+        --red: #f85149;
+        --blue: #58a6ff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 34px 0 10px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      code {
+        background: #20242c;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      pre {
+        background: #0b0d11;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 13px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin: 14px 0;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 999px;
+        margin-right: 6px;
+      }
+      .tag.critical {
+        background: rgba(248, 81, 73, 0.15);
+        color: var(--red);
+      }
+      .tag.fixed {
+        background: rgba(63, 185, 80, 0.15);
+        color: var(--green);
+      }
+      .tag.info {
+        background: rgba(88, 166, 255, 0.15);
+        color: var(--blue);
+      }
+      ol,
+      ul {
+        padding-left: 22px;
+      }
+      li {
+        margin: 6px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .ok {
+        color: var(--green);
+      }
+      .bad {
+        color: var(--red);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>LES-3 — "Repeat weekly" lesson creation</h1>
+      <div class="meta">
+        2026-07-19 · Tranche 4 debt item (docs/app-blueprint/02-lessons-calendar.md)
+      </div>
+
+      <div class="card">
+        <span class="tag fixed">Feature shipped</span>
+        <span class="tag critical">Production-relevant bug found + fixed</span>
+        <p>
+          The roadmap describes LES-3 as "wire or drop" —
+          <code>generateRecurringLessons</code> existed with zero callers, and the brief's
+          recommended default was to build the smallest honest version (a "repeat weekly for N
+          weeks" checkbox) rather than delete it, unless the owner declines. Wiring it up for real
+          and testing it against the live local database surfaced two genuine, unrelated bugs in
+          that dormant code, plus a third, much bigger one in the shared local dev database itself.
+          All three are described below.
+        </p>
+      </div>
+
+      <h2>What was actually done</h2>
+      <ul>
+        <li>
+          <strong>UI.</strong> <code>LessonFormEditorial</code> (create mode only) now has a "Repeat
+          weekly" checkbox + a weeks selector (4/6/8/12,
+          <code>components/lessons/editorial/form/LessonForm.Recurring.tsx</code>). Checking it and
+          submitting calls <code>generateRecurringLessons</code> instead of
+          <code>createLessonAction</code>; unchecked behaves exactly as before (verified by E2E).
+          The submit logic was extracted into a new <code>useLessonFormSubmit</code> hook to keep
+          the component under the file-size convention.
+        </li>
+        <li>
+          <strong>Requires an existing student.</strong> Recurring lessons need a resolved
+          <code>studentId</code> (the underlying schema requires a UUID) — the "+ new student by
+          email" path isn't supported for repeats. Checking the box with a new-student selection
+          shows an inline error rather than silently failing.
+        </li>
+        <li>
+          <strong>Google Calendar sync.</strong> <code>generateRecurringLessons</code> now calls
+          <code>syncLessonCreation</code> once per created lesson (best-effort, matching the
+          single-lesson creation path in <code>app/actions/lesson-edit.ts</code>) — the roadmap
+          brief's "Google-connected teacher gets 4 events" acceptance criterion. The original
+          dormant code never did this at all.
+        </li>
+      </ul>
+
+      <h2>Bugs found and fixed while verifying this end-to-end</h2>
+
+      <div class="card">
+        <p><span class="tag critical">Bug 1</span> <strong>Dead column reference.</strong></p>
+        <p>
+          The original (never-executed) <code>generateRecurringLessons</code> inserted a
+          <code>creator_user_id</code> field that doesn't exist on the <code>lessons</code> table at
+          all — confirmed via <code>\d lessons</code> against the live schema. Every invocation
+          would have failed with a Postgres/PostgREST schema-cache error. Removed the field; the
+          table has no such column and nothing else references it.
+        </p>
+      </div>
+
+      <div class="card">
+        <p>
+          <span class="tag critical">Bug 2 — the big one</span>
+          <strong
+            ><code>lesson_status</code> enum casing had drifted on the shared local dev
+            database.</strong
+          >
+        </p>
+        <p>
+          Every migration that creates <code>lesson_status</code> (<code>003_enums.sql</code>,
+          <code>20251107121500_create_enums.sql</code>) defines uppercase values
+          (<code>SCHEDULED</code>, <code>IN_PROGRESS</code>, <code>COMPLETED</code>,
+          <code>CANCELLED</code>). So does every write-side consumer: the Zod schema
+          (<code>LessonStatusEnum</code>), the status dropdown in
+          <code>LessonForm.Fields.tsx</code>, <code>lesson-edit.ts</code>, and this new recurring
+          code. But the actual live enum on the shared <code>uwh</code>-hosted local Supabase
+          instance had drifted to lowercase (<code>scheduled</code>, <code>in_progress</code>,
+          <code>completed</code>, <code>cancelled</code>) — confirmed directly via
+          <code>psql</code>, and confirmed that
+          <strong>no migration in this repo ever created lowercase values</strong>, so this wasn't
+          an applied-but-undocumented migration; it was out-of-band drift. A couple of read/display
+          call sites (<code>lib/services/lessons-queries.ts</code>'s <code>STATUS_LABELS</code>/
+          <code>STATUS_COLOURS</code>, <code>app/dashboard/lessons/page.tsx</code>'s
+          <code>STATUS_KEYS</code>) had already been patched defensively to accept either case — a
+          sign this was a known, partially-mitigated issue, never fixed at the root.
+        </p>
+        <p>
+          <strong>Net effect before this fix:</strong> every lesson-creation code path that writes
+          an explicit <code>SCHEDULED</code>/etc. status — including plain single-lesson creation
+          via the UI, not just this new recurring feature — was silently broken against this local
+          dev database. It's why <code>tests/e2e/teacher/lessons-crud.spec.ts</code>'s full
+          create/edit/delete test has sat <code>test.skip</code>'d with a stale "Coming Soon stub"
+          comment; that reason is outdated, but the test genuinely couldn't have passed against this
+          drifted state either.
+        </p>
+        <p>
+          <strong>Fix:</strong>
+          <code>supabase/migrations/20260719000007_fix_lesson_status_enum_casing.sql</code> — four
+          <code>ALTER TYPE lesson_status RENAME VALUE 'x' TO 'X'</code> statements.
+          <code>RENAME VALUE</code> is metadata-only: existing rows keep the same underlying enum
+          OID, so this is zero-downtime and zero-data-loss. Applied directly to the local
+          <code>uwh</code> database (all 41 existing lesson rows read back correctly afterward) and
+          recorded in <code>supabase_migrations.schema_migrations</code>.
+        </p>
+        <p>
+          <strong>Scope note:</strong> this fix targets the local dev database only. Whether
+          production (<code>zmlluqqqwrfhygvpfqka</code>) has the same drift is unverified — the
+          Supabase MCP connection to that project timed out when I tried a read-only check, and the
+          codebase has an explicit hard guard (<code>lib/testing/rls/env.ts</code>) refusing to ever
+          run test seeding against it. If production turns out to have the same lowercase drift, the
+          identical <code>RENAME VALUE</code> migration is the fix — but that must be verified and
+          applied deliberately, not inferred from this.
+        </p>
+      </div>
+
+      <div class="card">
+        <p>
+          <span class="tag info">Fallout, fixed</span> Two other test files were writing lowercase
+          <code>status: 'scheduled'</code> directly to seed lessons — they matched the drifted local
+          DB at the time they were written (earlier in this same effort), so they needed updating
+          once the enum was corrected:
+        </p>
+        <ul>
+          <li><code>tests/e2e/teacher/calendar-conflicts.spec.ts</code> (1 occurrence)</li>
+          <li>
+            <code>lib/services/__tests__/calendar-sync-recurring.rls.test.ts</code> (4 occurrences)
+          </li>
+        </ul>
+        <p>Both re-verified passing after the fix (see Automated verification below).</p>
+      </div>
+
+      <div class="card">
+        <p><span class="tag info">Found, not fixed (out of scope)</span></p>
+        <p>
+          Three unrelated RLS suites (<code>profiles.rls.test.ts</code>,
+          <code>songs.rls.test.ts</code>, <code>core-tables.rls.test.ts</code>) fail
+          deterministically against the current shared local database — 6 failing assertions about
+          cross-tenant profile/song visibility and a lesson-trends view. Checked whether this traces
+          to the enum fix: it doesn't — the one lesson insert in
+          <code>profiles.rls.test.ts</code> never sets an explicit status (relies on the column
+          default either way), and the failing <code>core-tables.rls.test.ts</code> assertion is
+          about a row being absent entirely, from a view whose <code>JOIN</code>/<code>WHERE</code>
+          clause never references <code>lesson_status</code> (only its internal
+          <code>COUNT() FILTER</code> subclauses do, which affects counts, not row presence). Most
+          likely explanation: data pollution from the very large number of E2E/RLS test runs against
+          this single shared dev database today (multiple parallel worktree agents plus many manual
+          runs). Flagging for Piotr rather than chasing further — resolving it isn't part of LES-3
+          and risks a much larger detour into unrelated test-isolation hygiene.
+        </p>
+      </div>
+
+      <h2>How to manually test it</h2>
+      <ol>
+        <li>
+          Ensure the local Supabase tunnel is up (<code>ssh -fN -L 54321:localhost:54321 uwh</code>)
+          and start the app: <code>npm run build && npx next start -p 3000</code>.
+        </li>
+        <li>Sign in as the teacher demo account and go to <code>/dashboard/lessons/new</code>.</li>
+        <li>
+          Pick an existing student, a title, and a date/time. Leave "Repeat weekly" unchecked,
+          submit — behaves exactly as before (redirects to the new lesson's detail page).
+        </li>
+        <li>
+          Go back to <code>/dashboard/lessons/new</code>. This time check "Repeat weekly", pick "4
+          weeks", submit.
+        </li>
+        <li>
+          You should land back on <code>/dashboard/lessons</code> (no single lesson to view).
+          Confirm 4 new lessons exist, each exactly 7 days apart from the picked date, with
+          sequential lesson numbers for that teacher/student pair.
+        </li>
+        <li>
+          Edge case: try checking "Repeat weekly" while selecting "+ New student by email…" — should
+          show an inline error instead of silently failing or creating a shadow student.
+        </li>
+        <li>
+          If the teacher has Google Calendar connected, confirm 4 events appear on their calendar
+          (best-effort — check server logs if not, since sync failures are logged, not surfaced to
+          the UI, matching the existing single-lesson-creation behavior).
+        </li>
+      </ol>
+
+      <h2>Automated verification performed</h2>
+      <table>
+        <tr>
+          <th>Check</th>
+          <th>Result</th>
+        </tr>
+        <tr>
+          <td><code>npm run typecheck</code></td>
+          <td class="ok">0 errors</td>
+        </tr>
+        <tr>
+          <td><code>npx eslint</code> on all changed/new files</td>
+          <td class="ok">0 errors (pre-existing soft line-count warnings only)</td>
+        </tr>
+        <tr>
+          <td><code>npx jest</code> (full suite)</td>
+          <td class="ok">197 suites, 2721 passed, 5 pre-existing skips, 0 failed</td>
+        </tr>
+        <tr>
+          <td>
+            New unit tests: <code>app/dashboard/lessons/__tests__/recurring-actions.test.ts</code>
+          </td>
+          <td class="ok">
+            8/8 passing (auth guards, validation, correct dates/numbering, Google sync fan-out, song
+            linking, DB-error path, weeks=1 parity with single-create)
+          </td>
+        </tr>
+        <tr>
+          <td>New E2E: <code>tests/e2e/teacher/lesson-repeat-weekly.spec.ts</code></td>
+          <td class="ok">
+            2/2 passing against the real local stack — unchecked-box parity, and checked-box
+            creating 4 real DB rows with verified 7-day spacing + sequential numbering
+          </td>
+        </tr>
+        <tr>
+          <td>Existing <code>tests/e2e/teacher/lessons-crud.spec.ts</code></td>
+          <td class="ok">Still passing (1 pre-existing skip unrelated to this change)</td>
+        </tr>
+        <tr>
+          <td><code>tests/e2e/teacher/calendar-conflicts.spec.ts</code> (fixed for enum casing)</td>
+          <td class="ok">Passing</td>
+        </tr>
+        <tr>
+          <td>
+            <code>lib/services/__tests__/calendar-sync-recurring.rls.test.ts</code> (fixed for enum
+            casing)
+          </td>
+          <td class="ok">2/2 passing against the real local DB</td>
+        </tr>
+        <tr>
+          <td>Enum migration: existing 41 lesson rows read back correctly after rename</td>
+          <td class="ok">Verified via direct REST query</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

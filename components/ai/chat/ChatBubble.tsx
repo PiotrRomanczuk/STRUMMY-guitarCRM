@@ -1,17 +1,66 @@
 'use client';
 
-import { Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: Date;
-}
+import { submitAIFeedback } from '@/app/actions/ai-feedback';
+import { logger } from '@/lib/logger';
+import type { ChatMessage } from './ai-chat.types';
 
 interface ChatBubbleProps {
   message: ChatMessage;
   isStreaming?: boolean;
+}
+
+/** AIA-2: thumbs up/down writing ai_messages.is_helpful. Only rendered once
+ * the message has a persisted id (set after streaming completes). */
+function FeedbackButtons({ messageId }: { messageId: string }) {
+  const [submitted, setSubmitted] = useState<boolean | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  const handleFeedback = async (isHelpful: boolean) => {
+    if (isPending || submitted !== null) return;
+    setIsPending(true);
+    try {
+      const result = await submitAIFeedback(messageId, isHelpful);
+      if (result.success) setSubmitted(isHelpful);
+    } catch (err) {
+      logger.error('[ChatBubble] submitAIFeedback error:', err);
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  if (submitted !== null) {
+    return (
+      <span className="text-[10px] text-muted-foreground px-1" data-testid="ai-feedback-thanks">
+        Thanks for the feedback
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1 px-1" data-testid="ai-feedback-buttons">
+      <button
+        type="button"
+        aria-label="This response was helpful"
+        onClick={() => handleFeedback(true)}
+        disabled={isPending}
+        className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground disabled:opacity-50"
+      >
+        <ThumbsUp className="w-3.5 h-3.5" />
+      </button>
+      <button
+        type="button"
+        aria-label="This response was not helpful"
+        onClick={() => handleFeedback(false)}
+        disabled={isPending}
+        className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground disabled:opacity-50"
+      >
+        <ThumbsDown className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
 }
 
 function TypingIndicator() {
@@ -31,18 +80,13 @@ export function ChatBubble({ message, isStreaming = false }: ChatBubbleProps) {
   const isEmpty = !message.content.trim();
 
   return (
-    <div
-      className={cn(
-        'flex flex-col gap-1',
-        isUser ? 'items-end ml-12' : 'items-start mr-6',
-      )}
-    >
+    <div className={cn('flex flex-col gap-1', isUser ? 'items-end ml-12' : 'items-start mr-6')}>
       <div
         className={cn(
           'p-4 shadow-sm max-w-full',
           isUser && 'bg-muted/80 text-foreground rounded-2xl rounded-tr-none',
           isAssistant && 'bg-card text-foreground rounded-2xl rounded-tl-none shadow-lg',
-          isSystem && 'bg-primary/5 text-foreground border border-primary/20 rounded-2xl',
+          isSystem && 'bg-primary/5 text-foreground border border-primary/20 rounded-2xl'
         )}
       >
         {isAssistant && (
@@ -59,12 +103,15 @@ export function ChatBubble({ message, isStreaming = false }: ChatBubbleProps) {
         )}
       </div>
 
-      <span className="text-[10px] text-muted-foreground px-1">
-        {message.timestamp.toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        })}
-      </span>
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground px-1">
+          {message.timestamp.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </span>
+        {isAssistant && !isStreaming && message.id && <FeedbackButtons messageId={message.id} />}
+      </div>
     </div>
   );
 }

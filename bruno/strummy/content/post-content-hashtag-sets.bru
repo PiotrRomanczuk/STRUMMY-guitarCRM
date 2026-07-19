@@ -1,0 +1,24 @@
+meta {
+  name: post-content-hashtag-sets
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/content/hashtag-sets
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Acoustic covers",
+    "description": "Hashtags for solo acoustic cover posts",
+    "hashtags": ["#guitarcover", "#acoustic"],
+    "is_active": true
+  }
+}
+
+docs {
+  Domain content. Auth user, role:teacher.
+}

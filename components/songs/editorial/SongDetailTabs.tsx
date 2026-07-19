@@ -29,13 +29,9 @@ const tabButtonStyle = (active: boolean) => ({
 /**
  * Teacher/admin song-detail tab switcher. "Overview" is the editorial detail
  * (rendered server-side and passed as `overview`); "Production" mounts the
- * content-production tab.
- *
- * NOTE: ProductionTab reads/writes `content_posts`, `content_post_metrics`,
- * and `hashtag_sets` — "bucket B" tables that must be restored to production by
- * Phase 0.1 (migration `20260427120000_content_production.sql`). Until then the
- * tab's `/api/content/*` calls return 500 and surface an error (no silent
- * failure), but the data path is not live in prod.
+ * content-production tab. Only rendered at all when the caller passes
+ * `canSeeProduction` (SongDetailEditorial gates on isAdmin || isTeacher), so
+ * no additional role check is needed here.
  */
 export const SongDetailTabs = ({ songId, overview }: Props) => {
   const [tab, setTab] = useState<Tab>('overview');
@@ -59,20 +55,15 @@ export const SongDetailTabs = ({ songId, overview }: Props) => {
         >
           Overview
         </button>
-        {/* Production tab hidden: content_posts tables not yet live in prod
-            (pending migration 20260427120000_content_production.sql).
-            Re-enable when Phase 0.1 is deployed. */}
-        {false && (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'production'}
-            onClick={() => setTab('production')}
-            style={tabButtonStyle(tab === 'production')}
-          >
-            Production
-          </button>
-        )}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'production'}
+          onClick={() => setTab('production')}
+          style={tabButtonStyle(tab === 'production')}
+        >
+          Production
+        </button>
       </div>
 
       {tab === 'overview' ? (

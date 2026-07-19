@@ -1,0 +1,14 @@
+meta {
+  name: get-content-posts-id
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/content/posts/{{sample_id}}
+  auth: inherit
+}
+
+docs {
+  Domain content. Auth user, role:teacher.
+}

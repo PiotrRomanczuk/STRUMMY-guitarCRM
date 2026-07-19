@@ -1,15 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
 import { formStyles as s } from '@/components/_editorial/form-styles';
-import { createLessonAction, updateLessonAction } from '@/app/actions/lesson-edit';
-import type { LessonFormValues } from '@/app/actions/lesson-edit';
+import { WEEK_OPTIONS } from '@/schemas/RecurringLessonSchema';
 import type { SongOption, StudentOption } from '@/lib/services/lesson-form-data';
 import { LessonFormFields } from './LessonForm.Fields';
+import { LessonFormRecurring } from './LessonForm.Recurring';
 import { LessonNotesAI } from '@/components/lessons/form/LessonNotesAI';
+import { useLessonFormSubmit } from './useLessonFormSubmit';
 
 const NEW_STUDENT = '__new__';
 
@@ -35,7 +35,6 @@ const toLocalInput = (iso: string): string => {
 };
 
 export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) => {
-  const router = useRouter();
   const [studentId, setStudentId] = useState(initial?.studentId ?? '');
   const [studentEmail, setStudentEmail] = useState('');
   const [title, setTitle] = useState(initial?.title ?? '');
@@ -45,8 +44,8 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
   );
   const [status, setStatus] = useState(initial?.status ?? 'SCHEDULED');
   const [songIds, setSongIds] = useState<string[]>(initial?.songIds ?? []);
-  const [error, setError] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  const [repeatWeekly, setRepeatWeekly] = useState(false);
+  const [repeatWeeks, setRepeatWeeks] = useState<number>(WEEK_OPTIONS[0].value);
 
   const isNewStudent = studentId === NEW_STUDENT;
 
@@ -56,60 +55,20 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
     .map((id) => songs.find((song) => song.id === id)?.title)
     .filter((t): t is string => Boolean(t));
 
-  const handleSubmit = useCallback(
-    async (event: React.FormEvent) => {
-      event.preventDefault();
-      if (isSaving) return;
-      setError('');
-
-      if (!scheduledLocal) {
-        setError('Pick a date and time for the lesson.');
-        return;
-      }
-      const values: LessonFormValues = {
-        studentId: isNewStudent || !studentId ? undefined : studentId,
-        studentEmail: isNewStudent ? studentEmail : undefined,
-        title: title.trim() || undefined,
-        notes: notes.trim() || undefined,
-        scheduledAt: new Date(scheduledLocal).toISOString(),
-        status: status as LessonFormValues['status'],
-        songIds,
-      };
-
-      if (mode === 'create' && !values.studentId && !values.studentEmail) {
-        setError('Choose a student or add one by email.');
-        return;
-      }
-
-      setIsSaving(true);
-      const result =
-        mode === 'edit' && initial
-          ? await updateLessonAction(initial.lessonId, values)
-          : await createLessonAction(values);
-      setIsSaving(false);
-
-      if ('error' in result) {
-        setError(result.error);
-        return;
-      }
-      router.push(`/dashboard/lessons/${result.lessonId}`);
-      router.refresh();
-    },
-    [
-      isSaving,
-      scheduledLocal,
-      isNewStudent,
-      studentId,
-      studentEmail,
-      title,
-      notes,
-      status,
-      songIds,
-      mode,
-      initial,
-      router,
-    ]
-  );
+  const { error, isSaving, handleSubmit } = useLessonFormSubmit({
+    mode,
+    initialLessonId: initial?.lessonId,
+    isNewStudent,
+    studentId,
+    studentEmail,
+    title,
+    notes,
+    scheduledLocal,
+    status,
+    songIds,
+    repeatWeekly,
+    repeatWeeks,
+  });
 
   return (
     <div style={s.page}>
@@ -139,6 +98,16 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
           onStatus={setStatus}
           onSongIds={setSongIds}
         />
+
+        {mode === 'create' && (
+          <LessonFormRecurring
+            repeatWeekly={repeatWeekly}
+            weeks={repeatWeeks}
+            disabled={isSaving}
+            onRepeatWeekly={setRepeatWeekly}
+            onWeeks={setRepeatWeeks}
+          />
+        )}
 
         <div data-testid="lesson-notes-ai">
           <LessonNotesAI

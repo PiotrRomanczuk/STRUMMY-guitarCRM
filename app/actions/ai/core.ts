@@ -22,17 +22,26 @@ import {
 
 /**
  * Generate AI response with TRUE streaming support (SSE)
+ *
+ * Deliberately takes no AbortSignal: this is an exported 'use server' async
+ * generator, and Next.js 16.2's Server Actions runtime re-checks a
+ * caller-supplied AbortSignal's `.aborted` on every pull of the resulting
+ * stream — including pulls that happen well after the signal's "temporary
+ * client reference" window has closed, which throws "Cannot access aborted
+ * on the server" from inside Next's own wrapper (not this function's body).
+ * That reproduces on every message, regardless of what this function does
+ * with the signal. Callers cancel by walking away from the stream client
+ * side instead (see useAIChat.ts / AIAssistantCard.tsx) — the request
+ * finishes server side but the UI stops rendering it.
  * @param prompt - User's message
  * @param model - AI model to use
  * @param conversationId - Optional conversation ID for context
- * @param signal - Optional AbortSignal for cancellation
  */
 // eslint-disable-next-line max-lines-per-function
 export async function* generateAIResponseStream(
   prompt: string,
   model: string = DEFAULT_AI_MODEL,
-  conversationId?: string,
-  signal?: AbortSignal
+  conversationId?: string
 ) {
   const startMs = Date.now();
   let fullContent = '';
@@ -97,28 +106,19 @@ export async function* generateAIResponseStream(
         temperature: 0.7,
         tools,
         stopWhen: stepCountIs(3),
-        abortSignal: signal,
       });
 
       for await (const chunk of result.textStream) {
-        if (signal?.aborted) {
-          yield `[Cancelled]`;
-          return;
-        }
         fullContent += chunk;
         yield fullContent;
       }
     } else {
       // Fallback: use generic provider (no tool calling)
-      for await (const chunk of createAIStreamFromProvider(
-        provider,
-        { model: providerModel, messages, temperature: 0.7 },
-        signal
-      )) {
-        if (signal?.aborted) {
-          yield `[Cancelled]`;
-          return;
-        }
+      for await (const chunk of createAIStreamFromProvider(provider, {
+        model: providerModel,
+        messages,
+        temperature: 0.7,
+      })) {
         fullContent = chunk;
         yield chunk;
       }
@@ -134,9 +134,13 @@ export async function* generateAIResponseStream(
       outputContent: fullContent,
     });
 
-    // Persist conversation messages and track usage (fire-and-forget)
+    // Persist conversation messages before the stream finishes (AIA-2 needs
+    // this to have landed by the time the client asks for the assistant
+    // message's id via getLatestAssistantMessageId — was previously
+    // fire-and-forget, racing the client's onComplete). Usage tracking has
+    // no such consumer and stays fire-and-forget.
     if (conversationId) {
-      saveConversationMessages({
+      await saveConversationMessages({
         conversationId,
         userMessage: prompt,
         assistantMessage: fullContent,

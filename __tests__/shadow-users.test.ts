@@ -1,4 +1,5 @@
-import { createShadowUser, syncLessonsFromCalendar } from '@/app/dashboard/actions';
+import { createShadowUser } from '@/app/dashboard/actions';
+import { syncLessonsFromCalendar } from '@/app/dashboard/calendar-actions';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getGoogleOAuth2Client } from '@/lib/google';
@@ -75,10 +76,16 @@ describe('Shadow Users', () => {
       error: null,
     });
 
-    // Mock profile lookup - student not found
+    // Mock the caller's own profile lookup — createShadowUser/syncLessonsFromCalendar
+    // authorize the caller (must be admin/teacher) via this exact query before
+    // ever looking for the student (that lookup goes through the admin
+    // client via listUsers/generateLink below, not this cookie-bound client).
     const mockProfileSelect = jest.fn().mockReturnThis();
     const mockProfileEq = jest.fn().mockReturnThis();
-    const mockProfileSingle = jest.fn().mockResolvedValue({ data: null }); // Profile not found
+    const mockProfileSingle = jest.fn().mockResolvedValue({
+      data: { is_admin: false, is_teacher: true },
+      error: null,
+    });
 
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === 'user_integrations') {
@@ -108,20 +115,22 @@ describe('Shadow Users', () => {
 
     // Mock auth admin list users (empty initially)
     mockAdminSupabase.auth.admin.listUsers = jest.fn().mockResolvedValue({
-        data: { users: [] },
-        error: null
+      data: { users: [] },
+      error: null,
     });
 
     // Mock auth admin generateLink
     mockAdminSupabase.auth.admin.generateLink = jest.fn().mockResolvedValue({
-        data: { user: { id: 'new-shadow-id', email: 'newstudent@example.com', email_confirmed_at: null } },
-        error: null
+      data: {
+        user: { id: 'new-shadow-id', email: 'newstudent@example.com', email_confirmed_at: null },
+      },
+      error: null,
     });
-    
+
     // Mock updateUserById
     mockAdminSupabase.auth.admin.updateUserById = jest.fn().mockResolvedValue({
-        data: { user: { id: 'new-shadow-id' } },
-        error: null
+      data: { user: { id: 'new-shadow-id' } },
+      error: null,
     });
 
     // Mock auth admin create user (fallback, shouldn't be called if generateLink works)
@@ -131,30 +140,32 @@ describe('Shadow Users', () => {
     });
 
     const email = 'newstudent@example.com';
-    
+
     // Act
     const result = await createShadowUser(email);
-    
+
     // Assert
     expect(mockAdminSupabase.auth.admin.generateLink).toHaveBeenCalledWith({
       type: 'magiclink',
       email: email,
       options: {
-          data: { 
-              is_student: true,
-              full_name: 'newstudent'
-          }
-      }
+        data: { is_student: true },
+      },
     });
-    
-    expect(mockAdminSupabase.auth.admin.updateUserById).toHaveBeenCalledWith('new-shadow-id', { email_confirm: true });
-    
-    expect(mockAdminUpsert).toHaveBeenCalledWith(expect.objectContaining({
-      id: 'new-shadow-id',
-      email: email,
-      is_student: true
-    }), { onConflict: 'id' });
-    
+
+    expect(mockAdminSupabase.auth.admin.updateUserById).toHaveBeenCalledWith('new-shadow-id', {
+      email_confirm: true,
+    });
+
+    expect(mockAdminUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'new-shadow-id',
+        email: email,
+        is_student: true,
+      }),
+      { onConflict: 'id' }
+    );
+
     expect(result).toEqual({ success: true, userId: 'new-shadow-id' });
   });
 });
@@ -211,10 +222,28 @@ describe('Shadow Users', () => {
       error: null,
     });
 
-    // Mock profile lookup - student not found
+    // Mock the caller's own profile lookup — createShadowUser/syncLessonsFromCalendar
+    // authorize the caller (must be admin/teacher) via this exact query before
+    // ever looking for the student (that lookup goes through the admin
+    // client via listUsers/generateLink below, not this cookie-bound client).
+    // profiles is queried twice in this flow with different intent:
+    // syncLessonsFromCalendar looks up the student by email first (not
+    // found here, so it falls back to createShadowUser); createShadowUser
+    // then authorizes the CALLER by id (must be admin/teacher). Same table,
+    // different column — branch on which one .eq() was called with.
     const mockProfileSelect = jest.fn().mockReturnThis();
-    const mockProfileEq = jest.fn().mockReturnThis();
-    const mockProfileSingle = jest.fn().mockResolvedValue({ data: null }); // Profile not found
+    const mockProfileSingle = jest.fn();
+    let mockProfileEqColumn = '';
+    const mockProfileEq = jest.fn().mockImplementation((column: string) => {
+      mockProfileEqColumn = column;
+      return { single: mockProfileSingle };
+    });
+    mockProfileSingle.mockImplementation(() => {
+      if (mockProfileEqColumn === 'email') {
+        return Promise.resolve({ data: null, error: null });
+      }
+      return Promise.resolve({ data: { is_admin: false, is_teacher: true }, error: null });
+    });
 
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === 'user_integrations') {
@@ -243,6 +272,9 @@ describe('Shadow Users', () => {
           {
             id: 'event-1',
             summary: 'Lesson with newstudent@example.com',
+            // isGuitarLesson() only treats Calendly-booked events as
+            // guitar lessons — gates on this marker in the description.
+            description: 'Powered by Calendly.com',
             start: { dateTime: '2023-01-01T10:00:00Z' },
             attendees: [{ email: 'newstudent@example.com' }],
           },
@@ -322,10 +354,7 @@ describe('Shadow Users', () => {
       type: 'magiclink',
       email: email,
       options: {
-        data: {
-          is_student: true,
-          full_name: 'newstudent',
-        },
+        data: { is_student: true },
       },
     });
 

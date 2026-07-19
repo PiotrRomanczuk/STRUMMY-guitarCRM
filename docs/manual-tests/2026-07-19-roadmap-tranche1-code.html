@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Roadmap Tranche 1 — code-level fixes</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --card: #171a21;
+        --fg: #e6e8ec;
+        --muted: #9aa3af;
+        --line: #262b34;
+        --green: #3fb950;
+        --amber: #d29922;
+        --red: #f85149;
+        --blue: #58a6ff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 34px 0 10px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+      }
+      h3 {
+        font-size: 16px;
+        margin: 22px 0 8px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      code {
+        background: #20242c;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      pre {
+        background: #0b0d11;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 13px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin: 14px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .lead {
+        color: var(--muted);
+      }
+      ul {
+        margin: 6px 0 6px 2px;
+        padding-left: 20px;
+      }
+      li {
+        margin: 3px 0;
+      }
+      .warn {
+        border-left: 3px solid var(--amber);
+      }
+      .ok {
+        border-left: 3px solid var(--green);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Roadmap Tranche 1 — code-level fixes (PRA-1, NOT-1, ASG-3)</h1>
+      <div class="meta">
+        Date: 2026-07-19 &nbsp;·&nbsp; Author: Claude &nbsp;·&nbsp; Branch:
+        <code>claude/docs-plan-implementation-56e7ad</code> &nbsp;·&nbsp; Source:
+        <code>docs/app-blueprint/90-roadmap.md</code> Tranche 1
+      </div>
+
+      <p class="lead">
+        Tranche 1's DB-side fixes are implemented, migrated onto the local dev stack, and proven
+        against real Postgres/PostgREST — no mocks. The
+        <strong>actual production cutover</strong> (Google OAuth switch, DNS, inviting the 5 real
+        students — <code>92-launch-runbook.md</code> P3–P5) is deliberately untouched here: that's a
+        real-world business action for Piotr to execute, not something to automate.
+      </p>
+
+      <h2>1. What was done</h2>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>What</th>
+          <th>Proof</th>
+        </tr>
+        <tr>
+          <td>PRA-1<br /><em>(hard launch gate)</em></td>
+          <td>
+            Recreated the missing AFTER-INSERT practice→repertoire aggregation trigger, and
+            repointed the AFTER-DELETE reversal trigger at the correct table/columns. Logging a
+            session now increments <code>student_repertoire</code>; same-day undo of a
+            <strong>song-linked</strong> session no longer raises <code>42703</code>.
+          </td>
+          <td>
+            3 real-Postgres integration tests + a new E2E test driving the actual UI undo flow
+          </td>
+        </tr>
+        <tr>
+          <td>NOT-1</td>
+          <td>
+            <code>delivery_channel</code> now defaults to <code>'email'</code> for every
+            notification type (was silently split 2 email / 16 in-app by a stale migration) —
+            matches the 2026-07-18 grill decision. <code>getDeliveryChannel</code> no longer
+            swallows genuine query errors.
+          </td>
+          <td>4 unit tests + existing prefs E2E still green</td>
+        </tr>
+        <tr>
+          <td>ASG-3<br /><em>(security)</em></td>
+          <td>
+            A student's assignment-status write now goes exclusively through a
+            <code>SECURITY DEFINER</code> RPC that validates ownership + the transition state
+            machine in SQL. The broad <code>assignments_student_status_update</code> RLS policy is
+            dropped — a student can no longer UPDATE <em>any</em> column of their own assignment via
+            a direct PostgREST call, only <code>status</code> via the RPC, and only through valid
+            transitions.
+          </td>
+          <td>
+            9 real-Postgres RLS tests, incl. the core proof: direct UPDATE of <code>title</code> and
+            of <code>status</code> both rejected
+          </td>
+        </tr>
+      </table>
+
+      <h3>Bug found and fixed in the RLS test harness itself</h3>
+      <div class="card ok">
+        <code>lib/testing/rls/seedTwoTeachers.ts</code> (and two other RLS spec files) upserted a
+        profile without <code>user_id</code>. PostgREST's <code>upsert</code> is not a partial merge
+        — every column absent from the payload gets overwritten with its schema default, silently
+        nulling the <code>user_id</code> the <code>handle_new_user</code> trigger had just set, and
+        tripping the <code>ck_shadow_user_id</code> check constraint on the very next query. This
+        was failing <strong>every</strong> RLS test that uses the two-teacher harness before the
+        fix. Now fixed in all 3 files.
+      </div>
+
+      <h3>Found, flagged, NOT fixed (out of scope for this pass)</h3>
+      <div class="card warn">
+        <ul>
+          <li>
+            <code>songs.rls.test.ts</code>: student can see songs beyond their own lesson-linked set
+            (2 failing assertions) — needs its own investigation, unrelated to ASG-3.
+          </li>
+          <li>
+            <code>profiles.rls.test.ts</code>: teacher can see a deactivated student / another
+            teacher's student by direct id lookup (2 failing assertions) — same, needs dedicated
+            review.
+          </li>
+          <li>
+            <code>core-tables.rls.test.ts</code>: <code>v_teacher_lesson_trends</code> view doesn't
+            exist — this is the already-known <code>lesson_status</code> enum-casing gap from the
+            earlier Tranche 2 migration replay (documented in
+            <code>2026-07-19-roadmap-tranche2.html</code>).
+          </li>
+        </ul>
+      </div>
+
+      <h2>2. How to manually verify</h2>
+      <pre>
+cd .claude/worktrees/docs-plan-implementation-56e7ad
+npm run typecheck && npx eslint . && npx jest
+# expect: 0 type errors, 0 lint errors, 190/190 suites green
+
+# Real-Postgres suites (need the uwh tunnel — see Tranche 2 report §2b)
+NEXT_PUBLIC_SUPABASE_LOCAL_URL=http://127.0.0.1:54321 \
+NEXT_PUBLIC_SUPABASE_LOCAL_ANON_KEY=&lt;from .env.local&gt; \
+SUPABASE_LOCAL_SERVICE_ROLE_KEY=&lt;from .env.local&gt; \
+  npx jest --config jest.config.rls.ts
+# expect: assignments.rls.test.ts (9), practice-metric-triggers.rls.test.ts (3),
+# notifications/practice-sessions/two-teacher-harness all green.
+# songs/profiles/core-tables fail — see "found, flagged, not fixed" above.
+
+# Full E2E slice built this session
+NEXT_PUBLIC_SUPABASE_LOCAL_URL=http://127.0.0.1:54321 PLAYWRIGHT_BASE_URL=http://localhost:3000 \
+  npx playwright test --config=playwright.local-3000.config.ts --project="Desktop Chrome" --workers=1 \
+  tests/e2e/teacher/calendar-conflicts.spec.ts tests/e2e/teacher/deleted-stub-routes.spec.ts \
+  tests/e2e/admin/ tests/e2e/notifications/ tests/e2e/student/practice.spec.ts \
+  tests/e2e/teacher/assignments-crud.spec.ts tests/e2e/student/assignments-interact.spec.ts
+# expect: 27 passed, 4 skipped</pre>
+
+      <h3>Manual click-through: ASG-3 (the security fix, worth eyeballing directly)</h3>
+      <ul>
+        <li>
+          Sign in as a student, open an assignment, advance its status normally — still works
+          exactly as before.
+        </li>
+        <li>
+          With that same session's cookies, <code>curl</code>
+          <code>PATCH .../rest/v1/assignments?id=eq.&lt;id&gt;</code> with
+          <code>{"title":"hacked"}</code> — expect it to affect 0 rows (no matching RLS policy for a
+          student UPDATE anymore).
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>

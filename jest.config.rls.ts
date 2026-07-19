@@ -14,6 +14,14 @@ const createJestConfig = nextJest({ dir: './' });
  * service-role key is available (e.g. on contributor machines without local
  * Supabase running).
  */
+
+// When running inside a worktree (cwd at .claude/worktrees/<name>/), ignore the
+// OTHER worktrees but allow the current one. When running from main, ignore all
+// worktrees. A blanket `/.claude/` ignore breaks worktree test runs entirely.
+const worktreeMatch = process.cwd().match(/\.claude\/worktrees\/([^/]+)/);
+const worktreeIgnorePattern = worktreeMatch
+  ? `/\\.claude/worktrees/(?!${worktreeMatch[1]}/)`
+  : '/\\.claude/worktrees/';
 const config: Config = {
   coverageProvider: 'v8',
   testEnvironment: 'node',
@@ -24,7 +32,7 @@ const config: Config = {
   },
 
   testMatch: ['<rootDir>/**/*.rls.test.{ts,tsx}'],
-  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/.claude/worktrees/'],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', worktreeIgnorePattern],
 
   maxWorkers: 1,
   clearMocks: true,

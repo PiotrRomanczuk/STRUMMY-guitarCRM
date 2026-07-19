@@ -1,8 +1,4 @@
-import {
-  sendNotification,
-  queueNotification,
-  checkUserPreference,
-} from '../notification-service';
+import { sendNotification, queueNotification, checkUserPreference } from '../notification-service';
 import { createAdminClient } from '@/lib/supabase/admin';
 import transporter from '@/lib/email/smtp-client';
 
@@ -32,9 +28,13 @@ jest.mock('@/lib/logging/notification-logger', () => ({
 
 // Mock in-app notification service
 const mockCreateInAppNotification = jest.fn();
-jest.mock('@/lib/services/in-app-notification-service', () => ({
-  createInAppNotification: mockCreateInAppNotification,
-}), { virtual: true });
+jest.mock(
+  '@/lib/services/in-app-notification-service',
+  () => ({
+    createInAppNotification: mockCreateInAppNotification,
+  }),
+  { virtual: true }
+);
 
 describe('notification-service', () => {
   let mockSupabase: {
@@ -42,6 +42,7 @@ describe('notification-service', () => {
     select: jest.Mock;
     eq: jest.Mock;
     single: jest.Mock;
+    maybeSingle: jest.Mock;
     insert: jest.Mock;
     update: jest.Mock;
     lt: jest.Mock;
@@ -56,6 +57,11 @@ describe('notification-service', () => {
       select: jest.fn(),
       eq: jest.fn(),
       single: jest.fn(),
+      // Same underlying jest.fn() as `single` — getDeliveryChannel calls
+      // .maybeSingle(), and tests queue its response via
+      // `single.mockResolvedValueOnce(...)` in call order; sharing the fn
+      // keeps both call sites reading from one queue.
+      maybeSingle: undefined as unknown as jest.Mock,
       insert: jest.fn(),
       update: jest.fn(),
       lt: jest.fn(),
@@ -63,6 +69,7 @@ describe('notification-service', () => {
       limit: jest.fn(),
       rpc: jest.fn(),
     };
+    mock.maybeSingle = mock.single;
 
     // Chain methods return the mock object itself
     mock.from.mockReturnValue(mock);
@@ -408,5 +415,4 @@ describe('notification-service', () => {
       expect(result).toBe(true);
     });
   });
-
 });

@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AIA-2 feedback buttons + AI chat abort-signal production bug fix</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --card: #171a21;
+        --fg: #e6e8ec;
+        --muted: #9aa3af;
+        --line: #262b34;
+        --green: #3fb950;
+        --amber: #d29922;
+        --red: #f85149;
+        --blue: #58a6ff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 34px 0 10px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      code {
+        background: #20242c;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      pre {
+        background: #0b0d11;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 13px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin: 14px 0;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 999px;
+        margin-right: 6px;
+      }
+      .tag.critical {
+        background: rgba(248, 81, 73, 0.15);
+        color: var(--red);
+      }
+      .tag.fixed {
+        background: rgba(63, 185, 80, 0.15);
+        color: var(--green);
+      }
+      .tag.parked {
+        background: rgba(88, 166, 255, 0.15);
+        color: var(--blue);
+      }
+      ol,
+      ul {
+        padding-left: 22px;
+      }
+      li {
+        margin: 6px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .ok {
+        color: var(--green);
+      }
+      .bad {
+        color: var(--red);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>AIA-2 — AI chat feedback buttons</h1>
+      <div class="meta">
+        2026-07-19 · Tranche 5 (parked) item from docs/app-blueprint/90-roadmap.md
+      </div>
+
+      <div class="card">
+        <span class="tag fixed">Feature shipped</span>
+        <span class="tag critical">Production bug found + fixed</span>
+        <p>
+          Building AIA-2 (thumbs up/down on AI replies, writing
+          <code>ai_messages.is_helpful</code>) required actually sending a real chat message through
+          the live server and Ollama, since the feature only makes sense once a reply exists to
+          react to. That real test immediately crashed —
+          <strong>every single AI chat message was broken in the production build</strong>,
+          silently, because the existing E2E tests never checked reply content. Fixing that turned
+          out to be the bulk of this change. See "What was actually broken" below.
+        </p>
+      </div>
+
+      <h2>What was actually done</h2>
+      <ul>
+        <li>
+          <strong>Feedback UI (the original ask).</strong> <code>ChatBubble.tsx</code> now shows a
+          thumbs-up/thumbs-down row under any completed assistant reply. Clicking one calls
+          <code>submitAIFeedback(messageId, isHelpful)</code> (new
+          <code>app/actions/ai-feedback.ts</code>), which writes
+          <code>ai_messages.is_helpful</code> and swaps the buttons for a "Thanks for the feedback"
+          line. Buttons only render once the message has a persisted id — see the next point.
+        </li>
+        <li>
+          <strong>Message id plumbing.</strong> <code>ai_messages</code> rows didn't previously
+          expose their id to the client at all.
+          <code>getLatestAssistantMessageId(conversationId)</code>
+          looks it up after a reply completes;
+          <code>useAIChat.ts</code>'s <code>onComplete</code> callback fetches it and attaches it to
+          the last assistant message (<code>ChatMessage.id</code>, new optional field).
+        </li>
+        <li>
+          <strong>Fixed a real stale-closure bug this surfaced.</strong>
+          <code>onComplete</code> originally read <code>conversation.conversationId</code> (React
+          state) to know which conversation to query. On the <em>first</em> message of a brand-new
+          conversation, the closure captured by <code>useAIStream</code> is from the render
+          <em>before</em> <code>startNewConversation()</code> resolves and updates that state, so it
+          was always reading a stale <code>null</code> — the id lookup silently never ran, and the
+          feedback buttons never appeared for anyone's first message in a fresh chat. Fixed by
+          threading the id through a ref (<code>activeConvIdRef</code>) that
+          <code>sendMessage</code> writes synchronously, which <code>onComplete</code> always reads
+          fresh regardless of which render's closure is executing.
+        </li>
+        <li>
+          <strong>Fixed a genuine production bug: every AI chat message crashed.</strong>
+          See the dedicated section below — this was found while verifying AIA-2 end-to-end, not
+          something the roadmap asked for, but it was silently breaking the core AI chat feature for
+          every real user in the production build.
+        </li>
+      </ul>
+
+      <h2>What was actually broken (found during this work, now fixed)</h2>
+      <div class="card">
+        <p>
+          <span class="tag critical">Root cause</span>
+          The chat UI creates a real <code>AbortController</code> and forwards its
+          <code>signal</code> as an argument into <code>generateAIResponseStream</code>, an exported
+          <code>'use server'</code> <strong>async generator</strong> (true SSE streaming). Next.js
+          16.2's Server Actions runtime treats that <code>AbortSignal</code> as a "temporary client
+          reference" and re-checks <code>.aborted</code> on it internally on every pull of the
+          resulting stream — including pulls that happen long after the reference's valid window has
+          closed. That throws
+          <code
+            >Cannot access aborted on the server. You cannot dot into a temporary client reference
+            from a server component.</code
+          >
+          from inside Next's own wrapper code, not from anything in this codebase, and it reproduced
+          on <strong>100% of messages</strong> in the production build (<code>next start</code>).
+        </p>
+        <p>
+          Because the existing 16 AI E2E specs only assert that a "Strummy AI" badge renders (never
+          the actual reply text), this crash was completely invisible to CI — the badge renders
+          either way, whether the content is a real answer or the literal error string.
+        </p>
+        <table>
+          <tr>
+            <th>Attempt</th>
+            <th>Result</th>
+          </tr>
+          <tr>
+            <td>Guard with <code>if (signal?.aborted)</code> inside the generator</td>
+            <td class="bad">Still crashes — the guard itself is the dotted access.</td>
+          </tr>
+          <tr>
+            <td>
+              Mirror into a server-owned <code>AbortController</code> before the first
+              <code>await</code>, use that everywhere
+            </td>
+            <td class="bad">
+              Still crashes — the crash is inside <em>Next's own</em> stream wrapper reading the
+              original argument, independent of what the function body does with it.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Stop forwarding a live client <code>AbortSignal</code> into the server action at all;
+              gate cancellation purely client-side in the consuming <code>for await</code> loop
+            </td>
+            <td class="ok">Fixed. No crash on any message, in any of the 17 AI E2E runs.</td>
+          </tr>
+        </table>
+        <p>
+          <code>generateAIResponseStream</code> no longer takes a <code>signal</code> parameter.
+          Both call sites (<code>useAIChat.ts</code> and the admin dashboard's
+          <code>AIAssistantCard.tsx</code>, which had the identical pattern) now check the
+          <em>local</em> <code>AbortSignal</code> inside their own client-side
+          <code>for await</code> loop and stop yielding chunks once it fires. The trade-off:
+          clicking "Stop" now stops the UI from rendering further output immediately, but the
+          server-side generation finishes in the background rather than being interrupted. There is
+          no existing cancel/stop E2E test, so this doesn't regress any covered behavior.
+        </p>
+        <p>
+          Along the way, also found and fixed a second, independent issue that was masking the first
+          one while debugging: <code>useToolCalling</code> in <code>core.ts</code> decides whether
+          to route through OpenRouter's tool-calling SDK based solely on whether
+          <code>OPENROUTER_API_KEY</code> is set — it ignores <code>AI_PROVIDER</code> entirely. In
+          this dev environment both are configured, so forcing
+          <code>AI_PROVIDER=ollama</code> silently still routed through OpenRouter with an
+          Ollama-only model id (<code>gemma3:1b</code>), which OpenRouter correctly rejected. Not
+          changed as part of this fix (it's a separate pre-existing provider-selection question, not
+          a crash) — but worth flagging: <code>AI_USE_VERCEL_SDK=false</code> is the current
+          workaround to force the non-tool-calling Ollama path for local testing.
+        </p>
+      </div>
+
+      <h2>How to manually test it</h2>
+      <ol>
+        <li>
+          Ensure the local Supabase tunnel is up (<code>ssh -fN -L 54321:localhost:54321 uwh</code>)
+          and start the app in production mode against a real provider, e.g. Ollama:
+          <pre>
+npm run build
+AI_PROVIDER=ollama AI_USE_VERCEL_SDK=false OLLAMA_BASE_URL=http://192.168.1.10:11434 \
+  OLLAMA_DEFAULT_MODEL=gemma3:1b npx next start -p 3000</pre>
+        </li>
+        <li>
+          Sign in as admin (<code>p.romanczuk@gmail.com</code> / <code>test123_admin</code>) and go
+          to <code>/dashboard/ai/chat</code>.
+        </li>
+        <li>Send any message, e.g. "Reply with exactly one word: OK".</li>
+        <li>
+          Confirm a real reply streams in (not a crash, not literal <code>[Cancelled]</code>).
+        </li>
+        <li>
+          Once streaming finishes, a thumbs-up / thumbs-down row appears under the reply
+          (<code>data-testid="ai-feedback-buttons"</code>). Click thumbs-up.
+        </li>
+        <li>
+          It should immediately switch to "Thanks for the feedback"
+          (<code>data-testid="ai-feedback-thanks"</code>).
+        </li>
+        <li>
+          Verify in the DB: the corresponding row in
+          <code>ai_messages</code> (<code>role='assistant'</code>, matching
+          <code>conversation_id</code>) now has <code>is_helpful = true</code>.
+        </li>
+        <li>
+          Edge case worth checking: this should work on the very first message of a brand new
+          conversation (this is exactly the stale-closure case that was broken) — not just on the
+          second message onward.
+        </li>
+      </ol>
+
+      <h2>Automated verification performed</h2>
+      <table>
+        <tr>
+          <th>Check</th>
+          <th>Result</th>
+        </tr>
+        <tr>
+          <td><code>npm run typecheck</code></td>
+          <td class="ok">0 errors</td>
+        </tr>
+        <tr>
+          <td><code>npx eslint</code> on all changed/new files</td>
+          <td class="ok">0 errors (pre-existing soft line-count warnings only)</td>
+        </tr>
+        <tr>
+          <td><code>npx jest</code> (full suite)</td>
+          <td class="ok">196 suites, 2713 passed, 5 pre-existing skips, 0 failed</td>
+        </tr>
+        <tr>
+          <td>New unit tests: <code>app/actions/__tests__/ai-feedback.test.ts</code></td>
+          <td class="ok">6/6 passing (auth guard, success, DB-error path for both functions)</td>
+        </tr>
+        <tr>
+          <td>New E2E: <code>tests/e2e/ai/feedback.spec.ts</code></td>
+          <td class="ok">
+            Passing against the real local stack (live Postgres + live Ollama) — sends a message,
+            clicks thumbs-up, asserts the UI confirmation, then polls the real
+            <code>ai_messages</code> row until <code>is_helpful = true</code>.
+          </td>
+        </tr>
+        <tr>
+          <td>Full existing AI E2E suite (<code>tests/e2e/ai/*.spec.ts</code>)</td>
+          <td class="ok">
+            17/17 passing (16 pre-existing + the new feedback spec), Desktop Chrome, against live
+            Ollama
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

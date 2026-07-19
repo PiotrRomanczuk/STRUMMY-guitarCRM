@@ -8,6 +8,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { createClient } from '@/lib/supabase/server';
 import {
   getUserNotifications as serviceGetUserNotifications,
   markAsRead as serviceMarkAsRead,
@@ -29,10 +30,18 @@ export async function getInAppNotifications(
 }
 
 /**
- * Mark a single notification as read
+ * Mark a single notification as read. Ownership is derived from the caller's
+ * session, not a client-supplied id — the underlying update runs on the admin
+ * client, so this is the only guard against marking another user's row.
  */
 export async function markNotificationAsRead(notificationId: string): Promise<boolean> {
-  const success = await serviceMarkAsRead(notificationId);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const success = await serviceMarkAsRead(notificationId, user.id);
 
   if (success) {
     revalidatePath('/dashboard');
@@ -43,9 +52,16 @@ export async function markNotificationAsRead(notificationId: string): Promise<bo
 }
 
 /**
- * Mark all notifications as read for a user
+ * Mark all notifications as read for a user. `userId` must match the caller's
+ * own session — see markNotificationAsRead for why.
  */
 export async function markAllNotificationsAsRead(userId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.id !== userId) return false;
+
   const success = await serviceMarkAllAsRead(userId);
 
   if (success) {

@@ -1,82 +1,65 @@
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
-// Mock the server client module
+// getUserWithRolesSSR resolves the session via the cookie-bound client, then
+// loads role flags via loadAuthedProfile — which reads `profiles` through the
+// SERVICE-ROLE admin client, not `user_roles` and not the cookie client. Both
+// seams need mocking.
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(),
 }));
+jest.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: jest.fn(),
+}));
 
 const mockCreateClient = createClient as jest.Mock;
+const mockCreateAdminClient = createAdminClient as jest.Mock;
 
-// Mock auth and database responses
-const mockAuth = {
-  getUser: jest.fn(),
-};
+function mockAuthedUser(user: { id: string; email: string } | null) {
+  mockCreateClient.mockResolvedValue({
+    auth: { getUser: jest.fn().mockResolvedValue({ data: { user }, error: null }) },
+  });
+}
 
-const mockSupabase = {
-  auth: mockAuth,
-  from: jest.fn(),
-};
+function mockProfileRow(
+  row: {
+    is_admin?: boolean;
+    is_teacher?: boolean;
+    is_student?: boolean;
+    is_parent?: boolean;
+    is_development?: boolean;
+  } | null
+) {
+  mockCreateAdminClient.mockReturnValue({
+    from: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest
+        .fn()
+        .mockResolvedValue(
+          row ? { data: row, error: null } : { data: null, error: { message: 'not found' } }
+        ),
+    }),
+  });
+}
 
 describe('getUserWithRolesSSR', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockCreateClient.mockResolvedValue(mockSupabase);
   });
 
-  it('returns user with profile roles when authenticated', async () => {
-    // The implementation checks for roles in user_roles table, not profile flags anymore?
-    // Wait, let's check the implementation of getUserWithRolesSSR again.
-    
-    /*
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-        
-      if (roles) {
-        return {
-          user,
-          isAdmin: roles.some((r) => r.role === 'admin'),
-          isTeacher: roles.some((r) => r.role === 'teacher'),
-          isStudent: roles.some((r) => r.role === 'student'),
-        };
-      }
-    */
-    
-    // The implementation has changed! It uses `user_roles` table now.
-    // The test was setting up `profile` with `is_admin` flags, but the code expects `user_roles` rows.
-    
-    const mockUser = { id: 'u-1', email: 'test@example.com' };
-    const mockRoles = [{ role: 'admin' }, { role: 'student' }];
-
-    // Mock the chain for user_roles table
-    const selectMock = jest.fn().mockReturnThis();
-    const eqMock = jest.fn().mockResolvedValue({ data: mockRoles, error: null });
-    
-    mockSupabase.from.mockReturnValue({
-      select: selectMock,
-      eq: eqMock
-    });
-    
-    // Fix the chain mock in the test setup
-    mockSupabase.from.mockImplementation((table: string) => {
-      if (table === 'user_roles') {
-        return {
-          select: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockResolvedValue({ data: mockRoles, error: null })
-        };
-      }
-      return {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest.fn()
-      };
-    });
-
-    (mockAuth.getUser as jest.Mock).mockResolvedValue({
-      data: { user: mockUser },
-      error: null,
+  it('returns user with profile roles when authenticated and a profile row exists', async () => {
+    // fetchProfileRow is wrapped in React's cache() and memoizes by userId —
+    // every test uses a distinct id so no test observes another's mock.
+    const mockUser = { id: 'u-roles-1', email: 'test@example.com' };
+    mockAuthedUser(mockUser);
+    mockProfileRow({
+      is_admin: true,
+      is_teacher: false,
+      is_student: true,
+      is_parent: false,
+      is_development: false,
     });
 
     const result = await getUserWithRolesSSR();
@@ -85,39 +68,48 @@ describe('getUserWithRolesSSR', () => {
       isAdmin: true,
       isTeacher: false,
       isStudent: true,
+      isParent: false,
       isDevelopment: false,
     });
   });
 
-  it('returns special admin roles for development admin email', async () => {
-    const mockUser = { id: 'admin-id', email: 'p.romanczuk@gmail.com' };
-
-    // Mock error or null data to trigger fallback
-    mockSupabase.from.mockImplementation(() => ({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ data: null, error: { message: 'error' } })
-    }));
-
-    (mockAuth.getUser as jest.Mock).mockResolvedValue({
-      data: { user: mockUser },
-      error: null,
+  it('surfaces the is_parent flag when set', async () => {
+    const mockUser = { id: 'u-roles-2', email: 'parent@example.com' };
+    mockAuthedUser(mockUser);
+    mockProfileRow({
+      is_admin: false,
+      is_teacher: false,
+      is_student: false,
+      is_parent: true,
+      is_development: false,
     });
+
+    const result = await getUserWithRolesSSR();
+    expect(result.isParent).toBe(true);
+  });
+
+  it('returns all-false roles for a real admin email when the profile lookup fails — no email-based backdoor', async () => {
+    // Regression guard: an earlier version of this test asserted a
+    // hardcoded isAdmin=true fallback for a specific email. No such
+    // special-casing exists in loadAuthedProfile — a failed profile lookup
+    // means no roles, full stop, regardless of whose email it is.
+    const mockUser = { id: 'u-roles-3', email: 'p.romanczuk@gmail.com' };
+    mockAuthedUser(mockUser);
+    mockProfileRow(null);
 
     const result = await getUserWithRolesSSR();
     expect(result).toEqual({
       user: mockUser,
-      isAdmin: true,
-      isTeacher: true,
+      isAdmin: false,
+      isTeacher: false,
       isStudent: false,
+      isParent: false,
       isDevelopment: false,
     });
   });
 
   it('returns all false when unauthenticated', async () => {
-    (mockAuth.getUser as jest.Mock).mockResolvedValue({
-      data: { user: null },
-      error: null,
-    });
+    mockAuthedUser(null);
 
     const result = await getUserWithRolesSSR();
     expect(result).toEqual({
@@ -125,22 +117,15 @@ describe('getUserWithRolesSSR', () => {
       isAdmin: false,
       isTeacher: false,
       isStudent: false,
+      isParent: false,
       isDevelopment: false,
     });
   });
 
-  it('returns all false when roles not found for regular user', async () => {
-    const mockUser = { id: 'u-2', email: 'regular@example.com' };
-
-    mockSupabase.from.mockImplementation(() => ({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ data: [], error: null })
-    }));
-
-    (mockAuth.getUser as jest.Mock).mockResolvedValue({
-      data: { user: mockUser },
-      error: null,
-    });
+  it('returns all false when the profile row is not found for a regular user', async () => {
+    const mockUser = { id: 'u-roles-4', email: 'regular@example.com' };
+    mockAuthedUser(mockUser);
+    mockProfileRow(null);
 
     const result = await getUserWithRolesSSR();
     expect(result).toEqual({
@@ -148,6 +133,7 @@ describe('getUserWithRolesSSR', () => {
       isAdmin: false,
       isTeacher: false,
       isStudent: false,
+      isParent: false,
       isDevelopment: false,
     });
   });
