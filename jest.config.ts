@@ -113,13 +113,6 @@ const config: Config = {
     // tasks/test-coverage-analysis.md §3 and §P0. Remove an entry only after
     // the file passes locally.
 
-    // ── Spotify: cookies() called outside Next.js request scope ─────────────
-    'app/api/spotify/features/route\\.test\\.ts',
-    'app/api/spotify/matches/approve/route\\.test\\.ts',
-    'app/api/spotify/matches/reject/route\\.test\\.ts',
-    'app/api/spotify/search/route\\.test\\.ts',
-    'app/api/spotify/sync/route\\.test\\.ts',
-
     // ── Medium fixes: stale assertions / missing mocks ───────────────────────
     '__tests__/components/admin/index\\.test\\.tsx',
     '__tests__/lib/getUserWithRolesSSR\\.test\\.ts',
@@ -127,9 +120,6 @@ const config: Config = {
     '__tests__/shadow-users\\.test\\.ts',
     '__tests__/sync-all-lessons\\.test\\.ts',
     '__tests__/utils/getUserRolesSSR\\.test\\.ts',
-    // useSearchParams() from next/navigation returns undefined — needs mock
-    'app/\\(auth\\)/sign-in/page\\.test\\.tsx',
-    'app/\\(auth\\)/sign-up/page\\.test\\.tsx',
     // Component forms: ESM fixed (lucide-react/react-markdown now mocked), but
     // real assertion failures remain (missing QueryClientProvider wrapper,
     // UI text drift). Need targeted test fixes before unquarantining.
@@ -137,7 +127,6 @@ const config: Config = {
     'components/lessons/form/LessonForm\\.test\\.tsx',
     'components/songs/form/SongForm\\.test\\.tsx',
     // Other component failures under investigation
-    'app/dashboard/songs/page\\.test\\.tsx',
     'components/assignments/shared/__tests__/AssignmentStatusActions\\.test\\.tsx',
     'components/dashboard/admin/SongStatsTable\\.test\\.tsx',
     'components/dashboard/calendar/CalendarEventsList\\.test\\.tsx',

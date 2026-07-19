@@ -1,6 +1,6 @@
 import { POST } from './route';
 import { createClient } from '@/lib/supabase/server';
-import { searchTracks } from '@/lib/spotify';
+import { searchSongsWithAI } from '@/lib/services/enhanced-spotify-search';
 import { NextRequest } from 'next/server';
 
 // Mock dependencies
@@ -8,8 +8,10 @@ jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(),
 }));
 
-jest.mock('@/lib/spotify', () => ({
-  searchTracks: jest.fn(),
+// Route now delegates matching to the AI-enhanced search service instead of
+// calling the raw Spotify search client directly (see enhanced-spotify-search.ts).
+jest.mock('@/lib/services/enhanced-spotify-search', () => ({
+  searchSongsWithAI: jest.fn(),
 }));
 
 describe('Spotify Sync API', () => {
@@ -41,7 +43,9 @@ describe('Spotify Sync API', () => {
   it('returns 401 if not authenticated', async () => {
     mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
 
-    const res = await POST(new NextRequest('http://localhost/api/spotify/sync', { method: 'POST' }));
+    const res = await POST(
+      new NextRequest('http://localhost/api/spotify/sync', { method: 'POST' })
+    );
     expect(res.status).toBe(401);
   });
 
@@ -52,7 +56,9 @@ describe('Spotify Sync API', () => {
       error: null,
     });
 
-    const res = await POST(new NextRequest('http://localhost/api/spotify/sync', { method: 'POST' }));
+    const res = await POST(
+      new NextRequest('http://localhost/api/spotify/sync', { method: 'POST' })
+    );
     expect(res.status).toBe(403);
   });
 
@@ -65,14 +71,14 @@ describe('Spotify Sync API', () => {
       single: jest.fn().mockResolvedValue({ data: { is_admin: true }, error: null }),
     };
 
+    const song1 = { id: '1', title: 'Song 1', author: 'Artist 1' };
+    const song2 = { id: '2', title: 'Song 2', author: 'Artist 2' };
+
     const songsBuilder = {
       select: jest.fn().mockReturnThis(),
       is: jest.fn().mockReturnThis(),
       limit: jest.fn().mockResolvedValue({
-        data: [
-          { id: '1', title: 'Song 1', author: 'Artist 1' },
-          { id: '2', title: 'Song 2', author: 'Artist 2' },
-        ],
+        data: [song1, song2],
         error: null,
       }),
     };
@@ -87,40 +93,55 @@ describe('Spotify Sync API', () => {
       .mockReturnValueOnce(songsBuilder)
       .mockReturnValue(updateBuilder);
 
-    // Mock Spotify search
-    (searchTracks as jest.Mock)
-      .mockResolvedValueOnce({
-        // For Song 1
-        tracks: {
-          items: [
-            {
-              external_urls: { spotify: 'https://spotify.com/track/1' },
-              duration_ms: 200000,
-              album: {
-                release_date: '2023-01-01',
-                images: [{ url: 'https://image.url/1' }],
-              },
+    // Song 1 gets a high-confidence AI match (>= 85) so it's updated directly.
+    // Song 2 gets no match at all, so it's skipped.
+    (searchSongsWithAI as jest.Mock).mockResolvedValue([
+      {
+        song: song1,
+        match: {
+          confidence: 90,
+          found: true,
+          track: {
+            external_urls: { spotify: 'https://spotify.com/track/1' },
+            duration_ms: 200000,
+            artists: [{ name: 'Artist 1' }],
+            album: {
+              release_date: '2023-01-01',
+              images: [{ url: 'https://image.url/1' }],
             },
-          ],
+          },
+          searchQuery: 'Song 1 Artist 1',
+          reasoning: 'High confidence match',
+          suggestions: [],
         },
-      })
-      .mockResolvedValueOnce({
-        // For Song 2 (no match)
-        tracks: { items: [] },
-      })
-      .mockResolvedValueOnce({
-        // For Song 2 (fallback no match)
-        tracks: { items: [] },
-      });
+        executionTime: 500,
+        queriesUsed: 1,
+      },
+      {
+        song: song2,
+        match: {
+          confidence: 0,
+          found: false,
+          track: undefined,
+          searchQuery: 'Song 2 Artist 2',
+          reasoning: 'No matches found in Spotify',
+          suggestions: [],
+        },
+        executionTime: 300,
+        queriesUsed: 3,
+      },
+    ]);
 
-    const res = await POST(new NextRequest('http://localhost/api/spotify/sync', { method: 'POST' }));
+    const res = await POST(
+      new NextRequest('http://localhost/api/spotify/sync', { method: 'POST' })
+    );
     const data = await res.json();
 
     expect(res.status).toBe(200);
     expect(data.total).toBe(2);
     expect(data.updated).toBe(1);
     expect(data.skipped).toBe(1);
-    expect(searchTracks).toHaveBeenCalledTimes(3);
+    expect(searchSongsWithAI).toHaveBeenCalledTimes(1);
     expect(updateBuilder.update).toHaveBeenCalledTimes(1);
     expect(updateBuilder.update).toHaveBeenCalledWith(
       expect.objectContaining({
