@@ -297,6 +297,45 @@ describe('updateRepertoireEntryAction', () => {
     });
     expect(result).toEqual({ error: 'Repertoire entry not found' });
   });
+
+  it('rejects a student trying to set current_status (column-level whitelist)', async () => {
+    // studentCtx is the default role mock — no asTeacherOnce() override here.
+    buildClient(studentCtx.user, {});
+    const result = await updateRepertoireEntryAction(REPERTOIRE_ID, {
+      current_status: 'mastered',
+    });
+    expect(result).toEqual({
+      error: 'You can only edit your notes and difficulty (rejected: current_status)',
+    });
+  });
+
+  it('allows a student to update only their own whitelisted fields (notes + difficulty)', async () => {
+    const qb = createMockQueryBuilder({ student_id: studentCtx.userId });
+    buildClient(studentCtx.user, { student_repertoire: qb });
+
+    const result = await updateRepertoireEntryAction(REPERTOIRE_ID, {
+      student_notes: 'Practiced the bridge today',
+      difficulty_rating: 3,
+    });
+    expect(result).toEqual({ success: true });
+    expect(qb.update).toHaveBeenCalledWith(
+      expect.objectContaining({ student_notes: 'Practiced the bridge today', difficulty_rating: 3 })
+    );
+  });
+
+  it('lets staff override current_status directly (teacher status-override path)', async () => {
+    const qb = createMockQueryBuilder({ student_id: studentCtx.userId });
+    buildClient(teacherCtx.user, { student_repertoire: qb });
+    asTeacherOnce();
+
+    const result = await updateRepertoireEntryAction(REPERTOIRE_ID, {
+      current_status: 'remembered',
+    });
+    expect(result).toEqual({ success: true });
+    expect(qb.update).toHaveBeenCalledWith(
+      expect.objectContaining({ current_status: 'remembered' })
+    );
+  });
 });
 
 describe('removeFromRepertoireAction', () => {
