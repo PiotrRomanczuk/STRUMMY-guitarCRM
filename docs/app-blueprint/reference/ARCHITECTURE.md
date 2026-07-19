@@ -5,7 +5,7 @@ updated: 2026-06-16
 
 # Strummy — Architecture
 
-> Living architecture reference for the guitar-crm (Strummy) student management system (~v0.143.0).
+> Living architecture reference for the Strummy student management system (~v0.143.0).
 > The canonical plan lives in [`docs/app-blueprint/`](../README.md); the domain model lives in `CONTEXT.md`.
 
 ---

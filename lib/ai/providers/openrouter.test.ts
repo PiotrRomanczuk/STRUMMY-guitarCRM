@@ -32,7 +32,7 @@ describe('OpenRouter Provider', () => {
     process.env = {
       ...originalEnv,
       OPENROUTER_API_KEY: 'test-api-key',
-      NEXT_PUBLIC_API_BASE_URL: 'https://guitar-crm.test',
+      NEXT_PUBLIC_API_BASE_URL: 'https://strummy.test',
     };
   });
 
@@ -83,7 +83,7 @@ describe('OpenRouter Provider', () => {
       const config = provider.getConfig();
 
       expect(config.headers).toBeDefined();
-      expect(config.headers?.['HTTP-Referer']).toBe('https://guitar-crm.test');
+      expect(config.headers?.['HTTP-Referer']).toBe('https://strummy.test');
       expect(config.headers?.['X-Title']).toBe('Guitar CRM');
     });
 

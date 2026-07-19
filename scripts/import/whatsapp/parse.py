@@ -16,7 +16,7 @@ LINE = re.compile(r"^‎?\[(\d{2})/(\d{2})/(\d{4}),\s*[\d:]+\]\s*([^:]+):\s*(.*)
 SKIP_SUBSTR = [
     "image omitted", "video omitted", "audio omitted", "sticker omitted",
     "You deleted this message", "this message was deleted",
-    "guitar-crm.vercel.app",  # the app itself, not a song
+    "strummy.vercel.app",  # the app itself, not a song
 ]
 
 def ug_title(url):

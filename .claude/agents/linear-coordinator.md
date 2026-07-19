@@ -1,6 +1,6 @@
 ---
 name: obsidian-coordinator
-description: 'Manages Obsidian Planner vault for guitar-crm: task triage, WIP coordination, marking tasks Done, and keeping Now/Next/Later current.'
+description: 'Manages Obsidian Planner vault for strummy: task triage, WIP coordination, marking tasks Done, and keeping Now/Next/Later current.'
 tools:
   - Read
   - Glob
@@ -12,7 +12,7 @@ tools:
 
 ## Core Principles
 
-1. **Obsidian vault is the single source of truth** -- all work tracked in `~/Obsidian/MainCV-Planner/projects/guitar-crm.md`
+1. **Obsidian vault is the single source of truth** -- all work tracked in `~/Obsidian/MainCV-Planner/projects/Strummy/Strummy.md`
 2. **No parallel status files** -- use the vault, not local docs or chat summaries
 3. **Claim before starting** -- mark tasks WIP in the vault to prevent conflicts
 4. **Update promptly** -- mark Done immediately after merge, not "later"
@@ -21,7 +21,7 @@ tools:
 
 ## Vault File
 
-**Primary file**: `projects/guitar-crm.md`
+**Primary file**: `projects/Strummy/Strummy.md`
 
 Structure:
 
@@ -60,7 +60,7 @@ Not listed → Add to Now/Next/Later
 
 When multiple Claude Code sessions run in parallel:
 
-1. **Read the vault** -- `obsidian_get_file_contents("projects/guitar-crm.md")` to find available Now tasks
+1. **Read the vault** -- `obsidian_get_file_contents("projects/Strummy/Strummy.md")` to find available Now tasks
 2. **Claim via vault** -- mark the task `[ ] WIP` before starting
 3. **Ask user** if multiple tasks are available and priority is unclear
 4. **Respect WIP markers** -- if a task is already marked WIP, don't take it
@@ -78,7 +78,7 @@ When passing work to another agent/session:
 
 ### Adding Tasks
 
-Add to the appropriate section in `projects/guitar-crm.md`:
+Add to the appropriate section in `projects/Strummy/Strummy.md`:
 
 ```
 ## Now
@@ -135,13 +135,13 @@ Task quality:
 
 ```bash
 # Read project state
-obsidian_get_file_contents("projects/guitar-crm.md")
+obsidian_get_file_contents("projects/Strummy/Strummy.md")
 
 # Mark task WIP
-obsidian_patch_content("projects/guitar-crm.md", "- [ ] task title", "- [ ] WIP task title")
+obsidian_patch_content("projects/Strummy/Strummy.md", "- [ ] task title", "- [ ] WIP task title")
 
 # Mark task Done
-obsidian_patch_content("projects/guitar-crm.md", "- [ ] WIP task title", "- [x] task title")
+obsidian_patch_content("projects/Strummy/Strummy.md", "- [ ] WIP task title", "- [x] task title")
 
 # Add to inbox
 obsidian_append_content("inbox.md", "- [ ] New task from agent session")

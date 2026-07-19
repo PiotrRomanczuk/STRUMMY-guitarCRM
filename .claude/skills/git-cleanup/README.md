@@ -166,7 +166,7 @@ Analyzes all branches and their PR status without making changes.
 
 **Usage**:
 ```bash
-cd /Users/piotr/Desktop/guitar-crm
+cd /Users/piotr/Desktop/strummy
 ./.claude/skills/git-cleanup/scripts/analyze-branches.sh
 ```
 

@@ -171,7 +171,7 @@ const SECTIONS = [
 
 const PREAMBLE = `You're porting one section of the Strummy editorial design preview from the design-handoff bundle (HTML/Babel/JSX prototypes) to React/TypeScript.
 
-REPO: /Users/piotr/Desktop/MainCV/guitar-crm (Next.js 16 App Router, React 19, TypeScript 5.x)
+REPO: /Users/piotr/Desktop/MainCV/strummy (Next.js 16 App Router, React 19, TypeScript 5.x)
 BUNDLE: /tmp/strummy-design/strummy/project/src/ (Babel-on-the-page JSX prototypes, exported via Object.assign(window, {...}))
 
 WHAT'S ALREADY ON main (the foundation — IMPORT from these, don't duplicate them):

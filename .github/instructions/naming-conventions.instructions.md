@@ -199,7 +199,7 @@ isValidEmail(); // Checker function
 
 ```typescript
 // Public constants: PascalCase or UPPER_CASE
-export const API_BASE_URL = 'https://api.guitar-crm.com';
+export const API_BASE_URL = 'https://api.strummy.com';
 export const DEFAULT_LESSON_LENGTH_MINUTES = 60;
 export const VALID_DIFFICULTIES = [
 	'beginner',

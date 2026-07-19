@@ -19,7 +19,7 @@ For every PR, run through these review passes **in order**. Stop and flag blocke
 - [ ] PR is on a **dedicated feature branch** (not `master`, not `staging`)
 - [ ] Branch name follows convention: `{type}/{short-description}` (no ticket ID prefix)
 - [ ] PR title is descriptive (no ticket ID prefix required)
-- [ ] PR body references the Obsidian task: `Task: projects/guitar-crm.md › Now — <task title>`
+- [ ] PR body references the Obsidian task: `Task: projects/Strummy/Strummy.md › Now — <task title>`
 - [ ] Obsidian task exists in vault and is marked WIP
 - [ ] If new work was discovered, new tasks were added to `inbox.md` in the vault
 
@@ -299,7 +299,7 @@ return Response.json({ items: results });
 
 ## After Review: Obsidian Vault Update
 
-After posting the review, update the vault task in `projects/guitar-crm.md`:
+After posting the review, update the vault task in `projects/Strummy/Strummy.md`:
 
 - **If approved**: note "PR approved" under the WIP task
 - **If changes requested**: leave WIP, add a note summarizing blockers

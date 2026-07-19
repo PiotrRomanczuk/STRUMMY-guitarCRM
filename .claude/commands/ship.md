@@ -135,7 +135,7 @@ gh pr create --title "{title}" --body "$(cat <<'EOF'
 {diff stat summary}
 
 ## Obsidian Task
-Task: projects/guitar-crm.md › Now — {task title from vault}
+Task: projects/Strummy/Strummy.md › Now — {task title from vault}
 
 ## Quality
 - Tests: {count} passing
@@ -156,7 +156,7 @@ gh pr edit {number} --add-label "version:{type}"
 
 ### Obsidian vault update (unless `--quick`)
 
-1. Read `projects/guitar-crm.md` from the vault to find the WIP task
+1. Read `projects/Strummy/Strummy.md` from the vault to find the WIP task
 2. Add a note with the PR link under the WIP task
 3. Task stays WIP until merged
 

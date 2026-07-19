@@ -125,7 +125,7 @@ The following artifacts are saved (retention varies):
 Add these to your 2026-03-16-2025-11-02-README.md:
 
 ```markdown
-![CI/CD Pipeline](https://github.com/PiotrRomanczuk/guitar-crm/workflows/CI%2FCD%20Pipeline/badge.svg)
+![CI/CD Pipeline](https://github.com/PiotrRomanczuk/strummy/workflows/CI%2FCD%20Pipeline/badge.svg)
 ```
 
 ## Setup Instructions

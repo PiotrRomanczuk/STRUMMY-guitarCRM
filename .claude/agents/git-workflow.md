@@ -13,7 +13,7 @@ tools:
 ## Core Principles
 
 1. **NEVER commit directly to `main` or `production`** -- always use feature branches
-2. **ALWAYS update Obsidian vault** -- mark task WIP before starting, Done after merge (`~/Obsidian/MainCV-Planner/projects/guitar-crm.md`)
+2. **ALWAYS update Obsidian vault** -- mark task WIP before starting, Done after merge (`~/Obsidian/MainCV-Planner/projects/Strummy/Strummy.md`)
 3. **ALWAYS test before committing** -- `npm run lint && npm test`
 4. **Version is bumped automatically post-merge** -- a GitHub Action bumps patch/minor/major based on branch prefix or PR labels
 
@@ -128,7 +128,7 @@ gh release create v0.X.Y \
 ```markdown
 ## Obsidian Task
 
-Task: projects/guitar-crm.md › Now — <task title>
+Task: projects/Strummy/Strummy.md › Now — <task title>
 
 ## Changes
 
@@ -168,7 +168,7 @@ Task: projects/guitar-crm.md › Now — <task title>
 
 ### After Merge
 
-- Check off task in Obsidian vault (`projects/guitar-crm.md`)
+- Check off task in Obsidian vault (`projects/Strummy/Strummy.md`)
 - Delete feature branch
 - Monitor deployment in Vercel
 - Verify feature in production
@@ -191,7 +191,7 @@ npm run pre-commit              # Full pre-commit checks
 ### Starting a New Feature
 
 ```bash
-# 1. Check vault Now list, mark task WIP in ~/Obsidian/MainCV-Planner/projects/guitar-crm.md
+# 1. Check vault Now list, mark task WIP in ~/Obsidian/MainCV-Planner/projects/Strummy/Strummy.md
 # 2. Create and checkout feature branch
 git checkout main
 git pull origin main
@@ -303,7 +303,7 @@ git push origin v0.66.0
 - [ ] All tests passing (unit + E2E)
 - [ ] Version bumped automatically post-merge
 - [ ] CHANGELOG.md updated
-- [ ] Obsidian task marked Done in vault (`projects/guitar-crm.md`)
+- [ ] Obsidian task marked Done in vault (`projects/Strummy/Strummy.md`)
 - [ ] Code reviewed and approved
 - [ ] Feature verified on Preview
 - [ ] No errors in Vercel logs

@@ -228,7 +228,7 @@ git pull origin main
 
 ### 4.5 Update Obsidian vault
 
-- Read `projects/guitar-crm.md` to find the WIP task matching this PR
+- Read `projects/Strummy/Strummy.md` to find the WIP task matching this PR
 - Mark it `[x]` Done via `obsidian_patch_content`
 - Add note: "Merged via /merge-fleet — PR #{number}"
 

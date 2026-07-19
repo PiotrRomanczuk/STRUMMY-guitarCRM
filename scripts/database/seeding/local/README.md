@@ -95,7 +95,7 @@ bash scripts/database/seeding/local/seed-all.sh
 Creates development users via Supabase Auth REST API:
 
 ```bash
-cd /path/to/guitar-crm
+cd /path/to/strummy
 node scripts/database/seeding/local/seed-dev-users-via-api.js
 ```
 

@@ -26,11 +26,11 @@ tools:
 
 Before any code work, check the vault:
 
-- **Read**: `~/Obsidian/MainCV-Planner/projects/guitar-crm.md` — find the relevant Now item
+- **Read**: `~/Obsidian/MainCV-Planner/projects/Strummy/Strummy.md` — find the relevant Now item
 - **New work not yet listed**: append it to the Now section first
 - **Mark task WIP** using Obsidian MCP:
   ```
-  obsidian_patch_content("projects/guitar-crm.md", "- [ ] task title", "- [ ] WIP task title")
+  obsidian_patch_content("projects/Strummy/Strummy.md", "- [ ] task title", "- [ ] WIP task title")
   ```
 
 ### Step 2: Create a New Branch
@@ -89,7 +89,7 @@ gh pr create --title "Add dark mode toggle" --body "$(cat <<'EOF'
 - Persist preference in localStorage
 
 ## Obsidian Task
-Task: projects/guitar-crm.md › Now — Add dark mode toggle
+Task: projects/Strummy/Strummy.md › Now — Add dark mode toggle
 
 ## Test plan
 - [ ] Toggle switches between light and dark mode
@@ -108,7 +108,7 @@ After PR creation, add the PR URL as a sub-item under the WIP task:
 
 ```
 obsidian_patch_content(
-  "projects/guitar-crm.md",
+  "projects/Strummy/Strummy.md",
   "- [ ] WIP Add dark mode toggle",
   "- [ ] WIP Add dark mode toggle\n  - PR: <PR_URL>"
 )
@@ -134,7 +134,7 @@ If checks fail:
 Once the PR is merged, mark the task Done:
 
 ```
-obsidian_patch_content("projects/guitar-crm.md", "- [ ] WIP task title", "- [x] task title")
+obsidian_patch_content("projects/Strummy/Strummy.md", "- [ ] WIP task title", "- [x] task title")
 ```
 
 ### Step 9: Create Release (if version was bumped)
@@ -205,7 +205,7 @@ Every PR must follow this structure:
 
 ## Obsidian Task
 
-Task: projects/guitar-crm.md › Now — <task title>
+Task: projects/Strummy/Strummy.md › Now — <task title>
 
 ## Changes
 

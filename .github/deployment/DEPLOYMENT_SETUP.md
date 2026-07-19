@@ -23,7 +23,7 @@ Your **VERCEL_PROJECT_ID**: `8FBpmeImltXNxm0jktxbZF29`
 
 ## Adding Secrets to GitHub
 
-1. Go to your GitHub repository: https://github.com/PiotrRomanczuk/guitar-crm
+1. Go to your GitHub repository: https://github.com/PiotrRomanczuk/strummy
 2. Click on **Settings** tab
 3. In the left sidebar, click **Secrets and variables** → **Actions**
 4. Click **New repository secret** for each of these:

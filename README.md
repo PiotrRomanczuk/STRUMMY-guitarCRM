@@ -11,7 +11,7 @@ Try the app at [strummy.app](https://strummy.app) with these read-only demo acco
 
 ---
 
-[![CI/CD](https://img.shields.io/badge/CI%2FCD-11--job_pipeline-22c55e?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/PiotrRomanczuk/guitar-crm/actions)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-11--job_pipeline-22c55e?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/PiotrRomanczuk/strummy/actions)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
@@ -316,7 +316,7 @@ This project pushed my abilities across multiple engineering disciplines:
 ### Directory Structure
 
 ```
-guitar-crm/
+strummy/
   app/
     (auth)/                 # Route group: sign-in, sign-up, forgot-password, invitations
     actions/                # 30 Server Actions (AI, songs, lessons, users, email)
@@ -387,8 +387,8 @@ Music theory dashboard: KPIs, Roman numeral progressions, archetype detection (P
 
 ```bash
 # Clone and install
-git clone https://github.com/PiotrRomanczuk/guitar-crm.git
-cd guitar-crm && npm install
+git clone https://github.com/PiotrRomanczuk/strummy.git
+cd strummy && npm install
 
 # Configure environment
 cp .env.example .env.local

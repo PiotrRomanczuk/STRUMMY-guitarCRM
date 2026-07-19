@@ -31,10 +31,10 @@ These variables **MUST** be set for the application to function in production.
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `NEXT_PUBLIC_APP_URL` | Production app URL | `https://guitar-crm.vercel.app` |
-| `NEXT_PUBLIC_SITE_URL` | Site URL for auth redirects | `https://guitar-crm.vercel.app` |
-| `NEXT_PUBLIC_API_BASE_URL` | API base URL | `https://guitar-crm.vercel.app/api` |
-| `NEXT_PUBLIC_API_BASE_URL_REMOTE` | Remote API URL (if different) | `https://guitar-crm.vercel.app/api` |
+| `NEXT_PUBLIC_APP_URL` | Production app URL | `https://strummy.vercel.app` |
+| `NEXT_PUBLIC_SITE_URL` | Site URL for auth redirects | `https://strummy.vercel.app` |
+| `NEXT_PUBLIC_API_BASE_URL` | API base URL | `https://strummy.vercel.app/api` |
+| `NEXT_PUBLIC_API_BASE_URL_REMOTE` | Remote API URL (if different) | `https://strummy.vercel.app/api` |
 
 ### Optional Environment Variables (Feature-Dependent)
 
@@ -75,7 +75,7 @@ Required if you want Google Calendar sync for lessons:
 |----------|-------------|---------|
 | `GOOGLE_CLIENT_ID` | Google OAuth2 Client ID | `123456789.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth2 Client Secret | `GOCSPX-xxxxxxxx` |
-| `GOOGLE_REDIRECT_URI` | OAuth callback URL | `https://guitar-crm.vercel.app/api/oauth2/callback` |
+| `GOOGLE_REDIRECT_URI` | OAuth callback URL | `https://strummy.vercel.app/api/oauth2/callback` |
 
 **Setup Steps:**
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
@@ -214,7 +214,7 @@ Located in `20260105100019_create_triggers.sql` and history triggers:
 
 1. **Site URL**: Set to your production URL
    - Dashboard → Authentication → URL Configuration → Site URL
-   - Example: `https://guitar-crm.vercel.app`
+   - Example: `https://strummy.vercel.app`
 
 2. **Redirect URLs**: Add allowed redirect URLs
    - `https://yourdomain.com/auth/callback`

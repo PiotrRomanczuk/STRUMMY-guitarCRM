@@ -46,7 +46,7 @@ Every merge to `main` triggers `version-bump.yml` which:
 3. Bumps `package.json`, commits it, creates an annotated git tag
 4. Generates a GitHub Release using the PR description as release notes
 
-**What I learned:** Manual versioning doesn't scale past 10 releases. I forgot to bump the version 3 times before automating it. Now the PR description becomes the release note, which forces me to write user-facing summaries instead of "fix stuff" commit messages. This produced [30 tagged releases](https://github.com/PiotrRomanczuk/guitar-crm/releases) with meaningful changelogs.
+**What I learned:** Manual versioning doesn't scale past 10 releases. I forgot to bump the version 3 times before automating it. Now the PR description becomes the release note, which forces me to write user-facing summaries instead of "fix stuff" commit messages. This produced [30 tagged releases](https://github.com/PiotrRomanczuk/strummy/releases) with meaningful changelogs.
 
 **Key file:** [`workflows/version-bump.yml`](./workflows/version-bump.yml)
 

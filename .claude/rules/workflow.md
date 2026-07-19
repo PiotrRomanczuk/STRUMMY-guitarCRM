@@ -6,7 +6,7 @@ description: Development workflow — Obsidian vault task tracking, commit forma
 
 > Full details: `.claude/agents/git-workflow.md`
 
-1. **Check vault before starting** -- open `~/Obsidian/MainCV-Planner/projects/guitar-crm.md` Now list; mark task WIP before starting
+1. **Check vault before starting** -- open `~/Obsidian/MainCV-Planner/projects/Strummy/Strummy.md` Now list; mark task WIP before starting
 2. **Branch from `main`** -- `feature/short-description`, `fix/short-description`, `refactor/short-description`
 3. **Commit format** -- `type(scope): description`
 4. **Test before push** -- `npm run lint && npm test`
@@ -30,4 +30,4 @@ description: Development workflow — Obsidian vault task tracking, commit forma
 - Migration guides for schema/API changes
 - Screenshots for UI features
 
-**Tags & Releases**: https://github.com/PiotrRomanczuk/guitar-crm/tags
+**Tags & Releases**: https://github.com/PiotrRomanczuk/strummy/tags

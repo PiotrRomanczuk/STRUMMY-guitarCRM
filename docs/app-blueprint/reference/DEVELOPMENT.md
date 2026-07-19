@@ -6,7 +6,7 @@
 
    ```bash
    git clone <repo-url>
-   cd guitar-crm
+   cd strummy
    ```
 
 2. **Install dependencies**

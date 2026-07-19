@@ -26,7 +26,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 
 const server = new McpServer({
-  name: 'guitar-crm-spotify',
+  name: 'strummy-spotify',
   version: '1.0.0',
 });
 

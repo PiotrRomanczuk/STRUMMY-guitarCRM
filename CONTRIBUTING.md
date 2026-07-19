@@ -16,7 +16,7 @@ Thank you for contributing to Strummy! This document provides guidelines for con
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd guitar-crm
+   cd strummy
    ```
 
 2. **Install dependencies**
