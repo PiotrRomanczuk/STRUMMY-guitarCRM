@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { SongInputSchema } from '@/schemas/SongSchema';
-import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import {
+  TEST_ACCOUNT_MUTATION_ERROR,
+  isDemoMutationBlocked,
+} from '@/lib/auth/test-account-guard';
 import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { logger } from '@/lib/logger';
 
@@ -11,7 +14,7 @@ export async function POST(request: NextRequest) {
       const supabase = await createClient();
       const body = await request.json();
 
-      if (flags.isDevelopment) {
+      if (isDemoMutationBlocked(flags.isDevelopment)) {
         return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
       }
 

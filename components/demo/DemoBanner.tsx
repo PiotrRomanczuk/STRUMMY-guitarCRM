@@ -33,11 +33,15 @@ export function DemoBanner() {
   return (
     <div className="flex items-center justify-center gap-2 bg-[#f2b127]/15 border-b border-[#f2b127]/30 px-4 py-2 text-sm text-[#f2b127]">
       <span className="truncate">
-        <strong>Demo Account</strong> — You&apos;re viewing sample data.{' '}
-        <Link href="/sign-up" className="underline underline-offset-2 hover:text-[#ffd183] font-medium">
+        <strong>Live demo</strong> — sample studio, explore freely. Changes you make are real and
+        reset periodically.{' '}
+        <Link
+          href="/sign-up"
+          className="underline underline-offset-2 hover:text-[#ffd183] font-medium"
+        >
           Sign up
         </Link>{' '}
-        to create your own workspace.
+        for your own workspace.
       </span>
       <button
         type="button"

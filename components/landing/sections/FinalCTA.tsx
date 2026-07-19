@@ -48,10 +48,10 @@ export function FinalCTA() {
             />
           </Link>
           <Link
-            href="#workflow"
+            href="/sign-in?demo=true"
             className="rounded-md border border-[var(--l-paper)]/40 px-5 py-2.5 text-sm font-medium text-[var(--l-paper)] transition-colors hover:bg-[var(--l-paper)]/10"
           >
-            Watch demo
+            Try the live demo
           </Link>
         </ScrollReveal>
       </div>

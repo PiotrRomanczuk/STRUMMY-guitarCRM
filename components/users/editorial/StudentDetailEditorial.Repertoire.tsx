@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { STAGES, STAGE_COLOR, type StageKey } from '@/components/songs/editorial/primitives';
 import type { StudentRepertoireRow } from '@/lib/services/student-detail-queries';
 import { updateRepertoireEntryAction } from '@/app/actions/repertoire';
-import { Empty, formatMinutes } from './StudentDetailEditorial';
+import { Empty, formatMinutes } from './StudentDetailEditorial.shared';
 
 const STATUS_LABEL: Record<string, string> = Object.fromEntries(
   STAGES.map((stage) => [stage.key, stage.label])

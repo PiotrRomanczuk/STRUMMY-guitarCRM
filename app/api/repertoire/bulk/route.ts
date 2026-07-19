@@ -6,7 +6,10 @@ import {
   type CreateRepertoireInput,
   type StudentRepertoireType,
 } from '@/schemas/StudentRepertoireSchema';
-import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import {
+  TEST_ACCOUNT_MUTATION_ERROR,
+  isDemoMutationBlocked,
+} from '@/lib/auth/test-account-guard';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {

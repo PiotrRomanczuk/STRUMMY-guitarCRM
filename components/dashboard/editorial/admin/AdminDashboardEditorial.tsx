@@ -118,11 +118,11 @@ export const AdminDashboardEditorial = ({ pulse, invites, lockedAccounts, now }:
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <Card>
           <CardHeader eyebrow="Watch closely" title="At-risk students" />
-          <ComingSoonBody note="Students with low practice or stale progress will surface here. Real query lands in a follow-up." />
+          <ComingSoonBody note="Students whose practice has gone quiet or whose progress has stalled will surface here." />
         </Card>
         <Card>
           <CardHeader eyebrow="Aggregate" title="Cohort insights" />
-          <ComingSoonBody note="Mastery distribution + practice trends by cohort. Coming next." />
+          <ComingSoonBody note="Mastery distribution and practice trends compared across student cohorts." />
         </Card>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -174,11 +174,11 @@ export const AdminDashboardEditorial = ({ pulse, invites, lockedAccounts, now }:
         <LockedAccountsCard accounts={lockedAccounts} />
         <Card>
           <CardHeader eyebrow="Trace" title="Audit log" />
-          <ComingSoonBody note="System events: invites, role changes, deletes. Tracked per-entity in the *_history tables (lessons, assignments, users) — a unified surface is parked, not planned." />
+          <ComingSoonBody note="A single timeline of system events — invites, role changes and deletions. Each record type keeps its own history today; this unifies them." />
         </Card>
         <Card>
           <CardHeader eyebrow="Health" title="Services" />
-          <ComingSoonBody note="Supabase, Vercel, Google Drive, Spotify, AI providers. Coming next." />
+          <ComingSoonBody note="Live status for the database, hosting, Google Drive, Spotify and the AI providers." />
         </Card>
       </div>
     </div>

@@ -1,0 +1,2191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Strummy — feature readiness (verified)</title>
+    <style>
+      html {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font:
+          14px -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+      }
+      img {
+        max-width: 100%;
+      }
+      .page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 24px 0;
+      }
+      @media (max-width: 640px) {
+        .page {
+          padding: 20px 14px 0;
+        }
+      }
+      .themetoggle {
+        position: fixed;
+        top: 14px;
+        right: 14px;
+        z-index: 10;
+        font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 7px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--rule, #e4dac4);
+        background: var(--card, #fff);
+        color: var(--ink-3, #79705f);
+        cursor: pointer;
+      }
+      .themetoggle:hover {
+        color: var(--ink, #1b1712);
+        border-color: var(--ink-4, #ab9f89);
+      }
+      .themetoggle:focus-visible {
+        outline: 2px solid var(--gold, #b9862b);
+        outline-offset: 2px;
+      }
+      @media print {
+        .themetoggle,
+        .tabs,
+        .filters {
+          display: none !important;
+        }
+        .view {
+          display: block !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button
+      class="themetoggle"
+      id="themetoggle"
+      type="button"
+      aria-label="Toggle light or dark theme"
+    >
+      Theme
+    </button>
+    <div class="page">
+<style>
+  :root {
+    --ivory: #faf7f0;
+    --paper: #f1ead9;
+    --card: #ffffff;
+    --ink: #1b1712;
+    --ink-2: #4a4239;
+    --ink-3: #79705f;
+    --ink-4: #ab9f89;
+    --rule: #e4dac4;
+    --gold: #b9862b;
+    --gold-tint: #f0dfae;
+    --gold-dim: #8e661e;
+    --ok: #3b6d22;
+    --ok-bg: #e9f1de;
+    --bad: #a32d2d;
+    --bad-bg: #f8e6e6;
+    --warn: #9c6a0a;
+    --warn-bg: #f5ecd8;
+    --mute: #79705f;
+    --mute-bg: #eee8da;
+    --check: #6d4aa7;
+    --check-bg: #efe8f8;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ivory: #16130e;
+      --paper: #1e1a14;
+      --card: #241f18;
+      --ink: #f2ecdd;
+      --ink-2: #d8cfb9;
+      --ink-3: #a79a80;
+      --ink-4: #756b57;
+      --rule: #3a331f;
+      --gold: #e0b84d;
+      --gold-tint: #4a3b1a;
+      --gold-dim: #f0dfae;
+      --ok: #a9d68c;
+      --ok-bg: #22301a;
+      --bad: #e79a9a;
+      --bad-bg: #3a1e1e;
+      --warn: #e8c988;
+      --warn-bg: #362a12;
+      --mute: #a79a80;
+      --mute-bg: #2a251c;
+      --check: #c3a8ec;
+      --check-bg: #2e2440;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ivory: #16130e;
+    --paper: #1e1a14;
+    --card: #241f18;
+    --ink: #f2ecdd;
+    --ink-2: #d8cfb9;
+    --ink-3: #a79a80;
+    --ink-4: #756b57;
+    --rule: #3a331f;
+    --gold: #e0b84d;
+    --gold-tint: #4a3b1a;
+    --gold-dim: #f0dfae;
+    --ok: #a9d68c;
+    --ok-bg: #22301a;
+    --bad: #e79a9a;
+    --bad-bg: #3a1e1e;
+    --warn: #e8c988;
+    --warn-bg: #362a12;
+    --mute: #a79a80;
+    --mute-bg: #2a251c;
+    --check: #c3a8ec;
+    --check-bg: #2e2440;
+  }
+  :root[data-theme="light"] {
+    --ivory: #faf7f0;
+    --paper: #f1ead9;
+    --card: #ffffff;
+    --ink: #1b1712;
+    --ink-2: #4a4239;
+    --ink-3: #79705f;
+    --ink-4: #ab9f89;
+    --rule: #e4dac4;
+    --gold: #b9862b;
+    --gold-tint: #f0dfae;
+    --gold-dim: #8e661e;
+    --ok: #3b6d22;
+    --ok-bg: #e9f1de;
+    --bad: #a32d2d;
+    --bad-bg: #f8e6e6;
+    --warn: #9c6a0a;
+    --warn-bg: #f5ecd8;
+    --mute: #79705f;
+    --mute-bg: #eee8da;
+    --check: #6d4aa7;
+    --check-bg: #efe8f8;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body,
+  .root {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--ivory);
+  }
+  .root {
+    padding: 0 0 3rem;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-style: italic;
+    font-size: 34px;
+    letter-spacing: -0.01em;
+    margin: 4px 0 6px;
+    text-wrap: balance;
+  }
+  .dek {
+    font-size: 14px;
+    color: var(--ink-3);
+    max-width: 62ch;
+    line-height: 1.55;
+  }
+  .banner {
+    margin: 20px 0 0;
+    padding: 14px 16px;
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--check);
+    border-radius: 8px;
+    background: var(--card);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 78ch;
+  }
+  .banner strong {
+    color: var(--ink);
+  }
+  .banner .bt {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--check);
+    display: block;
+    margin-bottom: 5px;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 22px 0 20px;
+  }
+  .stat {
+    background: var(--card);
+    padding: 14px 16px;
+  }
+  .stat .n {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .l {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-4);
+    margin-top: 2px;
+  }
+  .stat.bad .n {
+    color: var(--bad);
+  }
+  .stat.ok .n {
+    color: var(--ok);
+  }
+  .stat.check .n {
+    color: var(--check);
+  }
+  .filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 0 0 20px;
+  }
+  .chip {
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--ink-2);
+    cursor: pointer;
+    transition:
+      background 0.12s,
+      color 0.12s,
+      border-color 0.12s;
+  }
+  .chip:hover {
+    border-color: var(--ink-4);
+  }
+  .chip.active {
+    background: var(--ink);
+    color: var(--ivory);
+    border-color: var(--ink);
+  }
+  .chip:focus-visible,
+  .tab:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  section.group {
+    margin-bottom: 28px;
+  }
+  .group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 0 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .group-head h2 {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 500;
+    margin: 0;
+  }
+  .group-head .count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-4);
+  }
+  .group-note {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin: -4px 0 10px;
+    line-height: 1.55;
+    max-width: 88ch;
+  }
+  .tablewrap {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--card);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    min-width: 860px;
+  }
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-4);
+    font-weight: 400;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+  tbody tr:hover {
+    background: var(--paper);
+  }
+  tbody tr.amended td {
+    box-shadow: inset 3px 0 0 var(--check);
+  }
+  .id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .feat {
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .domain {
+    color: var(--ink-4);
+    font-size: 11.5px;
+  }
+  .pill {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .pill.shipped {
+    background: var(--ok-bg);
+    color: var(--ok);
+  }
+  .pill.blocking {
+    background: var(--bad-bg);
+    color: var(--bad);
+  }
+  .pill.blocked,
+  .pill.parked {
+    background: var(--mute-bg);
+    color: var(--mute);
+  }
+  .pill.pending {
+    background: var(--warn-bg);
+    color: var(--warn);
+  }
+  .pill.notbuilt {
+    background: var(--bad-bg);
+    color: var(--bad);
+  }
+  .vpill {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .vpill.held {
+    background: var(--ok-bg);
+    color: var(--ok);
+  }
+  .vpill.corrected {
+    background: var(--check-bg);
+    color: var(--check);
+  }
+  .vpill.unfounded {
+    background: var(--bad-bg);
+    color: var(--bad);
+  }
+  .vpill.added {
+    background: var(--warn-bg);
+    color: var(--warn);
+  }
+  .tests {
+    font-family: var(--mono);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .tests i {
+    font-style: normal;
+    color: var(--ink-4);
+    margin-right: 5px;
+  }
+  .tests i.on {
+    color: var(--gold-dim);
+    font-weight: 700;
+  }
+  .tests i.struck {
+    color: var(--bad);
+    text-decoration: line-through;
+    font-weight: 700;
+  }
+  .notes {
+    color: var(--ink-3);
+    line-height: 1.5;
+    max-width: 40ch;
+  }
+  .was {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--check);
+    line-height: 1.45;
+  }
+  .reach {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    white-space: nowrap;
+    color: var(--ink-4);
+  }
+  .reach.hidden {
+    color: var(--warn);
+  }
+  code.f,
+  code {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--paper);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  footer {
+    margin-top: 26px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    font-size: 11.5px;
+    color: var(--ink-4);
+    line-height: 1.6;
+    max-width: 88ch;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin: 22px 0 18px;
+    border-bottom: 1px solid var(--rule);
+    flex-wrap: wrap;
+  }
+  .tab {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 4px 10px;
+    border: none;
+    background: transparent;
+    color: var(--ink-4);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-right: 18px;
+  }
+  .tab:hover {
+    color: var(--ink-2);
+  }
+  .tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--gold);
+  }
+  .view {
+    display: none;
+  }
+  .view.active {
+    display: block;
+  }
+  .crud-pill {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .crud-pill.yes {
+    background: var(--ok-bg);
+    color: var(--ok);
+  }
+  .crud-pill.no {
+    background: var(--bad-bg);
+    color: var(--bad);
+  }
+  .crud-pill.partial {
+    background: var(--warn-bg);
+    color: var(--warn);
+  }
+  .crud-pill.na {
+    background: var(--mute-bg);
+    color: var(--mute);
+  }
+  .path {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .path s {
+    color: var(--bad);
+  }
+  .fix {
+    margin: 0 0 22px;
+    padding: 16px 18px;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--card);
+  }
+  .fix h3 {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 0 8px;
+  }
+  .fix p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    margin: 0 0 8px;
+    max-width: 82ch;
+  }
+  .fix ol {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink-2);
+    margin: 0;
+    padding-left: 20px;
+    max-width: 82ch;
+  }
+  .fix li {
+    margin-bottom: 5px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+    }
+  }
+</style>
+
+<div class="root">
+  <h2
+    class="sr-only"
+    style="
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    "
+  >
+    Verified status of Strummy features across implementation, testing, and
+    production readiness, with corrections to the prior revision
+  </h2>
+  <div class="eyebrow">Strummy · guitar-crm · revision 2, verified</div>
+  <h1>Feature readiness, gap by gap</h1>
+  <div class="dek">
+    Every roadmap item and gap across the app-blueprint domain docs — re-checked
+    line by line against the code on
+    <code>feature/audit-findings-implementation</code>. Rows marked
+    <span class="vpill corrected">Corrected</span> changed from the previous
+    revision; the Corrections tab logs each one with its evidence.
+  </div>
+
+  <div class="banner">
+    <span class="bt">Why this revision exists</span>
+    The previous revision was published without verifying its own sources. Four
+    independent passes over the live code found that
+    <strong>the roadmap half largely held up, but the CRUD half did not</strong
+    >. Several rows cited test files that have never been committed to any
+    branch of this repo, and one described a bug fix that was never made. Those
+    rows are corrected below and flagged, not silently rewritten. Its two cited
+    source documents — <code>2026-07-19-branch-archaeology.md</code> and
+    <code>2026-07-19-teacher-pov-crud-audit.md</code> — do not exist in the
+    working tree, on any branch, or anywhere in git history.
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-view="roadmap">Roadmap gaps</button>
+    <button class="tab" data-view="crud">Teacher-POV CRUD</button>
+    <button class="tab" data-view="corrections">Corrections log</button>
+  </div>
+
+  <div class="view active" id="view-roadmap">
+    <div class="stats" id="stats"></div>
+
+    <div class="fix">
+      <h3>The one thing that degrades if it waits</h3>
+      <p>
+        All four Identity blockers are already fixed in
+        <strong>open PR #525</strong> (<code>fix/shadow-claim-lifecycle</code>,
+        non-draft, opened 2026-07-14) — which also fixes a twin of IDA-6 in the
+        admin manual-link path that the previous revision missed entirely. The
+        fix is written, tested across all three tiers, and adversarially
+        reviewed. Do not reimplement it.
+      </p>
+      <ol>
+        <li>
+          Unpause the Supabase project — CI is red only because Database Quality
+          fails on <code>project is paused</code>, cascading into Quality Gate.
+          Lint, typecheck, unit, integration, build, CodeQL and Security Audit
+          all pass.
+        </li>
+        <li>
+          Dismiss the GitGuardian flag — the only hit is
+          <code>STUDENT_PASSWORD = 'e2eClaim123!'</code> in a new Playwright
+          spec. Needs a human, not a code change.
+        </li>
+        <li>
+          <strong>Merge #525 to main before this feature branch.</strong> #525's
+          migration is stamped <code>20260714120000</code>; this branch runs to
+          <code>20260719000007</code>. Neither is on main yet, so there is no
+          conflict today — but merge them out of order and you inherit a
+          Supabase "migration history out of order" repair job. Re-timestamping
+          #525's migration past <code>20260719000007</code> is the alternative.
+        </li>
+        <li>
+          Rebase this branch onto main afterward — the admin-path twin bug
+          resolves for free.
+        </li>
+      </ol>
+    </div>
+
+    <div class="filters" id="filters"></div>
+    <div id="groups"></div>
+    <footer>
+      Sources: <code>docs/app-blueprint/90-roadmap.md</code>,
+      <code>01-identity-access.md</code>, and direct reads of the migration
+      tree, <code>components/navigation/menuConfig.ts</code>, and
+      <code>tests/e2e/</code>. Tests column: U unit, I integration/RLS, E
+      Playwright E2E, M dated manual-test report under
+      <code>docs/manual-tests/</code>; a
+      <span class="tests"><i class="struck">struck</i></span> letter is a flag
+      the prior revision claimed that no artifact supports. "Reach" answers a
+      question the prior revision never asked — whether a real user can actually
+      navigate to the feature. "Prod ready" reflects merge plus test coverage on
+      <code>main</code>; the launch runbook's own cross-role RLS gate (P4) has
+      still not run, so treat "Ready" as "safe pending that gate."
+    </footer>
+  </div>
+
+  <div class="view" id="view-crud">
+    <div class="dek" style="margin-bottom: 16px">
+      Every Create/Read/Update/Delete operation on the five core CRM objects,
+      checked from the teacher's point of view — not "does a test exist," but
+      "does a test actually run a successful operation as a teacher." Every row
+      here was re-verified; the verdicts below replace the prior revision's.
+    </div>
+
+    <div class="banner" style="margin: 0 0 18px">
+      <span class="bt"
+        >Structural finding — the thing worth more than the table</span
+      >
+      Lessons, Assignments and Songs each carry
+      <strong>two parallel implementations</strong>: a server action the live UI
+      calls, and an API route handler that is largely orphaned. The prior
+      revision repeatedly tested one and credited the other. The paths that are
+      genuinely well-tested (<code>getSongsHandler</code>,
+      <code>deleteSongHandler</code>, assignments'
+      <code>route.integration.test.ts</code>) are mostly the orphaned ones; the
+      paths users actually hit (<code>getRecentLessons</code>,
+      <code>getLessonDetail</code>, <code>getAssignments</code>,
+      <code>getSongsForList</code>) have near-zero coverage. That inversion is
+      the real risk, and no version of this table surfaced it before.
+    </div>
+
+    <div class="stats" id="crud-stats"></div>
+    <div id="crud-groups"></div>
+    <footer>
+      "Real path" is the function or route the live UI actually calls, verified
+      by grepping <code>components/</code> and <code>app/</code>. A
+      <s>struck</s> test filename is one the prior revision cited that does not
+      exist on any branch or in any commit. Verdicts reflect the live path only
+      — coverage on an orphaned duplicate does not count.
+    </footer>
+  </div>
+
+  <div class="view" id="view-corrections">
+    <div class="dek" style="margin-bottom: 18px">
+      Every change from the previous revision, with the evidence that forced it.
+      Kept as a log rather than folded in silently, so the prior revision's
+      claims stay auditable.
+    </div>
+    <div class="stats" id="corr-stats"></div>
+    <div id="corr-groups"></div>
+    <footer>
+      Verification method: four independent read-only passes over the codebase,
+      each instructed to attempt to refute the claim before accepting it, plus
+      direct spot-reads of the load-bearing files
+      (<code>20260622210000_handle_new_user_persist_names.sql</code>,
+      <code>app/api/users/[id]/route.ts</code>,
+      <code>components/navigation/menuConfig.ts</code>, both
+      <code>chord-analysis/page.tsx</code> files) and
+      <code>git log --all --diff-filter=A</code> for every cited test file.
+    </footer>
+  </div>
+
+  <footer style="margin-top: 8px">
+    <strong>Created</strong> 2026-07-19 · <strong>Verified against</strong>
+    <code>feature/audit-findings-implementation</code> @ <code>5f1d2297</code> ·
+    <strong>Author</strong> Claude (4 independent read-only verification passes)
+    <br />
+    Revision 1 published 2026-07-19. Revision 2 — this one — rebuilt the same
+    day after full verification against the live codebase. This is a
+    point-in-time snapshot: every "Held" verdict is only as current as the
+    commit above. Re-verify before treating it as launch evidence.
+  </footer>
+</div>
+
+<script>
+  const DATA = [
+    {
+      group: "blocking",
+      tranche: "T1 — launch gate",
+      groupNote:
+        "All confirmed real by reading the SQL. Corrected from the prior revision: these are not unfixed everywhere — complete fixes for all four, plus the IDA-6 twin, sit in open unmerged PR #525.",
+      rows: [
+        {
+          id: "IDA-6",
+          domain: "Identity",
+          feat: "Fix handle_new_user() statement ordering",
+          status: "blocking",
+          statusLabel: "Fix ready · PR #525",
+          verify: "corrected",
+          tests: "",
+          reach: "—",
+          prod: "blocking",
+          notes:
+            "Confirmed by direct read: UPDATEs at lines 44-48 of 20260622210000 retarget FKs to new.id before that profile is INSERTed at line 52. The blanket EXCEPTION WHEN OTHERS at 88-91 swallows the FK violation and returns success — the user ends up authenticated with no profile, silently. A June 8 migration had fixed this ordering; 20260622121619 regressed it.",
+          was: "Was: “Not started · GATE”, implying no fix exists anywhere.",
+        },
+        {
+          id: "IDA-6b",
+          domain: "Identity",
+          feat: "Admin manual-link path has the same ordering bug",
+          status: "blocking",
+          statusLabel: "Fix ready · PR #525",
+          verify: "added",
+          tests: "",
+          reach: "—",
+          prod: "blocking",
+          notes:
+            "app/api/admin/link-shadow-user/transfer-shadow-references.ts:28-51 calls the transfer RPC before inserting the real profile — the identical failure, independently. Route validation guarantees no profile exists yet, so any non-empty shadow hits it.",
+          was: "New — missed entirely by the prior revision.",
+        },
+        {
+          id: "IDA-7",
+          domain: "Identity",
+          feat: "REVOKE transfer_shadow_profile_references from anon/authenticated",
+          status: "blocking",
+          statusLabel: "Fix ready · PR #525",
+          verify: "corrected",
+          tests: "",
+          reach: "—",
+          prod: "blocking",
+          notes:
+            "Real IDOR. No REVOKE or ALTER DEFAULT PRIVILEGES on this function exists in any migration, ever. Postgres grants EXECUTE to PUBLIC by default; the function is SECURITY DEFINER with no internal authz, and config.toml exposes the public schema via PostgREST. Fixed by commit 5f85f595 on #525.",
+          was: "Was: “Not started”.",
+        },
+        {
+          id: "IDA-8",
+          domain: "Identity",
+          feat: "Cover missing tables in shadow transfer",
+          status: "blocking",
+          statusLabel: "Fix ready · PR #525",
+          verify: "held",
+          tests: "",
+          reach: "—",
+          prod: "blocking",
+          notes:
+            "Confirmed, and the five-table list is exactly right — cross-checked every REFERENCES profiles(id) in the migration tree (~30 tables). chord_srs, chord_quiz_attempts, user_roles, task_management and song_status_history are the only genuine cascade-delete risks still absent from the transfer function.",
+          was: "",
+        },
+        {
+          id: "IDA-9",
+          domain: "Identity",
+          feat: "Reconcile-retry sweep for signup-trigger claims",
+          status: "pending",
+          statusLabel: "Fix ready · PR #525",
+          verify: "corrected",
+          tests: "",
+          reach: "—",
+          prod: "blocked",
+          notes:
+            "Correctly scoped as contingent on IDA-6, and correctly absent from this branch. #525 adds lib/services/shadow-claim-reconcile-sweep.ts wired into the dispatcher cron.",
+          was: "Was: “Not started · rider”.",
+        },
+        {
+          id: "#525",
+          domain: "Ops",
+          feat: "Merge PR #525 before this feature branch",
+          status: "blocking",
+          statusLabel: "Sequencing constraint",
+          verify: "added",
+          tests: "",
+          reach: "—",
+          prod: "blocking",
+          notes:
+            "#525's migration is stamped 20260714120000; this branch runs to 20260719000007. No conflict today since neither is on main — but merging out of order forces a Supabase migration-history repair. CI red only from a paused Supabase project plus a GitGuardian hit on a test password.",
+          was: "New — the prior revision did not track merge ordering.",
+        },
+        {
+          id: "P3",
+          domain: "Ops",
+          feat: "UPS + pull-the-plug test, external uptime monitor",
+          status: "pending",
+          statusLabel: "Pending (physical)",
+          verify: "held",
+          tests: "",
+          reach: "—",
+          prod: "blocked",
+          notes: "Hardware task, not code — owner-executed.",
+          was: "",
+        },
+        {
+          id: "P4",
+          domain: "Ops",
+          feat: "Production cutover: OAuth, Vercel env, RLS vs StrummyProd",
+          status: "pending",
+          statusLabel: "Pending (human)",
+          verify: "held",
+          tests: "",
+          reach: "—",
+          prod: "blocked",
+          notes: "Needs explicit authorization — live prod OAuth/env change.",
+          was: "",
+        },
+        {
+          id: "P5",
+          domain: "Ops",
+          feat: "Invite the 5 real students",
+          status: "pending",
+          statusLabel: "Pending (human)",
+          verify: "held",
+          tests: "",
+          reach: "—",
+          prod: "blocked",
+          notes:
+            "Blocked on IDA-6 landing — do not invite until #525 merges. Also worth settling the nav-visibility question first (see T2/T4): several shipped features are unreachable from the sidebar.",
+          was: "",
+        },
+      ],
+    },
+    {
+      group: "notbuilt",
+      tranche: "Claimed shipped — actually not built",
+      groupNote:
+        "The prior revision listed these under “Live features — nothing missing.” Both are literal 16-line stub cards reading “Coming soon / This page is being rebuilt.” The domain docs themselves already said so.",
+      rows: [
+        {
+          id: "—",
+          domain: "Songs",
+          feat: "Chord analysis — student view",
+          status: "notbuilt",
+          statusLabel: "Stub route",
+          verify: "unfounded",
+          tests: "",
+          reach: "hidden",
+          prod: "blocking",
+          notes:
+            "app/dashboard/songs/chord-analysis/page.tsx is 16 lines rendering a “Coming soon” Card. No chord-analysis logic exists. Doc 03 already called it a stub. Also nav-hidden.",
+          was: "Was: Shipped · Ready · “no gap found”.",
+        },
+        {
+          id: "—",
+          domain: "Admin",
+          feat: "Chord analysis — admin stats view",
+          status: "notbuilt",
+          statusLabel: "Stub route",
+          verify: "unfounded",
+          tests: "",
+          reach: "hidden",
+          prod: "blocking",
+          notes:
+            "app/dashboard/admin/stats/chord-analysis/page.tsx — byte-identical stub template. Doc 10 already listed it unbuilt.",
+          was: "Was: Shipped · Ready.",
+        },
+      ],
+    },
+    {
+      group: "shipped",
+      tranche: "T1 — self-host launch code fixes",
+      groupNote: "",
+      rows: [
+        {
+          id: "PRA-1",
+          domain: "Practice",
+          feat: "Fix practice aggregate/undo triggers",
+          status: "shipped",
+          verify: "held",
+          tests: "UIE",
+          reach: "nav",
+          prod: "ready",
+          notes:
+            "20260718210000 repoints the DELETE reversal at student_repertoire with correct columns and backfills. Dedicated E2E asserts aggregate increment plus successful undo.",
+          was: "",
+        },
+        {
+          id: "NOT-1",
+          domain: "Notifications",
+          feat: "Add delivery_channel column, default email",
+          status: "shipped",
+          verify: "held",
+          tests: "U",
+          reach: "nav",
+          prod: "ready",
+          notes: "038_in_app_notifications.sql; 20260719000000 resets rows.",
+          was: "",
+        },
+        {
+          id: "ASG-3",
+          domain: "Assignments",
+          feat: "Column-scope student assignment-status RLS write policy",
+          status: "shipped",
+          verify: "held",
+          tests: "I",
+          reach: "nav",
+          prod: "ready",
+          notes:
+            "SECURITY DEFINER RPC replaces the broad UPDATE policy; RLS tests assert the direct-UPDATE bypass is rejected.",
+          was: "",
+        },
+      ],
+    },
+    {
+      group: "shipped",
+      tranche: "T2 — v1 trust fixes",
+      groupNote:
+        "All five confirmed built and wired. Two carry a reachability caveat the prior revision did not surface.",
+      rows: [
+        {
+          id: "IDA-3",
+          domain: "Identity",
+          feat: "Re-mount admin lockout widget",
+          status: "shipped",
+          verify: "held",
+          tests: "UE",
+          reach: "nav",
+          prod: "ready",
+          notes:
+            "LockedAccountsCard mounted in AdminDashboardEditorial.tsx:174.",
+          was: "",
+        },
+        {
+          id: "ADM-1",
+          domain: "Admin",
+          feat: "system_logs viewer",
+          status: "shipped",
+          verify: "corrected",
+          tests: "E",
+          reach: "hidden",
+          prod: "ready",
+          notes:
+            "Page and E2E are real. But 'logs' is in CORE_LOOP_HIDDEN_ITEMS — stripped from every sidebar. Direct-URL only.",
+          was: "Was: Shipped, with no note that it is unreachable from the nav.",
+        },
+        {
+          id: "CAL-2",
+          domain: "Calendar",
+          feat: "Prove conflict loop, un-hide calendar nav",
+          status: "shipped",
+          verify: "held",
+          tests: "E",
+          reach: "nav",
+          prod: "ready",
+          notes:
+            "Genuinely nav-reachable — 'calendar' is not in the hidden list. Confirmed correct as claimed.",
+          was: "",
+        },
+        {
+          id: "LES-1/2, IDA-5, ASG-1",
+          domain: "Multi",
+          feat: 'Delete 4 dead "Coming soon" stub routes',
+          status: "shipped",
+          verify: "held",
+          tests: "E",
+          reach: "—",
+          prod: "ready",
+          notes:
+            "templates/, lessons/import, lessons/[id]/live directories genuinely gone from source; E2E asserts not-found.",
+          was: "",
+        },
+        {
+          id: "NOT-2",
+          domain: "Notifications",
+          feat: "Unify inbox/bell read paths",
+          status: "shipped",
+          verify: "held",
+          tests: "UE",
+          reach: "nav",
+          prod: "ready",
+          notes:
+            "markNotificationAsRead now derives ownership from the session rather than a client-supplied id — a real IDOR fix, confirmed in the diff.",
+          was: "",
+        },
+      ],
+    },
+    {
+      group: "shipped",
+      tranche: "T4 — debt",
+      groupNote: "",
+      rows: [
+        {
+          id: "AIA-1",
+          domain: "AI",
+          feat: "Pin reliable Ollama fallback, repair AI E2E",
+          status: "shipped",
+          verify: "corrected",
+          tests: "",
+          strike: "E",
+          reach: "—",
+          prod: "ready",
+          notes:
+            "The fallback model pin is real (FALLBACK_MODELS.ollama = 'gemma3:1b'). But the cited E coverage is scripts/testing/ai-agents-e2e.ts — a manual npx tsx script run against a live Ollama host, not a Playwright spec. No tests/e2e/ file covers it.",
+          was: "Was: E flag claimed.",
+        },
+        {
+          id: "SNG-5",
+          domain: "Songs",
+          feat: "Drop deprecated student_song_progress table",
+          status: "shipped",
+          verify: "held",
+          tests: "M",
+          reach: "—",
+          prod: "ready",
+          notes:
+            "20260719000002 drops table and dead function; zero app refs remain.",
+          was: "",
+        },
+        {
+          id: "IDA-1",
+          domain: "Identity",
+          feat: "Retire user_settings table + actions",
+          status: "shipped",
+          verify: "held",
+          tests: "M",
+          reach: "—",
+          prod: "ready",
+          notes:
+            "20260719000003 drops the table; app/actions/settings.ts deleted; zero refs.",
+          was: "",
+        },
+        {
+          id: "LES-3",
+          domain: "Lessons",
+          feat: 'Wire "repeat weekly" recurring lesson creation',
+          status: "shipped",
+          verify: "held",
+          tests: "UE",
+          reach: "nav",
+          prod: "ready",
+          notes:
+            "useLessonFormSubmit calls generateRecurringLessons; dedicated unit + E2E both real.",
+          was: "",
+        },
+        {
+          id: "CAL-3",
+          domain: "Calendar",
+          feat: "Recurring-import dedupe verification",
+          status: "shipped",
+          verify: "held",
+          tests: "I",
+          reach: "nav",
+          prod: "ready",
+          notes:
+            "RLS test proves google_event_id UNIQUE permits N per-instance ids and rejects true duplicates, run against the real DB.",
+          was: "",
+        },
+        {
+          id: "Hooks",
+          domain: "Repo",
+          feat: "Split useAIStream / useLessonForm / useDatabaseStatus",
+          status: "shipped",
+          statusLabel: "Shipped · overstated",
+          verify: "corrected",
+          tests: "M",
+          reach: "—",
+          prod: "ready",
+          notes:
+            "useAIStream.ts is exactly 150 lines (at the limit, not under), and its sidecar useAIStream.helpers.ts is 216 lines — over the rule this row claims is now satisfied. useDatabaseStatus is compliant (127/44/34). useLessonForm.ts no longer exists at all — deleted in a later dead-code commit; the active hook is a different file, useLessonFormSubmit.ts.",
+          was: "Was: “all now under the 150-line rule.”",
+        },
+        {
+          id: "Repo",
+          domain: "Repo",
+          feat: "Lighthouse audit, Bruno API drift, Jest quarantine drain",
+          status: "shipped",
+          verify: "held",
+          tests: "M",
+          reach: "—",
+          prod: "ready",
+          notes:
+            "Quarantine section in jest.config.ts present but empty — genuinely drained. Bruno .bru files spot-checked against routes.",
+          was: "",
+        },
+      ],
+    },
+    {
+      group: "shipped",
+      tranche: "T5 — parked items that shipped early",
+      groupNote: "",
+      rows: [
+        {
+          id: "CNT-1",
+          domain: "Content",
+          feat: "Re-enable ProductionTab",
+          status: "shipped",
+          verify: "held",
+          tests: "E",
+          reach: "nav",
+          prod: "ready",
+          notes:
+            "SongDetailTabs.tsx:73 renders it unconditionally; only gate is the expected isAdmin||isTeacher parent check.",
+          was: "",
+        },
+        {
+          id: "ADM-2",
+          domain: "Admin",
+          feat: "Drop dead audit_log read",
+          status: "shipped",
+          verify: "corrected",
+          tests: "",
+          strike: "M",
+          reach: "—",
+          prod: "ready",
+          notes:
+            "The code change is real — getAuditLogs() deleted, zero audit_log refs remain. But no manual-test doc anywhere mentions ADM-2 or audit_log; the M flag has nothing behind it.",
+          was: "Was: M flag claimed.",
+        },
+        {
+          id: "ADM-3",
+          domain: "Admin",
+          feat: "Mount the debug dashboard",
+          status: "shipped",
+          verify: "held",
+          tests: "E",
+          reach: "hidden",
+          prod: "ready",
+          notes:
+            "Real page, real E2E. No nav entry by design — direct-URL only, per the commit's own 'operator convenience' note.",
+          was: "",
+        },
+        {
+          id: "ASG-2",
+          domain: "Assignments",
+          feat: "Assignment history timeline",
+          status: "shipped",
+          verify: "held",
+          tests: "E",
+          reach: "nav",
+          prod: "ready",
+          notes:
+            "assignments/[id]/page.tsx calls getAssignmentHistory; timeline testid rendered; migration backs it.",
+          was: "",
+        },
+        {
+          id: "IDA-2",
+          domain: "Identity",
+          feat: "Avatar upload via storage bucket",
+          status: "shipped",
+          verify: "held",
+          tests: "E",
+          reach: "nav",
+          prod: "ready",
+          notes:
+            "lib/storage/avatar.ts + AvatarUpload mounted in SettingsEditorial.tsx:195; bucket migration present.",
+          was: "",
+        },
+        {
+          id: "AIA-2",
+          domain: "AI",
+          feat: "Wire is_helpful feedback + fix broken prod AI chat",
+          status: "shipped",
+          verify: "held",
+          tests: "UE",
+          reach: "hidden",
+          prod: "ready",
+          notes:
+            "Feedback action and wired thumbs controls both real, with a dedicated manual-test doc. Reached only via /dashboard/ai, which is nav-hidden.",
+          was: "",
+        },
+      ],
+    },
+    {
+      group: "shipped",
+      tranche: "Live features — built, but mostly unreachable",
+      groupNote:
+        "components/navigation/menuConfig.ts:59-77 defines CORE_LOOP_HIDDEN_ITEMS, applied unconditionally to every role at lines 205-206. The code works; nobody can find it without knowing the URL. Hidden ids include logs, fretboard, ai, ai-chat, chord-analysis, theory, repertoire, my-stats, skills, health, cohorts, song-stats, lesson-stats.",
+      rows: [
+        {
+          id: "—",
+          domain: "AI",
+          feat: "AI chat + history",
+          status: "shipped",
+          verify: "corrected",
+          tests: "UE",
+          reach: "hidden",
+          prod: "ready",
+          notes:
+            "All three routes are real pages with real coverage. But 'ai' and 'ai-chat' are both nav-hidden, and AI History never had a nav entry at all.",
+          was: "Was: Shipped · Ready, no reachability caveat.",
+        },
+        {
+          id: "—",
+          domain: "Fretboard",
+          feat: "Fretboard tool",
+          status: "shipped",
+          verify: "corrected",
+          tests: "E",
+          reach: "hidden",
+          prod: "ready",
+          notes:
+            "Renders a real FretboardEditorial, and has 8 genuine E2E tests (key change, chord mode, intervals, fret click) the prior revision credited it none of. Nav-hidden.",
+          was: "Was: no test flags, no reachability note.",
+        },
+        {
+          id: "—",
+          domain: "AI",
+          feat: "Strummy MCP server",
+          status: "shipped",
+          verify: "held",
+          tests: "",
+          reach: "—",
+          prod: "ready",
+          notes:
+            "mcp/strummy-server/src/index.ts registers 17 tools across roughly 6 groups. Correctly carries no test flags — none exist.",
+          was: "",
+        },
+      ],
+    },
+    {
+      group: "blocked",
+      tranche: "T3 — v1.1 parking lot",
+      groupNote:
+        "Every item independently confirmed genuinely unbuilt at the UI layer. No false 'deferred' claims found — this half of the prior revision was accurate.",
+      rows: [
+        {
+          id: "PRA-2",
+          domain: "Practice",
+          feat: "Tempo ladder view",
+          status: "blocked",
+          verify: "held",
+          tests: "",
+          reach: "—",
+          prod: "blocked",
+          notes:
+            "bpm_practiced column and input both ship; zero hits for 'ladder' anywhere in app/components/lib.",
+          was: "",
+        },
+        {
+          id: "PRA-3",
+          domain: "Practice",
+          feat: "Teacher practice view",
+          status: "blocked",
+          verify: "held",
+          tests: "",
+          reach: "—",
+          prod: "blocked",
+          notes:
+            "getPracticeSessions supports staff reads, but its only caller passes no studentId — student's own view only.",
+          was: "",
+        },
+        {
+          id: "CHT-1/2",
+          domain: "Chords",
+          feat: "Chord-SRS review surface + skills hub",
+          status: "blocked",
+          verify: "held",
+          tests: "",
+          reach: "hidden",
+          prod: "blocked",
+          notes:
+            "/dashboard/skills is a stub. getChordsDueCount has exactly one consumer — the quiz page's own review toggle. No dashboard nudge or badge.",
+          was: "",
+        },
+        {
+          id: "THY-1",
+          domain: "Theory",
+          feat: "Theory LMS activation",
+          status: "blocked",
+          statusLabel: "Built, switched off",
+          verify: "corrected",
+          tests: "",
+          reach: "hidden",
+          prod: "blocked",
+          notes:
+            "The strongest 'already built' item in this group: full CRUD plus routes for course list, detail, lesson reader, new, edit and access-manager all exist and work. It is nav-hidden pending authored content, with no E2E. 'Activation' is the accurate frame, not 'unbuilt.'",
+          was: "Was: grouped flatly as not-built.",
+        },
+        {
+          id: "SNG-1…4",
+          domain: "Songs",
+          feat: "Song requests UI, SOTW resurface, Spotify match review, sections write path",
+          status: "blocked",
+          verify: "held",
+          tests: "",
+          reach: "—",
+          prod: "blocked",
+          notes:
+            "All four backends complete (song-requests.ts, song-of-the-week.ts, /api/spotify/matches/*, song_sections table + RLS); zero components import any of them.",
+          was: "",
+        },
+        {
+          id: "—",
+          domain: "Practice",
+          feat: "Achievements / streaks",
+          status: "blocked",
+          verify: "held",
+          tests: "",
+          reach: "—",
+          prod: "blocked",
+          notes:
+            "No streak or achievement tables exist at all. Design deferred, not just build-deferred.",
+          was: "",
+        },
+      ],
+    },
+    {
+      group: "parked",
+      tranche: "T5 — parked / backlog",
+      groupNote: "Confirmed accurate. No launch relevance.",
+      rows: [
+        {
+          id: "CNT-2/3",
+          domain: "Content",
+          feat: "Content scheduling + metrics surfaces",
+          status: "parked",
+          verify: "held",
+          tests: "",
+          reach: "hidden",
+          prod: "blocked",
+          notes:
+            "/dashboard/admin/drive-videos is a stub; metrics entry is manual-only via PostMetricsForm.",
+          was: "",
+        },
+        {
+          id: "NOT-3",
+          domain: "Admin",
+          feat: "Admin notification analytics dashboard",
+          status: "parked",
+          verify: "held",
+          tests: "",
+          reach: "hidden",
+          prod: "blocked",
+          notes:
+            "/dashboard/admin/notifications is a stub; the notification-analytics API route exists with no UI consumer.",
+          was: "",
+        },
+      ],
+    },
+  ];
+
+  const STATUS_LABEL = {
+    shipped: "Shipped",
+    blocking: "Blocking",
+    blocked: "Blocked",
+    parked: "Parked",
+    pending: "Pending",
+    notbuilt: "Not built",
+  };
+  const VERIFY_LABEL = {
+    held: "Held",
+    corrected: "Corrected",
+    unfounded: "Unfounded",
+    added: "New",
+  };
+  const PROD_LABEL = {
+    ready: "Ready",
+    blocking: "Not ready",
+    blocked: "Not applicable",
+  };
+  const PROD_CLASS = {
+    ready: "shipped",
+    blocking: "blocking",
+    blocked: "blocked",
+  };
+  const REACH_LABEL = {
+    nav: "in nav",
+    hidden: "URL only",
+    "—": "—",
+  };
+
+  function testIcons(code, strike) {
+    const all = ["U", "I", "E", "M"];
+    return all
+      .map((l) => {
+        if (strike && strike.includes(l))
+          return '<i class="struck">' + l + "</i>";
+        return (
+          '<i class="' + (code.includes(l) ? "on" : "") + '">' + l + "</i>"
+        );
+      })
+      .join("");
+  }
+
+  function render(filter) {
+    const groupsEl = document.getElementById("groups");
+    groupsEl.innerHTML = "";
+    const visible = DATA.map((g) => ({
+      ...g,
+      rows: g.rows.filter(
+        (r) =>
+          filter === "all" ||
+          (filter === "amended"
+            ? r.verify === "corrected" ||
+              r.verify === "unfounded" ||
+              r.verify === "added"
+            : r.status === filter),
+      ),
+    })).filter((g) => g.rows.length > 0);
+
+    visible.forEach((g) => {
+      const section = document.createElement("section");
+      section.className = "group";
+      const head = document.createElement("div");
+      head.className = "group-head";
+      head.innerHTML =
+        "<h2>" +
+        g.tranche +
+        '</h2><span class="count">' +
+        g.rows.length +
+        " item" +
+        (g.rows.length === 1 ? "" : "s") +
+        "</span>";
+      section.appendChild(head);
+      if (g.groupNote) {
+        const note = document.createElement("div");
+        note.className = "group-note";
+        note.textContent = g.groupNote;
+        section.appendChild(note);
+      }
+      const wrap = document.createElement("div");
+      wrap.className = "tablewrap";
+      const rowsHtml = g.rows
+        .map(function (r) {
+          const amended = r.verify !== "held";
+          return (
+            '<tr class="' +
+            (amended ? "amended" : "") +
+            '">' +
+            '<td class="id">' +
+            r.id +
+            "</td>" +
+            '<td><div class="feat">' +
+            r.feat +
+            '</div><div class="domain">' +
+            r.domain +
+            "</div></td>" +
+            '<td><span class="pill ' +
+            r.status +
+            '">' +
+            (r.statusLabel || STATUS_LABEL[r.status]) +
+            "</span></td>" +
+            '<td><span class="vpill ' +
+            r.verify +
+            '">' +
+            VERIFY_LABEL[r.verify] +
+            "</span></td>" +
+            '<td class="tests">' +
+            testIcons(r.tests, r.strike) +
+            "</td>" +
+            '<td class="reach ' +
+            (r.reach === "hidden" ? "hidden" : "") +
+            '">' +
+            (REACH_LABEL[r.reach] || r.reach) +
+            "</td>" +
+            '<td><span class="pill ' +
+            PROD_CLASS[r.prod] +
+            '">' +
+            PROD_LABEL[r.prod] +
+            "</span></td>" +
+            '<td class="notes">' +
+            r.notes +
+            (r.was ? '<span class="was">' + r.was + "</span>" : "") +
+            "</td>" +
+            "</tr>"
+          );
+        })
+        .join("");
+      wrap.innerHTML =
+        "<table><thead><tr>" +
+        "<th>ID</th><th>Feature</th><th>Status</th><th>Vs. rev 1</th><th>Tests</th><th>Reach</th><th>Prod</th><th>Notes</th>" +
+        "</tr></thead><tbody>" +
+        rowsHtml +
+        "</tbody></table>";
+      section.appendChild(wrap);
+      groupsEl.appendChild(section);
+    });
+  }
+
+  function renderStats() {
+    const all = DATA.flatMap((g) => g.rows);
+    const shipped = all.filter((r) => r.status === "shipped").length;
+    const blocking = all.filter((r) => r.status === "blocking").length;
+    const amended = all.filter((r) => r.verify !== "held").length;
+    const hidden = all.filter((r) => r.reach === "hidden").length;
+    document.getElementById("stats").innerHTML =
+      '<div class="stat"><div class="n">' +
+      all.length +
+      '</div><div class="l">Total tracked</div></div>' +
+      '<div class="stat ok"><div class="n">' +
+      shipped +
+      '</div><div class="l">Shipped</div></div>' +
+      '<div class="stat bad"><div class="n">' +
+      blocking +
+      '</div><div class="l">Launch-blocking</div></div>' +
+      '<div class="stat check"><div class="n">' +
+      amended +
+      '</div><div class="l">Amended vs rev 1</div></div>' +
+      '<div class="stat"><div class="n">' +
+      hidden +
+      '</div><div class="l">Built but URL-only</div></div>';
+  }
+
+  function renderFilters() {
+    const filtersEl = document.getElementById("filters");
+    const opts = [
+      ["all", "All"],
+      ["amended", "Amended vs rev 1"],
+      ["blocking", "Launch-blocking"],
+      ["shipped", "Shipped"],
+      ["notbuilt", "Claimed but not built"],
+      ["blocked", "Blocked"],
+      ["parked", "Parked"],
+    ];
+    filtersEl.innerHTML = opts
+      .map(
+        ([v, l], i) =>
+          '<button class="chip' +
+          (i === 0 ? " active" : "") +
+          '" data-filter="' +
+          v +
+          '">' +
+          l +
+          "</button>",
+      )
+      .join("");
+    filtersEl.querySelectorAll(".chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        filtersEl
+          .querySelectorAll(".chip")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        render(btn.dataset.filter);
+      });
+    });
+  }
+
+  const CRUD_DATA = [
+    {
+      object: "Lessons",
+      groupNote:
+        'Both cited action test files — <code>lesson-edit.test.ts</code> and its coverage figures — have never been committed to any branch. The only genuine teacher-success coverage is one E2E spec; the spec that would cover edit and delete is <code>test.skip(true, "forms are Coming Soon stubs")</code>.',
+      rows: [
+        {
+          op: "Create",
+          path: "createLessonAction (lesson-edit.ts)",
+          tests:
+            "<s>lesson-edit.test.ts</s> → e2e/teacher/lesson-repeat-weekly.spec.ts",
+          verdict: "partial",
+          notes:
+            "Action path is live and correct. Real teacher-success coverage exists, but only via E2E — the cited unit file and its “98.5% coverage, 17 tests” do not exist.",
+          was: "Was: Yes.",
+        },
+        {
+          op: "Read (list)",
+          path: "getRecentLessons (lib/services/lessons-queries.ts)",
+          tests: "None",
+          verdict: "no",
+          notes:
+            "Verdict unchanged, but the path was wrong: the live UI never calls GET /api/lessons. The route it does call has zero tests.",
+          was: "Was: path given as GET /api/lessons.",
+        },
+        {
+          op: "Read (detail)",
+          path: "getLessonDetail (lib/services/lesson-detail-queries.ts)",
+          tests: "None",
+          verdict: "no",
+          notes: "Same pattern — orphaned route tested, live query untested.",
+          was: "Was: path given as GET /api/lessons/[id].",
+        },
+        {
+          op: "Update",
+          path: "updateLessonAction (lesson-edit.ts)",
+          tests: "<s>lesson-edit.test.ts</s>",
+          verdict: "no",
+          notes:
+            "Cited file does not exist. The one E2E that would cover edit is disabled via test.skip.",
+          was: "Was: Yes.",
+        },
+        {
+          op: "Delete",
+          path: "DELETE /api/lessons/[id]",
+          tests: "[id]/route.test.ts",
+          verdict: "no",
+          notes:
+            "Confirmed. Route is orphaned (no UI button; useLessonMutations unused), and the E2E that would exercise it sits in the skipped spec.",
+          was: "",
+        },
+      ],
+    },
+    {
+      object: "Assignments",
+      groupNote:
+        "Three cited test files do not exist. Conversely, two rows marked “zero tests at all” were wrong — <code>route.integration.test.ts</code> has 8 tests including genuine teacher-success cases. But those cover the orphaned API route, not the live UI path.",
+      rows: [
+        {
+          op: "Create",
+          path: "createAssignmentAction (assignment-edit.ts)",
+          tests: "<s>assignment-edit.test.ts</s>",
+          verdict: "no",
+          notes:
+            "Cited file never existed. The only test touching this mocks the action away entirely.",
+          was: "Was: Yes, “99.2% coverage.”",
+        },
+        {
+          op: "Read (list/detail)",
+          path: "getAssignments / getAssignmentDetail (lib/services/*)",
+          tests: "route.integration.test.ts (orphaned path only)",
+          verdict: "no",
+          notes:
+            "Verdict stands but the reasoning was wrong: tests do exist, including a real teacher-success GET detail — just against the API route the UI does not use. The live service functions have zero coverage.",
+          was: "Was: “Zero tests at all.”",
+        },
+        {
+          op: "Update (fields)",
+          path: "updateAssignmentAction (assignment-edit.ts)",
+          tests: "<s>assignment-edit.test.ts</s>",
+          verdict: "no",
+          notes: "Cited file never existed.",
+          was: "Was: Yes.",
+        },
+        {
+          op: "Update (status)",
+          path: "updateAssignmentStatusAction (assignment-status.ts)",
+          tests: "<s>assignment-status.test.ts</s>",
+          verdict: "no",
+          notes:
+            "Cited file never existed. Zero tests anywhere reference this function — despite the claimed “14 tests, 100% stmts/fns, 96.6% branches.”",
+          was: "Was: Yes.",
+        },
+        {
+          op: "Delete",
+          path: "DELETE /api/assignments/[id]",
+          tests: "route.integration.test.ts",
+          verdict: "na",
+          notes:
+            "Has both a teacher-success and a teacher-rejection test — but no delete button exists and useAssignmentMutations is unused. Orphaned, like the Songs delete path.",
+          was: "Was: No, “zero tests at all.”",
+        },
+      ],
+    },
+    {
+      object: "Songs",
+      groupNote:
+        'The prior revision\'s security narrative here is <strong>unfounded</strong>. <code class="f">songs_select_active</code>, <code class="f">rls_staff_policy_hygiene_check()</code>, and the "13 unscoped duplicate policies dropped across 5 tables" appear nowhere in the migration tree or in any commit on any branch. No such vulnerability was found, and no such fix exists — treat the whole claim as withdrawn, not as a fixed issue.',
+      rows: [
+        {
+          op: "Create",
+          path: "createSongAction (song-form.ts)",
+          tests: "songs.rls.test.ts (SELECT-visibility only)",
+          verdict: "no",
+          notes:
+            "The cited file is a pure read-scoping RLS test — zero insert tests, and it never references createSongAction. The only other reference mocks the action away.",
+          was: "Was: Yes.",
+        },
+        {
+          op: "Read (list)",
+          path: "getSongsForList",
+          tests: "None on the live path",
+          verdict: "no",
+          notes:
+            "getSongsHandler and getSongsForList are two independent implementations, not a chain. The cited tests cover the orphaned handler; the live function is exercised only through a fully-mocked page test.",
+          was: "Was: Yes — “the one clean result.”",
+        },
+        {
+          op: "Read (detail)",
+          path: "app/dashboard/songs/[id]/page.tsx (direct query)",
+          tests: "None",
+          verdict: "no",
+          notes: "Confirmed — no dedicated test, any role.",
+          was: "",
+        },
+        {
+          op: "Update",
+          path: "updateSongAction (song-edit.ts)",
+          tests: "songs.rls.test.ts (SELECT-visibility only)",
+          verdict: "no",
+          notes:
+            "Same as Create — the cited RLS test covers reads, not writes.",
+          was: "Was: Yes.",
+        },
+        {
+          op: "Delete",
+          path: "DELETE /api/song (no UI button exists)",
+          tests: "handlers.test.ts, handlers.integration.test.ts",
+          verdict: "na",
+          notes:
+            "Confirmed as claimed — genuine teacher-success coverage, but dead code no real user can trigger.",
+          was: "",
+        },
+      ],
+    },
+    {
+      object: "Users / Students",
+      groupNote:
+        "Contains the single most serious error in the prior revision: a bug fix described as shipped that was never made.",
+      rows: [
+        {
+          op: "Create",
+          path: "POST /api/users (via CreateStudentForm)",
+          tests: "route.unit.test.ts",
+          verdict: "no",
+          notes:
+            "Confirmed — every success case mocks isAdmin:true; the only teacher test asserts a 403.",
+          was: "",
+        },
+        {
+          op: "Read (list)",
+          path: "getUsersList (users-list-queries.ts)",
+          tests: "None",
+          verdict: "no",
+          notes:
+            "Confirmed. Teacher-scoping via allowedStudentIds — the exact mechanism stopping Teacher A seeing Teacher B's students — is entirely unverified.",
+          was: "",
+        },
+        {
+          op: "Read (detail)",
+          path: "getStudentProfile (student-detail-queries.ts)",
+          tests: "None",
+          verdict: "no",
+          notes: "Confirmed — zero tests; relies entirely on RLS.",
+          was: "",
+        },
+        {
+          op: "Update",
+          path: "PUT /api/users/[id]",
+          tests: "__tests__/api/users/[id]/route.unit.test.ts",
+          verdict: "no",
+          notes:
+            "The claimed fix was never implemented. Read directly: the route is still hard-gated `if (!user || !isAdmin) return Unauthorized` across three separate handlers — teachers get 401, always. A 6-test file does exist, matching the claimed count, but it is an unrelated STRUM-253 regression suite about partial-payload role-flag clobbering, and every test runs as admin.",
+          was: "Was: Yes — “teachers can now rename students they teach, ownership-checked, 6 new tests.”",
+        },
+        {
+          op: "Delete/deactivate",
+          path: "deleteShadowUser / deleteUser",
+          tests: "None",
+          verdict: "no",
+          notes:
+            "Confirmed — and no UI path exists for deleting a real, non-shadow student at all.",
+          was: "",
+        },
+      ],
+    },
+    {
+      object: "Repertoire",
+      groupNote:
+        'The cited <code class="f">student-repertoire-write.rls.test.ts</code> ("8 tests") <strong>does not exist anywhere</strong> — same pattern as the Songs security claim. The "importCsvSongs role gate, 5 tests" claim is also false: zero tests reference that function. Two verdicts nonetheless survive on other evidence.',
+      rows: [
+        {
+          op: "Create",
+          path: "importCsvSongs (import-csv-songs.ts)",
+          tests: "import-csv-songs.unit.test.ts (date helpers only)",
+          verdict: "no",
+          notes:
+            "The claimed function importRepertoireOnly does not exist — only importCsvSongs is exported. The real cited test covers pure date-parsing helpers, with zero coverage of the action or its role gate.",
+          was: "Was: Yes, via a function name that does not exist.",
+        },
+        {
+          op: "Read",
+          path: "getStudentRepertoire (student-detail-queries.ts)",
+          tests: "core-tables.rls.test.ts (student perspective only)",
+          verdict: "no",
+          notes: "Confirmed — the read path itself has no dedicated test.",
+          was: "",
+        },
+        {
+          op: "Update",
+          path: "updateRepertoireEntryAction (repertoire.ts)",
+          tests: "repertoire.integration.test.ts",
+          verdict: "yes",
+          notes:
+            "Verdict survives on its own merit — genuine asTeacherOnce()-gated teacher-success tests including a staff-override path. Only the second citation was fabricated.",
+          was: "Was: Yes, citing one real and one non-existent file.",
+        },
+        {
+          op: "Delete",
+          path: "removeFromRepertoireAction (repertoire.ts)",
+          tests: "repertoire.integration.test.ts",
+          verdict: "yes",
+          notes:
+            "Survives, thinly: the delete test does pass a teacher identity and assert success. The action has no in-app role check and relies on DB RLS.",
+          was: "Was: Yes, citing a non-existent RLS suite.",
+        },
+      ],
+    },
+  ];
+
+  const CRUD_LABEL = {
+    yes: "Yes",
+    no: "No",
+    partial: "Partial (E2E only)",
+    na: "N/A (orphaned)",
+  };
+
+  function renderCrud() {
+    const groupsEl = document.getElementById("crud-groups");
+    groupsEl.innerHTML = "";
+    CRUD_DATA.forEach((g) => {
+      const section = document.createElement("section");
+      section.className = "group";
+      const head = document.createElement("div");
+      head.className = "group-head";
+      head.innerHTML =
+        "<h2>" +
+        g.object +
+        '</h2><span class="count">' +
+        g.rows.length +
+        " ops</span>";
+      section.appendChild(head);
+      if (g.groupNote) {
+        const note = document.createElement("div");
+        note.className = "group-note";
+        note.innerHTML = g.groupNote;
+        section.appendChild(note);
+      }
+      const wrap = document.createElement("div");
+      wrap.className = "tablewrap";
+      const rowsHtml = g.rows
+        .map(function (r) {
+          return (
+            '<tr class="' +
+            (r.was ? "amended" : "") +
+            '">' +
+            '<td class="feat">' +
+            r.op +
+            "</td>" +
+            '<td class="path">' +
+            r.path +
+            "</td>" +
+            '<td class="path">' +
+            r.tests +
+            "</td>" +
+            '<td><span class="crud-pill ' +
+            r.verdict +
+            '">' +
+            CRUD_LABEL[r.verdict] +
+            "</span></td>" +
+            '<td class="notes">' +
+            r.notes +
+            (r.was ? '<span class="was">' + r.was + "</span>" : "") +
+            "</td>" +
+            "</tr>"
+          );
+        })
+        .join("");
+      wrap.innerHTML =
+        "<table><thead><tr>" +
+        "<th>Operation</th><th>Real path (live UI)</th><th>Test file</th><th>Teacher-POV success?</th><th>Notes</th>" +
+        "</tr></thead><tbody>" +
+        rowsHtml +
+        "</tbody></table>";
+      section.appendChild(wrap);
+      groupsEl.appendChild(section);
+    });
+  }
+
+  function renderCrudStats() {
+    const all = CRUD_DATA.flatMap((g) => g.rows);
+    const counts = { yes: 0, no: 0, partial: 0, na: 0 };
+    all.forEach((r) => counts[r.verdict]++);
+    const changed = all.filter((r) => r.was).length;
+    document.getElementById("crud-stats").innerHTML =
+      '<div class="stat"><div class="n">' +
+      all.length +
+      '</div><div class="l">Operations checked</div></div>' +
+      '<div class="stat ok"><div class="n">' +
+      counts.yes +
+      '</div><div class="l">Teacher-POV tested</div></div>' +
+      '<div class="stat bad"><div class="n">' +
+      counts.no +
+      '</div><div class="l">Not tested</div></div>' +
+      '<div class="stat"><div class="n">' +
+      (counts.partial + counts.na) +
+      '</div><div class="l">Partial / orphaned</div></div>' +
+      '<div class="stat check"><div class="n">' +
+      changed +
+      '</div><div class="l">Amended vs rev 1</div></div>';
+  }
+
+  const CORR = [
+    {
+      title: "Fabricated citations",
+      note: "Test files cited as evidence that have never been committed to any branch. Verified with git log --all --diff-filter=A across the full history.",
+      rows: [
+        [
+          "lesson-edit.test.ts",
+          "Cited for Lessons create + update, with “98.5% coverage, 17 tests.”",
+          "No such file, ever.",
+        ],
+        [
+          "assignment-edit.test.ts",
+          "Cited for Assignments create + update, with “99.2% coverage.”",
+          "No such file, ever.",
+        ],
+        [
+          "assignment-status.test.ts",
+          "Cited for Assignments status update, with “14 tests, 100% stmts/fns, 96.6% branches.”",
+          "No such file, ever. Zero tests reference the function.",
+        ],
+        [
+          "student-repertoire-write.rls.test.ts",
+          "Cited as an 8-test RLS suite underpinning three Repertoire verdicts.",
+          "No such file, ever.",
+        ],
+        [
+          "songs_select_active / rls_staff_policy_hygiene_check()",
+          "Cited as a cross-tenant SELECT vulnerability found and fixed, plus a regression guard.",
+          "Neither identifier exists in any migration or commit. Claim withdrawn — no vulnerability was found.",
+        ],
+        [
+          "2026-07-19-branch-archaeology.md · 2026-07-19-teacher-pov-crud-audit.md",
+          "Cited as the two source documents for the whole artifact.",
+          "Neither exists in the working tree, on any branch, or in git history.",
+        ],
+      ],
+    },
+    {
+      title: "Claims contradicted by the code",
+      note: "Statements about implementation state that direct reads disprove.",
+      rows: [
+        [
+          "Users → Update",
+          "“Was hard-gated isAdmin-only in source (real bug). Teachers can now rename students they teach; 6 new tests.”",
+          "Never implemented. Route still returns Unauthorized to non-admins across three handlers. The 6-test file is an unrelated admin-only regression suite.",
+        ],
+        [
+          "Chord analysis (both routes)",
+          "Listed under “Live features — nothing missing”, shipped and production-ready.",
+          "Both are 16-line “Coming soon” stub cards. The domain docs already said so.",
+        ],
+        [
+          "Hooks split",
+          "“All now under the 150-line rule.”",
+          "useAIStream.helpers.ts is 216 lines; useAIStream.ts is exactly 150. useLessonForm.ts was deleted outright, not split.",
+        ],
+        [
+          "IDA-6 / 7 / 8 / 9",
+          "“Not started”, implying no fix exists.",
+          "All four are fixed in open PR #525, along with a twin of IDA-6 in the admin link path that went unnoticed.",
+        ],
+        [
+          "IDA-6 through IDA-9 (provenance)",
+          "Presented as tracked IDs from 01-identity-access.md.",
+          "That doc's gap list stops at IDA-5. The IDs are unsourced — though the underlying defects are all real.",
+        ],
+      ],
+    },
+    {
+      title: "Understated or mis-scoped",
+      note: "Rows where the prior revision was too harsh, or credited the wrong thing.",
+      rows: [
+        [
+          "Assignments → Read, Delete",
+          "“Zero tests at all.”",
+          "False — route.integration.test.ts has 8 tests including genuine teacher-success cases. They cover the orphaned API route, not the live path.",
+        ],
+        [
+          "Fretboard",
+          "Shipped with no test flags.",
+          "Has 8 real E2E tests. Also nav-hidden, which the row did not mention.",
+        ],
+        [
+          "AIA-1 “E” flag · ADM-2 “M” flag",
+          "Claimed Playwright coverage and a manual-test doc respectively.",
+          "AIA-1's “E2E” is a manual npx tsx script; no ADM-2 manual-test doc exists. Both code changes are real — only the flags are wrong.",
+        ],
+        [
+          "THY-1 Theory LMS",
+          "Grouped flatly as unbuilt, deferred for usage data.",
+          "Fully built end-to-end — schema, CRUD, six routes — and deliberately nav-hidden pending authored content. “Activation” is the accurate frame.",
+        ],
+        [
+          "Reachability (13 features)",
+          "Not tracked at all.",
+          "CORE_LOOP_HIDDEN_ITEMS strips logs, fretboard, ai, ai-chat, theory, repertoire, my-stats, skills, health, cohorts and the stats pages from every sidebar, for every role.",
+        ],
+      ],
+    },
+    {
+      title: "Held up under scrutiny",
+      note: "Verified accurate and left unchanged — the majority of the roadmap half.",
+      rows: [
+        [
+          "22 of 24 “shipped” roadmap rows",
+          "Claimed built, wired and migrated.",
+          "Confirmed against real code, mounted components and un-reverted migrations.",
+        ],
+        [
+          "All 11 blocked / parked items",
+          "Claimed deliberately not built.",
+          "Every one confirmed genuinely unbuilt at the UI layer. No false “deferred” claims.",
+        ],
+        [
+          "IDA-8's five-table list",
+          "chord_srs, chord_quiz_attempts, user_roles, task_management, song_status_history.",
+          "Exactly right — cross-checked against every REFERENCES profiles(id) in the tree. Neither over- nor under-inclusive.",
+        ],
+        [
+          "20 of 22 test flags",
+          "U/I/E/M coverage marks.",
+          "Backed by named, real test files.",
+        ],
+        [
+          "NOT-2's IDOR fix",
+          "“Fixed a latent IDOR in the mark-read path.”",
+          "Real — ownership now derives from the session, not a client-supplied id.",
+        ],
+      ],
+    },
+  ];
+
+  function renderCorr() {
+    const el = document.getElementById("corr-groups");
+    el.innerHTML = "";
+    CORR.forEach((g) => {
+      const section = document.createElement("section");
+      section.className = "group";
+      const head = document.createElement("div");
+      head.className = "group-head";
+      head.innerHTML =
+        "<h2>" +
+        g.title +
+        '</h2><span class="count">' +
+        g.rows.length +
+        " item" +
+        (g.rows.length === 1 ? "" : "s") +
+        "</span>";
+      section.appendChild(head);
+      const note = document.createElement("div");
+      note.className = "group-note";
+      note.textContent = g.note;
+      section.appendChild(note);
+      const wrap = document.createElement("div");
+      wrap.className = "tablewrap";
+      wrap.innerHTML =
+        "<table><thead><tr><th>Subject</th><th>Revision 1 said</th><th>Verification found</th></tr></thead><tbody>" +
+        g.rows
+          .map(
+            (r) =>
+              '<tr><td class="feat" style="max-width:26ch">' +
+              r[0] +
+              '</td><td class="notes">' +
+              r[1] +
+              '</td><td class="notes">' +
+              r[2] +
+              "</td></tr>",
+          )
+          .join("") +
+        "</tbody></table>";
+      section.appendChild(wrap);
+      el.appendChild(section);
+    });
+  }
+
+  function renderCorrStats() {
+    document.getElementById("corr-stats").innerHTML =
+      '<div class="stat bad"><div class="n">6</div><div class="l">Fabricated citations</div></div>' +
+      '<div class="stat bad"><div class="n">5</div><div class="l">Contradicted by code</div></div>' +
+      '<div class="stat check"><div class="n">5</div><div class="l">Mis-scoped</div></div>' +
+      '<div class="stat ok"><div class="n">33</div><div class="l">Roadmap rows held</div></div>' +
+      '<div class="stat"><div class="n">4</div><div class="l">Verification passes</div></div>';
+  }
+
+  function initTabs() {
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        document
+          .querySelectorAll(".view")
+          .forEach((v) => v.classList.remove("active"));
+        document
+          .getElementById("view-" + tab.dataset.view)
+          .classList.add("active");
+      });
+    });
+  }
+
+  renderStats();
+  renderFilters();
+  render("all");
+  renderCrudStats();
+  renderCrud();
+  renderCorrStats();
+  renderCorr();
+  initTabs();
+</script>
+    </div>
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var btn = document.getElementById("themetoggle");
+        var KEY = "strummy-readiness-theme";
+        var saved = null;
+        try {
+          saved = localStorage.getItem(KEY);
+        } catch (e) {}
+        if (saved === "dark" || saved === "light") {
+          root.setAttribute("data-theme", saved);
+        }
+        btn.addEventListener("click", function () {
+          var current = root.getAttribute("data-theme");
+          if (!current) {
+            current = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+          }
+          var next = current === "dark" ? "light" : "dark";
+          root.setAttribute("data-theme", next);
+          try {
+            localStorage.setItem(KEY, next);
+          } catch (e) {}
+        });
+      })();
+    </script>
+  </body>
+</html>

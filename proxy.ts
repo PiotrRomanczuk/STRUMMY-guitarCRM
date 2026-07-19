@@ -10,7 +10,10 @@ import { middlewareLogger as log } from '@/lib/logger/edge-logger';
 const CSP_HEADER = [
   "default-src 'self'",
   // Scripts: self + Next.js inline bootstrap
-  "script-src 'self' 'unsafe-inline'",
+  // us-assets.i.posthog.com serves the analytics bundle (config.js, surveys.js).
+  // connect-src already allowed it, so without this every page logged a CSP
+  // violation to the console and analytics silently failed to initialise.
+  "script-src 'self' 'unsafe-inline' https://us-assets.i.posthog.com",
   // Styles: self + Tailwind requires unsafe-inline for runtime styles;
   // Google Fonts stylesheet for Material Symbols Outlined (loaded in app/layout.tsx)
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",

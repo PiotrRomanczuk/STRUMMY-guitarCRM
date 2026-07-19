@@ -27,6 +27,14 @@ type Props = {
  * initial value). The URL text input stays visible as a manual-entry
  * fallback, per the roadmap's own approach.
  */
+/**
+ * File upload needs a Supabase Storage service. Self-hosted stacks can run
+ * without one (the StudentManager stack has no storage-api container, so the
+ * bucket 503s), and an upload button that always fails is worse than no button.
+ * Set NEXT_PUBLIC_AVATAR_UPLOAD_ENABLED=false there; the URL field still works.
+ */
+const isUploadEnabled = process.env.NEXT_PUBLIC_AVATAR_UPLOAD_ENABLED !== 'false';
+
 export function AvatarUpload({ userId, initialUrl }: Props) {
   const [url, setUrl] = useState(initialUrl ?? '');
   const [error, setError] = useState<string | null>(null);
@@ -73,28 +81,30 @@ export function AvatarUpload({ userId, initialUrl }: Props) {
           placeholder="https://…"
           style={{ ...editableInputStyle, flex: 1 }}
         />
-        <label
-          style={{
-            padding: '10px 14px',
-            borderRadius: 6,
-            border: '1px solid var(--rule)',
-            background: 'var(--card)',
-            fontSize: 12,
-            fontFamily: 'var(--mono)',
-            cursor: isUploading ? 'wait' : 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {isUploading ? 'Uploading…' : 'Upload image'}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            onChange={handleFileChange}
-            disabled={isUploading}
-            style={{ display: 'none' }}
-          />
-        </label>
+        {isUploadEnabled && (
+          <label
+            style={{
+              padding: '10px 14px',
+              borderRadius: 6,
+              border: '1px solid var(--rule)',
+              background: 'var(--card)',
+              fontSize: 12,
+              fontFamily: 'var(--mono)',
+              cursor: isUploading ? 'wait' : 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {isUploading ? 'Uploading…' : 'Upload image'}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              onChange={handleFileChange}
+              disabled={isUploading}
+              style={{ display: 'none' }}
+            />
+          </label>
+        )}
       </div>
       {error && (
         <div

@@ -5,8 +5,13 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard, Music, BookOpen, Users,
-  BarChart, MoreHorizontal, type LucideIcon,
+  LayoutDashboard,
+  Music,
+  BookOpen,
+  Users,
+  ListMusic,
+  MoreHorizontal,
+  type LucideIcon,
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -30,9 +35,7 @@ const SHARED_TABS: TabDef[] = [
 
 function isTabActive(pathname: string | null, href: string): boolean {
   if (!pathname) return false;
-  return href === '/dashboard'
-    ? pathname === '/dashboard'
-    : pathname.startsWith(href);
+  return href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href);
 }
 
 export function MobileBottomNavV2({ isStudent, onOpenMore }: MobileBottomNavProps) {
@@ -41,7 +44,9 @@ export function MobileBottomNavV2({ isStudent, onOpenMore }: MobileBottomNavProp
   const tabs: TabDef[] = [
     ...SHARED_TABS,
     isStudent
-      ? { href: '/dashboard/stats', label: 'Stats', icon: BarChart }
+      ? // /dashboard/stats is still a "Coming soon" stub — send students to
+        // their repertoire, which is populated and in the sidebar.
+        { href: '/dashboard/repertoire', label: 'Repertoire', icon: ListMusic }
       : { href: '/dashboard/users', label: 'Students', icon: Users },
   ];
 
@@ -50,7 +55,7 @@ export function MobileBottomNavV2({ isStudent, onOpenMore }: MobileBottomNavProp
       className={cn(
         'fixed bottom-0 left-0 right-0 z-50 md:hidden',
         'bg-[rgba(32,31,31,0.7)] backdrop-blur-[20px]',
-        'pb-[env(safe-area-inset-bottom)]',
+        'pb-[env(safe-area-inset-bottom)]'
       )}
       aria-label="Mobile navigation"
     >
@@ -64,9 +69,7 @@ export function MobileBottomNavV2({ isStudent, onOpenMore }: MobileBottomNavProp
               className={cn(
                 'relative flex flex-col items-center justify-center gap-0.5',
                 'flex-1 h-full min-h-[44px] transition-colors duration-200',
-                active
-                  ? 'text-primary'
-                  : 'text-[#d5c4ad] opacity-60',
+                active ? 'text-primary' : 'text-[#d5c4ad] opacity-60'
               )}
               aria-current={active ? 'page' : undefined}
             >
@@ -78,7 +81,12 @@ export function MobileBottomNavV2({ isStudent, onOpenMore }: MobileBottomNavProp
                 />
               )}
               <tab.icon className="relative z-10 h-5 w-5" strokeWidth={active ? 2.5 : 1.75} />
-              <span className={cn('relative z-10 text-[10px]', active ? 'font-semibold' : 'font-medium')}>
+              <span
+                className={cn(
+                  'relative z-10 text-[10px]',
+                  active ? 'font-semibold' : 'font-medium'
+                )}
+              >
                 {tab.label}
               </span>
             </Link>
@@ -89,7 +97,7 @@ export function MobileBottomNavV2({ isStudent, onOpenMore }: MobileBottomNavProp
           onClick={onOpenMore}
           className={cn(
             'flex flex-col items-center justify-center gap-0.5',
-            'flex-1 h-full min-h-[44px] text-[#d5c4ad] opacity-60',
+            'flex-1 h-full min-h-[44px] text-[#d5c4ad] opacity-60'
           )}
           aria-label="Open more menu"
         >

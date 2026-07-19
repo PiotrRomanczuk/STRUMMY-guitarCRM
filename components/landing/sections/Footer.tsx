@@ -126,17 +126,9 @@ function LegalRow() {
     <div className="mt-12 border-t border-[var(--l-ink-3)]/30 pt-6 text-xs text-[var(--l-ink-4)]">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p>© {new Date().getFullYear()} Strummy. All rights reserved.</p>
-        <div className="flex gap-6">
-          <Link href="/privacy" className="hover:text-[var(--l-paper)]">
-            Privacy Policy
-          </Link>
-          <Link href="/terms" className="hover:text-[var(--l-paper)]">
-            Terms of Service
-          </Link>
-          <Link href="/cookies" className="hover:text-[var(--l-paper)]">
-            Cookies Settings
-          </Link>
-        </div>
+        {/* Legal pages aren't written yet; linking to 404s is worse than omitting
+            them. Restore this row once /privacy, /terms and /cookies exist. */}
+        <p>Built by Piotr Romanczuk.</p>
       </div>
     </div>
   );

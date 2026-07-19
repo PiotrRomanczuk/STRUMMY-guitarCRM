@@ -3,7 +3,10 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { AssignmentInputSchema } from '@/schemas/AssignmentSchema';
 import { getAssignmentsHandler, createAssignmentHandler } from './handlers';
-import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import {
+  TEST_ACCOUNT_MUTATION_ERROR,
+  isDemoMutationBlocked,
+} from '@/lib/auth/test-account-guard';
 import { logger } from '@/lib/logger';
 import { createListResponse } from '@/lib/api/response';
 
@@ -72,7 +75,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return withApiAuth(request, async ({ user, roles, flags }) => {
     try {
-      if (flags.isDevelopment) {
+      if (isDemoMutationBlocked(flags.isDevelopment)) {
         return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
       }
 

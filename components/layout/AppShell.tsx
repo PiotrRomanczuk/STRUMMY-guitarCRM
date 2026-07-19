@@ -1,11 +1,8 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import Header from '@/components/navigation/Header';
 import { Toaster } from 'sonner';
-import { getSupabaseConfig } from '@/lib/supabase/config';
 import { useKeyboardViewport } from '@/hooks/use-keyboard-viewport';
-import { logger } from '@/lib/logger';
 import { AppShellV2 } from '@/components/v2/navigation';
 
 interface AppShellProps {
@@ -35,19 +32,13 @@ export function AppShell({
   // /dashboard/* owns its own shell (Sidebar + Topbar) via app/dashboard/layout.tsx.
   const isDashboardPage = (pathname || '').startsWith('/dashboard');
 
-  const { isLocal } = getSupabaseConfig();
-  logger.info('AppShell:', {
-    pathname,
-    hasUser: !!user,
-    isAuthPage,
-    db: isLocal ? 'local' : 'remote',
-  });
-
-  // Auth pages (or logged-out) — no navigation.
+  // Auth pages (or logged-out) — no app chrome. The landing page ships its own
+  // marketing header and the auth pages their own AuthHeader, so rendering the
+  // app Header here stacked a second, differently-styled bar on top of them —
+  // and exposed the ConnectionStatus database badge to anonymous visitors.
   if (isAuthPage || !user) {
     return (
       <>
-        <Header user={user} isAdmin={isAdmin} isTeacher={isTeacher} isStudent={isStudent} />
         <main className="min-h-screen bg-background">{children}</main>
         <Toaster />
       </>

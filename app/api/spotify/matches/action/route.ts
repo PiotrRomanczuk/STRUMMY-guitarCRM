@@ -3,7 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 import { getTrack } from '@/lib/spotify';
 import type { SpotifyApiTrack } from '@/types/spotify';
 import { z } from 'zod';
-import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import {
+  TEST_ACCOUNT_MUTATION_ERROR,
+  isDemoMutationBlocked,
+} from '@/lib/auth/test-account-guard';
 import { logger } from '@/lib/logger';
 
 const ActionSchema = z.object({

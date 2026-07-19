@@ -6,7 +6,10 @@ import {
   deleteSongHandler,
 } from './handlers';
 import { createListResponse } from '@/lib/api/response';
-import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import {
+  TEST_ACCOUNT_MUTATION_ERROR,
+  isDemoMutationBlocked,
+} from '@/lib/auth/test-account-guard';
 import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
         isDevelopment: flags.isDevelopment,
       };
 
-      if (profile.isDevelopment) {
+      if (isDemoMutationBlocked(profile.isDevelopment)) {
         return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
       }
 
@@ -145,7 +148,7 @@ export async function PUT(request: NextRequest) {
         isDevelopment: flags.isDevelopment,
       };
 
-      if (profile.isDevelopment) {
+      if (isDemoMutationBlocked(profile.isDevelopment)) {
         return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
       }
 
@@ -186,7 +189,7 @@ export async function DELETE(request: NextRequest) {
         isDevelopment: flags.isDevelopment,
       };
 
-      if (profile.isDevelopment) {
+      if (isDemoMutationBlocked(profile.isDevelopment)) {
         return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
       }
 

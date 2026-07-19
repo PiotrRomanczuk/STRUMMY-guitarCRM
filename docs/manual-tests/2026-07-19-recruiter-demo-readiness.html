@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — Recruiter Demo Readiness (2026-07-19)</title>
+    <style>
+      :root {
+        --ink: #1b1712;
+        --ink-2: #4a4239;
+        --ink-3: #79705f;
+        --rule: #e4dac4;
+        --paper: #faf7f0;
+        --card: #fff;
+        --ok: #3b6d22;
+        --ok-bg: #e9f1de;
+        --bad: #a32d2d;
+        --bad-bg: #f8e6e6;
+        --warn: #9c6a0a;
+        --warn-bg: #f5ecd8;
+        --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #f2ecdd;
+          --ink-2: #d8cfb9;
+          --ink-3: #a79a80;
+          --rule: #3a331f;
+          --paper: #16130e;
+          --card: #241f18;
+          --ok: #a9d68c;
+          --ok-bg: #22301a;
+          --bad: #e79a9a;
+          --bad-bg: #3a1e1e;
+          --warn: #e8c988;
+          --warn-bg: #362a12;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 40px 24px;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+      .wrap {
+        max-width: 940px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 30px;
+        margin: 0 0 6px;
+        letter-spacing: -0.01em;
+      }
+      h2 {
+        font-size: 20px;
+        margin: 36px 0 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--rule);
+      }
+      h3 {
+        font-size: 16px;
+        margin: 22px 0 8px;
+      }
+      .meta {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--ink-3);
+        margin-bottom: 24px;
+      }
+      code {
+        font-family: var(--mono);
+        font-size: 13px;
+        background: var(--card);
+        padding: 1px 5px;
+        border-radius: 4px;
+        border: 1px solid var(--rule);
+      }
+      pre {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-family: var(--mono);
+        font-size: 12.5px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        font-size: 14px;
+      }
+      th {
+        text-align: left;
+        font-family: var(--mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-3);
+        font-weight: 400;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--rule);
+      }
+      td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+      }
+      .pill {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .pass {
+        background: var(--ok-bg);
+        color: var(--ok);
+      }
+      .fail {
+        background: var(--bad-bg);
+        color: var(--bad);
+      }
+      .warnp {
+        background: var(--warn-bg);
+        color: var(--warn);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-left: 3px solid var(--warn);
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin: 16px 0;
+      }
+      .card.good {
+        border-left-color: var(--ok);
+      }
+      ol li,
+      ul li {
+        margin-bottom: 6px;
+      }
+      .steps {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        padding: 16px 18px 16px 34px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Recruiter Demo Readiness</h1>
+      <div class="meta">
+        2026-07-19 · branch <code>feature/audit-findings-implementation</code> · target
+        strummy.vercel.app → StudentManager (uwh via Cloudflare tunnel)
+      </div>
+
+      <h2>What was built</h2>
+      <p>
+        Strummy was made presentable as a self-serve demo a recruiter can explore alone: a one-click
+        demo login, a studio full of realistic data, every visible button working (including
+        create/edit flows), and no dead ends or false claims on the public pages.
+      </p>
+
+      <h3>1. Three real bugs found and fixed</h3>
+      <p>These were breaking the live app for real users, not just the demo:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Bug</th>
+            <th>Symptom</th>
+            <th>Fix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Attaching a song to a lesson failed</strong></td>
+            <td>
+              The <code>song_status_history</code> table was missing, so a trigger on the repertoire
+              cascade aborted the transaction. <code>lesson_songs</code> had 0 rows against 57
+              lessons — the core loop had never completed on this stack.
+            </td>
+            <td>
+              Migration <code>20260719190000_restore_song_status_history.sql</code> (DDL + RLS
+              mirrored from the baseline)
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Students page was empty for everyone</strong></td>
+            <td>
+              <code>profiles.student_status</code> was missing, so the people-list SELECT errored
+              and the roster rendered “No people match these filters” for teachers and admins alike.
+            </td>
+            <td>
+              Migration <code>20260719193000_restore_student_status_columns.sql</code>; 61 existing
+              students with lessons marked active
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Production build was broken</strong></td>
+            <td>
+              A client component imported helpers from a Server Component, dragging
+              <code>next/headers</code> into the client graph. The branch could not deploy.
+            </td>
+            <td>Helpers extracted to <code>StudentDetailEditorial.shared.tsx</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>2. Production environment repaired</h3>
+      <p>
+        Six Vercel production variables had a trailing <code>CRLF</code> baked into their values —
+        every cleaned value landed on its exact canonical length (Gmail app password 16 chars,
+        Google client secret 35, PostHog host 24), confirming the corruption.
+        <code>GMAIL_USER</code>, <code>GMAIL_APP_PASSWORD</code>, <code>GOOGLE_CLIENT_ID</code>,
+        <code>GOOGLE_CLIENT_SECRET</code> (SMTP auth and OAuth would reject these) plus the two
+        PostHog vars. <code>NEXT_PUBLIC_APP_URL</code> was also set so email links stop pointing at
+        localhost.
+      </p>
+
+      <h3>3. Demo data</h3>
+      <p>
+        <code>seed-demo.ts</code> now also seeds the engagement surfaces that were rendering empty,
+        and got a safety guard: it prints the target host and makes you type it back before writing
+        anything with the service-role key.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Seeded</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Lessons</td>
+            <td>30 completed (with teacher notes) + 10 this week, 2 already done</td>
+          </tr>
+          <tr>
+            <td>Lesson songs</td>
+            <td>53, progressing to_learn → started → remembered → mastered</td>
+          </tr>
+          <tr>
+            <td>Repertoire</td>
+            <td>25 rows via trigger cascade, 11 with student self-ratings and notes</td>
+          </tr>
+          <tr>
+            <td>Practice</td>
+            <td>50 sessions across 4 weeks, with BPM and a live streak for Emma</td>
+          </tr>
+          <tr>
+            <td>Assignments</td>
+            <td>14 — mix of completed, in progress, overdue and upcoming</td>
+          </tr>
+          <tr>
+            <td>Notifications</td>
+            <td>15, unread ones so the bell carries a badge</td>
+          </tr>
+          <tr>
+            <td>Extras</td>
+            <td>Active Song of the Week, 2 song requests (1 pending, 1 approved)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>4. Demo accounts can now write</h3>
+      <p>
+        Demo accounts were blocked from mutating at ~90 call sites, mostly failing silently.
+        <code>DEMO_WRITES_ENABLED=true</code> (production only) lifts that block so a recruiter can
+        actually create a lesson or edit a song. Local and CI keep the guard, so the
+        demo-mutation-guard E2E suite still exercises the blocked path. 15 API routes that inlined
+        <code>if (flags.isDevelopment)</code> were rewritten onto the flag-aware helper.
+      </p>
+
+      <h3>5. Public surface cleaned</h3>
+      <ul>
+        <li>
+          Landing/auth pages no longer render a second, legacy purple header — which also removes
+          the clickable <strong>“Remote DB”</strong> debug badge that was firing Supabase probes for
+          anonymous visitors, and a <code>console.log</code> on every navigation.
+        </li>
+        <li>
+          11 footer/FAQ links that 404'd are gone; social placeholders replaced with the real repo.
+        </li>
+        <li>
+          Both “Watch demo” buttons (which only scrolled to a text section) now open the live demo.
+        </li>
+        <li>
+          FAQ no longer claims students don't need accounts (they do). Pricing is labelled as
+          planned and lists only features that exist.
+        </li>
+        <li>Song detail no longer shows a “Planned” roadmap card on every song.</li>
+        <li>
+          Admin cards no longer contain engineering-log copy (“Real query lands in a follow-up”).
+        </li>
+        <li>
+          PWA icons created — “Install app” now works. Avatar upload hidden in production (this
+          stack has no storage service, so it could only ever fail).
+        </li>
+        <li>CSP now allows the PostHog asset host; it was blocked, erroring on every page load.</li>
+      </ul>
+
+      <h3>6. Navigation opened up</h3>
+      <p>
+        Verified-working features were revealed: <strong>Fretboard</strong>,
+        <strong>AI Assistant</strong> and <strong>AI Chat</strong> for teachers;
+        <strong>My Repertoire</strong> and a new <strong>Practice Log</strong> item for students.
+        Stub pages stay hidden, and a new test asserts no nav item points at a “Coming soon” route.
+        The dead <code>DEMO_HIDDEN_ITEMS</code>
+        list (a strict subset of the core-loop list, so it never did anything) was deleted.
+      </p>
+
+      <h2>How to test it</h2>
+      <div class="card good">
+        <strong>Fastest path:</strong> open
+        <code>https://strummy.vercel.app/sign-in?demo=true</code> — one click lands you in Sarah
+        Mitchell's teacher dashboard, no typing.
+      </div>
+
+      <h3>Setup</h3>
+      <ol class="steps">
+        <li>
+          Reseed for a clean, current week: <code>npm run seed:demo</code> — it prints the target
+          host and asks you to type it back.
+        </li>
+        <li>
+          Local run against the same database:
+          <code
+            >DEMO_WRITES_ENABLED=true npm run build && DEMO_WRITES_ENABLED=true npx next start -p
+            3100</code
+          >
+        </li>
+        <li>
+          Credentials — teacher <code>sarah@strummy.app</code>, students <code>emma@</code> /
+          <code>carlos@</code> / <code>lily@</code> / <code>james@strummy.app</code>, all
+          <code>Demo2024!</code>
+        </li>
+      </ol>
+
+      <h3>Teacher walkthrough (expect all to work)</h3>
+      <ol class="steps">
+        <li>
+          <strong>Landing page</strong> — exactly one header, no “Remote DB” badge. Click every
+          footer link: none should 404. “Try the live demo” logs you straight in.
+        </li>
+        <li>
+          <strong>Dashboard</strong> — today's lessons on the day spine, week-density bars filled,
+          roster and song library cards populated.
+        </li>
+        <li>
+          <strong>Lessons</strong> → open a past lesson: teacher notes plus attached songs with
+          status badges. <em>Was broken before — songs could never be attached.</em>
+        </li>
+        <li>
+          <strong>Students</strong> → “4 shown” with Emma, Carlos, Lily, James. Open one: stats,
+          preferences and repertoire. <em>Was empty for every role before.</em>
+        </li>
+        <li>
+          <strong>Create a song</strong> (Songs → New) — it should save and redirect to the new
+          song, <em>not</em> fail with “not available on test accounts”. Same for a new lesson or
+          assignment.
+        </li>
+        <li>
+          <strong>Songs</strong> → open one: chords, key, tempo, lyrics. No “Planned” roadmap card.
+        </li>
+        <li>
+          <strong>Fretboard</strong> — pick a key and scale; the diagram updates and the URL carries
+          state.
+        </li>
+        <li>
+          <strong>AI Assistant</strong> — send a prompt; it should stream a response (OpenRouter key
+          verified live).
+        </li>
+        <li>
+          <strong>Notifications bell</strong> — unread badge; feed shows the daily summary and
+          student activity.
+        </li>
+        <li>
+          <strong>Calendar</strong> — renders with a Connect prompt.
+          <em>Do not run the Google connect flow</em> (redirect URI isn't configured for this
+          deployment).
+        </li>
+      </ol>
+
+      <h3>Student walkthrough (sign in as emma@strummy.app)</h3>
+      <ol class="steps">
+        <li>
+          Sidebar shows My Lessons / My Songs / My Assignments / My Repertoire / Practice Log — and
+          nothing broken.
+        </li>
+        <li>
+          <strong>Repertoire</strong> — songs with statuses and her self-ratings; change a rating
+          and it persists.
+        </li>
+        <li>
+          <strong>Practice Log</strong> — four weeks of sessions with durations and BPM; log a new
+          one.
+        </li>
+        <li>
+          <strong>Assignments</strong> — advance one from not started → in progress; no edit/delete
+          controls (correct for a student).
+        </li>
+        <li>
+          <strong>Notifications</strong> — “Lesson tomorrow at 16:00” and the rest of her feed.
+        </li>
+        <li>Confirm isolation: she must not see other students anywhere.</li>
+      </ol>
+
+      <h3>Edge cases worth a look</h3>
+      <ul>
+        <li>
+          Mobile at 390px — editorial pages use fixed-width grids; check the dashboard and lists.
+        </li>
+        <li>
+          Five wrong passwords locks an account for 30 minutes. Sign in before a live walkthrough.
+        </li>
+        <li>
+          Re-run <code>npm run seed:demo</code> to reset; it refreshes “this week” relative to
+          today, so run it if the demo data drifts into last week.
+        </li>
+      </ul>
+
+      <h2>Verification results</h2>
+      <p>Automated click-through (Playwright, production build, both roles):</p>
+      <pre>
+PASS  teacher login                      /dashboard
+PASS  students roster populated          "4 shown" + Emma
+PASS  student detail renders
+PASS  song detail: no roadmap card
+PASS  lesson detail renders
+PASS  demo WRITE: create song            redirected to new song
+PASS  student login                      /dashboard
+PASS  student dashboard / repertoire / practice / assignments / notifications
+PASS  landing: 1 header, no DB badge, 0 dead links
+PASS  demo one-click login (?demo=true)
+INFO  teacher sidebar  Dashboard · Lessons · Songs · Assignments · Students ·
+                       Calendar · Fretboard · AI Assistant · AI Chat · Settings
+INFO  student sidebar  Dashboard · My Lessons · My Songs · My Assignments ·
+                       My Repertoire · Practice Log · Settings</pre>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Gate</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>npm run lint</code></td>
+            <td><span class="pill pass">0 errors</span> 271 pre-existing warnings</td>
+          </tr>
+          <tr>
+            <td><code>npx tsc --noEmit</code></td>
+            <td><span class="pill pass">clean</span></td>
+          </tr>
+          <tr>
+            <td><code>npm test</code> (unit)</td>
+            <td><span class="pill pass">220 suites · 2828 passed</span></td>
+          </tr>
+          <tr>
+            <td><code>npm run build</code></td>
+            <td><span class="pill pass">compiled · 91 pages</span></td>
+          </tr>
+          <tr>
+            <td>Integration</td>
+            <td>
+              <span class="pill warnp">1 pre-existing failure</span>
+              <code>shadow-dedup</code> inserts duplicate <code>invite_email</code> rows into a DB
+              that has a unique constraint on that column — unrelated to this work
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Known limitations</h2>
+      <ul>
+        <li>
+          <strong>Google Calendar connect</strong> — <code>GOOGLE_REDIRECT_URI</code> is unset in
+          production; the page renders fine but don't run the connect flow.
+        </li>
+        <li>
+          <strong>Student emails</strong> — <code>STUDENT_EMAILS_ENABLED</code> is off, so nothing
+          is sent to the fake demo addresses. In-app notifications still fire.
+        </li>
+        <li>
+          <strong>Avatar upload</strong> — hidden in production; the manual URL field still works.
+        </li>
+        <li>
+          <strong>Sentry</strong> — no DSN configured in production (warns at boot, doesn't fail).
+        </li>
+        <li>
+          <strong>Song catalog</strong> — 429 songs with 20 duplicated titles; only the 7 demo songs
+          carry full lyrics and chords. Cosmetic, left alone deliberately.
+        </li>
+        <li>
+          <strong>Mobile</strong> — editorial pages use fixed-width grids with no breakpoints.
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>

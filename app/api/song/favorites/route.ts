@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { UserFavoriteInputSchema } from '@/schemas/UserFavoriteSchema';
-import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import {
+  TEST_ACCOUNT_MUTATION_ERROR,
+  isDemoMutationBlocked,
+} from '@/lib/auth/test-account-guard';
 import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { logger } from '@/lib/logger';
 import { createListResponse } from '@/lib/api/response';
@@ -68,7 +71,7 @@ export async function POST(req: NextRequest) {
 
       const { user_id, song_id } = parseResult.data;
 
-      if (flags.isDevelopment) {
+      if (isDemoMutationBlocked(flags.isDevelopment)) {
         return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
       }
 
@@ -131,7 +134,7 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ error: 'User ID and Song ID are required' }, { status: 400 });
       }
 
-      if (flags.isDevelopment) {
+      if (isDemoMutationBlocked(flags.isDevelopment)) {
         return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
       }
 

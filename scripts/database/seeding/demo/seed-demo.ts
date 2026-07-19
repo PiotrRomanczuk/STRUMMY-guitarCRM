@@ -15,8 +15,7 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!REMOTE_URL) {
   console.error(
-    '❌ NEXT_PUBLIC_SUPABASE_URL is not set.\n' +
-    '   Add it to .env.local and re-run.'
+    '❌ NEXT_PUBLIC_SUPABASE_URL is not set.\n' + '   Add it to .env.local and re-run.'
   );
   process.exit(1);
 }
@@ -24,7 +23,7 @@ if (!REMOTE_URL) {
 if (/127\.0\.0\.1|localhost/.test(REMOTE_URL)) {
   console.error(
     '❌ NEXT_PUBLIC_SUPABASE_URL points to localhost — aborting.\n' +
-    '   This script targets the remote Supabase project only.'
+      '   This script targets the remote Supabase project only.'
   );
   process.exit(1);
 }
@@ -35,17 +34,48 @@ if (!SERVICE_ROLE_KEY) {
 
 const supabase = createClient(REMOTE_URL, SERVICE_ROLE_KEY);
 
+/**
+ * This script writes with the service-role key, bypassing RLS, against whatever
+ * NEXT_PUBLIC_SUPABASE_URL resolves to — which may be a live stack serving real
+ * users. Show the operator exactly which host is about to be written to and make
+ * them type it back. `--yes` skips the prompt for scripted/scheduled reseeds.
+ */
+async function confirmTarget(): Promise<void> {
+  const host = new URL(REMOTE_URL!).host;
+
+  if (process.argv.includes('--yes') || process.argv.includes('-y')) {
+    console.log(`⚠️  Target: ${host} (confirmation skipped via --yes)\n`);
+    return;
+  }
+
+  console.log('⚠️  This writes demo users, songs, lessons and assignments using the');
+  console.log('   SERVICE ROLE key (RLS bypassed). It DELETES existing lessons and');
+  console.log('   assignments belonging to the demo students.\n');
+  console.log(`   Target host: ${host}\n`);
+
+  const readline = await import('node:readline/promises');
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const answer = await rl.question(`Type the host to confirm (${host}): `);
+  rl.close();
+
+  if (answer.trim() !== host) {
+    console.error('\n❌ Host mismatch — aborting. Nothing was written.');
+    process.exit(1);
+  }
+  console.log('');
+}
+
 // ─── Demo Data ────────────────────────────────────────────────────────────────
 
 // Demo-only password — intentionally committed, these accounts are non-production
 const DEMO_PASSWORD = process.env.DEMO_SEED_PASSWORD ?? 'Demo2024!';
 
 const DEMO_USERS = [
-  { email: 'sarah@strummy.app', fullName: 'Sarah Mitchell', isTeacher: true,  isStudent: false },
-  { email: 'emma@strummy.app',  fullName: 'Emma Johnson',   isTeacher: false, isStudent: true  },
-  { email: 'carlos@strummy.app',fullName: 'Carlos Reyes',   isTeacher: false, isStudent: true  },
-  { email: 'lily@strummy.app',  fullName: 'Lily Park',      isTeacher: false, isStudent: true  },
-  { email: 'james@strummy.app', fullName: "James O'Brien",  isTeacher: false, isStudent: true  },
+  { email: 'sarah@strummy.app', fullName: 'Sarah Mitchell', isTeacher: true, isStudent: false },
+  { email: 'emma@strummy.app', fullName: 'Emma Johnson', isTeacher: false, isStudent: true },
+  { email: 'carlos@strummy.app', fullName: 'Carlos Reyes', isTeacher: false, isStudent: true },
+  { email: 'lily@strummy.app', fullName: 'Lily Park', isTeacher: false, isStudent: true },
+  { email: 'james@strummy.app', fullName: "James O'Brien", isTeacher: false, isStudent: true },
 ] as const;
 
 const DEMO_SONGS = [
@@ -100,7 +130,8 @@ You're my [A7sus4]wonder[Em7]wall[G] [Dsus4] [A7sus4]`,
     release_year: 1975,
     youtube_url: 'https://www.youtube.com/watch?v=hjpF8ukSrvk',
     spotify_link_url: 'https://open.spotify.com/track/7xGfFoTpQ2E7fRF5lN10tr',
-    ultimate_guitar_link: 'https://tabs.ultimate-guitar.com/tab/pink-floyd/wish-you-were-here-chords-44555',
+    ultimate_guitar_link:
+      'https://tabs.ultimate-guitar.com/tab/pink-floyd/wish-you-were-here-chords-44555',
     lyrics_with_chords: `[Em7]  [G]  [Em7]  [G]
 [Em7]  [A7sus4]  [Em7]  [A7sus4]
 [G]  [Em7]  [G]  [Em7]
@@ -135,7 +166,8 @@ Wish you were [Em7]here [A7sus4] [G]`,
     release_year: 1977,
     youtube_url: 'https://www.youtube.com/watch?v=09839DpTctU',
     spotify_link_url: 'https://open.spotify.com/track/40riOy7x9W7GXjyGp4pjAv',
-    ultimate_guitar_link: 'https://tabs.ultimate-guitar.com/tab/eagles/hotel-california-chords-46190',
+    ultimate_guitar_link:
+      'https://tabs.ultimate-guitar.com/tab/eagles/hotel-california-chords-46190',
     lyrics_with_chords: `[Bm]On a dark desert highway, [F#]cool wind in my hair
 [A]Warm smell of colitas, [E]rising up through the air
 [G]Up ahead in the distance, [D]I saw a shimmering light
@@ -194,7 +226,8 @@ Any [Em]time of year, you can [F#]find it here`,
     release_year: 1967,
     youtube_url: 'https://www.youtube.com/watch?v=UfmkgQRmmeE',
     spotify_link_url: 'https://open.spotify.com/track/3yrSvpt2l1xhsV9Em2VIcr',
-    ultimate_guitar_link: 'https://tabs.ultimate-guitar.com/tab/van-morrison/brown-eyed-girl-chords-766962',
+    ultimate_guitar_link:
+      'https://tabs.ultimate-guitar.com/tab/van-morrison/brown-eyed-girl-chords-766962',
     lyrics_with_chords: `[G]Hey, where did [C]we go, [G]days when the [D]rains came?
 [G]Down in the [C]hollow, [G]playin' a [D]new game
 [G]Laughing and a-[C]running, hey hey,
@@ -228,7 +261,8 @@ Sha la la [G]la la la la [C]la la la la te [G]da, la te [D]da`,
     release_year: 1991,
     youtube_url: 'https://www.youtube.com/watch?v=tAGnKpE4NCI',
     spotify_link_url: 'https://open.spotify.com/track/0nLiqZ6A27jJri2VCalIUs',
-    ultimate_guitar_link: 'https://tabs.ultimate-guitar.com/tab/metallica/nothing-else-matters-chords-8547',
+    ultimate_guitar_link:
+      'https://tabs.ultimate-guitar.com/tab/metallica/nothing-else-matters-chords-8547',
     lyrics_with_chords: `[Em]So close no matter [D]how far
 [C]Couldn't be much more [Em]from the heart
 [Em]Forever trusting [D]who we are
@@ -261,7 +295,8 @@ Sha la la [G]la la la la [C]la la la la te [G]da, la te [D]da`,
     release_year: 1971,
     youtube_url: 'https://www.youtube.com/watch?v=QkF3oxziUI4',
     spotify_link_url: 'https://open.spotify.com/track/5CQ30WqJwcep0pYcV4AMNc',
-    ultimate_guitar_link: 'https://tabs.ultimate-guitar.com/tab/led-zeppelin/stairway-to-heaven-chords-9562',
+    ultimate_guitar_link:
+      'https://tabs.ultimate-guitar.com/tab/led-zeppelin/stairway-to-heaven-chords-9562',
     lyrics_with_chords: `[Am]There's a [E+]lady who's [C]sure
 All that [D]glitters is [Fmaj7]gold
 And she's [Am]buying a [E+]stairway to [C]hea[D]ven
@@ -287,42 +322,132 @@ Sometimes [D]all of our [Fmaj7]thoughts are [Am]misgiven`,
 
 const STUDENT_LESSONS: Record<string, { notes: string }[]> = {
   'emma@strummy.app': [
-    { notes: 'Great first session — G, C, D open chords introduced. Focus on clean chord shapes before transitions.' },
-    { notes: 'Chord transitions improving. Introduced Wonderwall strumming — down-down-up-up-down-up.' },
-    { notes: 'Wonderwall strumming pattern locked in. Timing is solid; start syncing with a metronome next session.' },
-    { notes: 'Brown Eyed Girl verse progression — G, C, G, D. Tempo needs work; keep it slow and steady.' },
-    { notes: 'Blackbird fingerpicking intro attempted — keep left-hand thumb anchored. 15 mins daily on the opening bars.' },
-    { notes: 'Brown Eyed Girl progression feels natural now. Ready to add vocals next week; keep the groove loose.' },
-    { notes: 'Blackbird full arrangement coming together. Focus on the bass-note walk from G to A to Bm.' },
-    { notes: 'Wish You Were Here intro — the acoustic intro is 90% there. Nail the bend on the 2nd string.' },
-    { notes: 'Performance practice: Wonderwall + Brown Eyed Girl back-to-back. Transitions between songs need smoothing.' },
-    { notes: 'Wish You Were Here full song — bridge section needs repetition. Great dynamics throughout.' },
-    { notes: 'Fingerpicking technique workshop — alternating bass patterns, Travis picking intro. Beautiful tone.' },
-    { notes: 'Repertoire review + setting new goals. Emma is ready for intermediate material — Nothing Else Matters next.' },
+    {
+      notes:
+        'Great first session — G, C, D open chords introduced. Focus on clean chord shapes before transitions.',
+    },
+    {
+      notes:
+        'Chord transitions improving. Introduced Wonderwall strumming — down-down-up-up-down-up.',
+    },
+    {
+      notes:
+        'Wonderwall strumming pattern locked in. Timing is solid; start syncing with a metronome next session.',
+    },
+    {
+      notes:
+        'Brown Eyed Girl verse progression — G, C, G, D. Tempo needs work; keep it slow and steady.',
+    },
+    {
+      notes:
+        'Blackbird fingerpicking intro attempted — keep left-hand thumb anchored. 15 mins daily on the opening bars.',
+    },
+    {
+      notes:
+        'Brown Eyed Girl progression feels natural now. Ready to add vocals next week; keep the groove loose.',
+    },
+    {
+      notes:
+        'Blackbird full arrangement coming together. Focus on the bass-note walk from G to A to Bm.',
+    },
+    {
+      notes:
+        'Wish You Were Here intro — the acoustic intro is 90% there. Nail the bend on the 2nd string.',
+    },
+    {
+      notes:
+        'Performance practice: Wonderwall + Brown Eyed Girl back-to-back. Transitions between songs need smoothing.',
+    },
+    {
+      notes:
+        'Wish You Were Here full song — bridge section needs repetition. Great dynamics throughout.',
+    },
+    {
+      notes:
+        'Fingerpicking technique workshop — alternating bass patterns, Travis picking intro. Beautiful tone.',
+    },
+    {
+      notes:
+        'Repertoire review + setting new goals. Emma is ready for intermediate material — Nothing Else Matters next.',
+    },
   ],
   'carlos@strummy.app': [
-    { notes: 'Barre chords introduced — F and Bm shapes. Wrist position corrected; squeeze from the thumb, not the forearm.' },
-    { notes: 'Hotel California intro riff — first 8 bars clean at 40 BPM. Bumping to 60 BPM next week.' },
-    { notes: 'Hotel California intro riff sounding great. Work on dynamics: let the quiet notes breathe.' },
-    { notes: 'Nothing Else Matters picking pattern at 60 BPM is clean. Bump to 75 BPM and revisit string separation.' },
-    { notes: 'Hotel California full arrangement — verse + chorus connected. Solo section outlined for reference.' },
-    { notes: 'Stairway to Heaven intro — classical fingerpicking section. Focus on the descending bass line.' },
-    { notes: 'Lead guitar basics — minor pentatonic in Am position. Hammer-ons and pull-offs introduced.' },
-    { notes: 'Solo improvisation intro — pentatonic over a 12-bar blues backing. Great feel, work on phrasing.' },
+    {
+      notes:
+        'Barre chords introduced — F and Bm shapes. Wrist position corrected; squeeze from the thumb, not the forearm.',
+    },
+    {
+      notes:
+        'Hotel California intro riff — first 8 bars clean at 40 BPM. Bumping to 60 BPM next week.',
+    },
+    {
+      notes:
+        'Hotel California intro riff sounding great. Work on dynamics: let the quiet notes breathe.',
+    },
+    {
+      notes:
+        'Nothing Else Matters picking pattern at 60 BPM is clean. Bump to 75 BPM and revisit string separation.',
+    },
+    {
+      notes:
+        'Hotel California full arrangement — verse + chorus connected. Solo section outlined for reference.',
+    },
+    {
+      notes:
+        'Stairway to Heaven intro — classical fingerpicking section. Focus on the descending bass line.',
+    },
+    {
+      notes:
+        'Lead guitar basics — minor pentatonic in Am position. Hammer-ons and pull-offs introduced.',
+    },
+    {
+      notes:
+        'Solo improvisation intro — pentatonic over a 12-bar blues backing. Great feel, work on phrasing.',
+    },
   ],
   'lily@strummy.app': [
-    { notes: 'G, C, D chord triangle mastered with smooth transitions. Excellent posture from day one.' },
-    { notes: 'Capo introduced for Wish You Were Here — key transposition concept understood. Practice the full intro daily.' },
-    { notes: 'Brown Eyed Girl timing locked in with backing track. Ready to perform — add your own strumming flair.' },
-    { notes: 'Wonderwall — learning the full song structure. Verse-prechorus-chorus transitions practiced.' },
-    { notes: 'Performance ready — Brown Eyed Girl with confidence. Started exploring Blackbird fingerpicking.' },
-    { notes: 'Fingerpicking foundations — alternating thumb technique. Blackbird opening 4 bars at slow tempo.' },
+    {
+      notes:
+        'G, C, D chord triangle mastered with smooth transitions. Excellent posture from day one.',
+    },
+    {
+      notes:
+        'Capo introduced for Wish You Were Here — key transposition concept understood. Practice the full intro daily.',
+    },
+    {
+      notes:
+        'Brown Eyed Girl timing locked in with backing track. Ready to perform — add your own strumming flair.',
+    },
+    {
+      notes:
+        'Wonderwall — learning the full song structure. Verse-prechorus-chorus transitions practiced.',
+    },
+    {
+      notes:
+        'Performance ready — Brown Eyed Girl with confidence. Started exploring Blackbird fingerpicking.',
+    },
+    {
+      notes:
+        'Fingerpicking foundations — alternating thumb technique. Blackbird opening 4 bars at slow tempo.',
+    },
   ],
   'james@strummy.app': [
-    { notes: 'Guitar anatomy, posture, and first chord shapes (G, D, Em) covered. Take it slow — muscle memory takes time.' },
-    { notes: 'Open chord progressions improving. G to D transitions getting smoother. Introduced Em → Am movement.' },
-    { notes: 'Wonderwall verse rhythm is almost there; count out loud while strumming. Down-up pattern needs consistency.' },
-    { notes: 'Strumming patterns workshop — 3 patterns learned. Muting technique introduced for rhythmic precision.' },
+    {
+      notes:
+        'Guitar anatomy, posture, and first chord shapes (G, D, Em) covered. Take it slow — muscle memory takes time.',
+    },
+    {
+      notes:
+        'Open chord progressions improving. G to D transitions getting smoother. Introduced Em → Am movement.',
+    },
+    {
+      notes:
+        'Wonderwall verse rhythm is almost there; count out loud while strumming. Down-up pattern needs consistency.',
+    },
+    {
+      notes:
+        'Strumming patterns workshop — 3 patterns learned. Muting technique introduced for rhythmic precision.',
+    },
   ],
 };
 
@@ -330,69 +455,235 @@ const STUDENT_LESSONS: Record<string, { notes: string }[]> = {
 type LessonSongSpec = { title: string; status: string; notes?: string };
 const LESSON_SONGS_BY_STUDENT: Record<string, LessonSongSpec[][]> = {
   'emma@strummy.app': [
-    [{ title: 'Wonderwall', status: 'to_learn' }, { title: 'Brown Eyed Girl', status: 'to_learn' }],
+    [
+      { title: 'Wonderwall', status: 'to_learn' },
+      { title: 'Brown Eyed Girl', status: 'to_learn' },
+    ],
     [{ title: 'Wonderwall', status: 'started', notes: 'Focus on strumming pattern' }],
-    [{ title: 'Wonderwall', status: 'started', notes: 'Verse strumming pattern — keep tempo steady' }, { title: 'Brown Eyed Girl', status: 'to_learn' }],
-    [{ title: 'Brown Eyed Girl', status: 'started' }, { title: 'Wonderwall', status: 'remembered' }],
-    [{ title: 'Blackbird', status: 'to_learn', notes: 'Focus on first 4 bars only' }, { title: 'Wonderwall', status: 'remembered' }],
-    [{ title: 'Brown Eyed Girl', status: 'with_author' }, { title: 'Blackbird', status: 'started' }],
-    [{ title: 'Blackbird', status: 'remembered' }, { title: 'Wonderwall', status: 'mastered' }],
-    [{ title: 'Wish You Were Here', status: 'to_learn' }, { title: 'Blackbird', status: 'remembered' }],
-    [{ title: 'Wonderwall', status: 'mastered' }, { title: 'Brown Eyed Girl', status: 'mastered' }],
-    [{ title: 'Wish You Were Here', status: 'started' }, { title: 'Blackbird', status: 'mastered' }],
+    [
+      {
+        title: 'Wonderwall',
+        status: 'started',
+        notes: 'Verse strumming pattern — keep tempo steady',
+      },
+      { title: 'Brown Eyed Girl', status: 'to_learn' },
+    ],
+    [
+      { title: 'Brown Eyed Girl', status: 'started' },
+      { title: 'Wonderwall', status: 'remembered' },
+    ],
+    [
+      { title: 'Blackbird', status: 'to_learn', notes: 'Focus on first 4 bars only' },
+      { title: 'Wonderwall', status: 'remembered' },
+    ],
+    [
+      { title: 'Brown Eyed Girl', status: 'with_author' },
+      { title: 'Blackbird', status: 'started' },
+    ],
+    [
+      { title: 'Blackbird', status: 'remembered' },
+      { title: 'Wonderwall', status: 'mastered' },
+    ],
+    [
+      { title: 'Wish You Were Here', status: 'to_learn' },
+      { title: 'Blackbird', status: 'remembered' },
+    ],
+    [
+      { title: 'Wonderwall', status: 'mastered' },
+      { title: 'Brown Eyed Girl', status: 'mastered' },
+    ],
+    [
+      { title: 'Wish You Were Here', status: 'started' },
+      { title: 'Blackbird', status: 'mastered' },
+    ],
     [{ title: 'Wish You Were Here', status: 'remembered' }],
-    [{ title: 'Wish You Were Here', status: 'remembered' }, { title: 'Nothing Else Matters', status: 'to_learn' }],
+    [
+      { title: 'Wish You Were Here', status: 'remembered' },
+      { title: 'Nothing Else Matters', status: 'to_learn' },
+    ],
   ],
   'carlos@strummy.app': [
-    [{ title: 'Hotel California', status: 'to_learn' }, { title: 'Nothing Else Matters', status: 'to_learn' }],
+    [
+      { title: 'Hotel California', status: 'to_learn' },
+      { title: 'Nothing Else Matters', status: 'to_learn' },
+    ],
     [{ title: 'Hotel California', status: 'started', notes: 'First 8 bars at 40 BPM' }],
-    [{ title: 'Hotel California', status: 'started', notes: 'Nail the dynamics in the intro riff' }, { title: 'Nothing Else Matters', status: 'started' }],
-    [{ title: 'Nothing Else Matters', status: 'remembered' }, { title: 'Hotel California', status: 'remembered' }],
-    [{ title: 'Hotel California', status: 'with_author' }, { title: 'Stairway to Heaven', status: 'to_learn' }],
+    [
+      {
+        title: 'Hotel California',
+        status: 'started',
+        notes: 'Nail the dynamics in the intro riff',
+      },
+      { title: 'Nothing Else Matters', status: 'started' },
+    ],
+    [
+      { title: 'Nothing Else Matters', status: 'remembered' },
+      { title: 'Hotel California', status: 'remembered' },
+    ],
+    [
+      { title: 'Hotel California', status: 'with_author' },
+      { title: 'Stairway to Heaven', status: 'to_learn' },
+    ],
     [{ title: 'Stairway to Heaven', status: 'started', notes: 'Classical fingerpicking section' }],
-    [{ title: 'Stairway to Heaven', status: 'started' }, { title: 'Nothing Else Matters', status: 'mastered' }],
+    [
+      { title: 'Stairway to Heaven', status: 'started' },
+      { title: 'Nothing Else Matters', status: 'mastered' },
+    ],
     [{ title: 'Stairway to Heaven', status: 'remembered' }],
   ],
   'lily@strummy.app': [
-    [{ title: 'Brown Eyed Girl', status: 'to_learn' }, { title: 'Wish You Were Here', status: 'to_learn' }],
-    [{ title: 'Brown Eyed Girl', status: 'started' }, { title: 'Wish You Were Here', status: 'started', notes: 'Capo 2 — practice the full intro' }],
-    [{ title: 'Brown Eyed Girl', status: 'with_author', notes: 'Performance-ready!' }, { title: 'Wish You Were Here', status: 'remembered' }],
-    [{ title: 'Wonderwall', status: 'to_learn' }, { title: 'Brown Eyed Girl', status: 'mastered' }],
-    [{ title: 'Wonderwall', status: 'started' }, { title: 'Blackbird', status: 'to_learn' }],
-    [{ title: 'Blackbird', status: 'started' }, { title: 'Wonderwall', status: 'remembered' }],
+    [
+      { title: 'Brown Eyed Girl', status: 'to_learn' },
+      { title: 'Wish You Were Here', status: 'to_learn' },
+    ],
+    [
+      { title: 'Brown Eyed Girl', status: 'started' },
+      { title: 'Wish You Were Here', status: 'started', notes: 'Capo 2 — practice the full intro' },
+    ],
+    [
+      { title: 'Brown Eyed Girl', status: 'with_author', notes: 'Performance-ready!' },
+      { title: 'Wish You Were Here', status: 'remembered' },
+    ],
+    [
+      { title: 'Wonderwall', status: 'to_learn' },
+      { title: 'Brown Eyed Girl', status: 'mastered' },
+    ],
+    [
+      { title: 'Wonderwall', status: 'started' },
+      { title: 'Blackbird', status: 'to_learn' },
+    ],
+    [
+      { title: 'Blackbird', status: 'started' },
+      { title: 'Wonderwall', status: 'remembered' },
+    ],
   ],
   'james@strummy.app': [
     [{ title: 'Wonderwall', status: 'to_learn' }],
-    [{ title: 'Wonderwall', status: 'to_learn' }, { title: 'Brown Eyed Girl', status: 'to_learn' }],
-    [{ title: 'Wonderwall', status: 'started' }, { title: 'Brown Eyed Girl', status: 'to_learn' }],
+    [
+      { title: 'Wonderwall', status: 'to_learn' },
+      { title: 'Brown Eyed Girl', status: 'to_learn' },
+    ],
+    [
+      { title: 'Wonderwall', status: 'started' },
+      { title: 'Brown Eyed Girl', status: 'to_learn' },
+    ],
     [{ title: 'Wonderwall', status: 'started', notes: 'Keep counting out loud' }],
   ],
 };
 
 // Assignments per student — statuses match DB enum: not_started | in_progress | completed | overdue | pending | submitted
-type AssignmentSpec = { title: string; description: string; status: string; dueDaysFromNow: number };
+type AssignmentSpec = {
+  title: string;
+  description: string;
+  status: string;
+  dueDaysFromNow: number;
+};
 const ASSIGNMENTS_BY_STUDENT: Record<string, AssignmentSpec[]> = {
   'emma@strummy.app': [
-    { title: 'Wonderwall chord transitions', description: 'Practice G → Cadd9 → Dsus4 transitions for 20 minutes daily. Use a metronome at 60 BPM.', status: 'completed', dueDaysFromNow: -7 },
-    { title: 'Blackbird intro fingerpicking', description: 'Learn the opening 8 bars of Blackbird. Keep the thumb on the bass string at all times.', status: 'in_progress', dueDaysFromNow: 3 },
-    { title: 'Brown Eyed Girl video recording', description: 'Record a 1-minute clip of your Brown Eyed Girl strumming and share it in the next lesson.', status: 'not_started', dueDaysFromNow: 7 },
-    { title: 'Nothing Else Matters intro', description: 'Learn the iconic picking intro at 50 BPM. Focus on letting each note ring clearly.', status: 'not_started', dueDaysFromNow: 10 },
+    {
+      title: 'Wonderwall chord transitions',
+      description:
+        'Practice G → Cadd9 → Dsus4 transitions for 20 minutes daily. Use a metronome at 60 BPM.',
+      status: 'completed',
+      dueDaysFromNow: -7,
+    },
+    {
+      title: 'Blackbird intro fingerpicking',
+      description:
+        'Learn the opening 8 bars of Blackbird. Keep the thumb on the bass string at all times.',
+      status: 'in_progress',
+      dueDaysFromNow: 3,
+    },
+    {
+      title: 'Brown Eyed Girl video recording',
+      description:
+        'Record a 1-minute clip of your Brown Eyed Girl strumming and share it in the next lesson.',
+      status: 'not_started',
+      dueDaysFromNow: 7,
+    },
+    {
+      title: 'Nothing Else Matters intro',
+      description:
+        'Learn the iconic picking intro at 50 BPM. Focus on letting each note ring clearly.',
+      status: 'not_started',
+      dueDaysFromNow: 10,
+    },
   ],
   'carlos@strummy.app': [
-    { title: 'Hotel California intro riff', description: 'Practice the iconic intro slowly at 50 BPM, focusing on clean note separation and dynamics.', status: 'completed', dueDaysFromNow: -5 },
-    { title: 'Nothing Else Matters at 75 BPM', description: 'Bump the picking pattern tempo from 60 to 75 BPM. Record yourself and listen back for timing accuracy.', status: 'completed', dueDaysFromNow: -1 },
-    { title: 'Stairway to Heaven chord research', description: 'Look up the chord shapes for Stairway to Heaven and practice each one slowly before the next session.', status: 'in_progress', dueDaysFromNow: 5 },
-    { title: 'Pentatonic scale daily drill', description: 'Run through the Am pentatonic in all 5 positions — 5 minutes each position with a metronome.', status: 'not_started', dueDaysFromNow: 8 },
+    {
+      title: 'Hotel California intro riff',
+      description:
+        'Practice the iconic intro slowly at 50 BPM, focusing on clean note separation and dynamics.',
+      status: 'completed',
+      dueDaysFromNow: -5,
+    },
+    {
+      title: 'Nothing Else Matters at 75 BPM',
+      description:
+        'Bump the picking pattern tempo from 60 to 75 BPM. Record yourself and listen back for timing accuracy.',
+      status: 'completed',
+      dueDaysFromNow: -1,
+    },
+    {
+      title: 'Stairway to Heaven chord research',
+      description:
+        'Look up the chord shapes for Stairway to Heaven and practice each one slowly before the next session.',
+      status: 'in_progress',
+      dueDaysFromNow: 5,
+    },
+    {
+      title: 'Pentatonic scale daily drill',
+      description:
+        'Run through the Am pentatonic in all 5 positions — 5 minutes each position with a metronome.',
+      status: 'not_started',
+      dueDaysFromNow: 8,
+    },
   ],
   'lily@strummy.app': [
-    { title: 'Wish You Were Here full intro', description: 'Practice the complete intro with capo on fret 2. Aim for smooth note transitions throughout.', status: 'completed', dueDaysFromNow: -3 },
-    { title: 'Brown Eyed Girl with backing track', description: 'Play through the full song with a YouTube backing track at least 3 times before the next lesson.', status: 'completed', dueDaysFromNow: -1 },
-    { title: 'Blackbird opening bars', description: 'Learn the first 4 bars of Blackbird fingerpicking. Keep thumb anchored on the low E string.', status: 'in_progress', dueDaysFromNow: 4 },
+    {
+      title: 'Wish You Were Here full intro',
+      description:
+        'Practice the complete intro with capo on fret 2. Aim for smooth note transitions throughout.',
+      status: 'completed',
+      dueDaysFromNow: -3,
+    },
+    {
+      title: 'Brown Eyed Girl with backing track',
+      description:
+        'Play through the full song with a YouTube backing track at least 3 times before the next lesson.',
+      status: 'completed',
+      dueDaysFromNow: -1,
+    },
+    {
+      title: 'Blackbird opening bars',
+      description:
+        'Learn the first 4 bars of Blackbird fingerpicking. Keep thumb anchored on the low E string.',
+      status: 'in_progress',
+      dueDaysFromNow: 4,
+    },
   ],
   'james@strummy.app': [
-    { title: 'Daily chord switching practice', description: 'Switch between G, D, and Em for 10 minutes every day. Time yourself — aim for 1 switch per second.', status: 'completed', dueDaysFromNow: -4 },
-    { title: 'Wonderwall verse strumming', description: 'Learn the down-up strumming pattern for the Wonderwall verse. Count "1-and-2-and-3-and-4-and" out loud.', status: 'in_progress', dueDaysFromNow: 6 },
-    { title: 'Chord diagram worksheet', description: 'Fill in the chord diagrams for G, C, D, Em, and Am from memory. Check against your chord chart after.', status: 'not_started', dueDaysFromNow: 9 },
+    {
+      title: 'Daily chord switching practice',
+      description:
+        'Switch between G, D, and Em for 10 minutes every day. Time yourself — aim for 1 switch per second.',
+      status: 'completed',
+      dueDaysFromNow: -4,
+    },
+    {
+      title: 'Wonderwall verse strumming',
+      description:
+        'Learn the down-up strumming pattern for the Wonderwall verse. Count "1-and-2-and-3-and-4-and" out loud.',
+      status: 'in_progress',
+      dueDaysFromNow: 6,
+    },
+    {
+      title: 'Chord diagram worksheet',
+      description:
+        'Fill in the chord diagrams for G, C, D, Em, and Am from memory. Check against your chord chart after.',
+      status: 'not_started',
+      dueDaysFromNow: 9,
+    },
   ],
 };
 
@@ -407,16 +698,66 @@ interface WeekLesson {
 }
 
 const THIS_WEEK_SCHEDULE: WeekLesson[] = [
-  { dow: 0, hour: 10, email: 'emma@strummy.app',   notes: 'Review Wish You Were Here progress + set weekly goals' },
-  { dow: 0, hour: 14, email: 'carlos@strummy.app',  notes: 'Solo improvisation continued — phrasing and dynamics' },
-  { dow: 1, hour: 10, email: 'lily@strummy.app',    notes: 'Blackbird fingerpicking — bars 1-8 at slow tempo' },
-  { dow: 1, hour: 15, email: 'james@strummy.app',   notes: 'Chord transitions speed drill + metronome work' },
-  { dow: 2, hour: 11, email: 'emma@strummy.app',    notes: 'Nothing Else Matters intro — picking pattern at 50 BPM' },
-  { dow: 3, hour: 10, email: 'carlos@strummy.app',  notes: 'Pentatonic scale patterns — all 5 positions' },
-  { dow: 3, hour: 14, email: 'lily@strummy.app',    notes: 'Wonderwall performance prep with backing track' },
-  { dow: 4, hour: 10, email: 'james@strummy.app',   notes: 'Strumming pattern workshop — down-up and muting' },
-  { dow: 4, hour: 15, email: 'emma@strummy.app',    notes: 'Repertoire run-through: 3-song setlist practice' },
-  { dow: 5, hour: 11, email: 'carlos@strummy.app',  notes: 'Hotel California full arrangement — verse + solo' },
+  {
+    dow: 0,
+    hour: 10,
+    email: 'emma@strummy.app',
+    notes: 'Review Wish You Were Here progress + set weekly goals',
+  },
+  {
+    dow: 0,
+    hour: 14,
+    email: 'carlos@strummy.app',
+    notes: 'Solo improvisation continued — phrasing and dynamics',
+  },
+  {
+    dow: 1,
+    hour: 10,
+    email: 'lily@strummy.app',
+    notes: 'Blackbird fingerpicking — bars 1-8 at slow tempo',
+  },
+  {
+    dow: 1,
+    hour: 15,
+    email: 'james@strummy.app',
+    notes: 'Chord transitions speed drill + metronome work',
+  },
+  {
+    dow: 2,
+    hour: 11,
+    email: 'emma@strummy.app',
+    notes: 'Nothing Else Matters intro — picking pattern at 50 BPM',
+  },
+  {
+    dow: 3,
+    hour: 10,
+    email: 'carlos@strummy.app',
+    notes: 'Pentatonic scale patterns — all 5 positions',
+  },
+  {
+    dow: 3,
+    hour: 14,
+    email: 'lily@strummy.app',
+    notes: 'Wonderwall performance prep with backing track',
+  },
+  {
+    dow: 4,
+    hour: 10,
+    email: 'james@strummy.app',
+    notes: 'Strumming pattern workshop — down-up and muting',
+  },
+  {
+    dow: 4,
+    hour: 15,
+    email: 'emma@strummy.app',
+    notes: 'Repertoire run-through: 3-song setlist practice',
+  },
+  {
+    dow: 5,
+    hour: 11,
+    email: 'carlos@strummy.app',
+    notes: 'Hotel California full arrangement — verse + solo',
+  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -429,8 +770,15 @@ function daysFromNow(days: number): string {
 
 function getWeekScheduleLessons(
   userIds: Record<string, string>,
-  teacherId: string,
-): { teacher_id: string; student_id: string; status: string; scheduled_at: string; notes: string; lesson_teacher_number: number }[] {
+  teacherId: string
+): {
+  teacher_id: string;
+  student_id: string;
+  status: string;
+  scheduled_at: string;
+  notes: string;
+  lesson_teacher_number: number;
+}[] {
   const now = new Date();
   const dayOfWeek = now.getDay();
   const currentHour = now.getHours();
@@ -478,7 +826,10 @@ async function getOrCreateUser(email: string, fullName: string): Promise<string>
   }
 
   // User already exists — fetch their ID
-  const { data: listData, error: listErr } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const { data: listData, error: listErr } = await supabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
   if (listErr) {
     console.error('  ❌ Failed to list users:', listErr.message);
     process.exit(1);
@@ -495,7 +846,7 @@ async function getOrCreateUser(email: string, fullName: string): Promise<string>
 
 async function main() {
   console.log('🎸 Demo Seed — Strummy Showcase\n' + '='.repeat(40));
-  console.log(`🌐 Remote URL: ${REMOTE_URL}\n`);
+  await confirmTarget();
 
   // ── Step 1: Create / get users + upsert profiles ──────────────────────────
   console.log('👤 Step 1: Users & profiles');
@@ -508,6 +859,9 @@ async function main() {
     const { error } = await supabase.from('profiles').upsert(
       {
         id,
+        // Required by ck_shadow_user_id: a non-shadow profile must carry the
+        // auth user id. Omitting it fails the check on the upsert path.
+        user_id: id,
         email: user.email,
         full_name: user.fullName,
         avatar_url: `https://i.pravatar.cc/150?u=${user.email}`,
@@ -518,7 +872,10 @@ async function main() {
       },
       { onConflict: 'id' }
     );
-    if (error) { console.error(`  ❌ Profile upsert failed for ${user.email}:`, error.message); process.exit(1); }
+    if (error) {
+      console.error(`  ❌ Profile upsert failed for ${user.email}:`, error.message);
+      process.exit(1);
+    }
     console.log(`  ✅ ${user.fullName} <${user.email}>`);
   }
 
@@ -534,7 +891,10 @@ async function main() {
     .select('id, title')
     .in('title', songTitles);
 
-  if (fetchSongsErr) { console.error('  ❌ Song fetch failed:', fetchSongsErr.message); process.exit(1); }
+  if (fetchSongsErr) {
+    console.error('  ❌ Song fetch failed:', fetchSongsErr.message);
+    process.exit(1);
+  }
 
   const existingByTitle: Record<string, string> = {};
   for (const s of existingSongs ?? []) existingByTitle[s.title] = s.id;
@@ -565,7 +925,10 @@ async function main() {
           lyrics_with_chords: song.lyrics_with_chords,
         })
         .eq('id', existingId);
-      if (updateErr) { console.error(`  ❌ Song update failed for "${song.title}":`, updateErr.message); process.exit(1); }
+      if (updateErr) {
+        console.error(`  ❌ Song update failed for "${song.title}":`, updateErr.message);
+        process.exit(1);
+      }
       songMap[song.title] = existingId;
       updatedCount++;
     } else {
@@ -575,7 +938,10 @@ async function main() {
         .insert(song)
         .select('id, title')
         .single();
-      if (insertErr) { console.error(`  ❌ Song insert failed for "${song.title}":`, insertErr.message); process.exit(1); }
+      if (insertErr) {
+        console.error(`  ❌ Song insert failed for "${song.title}":`, insertErr.message);
+        process.exit(1);
+      }
       songMap[song.title] = newSong.id;
       insertedCount++;
     }
@@ -618,7 +984,10 @@ async function main() {
       .insert(lessonsToInsert)
       .select('id, status');
 
-    if (lessonErr) { console.error(`  ❌ Lessons insert failed for ${email}:`, lessonErr.message); process.exit(1); }
+    if (lessonErr) {
+      console.error(`  ❌ Lessons insert failed for ${email}:`, lessonErr.message);
+      process.exit(1);
+    }
     const completedIds = (inserted ?? []).filter((l) => l.status === 'COMPLETED').map((l) => l.id);
     lessonIdsByStudent[email] = completedIds;
     totalLessons += inserted?.length ?? 0;
@@ -626,19 +995,24 @@ async function main() {
   }
 
   // ── Step 4b: Insert this-week schedule ──────────────────────────────────────
-  console.log('\n📆 Step 4b: This week\'s schedule');
+  console.log("\n📆 Step 4b: This week's schedule");
   const weekLessons = getWeekScheduleLessons(userIds, teacherId);
   const { data: weekInserted, error: weekErr } = await supabase
     .from('lessons')
     .insert(weekLessons)
     .select('id, status');
 
-  if (weekErr) { console.error('  ❌ This-week lessons insert failed:', weekErr.message); process.exit(1); }
+  if (weekErr) {
+    console.error('  ❌ This-week lessons insert failed:', weekErr.message);
+    process.exit(1);
+  }
   const weekCount = weekInserted?.length ?? 0;
   const completedThisWeek = (weekInserted ?? []).filter((l) => l.status === 'COMPLETED').length;
   const scheduledThisWeek = weekCount - completedThisWeek;
   totalLessons += weekCount;
-  console.log(`  ✅ ${weekCount} lessons this week (${completedThisWeek} completed, ${scheduledThisWeek} scheduled)`);
+  console.log(
+    `  ✅ ${weekCount} lessons this week (${completedThisWeek} completed, ${scheduledThisWeek} scheduled)`
+  );
 
   // ── Step 5: Insert lesson_songs ───────────────────────────────────────────
   console.log('\n🎼 Step 5: Lesson songs');
@@ -654,11 +1028,12 @@ async function main() {
       for (const spec of specs) {
         const songId = songMap[spec.title];
         if (!songId) continue;
+        // No `notes` column on lesson_songs in the deployed schema — the
+        // per-song narrative lives in the lesson's own notes field instead.
         lessonSongsToInsert.push({
           lesson_id: lessonId,
           song_id: songId,
           status: spec.status,
-          notes: spec.notes ?? null,
         });
       }
     }
@@ -669,7 +1044,10 @@ async function main() {
     .insert(lessonSongsToInsert)
     .select('id');
 
-  if (lsErr) { console.error('  ❌ lesson_songs insert failed:', lsErr.message); process.exit(1); }
+  if (lsErr) {
+    console.error('  ❌ lesson_songs insert failed:', lsErr.message);
+    process.exit(1);
+  }
   const totalLessonSongs = insertedLS?.length ?? 0;
   console.log(`  ✅ ${totalLessonSongs} lesson_songs inserted`);
 
@@ -696,9 +1074,330 @@ async function main() {
     .insert(assignmentsToInsert)
     .select('id');
 
-  if (aErr) { console.error('  ❌ assignments insert failed:', aErr.message); process.exit(1); }
+  if (aErr) {
+    console.error('  ❌ assignments insert failed:', aErr.message);
+    process.exit(1);
+  }
   const totalAssignments = insertedA?.length ?? 0;
   console.log(`  ✅ ${totalAssignments} assignments inserted`);
+
+  // ── Step 7: Engagement data ───────────────────────────────────────────────
+  // Practice history, self-ratings, notifications, song-of-the-week and song
+  // requests. Without these the Practice, Repertoire and Notifications surfaces
+  // render empty even though the core loop is fully populated.
+  console.log('\n🔥 Step 7: Engagement data');
+
+  // Idempotency: clear this demo cohort's engagement rows before re-inserting.
+  await supabase.from('practice_sessions').delete().in('student_id', studentIds);
+  await supabase.from('song_requests').delete().in('student_id', studentIds);
+  await supabase
+    .from('in_app_notifications')
+    .delete()
+    .in('user_id', [...studentIds, teacherId]);
+
+  // -- Practice sessions: 4 weeks of history, densest for Emma ---------------
+  // `daysAgo` doubles as the streak driver — consecutive recent days read as an
+  // active streak on the student dashboard.
+  const PRACTICE_PLAN: Record<
+    string,
+    { daysAgo: number; minutes: number; bpm?: number; note?: string }[]
+  > = {
+    'emma@strummy.app': [
+      { daysAgo: 0, minutes: 35, bpm: 92, note: 'Wonderwall chorus — clean transitions at last' },
+      { daysAgo: 1, minutes: 25, bpm: 88, note: 'Slow practice on the Em7 → G change' },
+      { daysAgo: 2, minutes: 45, bpm: 85, note: 'Full run-through, two clean takes' },
+      { daysAgo: 3, minutes: 20, bpm: 80 },
+      { daysAgo: 4, minutes: 30, bpm: 78, note: 'Strumming pattern drill with metronome' },
+      { daysAgo: 6, minutes: 40, note: 'Blackbird fingerpicking — slow but steady' },
+      { daysAgo: 8, minutes: 25, bpm: 72 },
+      { daysAgo: 10, minutes: 50, note: 'Long session, worked through the bridge' },
+      { daysAgo: 12, minutes: 20 },
+      { daysAgo: 14, minutes: 35, bpm: 70, note: 'Back to basics on chord shapes' },
+      { daysAgo: 17, minutes: 30 },
+      { daysAgo: 19, minutes: 45, note: 'Recorded myself — hearing the timing issues now' },
+      { daysAgo: 22, minutes: 25, bpm: 65 },
+      { daysAgo: 25, minutes: 30 },
+    ],
+    'carlos@strummy.app': [
+      { daysAgo: 0, minutes: 40, bpm: 110, note: 'Hotel California intro, finally under tempo' },
+      { daysAgo: 1, minutes: 30, bpm: 105 },
+      { daysAgo: 3, minutes: 55, note: 'Solo section — bar by bar' },
+      { daysAgo: 5, minutes: 25, bpm: 100 },
+      { daysAgo: 7, minutes: 35 },
+      { daysAgo: 9, minutes: 45, bpm: 95, note: 'Barre chords still buzzing on the B string' },
+      { daysAgo: 13, minutes: 30 },
+      { daysAgo: 16, minutes: 40, note: 'Nothing Else Matters intro picking' },
+      { daysAgo: 20, minutes: 20, bpm: 88 },
+      { daysAgo: 24, minutes: 35 },
+    ],
+    'lily@strummy.app': [
+      { daysAgo: 1, minutes: 25, note: 'Brown Eyed Girl — first full verse!' },
+      { daysAgo: 4, minutes: 20, bpm: 130 },
+      { daysAgo: 6, minutes: 30 },
+      { daysAgo: 11, minutes: 15, note: 'Short session, fingers sore' },
+      { daysAgo: 15, minutes: 25, bpm: 120 },
+      { daysAgo: 21, minutes: 20 },
+    ],
+    'james@strummy.app': [
+      { daysAgo: 2, minutes: 20, note: 'G and C changes, getting smoother' },
+      { daysAgo: 7, minutes: 15 },
+      { daysAgo: 12, minutes: 25, bpm: 60 },
+      { daysAgo: 18, minutes: 20 },
+    ],
+  };
+
+  const practiceRows: object[] = [];
+  for (const email of studentEmails) {
+    const repertoireSongIds = (LESSON_SONGS_BY_STUDENT[email] ?? [])
+      .flat()
+      .map((s) => songMap[s.title])
+      .filter(Boolean);
+
+    for (const [i, p] of (PRACTICE_PLAN[email] ?? []).entries()) {
+      const at = new Date();
+      at.setDate(at.getDate() - p.daysAgo);
+      at.setHours(17, 30, 0, 0);
+      practiceRows.push({
+        student_id: userIds[email],
+        song_id: repertoireSongIds.length ? repertoireSongIds[i % repertoireSongIds.length] : null,
+        duration_minutes: p.minutes,
+        bpm_practiced: p.bpm ?? null,
+        notes: p.note ?? null,
+        created_at: at.toISOString(),
+      });
+    }
+  }
+
+  const { error: pErr } = await supabase.from('practice_sessions').insert(practiceRows);
+  if (pErr) {
+    console.error('  ❌ practice_sessions insert failed:', pErr.message);
+    process.exit(1);
+  }
+  console.log(`  ✅ ${practiceRows.length} practice sessions`);
+
+  // -- Repertoire self-ratings ----------------------------------------------
+  // Rows themselves are created by the lesson_songs → repertoire trigger; this
+  // only layers on the student-authored fields.
+  const SELF_RATINGS: Record<string, { rating: number; note: string }> = {
+    'emma@strummy.app': {
+      rating: 4,
+      note: 'Feeling good about this one — the chorus is automatic now.',
+    },
+    'carlos@strummy.app': { rating: 3, note: 'Intro is solid, the solo still needs work.' },
+    'lily@strummy.app': { rating: 3, note: 'Fun to play! Still looking at my hands too much.' },
+    'james@strummy.app': { rating: 2, note: 'Chord changes are slow but I can hear the song now.' },
+  };
+
+  let ratedCount = 0;
+  for (const email of studentEmails) {
+    const cfg = SELF_RATINGS[email];
+    const { data: reps } = await supabase
+      .from('student_repertoire')
+      .select('id')
+      .eq('student_id', userIds[email])
+      .limit(3);
+
+    for (const [i, r] of (reps ?? []).entries()) {
+      const { error } = await supabase
+        .from('student_repertoire')
+        .update({
+          self_rating: Math.max(1, cfg.rating - i),
+          self_rating_updated_at: new Date().toISOString(),
+          student_notes: i === 0 ? cfg.note : null,
+        })
+        .eq('id', r.id);
+      if (!error) ratedCount++;
+    }
+  }
+  console.log(`  ✅ ${ratedCount} repertoire self-ratings`);
+
+  // -- In-app notifications --------------------------------------------------
+  const hoursAgo = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
+  const notificationRows = [
+    // Teacher (Sarah) — unread first so the bell shows a count
+    {
+      user_id: teacherId,
+      notification_type: 'teacher_daily_summary',
+      title: 'Your day at a glance',
+      body: '3 lessons scheduled today. Emma Johnson has an assignment due tomorrow.',
+      priority: 5,
+      is_read: false,
+      action_url: '/dashboard',
+      action_label: 'Open dashboard',
+      created_at: hoursAgo(3),
+    },
+    {
+      user_id: teacherId,
+      notification_type: 'assignment_completed',
+      title: 'Emma completed an assignment',
+      body: '"Practice the Wonderwall chorus transition" was marked complete.',
+      priority: 5,
+      is_read: false,
+      action_url: '/dashboard/assignments',
+      action_label: 'View assignments',
+      created_at: hoursAgo(20),
+    },
+    {
+      user_id: teacherId,
+      notification_type: 'song_mastery_achievement',
+      title: 'Carlos mastered a song',
+      body: 'Carlos Reyes moved "Hotel California" to mastered.',
+      priority: 5,
+      is_read: true,
+      read_at: hoursAgo(40),
+      action_url: '/dashboard/users',
+      action_label: 'View student',
+      created_at: hoursAgo(46),
+    },
+    {
+      user_id: teacherId,
+      notification_type: 'weekly_progress_digest',
+      title: 'Weekly summary ready',
+      body: '4 active students · 10 lessons · 34 practice sessions logged this week.',
+      priority: 3,
+      is_read: true,
+      read_at: hoursAgo(70),
+      created_at: hoursAgo(72),
+    },
+    // Student (Emma)
+    {
+      user_id: userIds['emma@strummy.app'],
+      notification_type: 'lesson_reminder_24h',
+      title: 'Lesson tomorrow at 16:00',
+      body: 'Your guitar lesson with Sarah Mitchell is tomorrow. Bring your capo!',
+      priority: 8,
+      is_read: false,
+      action_url: '/dashboard/lessons',
+      action_label: 'View lesson',
+      created_at: hoursAgo(2),
+    },
+    {
+      user_id: userIds['emma@strummy.app'],
+      notification_type: 'assignment_created',
+      title: 'New assignment from Sarah',
+      body: 'Practice the Blackbird fingerpicking pattern — due in 3 days.',
+      priority: 5,
+      is_read: false,
+      action_url: '/dashboard/assignments',
+      action_label: 'Open assignment',
+      created_at: hoursAgo(26),
+    },
+    {
+      user_id: userIds['emma@strummy.app'],
+      notification_type: 'song_mastery_achievement',
+      title: 'Wonderwall mastered!',
+      body: 'Nice work — Sarah marked Wonderwall as mastered in your repertoire.',
+      priority: 5,
+      is_read: false,
+      action_url: '/dashboard/repertoire',
+      action_label: 'See repertoire',
+      created_at: hoursAgo(50),
+    },
+    {
+      user_id: userIds['emma@strummy.app'],
+      notification_type: 'lesson_recap',
+      title: 'Lesson recap available',
+      body: 'Sarah added notes from your last lesson, including what to focus on this week.',
+      priority: 3,
+      is_read: true,
+      read_at: hoursAgo(60),
+      action_url: '/dashboard/lessons',
+      action_label: 'Read recap',
+      created_at: hoursAgo(74),
+    },
+    {
+      user_id: userIds['emma@strummy.app'],
+      notification_type: 'milestone_reached',
+      title: '10 lessons completed',
+      body: "That's 10 lessons and 12 hours of practice logged. Keep going!",
+      priority: 3,
+      is_read: true,
+      read_at: hoursAgo(100),
+      created_at: hoursAgo(120),
+    },
+    // A couple for the other students so their views aren't bare
+    {
+      user_id: userIds['carlos@strummy.app'],
+      notification_type: 'assignment_due_reminder',
+      title: 'Assignment due tomorrow',
+      body: 'Hotel California intro — clean run at 100 bpm.',
+      priority: 8,
+      is_read: false,
+      action_url: '/dashboard/assignments',
+      action_label: 'Open assignment',
+      created_at: hoursAgo(5),
+    },
+    {
+      user_id: userIds['lily@strummy.app'],
+      notification_type: 'lesson_reminder_24h',
+      title: 'Lesson tomorrow at 15:00',
+      body: 'Your guitar lesson with Sarah Mitchell is tomorrow.',
+      priority: 8,
+      is_read: false,
+      action_url: '/dashboard/lessons',
+      action_label: 'View lesson',
+      created_at: hoursAgo(6),
+    },
+  ];
+
+  const { error: nErr } = await supabase.from('in_app_notifications').insert(notificationRows);
+  if (nErr) {
+    console.error('  ❌ in_app_notifications insert failed:', nErr.message);
+    process.exit(1);
+  }
+  console.log(`  ✅ ${notificationRows.length} in-app notifications`);
+
+  // -- Song of the week ------------------------------------------------------
+  // getCurrentSongOfTheWeek() uses maybeSingle() on is_active, so exactly one
+  // active row may exist at a time.
+  await supabase.from('song_of_the_week').update({ is_active: false }).eq('is_active', true);
+
+  const sotwUntil = new Date();
+  sotwUntil.setDate(sotwUntil.getDate() + 5);
+  const { error: sErr } = await supabase.from('song_of_the_week').insert({
+    song_id: songMap['Wish You Were Here'],
+    selected_by: teacherId,
+    teacher_message:
+      "This week we're looking at Wish You Were Here — the intro is a masterclass in leaving space. Focus on letting each chord ring, and don't rush the pauses.",
+    active_from: new Date().toISOString(),
+    active_until: sotwUntil.toISOString(),
+    is_active: true,
+    category: 'student',
+  });
+  if (sErr) {
+    console.error('  ❌ song_of_the_week insert failed:', sErr.message);
+    process.exit(1);
+  }
+  console.log('  ✅ song of the week set');
+
+  // -- Song requests ---------------------------------------------------------
+  const { error: rErr } = await supabase.from('song_requests').insert([
+    {
+      student_id: userIds['emma@strummy.app'],
+      title: 'Landslide',
+      artist: 'Fleetwood Mac',
+      url: 'https://www.youtube.com/watch?v=Y0N0mBoc9Sk',
+      notes:
+        'Could we learn this one? I love the fingerpicking and it feels like a step up from Blackbird.',
+      status: 'pending',
+      created_at: hoursAgo(30),
+    },
+    {
+      student_id: userIds['carlos@strummy.app'],
+      title: 'Sultans of Swing',
+      artist: 'Dire Straits',
+      notes: 'Ambitious I know, but I want something to work toward.',
+      status: 'approved',
+      reviewed_by: teacherId,
+      review_notes: "Great pick — let's start with the rhythm part and build up to the solos.",
+      created_at: hoursAgo(96),
+    },
+  ]);
+  if (rErr) {
+    console.error('  ❌ song_requests insert failed:', rErr.message);
+    process.exit(1);
+  }
+  console.log('  ✅ 2 song requests');
 
   // ── Summary ───────────────────────────────────────────────────────────────
   const pendingCount = Object.values(ASSIGNMENTS_BY_STUDENT)
@@ -710,7 +1409,9 @@ async function main() {
   console.log(`   👤 Users:            ${DEMO_USERS.length} (1 teacher, 4 students)`);
   console.log(`   🎵 Songs:            ${totalSongs}`);
   console.log(`   📅 Historical:       ${totalLessons - weekCount} lessons`);
-  console.log(`   📆 This week:        ${weekCount} lessons (${completedThisWeek} done, ${scheduledThisWeek} upcoming)`);
+  console.log(
+    `   📆 This week:        ${weekCount} lessons (${completedThisWeek} done, ${scheduledThisWeek} upcoming)`
+  );
   console.log(`   🎼 Lesson songs:     ${totalLessonSongs}`);
   console.log(`   📝 Assignments:      ${totalAssignments} (${pendingCount} pending)`);
   console.log('\n📊 Expected dashboard stats:');
@@ -724,4 +1425,7 @@ async function main() {
   }
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

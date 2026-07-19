@@ -3,32 +3,30 @@ export type FooterColumn = {
   links: { label: string; href: string }[];
 };
 
+// Every href below must resolve. Marketing placeholders (/blog, /careers,
+// /contact, /changelog, /about, /community, /connect) were removed rather than
+// stubbed — a 404 from the footer reads worse than a shorter footer.
 export const footerColumns: FooterColumn[] = [
   {
     heading: 'Product',
     links: [
       { label: 'Features', href: '/#capabilities' },
+      { label: 'How it works', href: '/#workflow' },
       { label: 'Pricing', href: '/#pricing' },
-      { label: 'Security', href: '/#faq' },
-      { label: 'Updates', href: '/changelog' },
-      { label: 'Company', href: '/about' },
+      { label: 'FAQ', href: '/#faq' },
     ],
   },
   {
-    heading: 'About',
+    heading: 'Get started',
     links: [
-      { label: 'Blog', href: '/blog' },
-      { label: 'Careers', href: '/careers' },
-      { label: 'Contact', href: '/contact' },
-      { label: 'Community', href: '/community' },
-      { label: 'Connect', href: '/connect' },
+      { label: 'Try the live demo', href: '/sign-in?demo=true' },
+      { label: 'Create an account', href: '/sign-up' },
+      { label: 'Sign in', href: '/sign-in' },
+      { label: 'Source on GitHub', href: 'https://github.com/PiotrRomanczuk/strummy' },
     ],
   },
 ];
 
 export const footerSocial = [
-  { label: 'Instagram', href: 'https://instagram.com' },
-  { label: 'X', href: 'https://x.com' },
-  { label: 'LinkedIn', href: 'https://linkedin.com' },
-  { label: 'YouTube', href: 'https://youtube.com' },
+  { label: 'GitHub', href: 'https://github.com/PiotrRomanczuk/strummy' },
 ];

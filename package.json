@@ -42,6 +42,7 @@
     "db:quality": "./scripts/database/maintenance/check-db-quality.sh",
     "backup": "./scripts/database/backup/backup-db.sh",
     "seed": "./scripts/database/seeding/local/seed-db.sh",
+    "seed:demo": "npx tsx scripts/database/seeding/demo/seed-demo.ts",
     "seed:remote": "./scripts/database/seeding/remote/seed-remote.sh",
     "seed:test-user": "npx tsx scripts/database/seeding/test/seed-test-user.ts",
     "dev:server": "./scripts/development/dev-server.sh",

@@ -142,7 +142,7 @@ export const AssignmentsListEditorial = ({ rows, counts, asStudent, canCreate }:
           >
             {asStudent
               ? 'No assignments on your desk. Enjoy the quiet.'
-              : 'No assignments yet. Create one from a lesson or song.'}
+              : 'No assignments yet. Use “New assignment” above to set homework for a student.'}
           </div>
         ) : (
           <>

@@ -49,32 +49,27 @@ export const NOTIFICATION_ITEM: NotificationItem = {
   hasIndicator: true,
 };
 
-const DEMO_HIDDEN_ITEMS = ['skills', 'health', 'logs', 'cohorts', 'chord-analysis'];
-
-// Minimal core-loop scope: hide every non-core feature from the sidebar until it
-// is individually proven. Core loop = Dashboard, Lessons, Songs, Assignments,
-// Students (+ Home/Settings, which render separately). Hiding is nav-only — the
-// routes remain reachable by direct URL. Remove ids from this list to reveal a
-// feature once it's ready.
+// Hide features from the sidebar until each is individually proven. Hiding is
+// nav-only — routes stay reachable by direct URL. Remove an id here once the
+// feature is backed by real data and has been clicked through end to end.
+//
+// Revealed 2026-07-19 after verification: fretboard (self-contained, no data
+// needed), ai + ai-chat (OpenRouter key verified live), repertoire and practice
+// (both seeded with real history). Still hidden below: surfaces that are either
+// "Coming soon" stubs or would render empty.
 const CORE_LOOP_HIDDEN_ITEMS = [
-  // Teaching
+  // Built, but no seeded course content yet
   'theory',
-  // Students group extras
+  // "Coming soon" stub pages
   'skills',
   'health',
-  // Analytics group (all)
   'song-stats',
   'lesson-stats',
   'chord-analysis',
   'cohorts',
-  'logs',
-  // Tools group
-  'fretboard',
-  'ai',
-  'ai-chat',
-  // Student Progress group (all)
   'my-stats',
-  'repertoire',
+  // Admin-flavoured; not part of the teaching loop
+  'logs',
 ];
 
 function hideNonCore(groups: MenuGroup[]): MenuGroup[] {
@@ -86,7 +81,7 @@ function hideNonCore(groups: MenuGroup[]): MenuGroup[] {
     .filter((g) => g.items.length > 0);
 }
 
-function getTeacherGroups(isDemoAccount?: boolean): MenuGroup[] {
+function getTeacherGroups(): MenuGroup[] {
   const groups: MenuGroup[] = [
     {
       label: 'Teaching',
@@ -146,15 +141,6 @@ function getTeacherGroups(isDemoAccount?: boolean): MenuGroup[] {
     },
   ];
 
-  if (isDemoAccount) {
-    return groups
-      .map((g) => ({
-        ...g,
-        items: g.items.filter((item) => !DEMO_HIDDEN_ITEMS.includes(item.id)),
-      }))
-      .filter((g) => g.items.length > 0);
-  }
-
   return groups;
 }
 
@@ -184,6 +170,7 @@ function getStudentGroups(): MenuGroup[] {
           icon: ListMusic,
           path: '/dashboard/repertoire',
         },
+        { id: 'practice', label: 'Practice Log', icon: Guitar, path: '/dashboard/practice' },
       ],
     },
   ];
@@ -196,13 +183,8 @@ interface RoleFlags {
   isDemoAccount?: boolean;
 }
 
-export function getMenuGroups({
-  isAdmin,
-  isTeacher,
-  isStudent,
-  isDemoAccount,
-}: RoleFlags): MenuGroup[] {
-  if (isAdmin || isTeacher) return hideNonCore(getTeacherGroups(isDemoAccount));
+export function getMenuGroups({ isAdmin, isTeacher, isStudent }: RoleFlags): MenuGroup[] {
+  if (isAdmin || isTeacher) return hideNonCore(getTeacherGroups());
   if (isStudent) return hideNonCore(getStudentGroups());
   return [];
 }

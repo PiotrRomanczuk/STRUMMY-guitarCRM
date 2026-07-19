@@ -92,9 +92,6 @@ describe('SongDetailEditorial — canSeeProduction gate', () => {
     jest.mock('@/components/songs/editorial/SongChordsCardEditorial', () => ({
       SongChordsCardEditorial: () => <div />,
     }));
-    jest.mock('@/components/songs/editorial/ComingSoonCard', () => ({
-      ComingSoonCard: () => <div />,
-    }));
     jest.mock('@/components/songs/editorial/SongSidebarEditorial', () => ({
       LearnersCard: () => <div />,
       RelatedCard: () => <div />,

@@ -55,10 +55,10 @@ export function Hero() {
               Start free
             </Link>
             <Link
-              href="#workflow"
+              href="/sign-in?demo=true"
               className="rounded-md border border-[var(--l-ink-3)]/40 bg-transparent px-5 py-2.5 text-sm font-medium text-[var(--l-paper)] transition-colors hover:bg-[var(--l-ink-2)]"
             >
-              Watch demo
+              Try the live demo
             </Link>
           </motion.div>
         </div>

@@ -11,6 +11,8 @@ import { DeleteShadowButton } from './DeleteShadowButton';
 import { InviteShadowButton } from './InviteShadowButton';
 import { ShadowBadge } from './ShadowBadge';
 import { StudentDetailEditorialRepertoire } from './StudentDetailEditorial.Repertoire';
+import { Empty, formatMinutes } from './StudentDetailEditorial.shared';
+export { Empty, formatMinutes };
 
 const formatDate = (iso: string | null): string => {
   if (!iso) return '—';
@@ -19,11 +21,6 @@ const formatDate = (iso: string | null): string => {
     day: 'numeric',
     year: 'numeric',
   });
-};
-
-export const formatMinutes = (m: number): string => {
-  if (m < 60) return `${m}m`;
-  return `${Math.floor(m / 60)}h ${m % 60}m`;
 };
 
 const initialsFor = (name: string | null, email: string | null): string => {
@@ -347,17 +344,3 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-export const Empty = ({ children }: { children: React.ReactNode }) => (
-  <div
-    style={{
-      padding: '28px 24px',
-      textAlign: 'center',
-      color: 'var(--ink-4)',
-      fontStyle: 'italic',
-      fontFamily: 'var(--serif)',
-      fontSize: 14,
-    }}
-  >
-    {children}
-  </div>
-);

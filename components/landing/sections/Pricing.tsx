@@ -36,7 +36,10 @@ export function Pricing() {
           splitBy="char"
         />
         <ScrollReveal className="mt-4 text-center" y={12} delay={0.15}>
-          <p className="text-[var(--l-ink-5)]">Start free. Upgrade when you&apos;re ready.</p>
+          <p className="text-[var(--l-ink-5)]">
+            Free while Strummy is in active development. Paid tiers below are planned, not yet
+            billed.
+          </p>
         </ScrollReveal>
         <ScrollReveal className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3" stagger={0.12} y={28}>
           {pricingTiers.map((tier) => (

@@ -6,7 +6,6 @@ import type {
   SongUsageStats,
 } from '@/lib/services/song-detail-queries';
 
-import { ComingSoonCard } from './ComingSoonCard';
 import { SongChordsCardEditorial } from './SongChordsCardEditorial';
 import { SongDetailTabs } from './SongDetailTabs';
 import { SongHeroEditorial } from './SongHeroEditorial';
@@ -58,7 +57,6 @@ export const SongDetailEditorial = ({
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
         <SongChordsCardEditorial title={song.title ?? 'this song'} chordTokens={chordTokens} />
-        <ComingSoonCard />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <UsageCard stats={stats} />

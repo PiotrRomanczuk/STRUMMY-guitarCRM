@@ -3,7 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 import { withApiAuth } from '@/lib/auth/withApiAuth';
 import { AssignmentUpdateSchema } from '@/schemas/AssignmentSchema';
 import { getAssignmentHandler, updateAssignmentHandler, deleteAssignmentHandler } from './handlers';
-import { TEST_ACCOUNT_MUTATION_ERROR } from '@/lib/auth/test-account-guard';
+import {
+  TEST_ACCOUNT_MUTATION_ERROR,
+  isDemoMutationBlocked,
+} from '@/lib/auth/test-account-guard';
 import { logger } from '@/lib/logger';
 
 /**
@@ -34,7 +37,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return withApiAuth(request, async ({ user, roles, flags }) => {
     try {
-      if (flags.isDevelopment) {
+      if (isDemoMutationBlocked(flags.isDevelopment)) {
         return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
       }
 
@@ -73,7 +76,7 @@ export async function DELETE(
 ) {
   return withApiAuth(request, async ({ user, roles, flags }) => {
     try {
-      if (flags.isDevelopment) {
+      if (isDemoMutationBlocked(flags.isDevelopment)) {
         return NextResponse.json({ error: TEST_ACCOUNT_MUTATION_ERROR }, { status: 403 });
       }
 
