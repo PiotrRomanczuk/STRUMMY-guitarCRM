@@ -1,11 +1,8 @@
 import '@/app/editorial-tokens.css';
 
 import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
-import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LoadingCard } from '@/components/dashboard/states';
-import { TodayLessons, UpcomingLessons } from '@/components/dashboard/cards';
 import { AdminDashboardEditorial } from '@/components/dashboard/editorial/admin/AdminDashboardEditorial';
 import { StudentDashboardEditorial } from '@/components/dashboard/editorial/student/StudentDashboardEditorial';
 import { TeacherDashboardEditorial } from '@/components/dashboard/editorial/teacher/TeacherDashboardEditorial';
@@ -45,14 +42,6 @@ const fraunces = Fraunces({
   axes: ['opsz'],
   display: 'swap',
 });
-
-function resolveRoleLabel(isAdmin: boolean, isTeacher: boolean, isStudent: boolean): string {
-  const roles: string[] = [];
-  if (isAdmin) roles.push('Admin');
-  if (isTeacher) roles.push('Teacher');
-  if (isStudent) roles.push('Student');
-  return roles.length > 0 ? roles.join(' · ') : 'No role assigned';
-}
 
 function resolveActiveView(
   view: string | undefined,
@@ -135,53 +124,6 @@ async function StudentEditorialView({ userId, email }: { userId: string; email: 
   );
 }
 
-function LegacyShell({
-  user,
-  isAdmin,
-  isTeacher,
-  isStudent,
-  activeView,
-}: {
-  user: { id: string; email?: string | null } | null;
-  isAdmin: boolean;
-  isTeacher: boolean;
-  isStudent: boolean;
-  activeView: 'admin' | 'teacher' | 'student';
-}) {
-  return (
-    <div className="mx-auto max-w-3xl space-y-4 p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Welcome</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <p className="text-muted-foreground">Dashboard rebuild in progress.</p>
-          <p>
-            <span className="font-medium">Signed in as:</span>{' '}
-            <span className="text-muted-foreground">{user?.email ?? 'unknown'}</span>
-          </p>
-          <p>
-            <span className="font-medium">Role:</span>{' '}
-            <span className="text-muted-foreground">
-              {resolveRoleLabel(isAdmin, isTeacher, isStudent)}
-            </span>
-          </p>
-        </CardContent>
-      </Card>
-      {activeView === 'teacher' && user && (
-        <>
-          <Suspense fallback={<LoadingCard />}>
-            <TodayLessons teacherId={user.id} />
-          </Suspense>
-          <Suspense fallback={<LoadingCard />}>
-            <UpcomingLessons teacherId={user.id} />
-          </Suspense>
-        </>
-      )}
-    </div>
-  );
-}
-
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -208,13 +150,5 @@ export default async function DashboardPage({
     return <AdminEditorialView />;
   }
 
-  return (
-    <LegacyShell
-      user={user}
-      isAdmin={isAdmin}
-      isTeacher={isTeacher}
-      isStudent={isStudent}
-      activeView={activeView}
-    />
-  );
+  redirect('/sign-in?redirect=/dashboard');
 }

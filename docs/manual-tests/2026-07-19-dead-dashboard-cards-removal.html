@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Manual Test — Dead Dashboard Cards Removal (2026-07-19)</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --card: #171a21;
+        --fg: #e6e8ec;
+        --muted: #9aa3af;
+        --line: #262b34;
+        --green: #3fb950;
+        --amber: #d29922;
+        --red: #f85149;
+        --blue: #58a6ff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 34px 0 10px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+      }
+      h3 {
+        font-size: 16px;
+        margin: 22px 0 8px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      code {
+        background: #20242c;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      pre {
+        background: #0b0d11;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 13px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin: 14px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .pill {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .del {
+        background: rgba(248, 81, 73, 0.15);
+        color: var(--red);
+      }
+      .ok {
+        background: rgba(63, 185, 80, 0.15);
+        color: var(--green);
+      }
+      ul {
+        margin: 6px 0 6px 2px;
+        padding-left: 20px;
+      }
+      li {
+        margin: 3px 0;
+      }
+      .warn {
+        border-left: 3px solid var(--amber);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Dead Dashboard Cards Removal</h1>
+      <p class="meta">
+        Date: 2026-07-19 &nbsp;·&nbsp; Author: Claude &nbsp;·&nbsp; Branch:
+        fix/e2e-desktop-chrome-failures &nbsp;·&nbsp; Follows up:
+        <code>docs/manual-tests/2026-07-18-e2e-stale-test-repair.html</code>
+      </p>
+
+      <p class="lead">
+        Resolves the one open decision left in the 2026-07-18 stale-test repair report:
+        <em
+          >"Background task spawned: remount or delete TodayLessons / UpcomingLessons (and possibly
+          the dead LegacyShell)."</em
+        >
+        Verdict: <strong>delete</strong>. Both cards, and the shell that rendered them, were
+        provably unreachable in production.
+      </p>
+
+      <h2>1. What was actually done</h2>
+
+      <h3>Why delete, not remount</h3>
+      <p>
+        <code>app/dashboard/layout.tsx</code> redirects to <code>/sign-in</code> when there is no
+        authenticated user, and to <code>/onboarding</code> when the user has no role. By the time
+        <code>app/dashboard/page.tsx</code> runs, <code>user</code> is guaranteed non-null and at
+        least one of <code>isAdmin</code> / <code>isTeacher</code> / <code>isStudent</code> is true.
+        <code>resolveActiveView()</code> always resolves to
+        <code>'admin' | 'teacher' | 'student'</code>, and each of those three branches in
+        <code>DashboardPage</code> already returns an editorial view when <code>user</code> is set —
+        so the old <code>LegacyShell</code> fallback (which rendered <code>TodayLessons</code> +
+        <code>UpcomingLessons</code>) could never actually render for a real signed-in user. It was
+        dead code.
+      </p>
+      <p>
+        Functionally, <code>TeacherDaySpine</code> (inside <code>TeacherDashboardEditorial</code>)
+        already covers what <code>TodayLessons</code> did — a full schedule view of today's lessons,
+        driven by the same <code>getTeacherDayLessons</code> query. There was no editorial
+        equivalent asked for "upcoming this week"; reviving it would have been new feature work on a
+        test-repair branch, not a bug fix.
+      </p>
+
+      <table>
+        <tr>
+          <th>Change</th>
+          <th>Files</th>
+        </tr>
+        <tr>
+          <td><span class="pill del">deleted</span> dead components</td>
+          <td>
+            <code>components/dashboard/cards/TodayLessons.tsx</code>,
+            <code>TodayLessons.helpers.ts</code>, <code>UpcomingLessons.tsx</code>,
+            <code>UpcomingLessons.helpers.ts</code>, <code>UpcomingLessons.helpers.test.ts</code>,
+            <code>index.ts</code> (whole <code>components/dashboard/cards/</code> directory)
+          </td>
+        </tr>
+        <tr>
+          <td><span class="pill del">deleted</span> orphaned E2E specs</td>
+          <td>
+            <code>tests/e2e/dashboard/today-lessons.spec.ts</code>,
+            <code>tests/e2e/dashboard/upcoming-lessons.spec.ts</code> — both were already
+            <code>test.describe.skip</code>'d pending exactly this decision.
+          </td>
+        </tr>
+        <tr>
+          <td><span class="pill ok">simplified</span> <code>app/dashboard/page.tsx</code></td>
+          <td>
+            Removed <code>LegacyShell</code>, <code>resolveRoleLabel</code>, and now-unused imports
+            (<code>Card</code>/<code>CardHeader</code>/<code>CardContent</code>/<code>CardTitle</code>,
+            <code>Suspense</code>, <code>LoadingCard</code>, the two deleted card components). The
+            final fallback (reached only if <code>user</code> is unexpectedly null at this point — a
+            defensive edge case, not a real path) now does
+            <code>redirect('/sign-in?redirect=/dashboard')</code>, mirroring the same guard the
+            layout already uses, instead of rendering a "Dashboard rebuild in progress" placeholder
+            that could never be seen.
+          </td>
+        </tr>
+      </table>
+
+      <p>
+        <strong>No product behavior changed for any real user.</strong> Every reachable dashboard
+        view (admin / teacher / student editorial) is untouched.
+      </p>
+
+      <h2>2. How to manually verify</h2>
+
+      <h3>a. Static gates</h3>
+      <pre>
+cd strummy
+npx tsc --noEmit          # expect: 0 errors
+npm run lint               # expect: 0 errors (pre-existing warnings elsewhere unrelated)
+npx playwright test --list # expect: compiles, no reference to the deleted specs
+npx jest --testPathPatterns="dashboard" # expect: all suites pass</pre>
+
+      <h3>b. Confirm nothing references the deleted testids</h3>
+      <pre>
+grep -rn "today-lessons\|upcoming-lessons\|TodayLessons\|UpcomingLessons" tests __tests__ app components
+# expect: no matches</pre>
+
+      <h3>c. Exercise the dashboard in a browser</h3>
+      <ol>
+        <li>Start the dev server: <code>npm run dev</code>.</li>
+        <li>
+          Sign in as the teacher demo account (<code>sarah@strummy.app</code>) → land on
+          <code>/dashboard</code> → confirm the editorial teacher view renders, including "Today's
+          schedule" in the day spine.
+        </li>
+        <li>
+          Sign in as the student demo account (<code>emma@strummy.app</code>) → confirm the student
+          editorial view renders.
+        </li>
+        <li>
+          Sign in as admin (<code>p.romanczuk@gmail.com</code>) → confirm the admin editorial view
+          renders.
+        </li>
+        <li>
+          Log out and hit <code>/dashboard</code> directly while unauthenticated → confirm redirect
+          to <code>/sign-in?redirect=/dashboard</code> (this exercises both the layout guard and the
+          new page-level fallback path).
+        </li>
+      </ol>
+
+      <h2>3. Residual — unchanged from the 2026-07-18 report</h2>
+      <ul class="warn">
+        <li>
+          <strong>seed</strong>: the 8 student/teacher/integration specs that need
+          <code>npm run seed</code> against a local stack are still untouched — that was an explicit
+          "no-infra" decision, not something this pass revisits.
+        </li>
+        <li>
+          <strong>env</strong>: sign-up spec <code>#379</code> (verification screen) still depends
+          on signup success + the rate-limiter; its locators were already correct.
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>
