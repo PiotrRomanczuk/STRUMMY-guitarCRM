@@ -85,6 +85,32 @@ describe('PUT /api/users/[id] - partial payload (STRUM-253)', () => {
     expect(payload).not.toHaveProperty('is_parent');
     expect(payload).not.toHaveProperty('is_active');
     expect(payload).not.toHaveProperty('parent_id');
+    expect(payload).not.toHaveProperty('student_status');
+  });
+
+  it('includes student_status only when explicitly provided', async () => {
+    const calls: UpdateCall[] = [];
+    (createClient as jest.Mock).mockResolvedValue(buildSupabaseMock(calls));
+
+    const res = await PUT(makeRequest({ studentStatus: 'trial' }), {
+      params: paramsPromise,
+    });
+
+    expect(res.status).toBe(200);
+    const payload = calls[0].payload;
+    expect(payload).toHaveProperty('student_status', 'trial');
+  });
+
+  it('rejects an invalid student_status value', async () => {
+    const calls: UpdateCall[] = [];
+    (createClient as jest.Mock).mockResolvedValue(buildSupabaseMock(calls));
+
+    const res = await PUT(makeRequest({ studentStatus: 'bogus' }), {
+      params: paramsPromise,
+    });
+
+    expect(res.status).toBe(400);
+    expect(calls).toHaveLength(0);
   });
 
   it('includes role flags only when explicitly provided (incl. false)', async () => {

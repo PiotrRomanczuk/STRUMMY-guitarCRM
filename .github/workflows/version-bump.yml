@@ -1,8 +1,9 @@
 name: Version Bump
 
 on:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: ['CI/CD Pipeline']
+    types: [completed]
 
 permissions:
   contents: write
@@ -13,14 +14,20 @@ concurrency:
 
 jobs:
   bump:
-    # Skip commits made by this workflow to prevent infinite loops
-    if: "!startsWith(github.event.head_commit.message, 'chore: bump version')"
+    # Only bump once CI/CD Pipeline is green on main — never on a red or
+    # cancelled run — and skip commits made by this workflow itself to
+    # prevent infinite loops.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      !startsWith(github.event.workflow_run.head_commit.message, 'chore: bump version')
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -32,7 +39,7 @@ jobs:
         id: detect
         env:
           GH_TOKEN: ${{ github.token }}
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          COMMIT_MSG: ${{ github.event.workflow_run.head_commit.message }}
         run: |
           # Extract PR number from squash-merge commit message (e.g. "Some title (#123)")
           PR_NUMBER=$(echo "$COMMIT_MSG" | sed -n 's/.*(#\([0-9]*\)).*/\1/p' | tail -1)
@@ -109,7 +116,9 @@ jobs:
           COMMIT_EOF
 
           git commit -F /tmp/commit_msg.txt
-          git push
+          # Checkout is pinned to the workflow_run's head_sha (detached HEAD) —
+          # push explicitly to main rather than relying on a tracked branch.
+          git push origin HEAD:main
 
       - name: Create and push git tag
         if: steps.detect.outputs.skip != 'true'

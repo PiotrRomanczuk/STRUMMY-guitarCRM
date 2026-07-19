@@ -14,6 +14,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+export type StudentStatus = 'lead' | 'trial' | 'active' | 'inactive' | 'churned';
+
 export type EditableUser = {
   id: string;
   fullName: string | null;
@@ -22,6 +24,7 @@ export type EditableUser = {
   isTeacher: boolean;
   isStudent: boolean;
   isActive: boolean;
+  studentStatus: StudentStatus;
 };
 
 const fieldLabelStyle: React.CSSProperties = {
@@ -66,6 +69,7 @@ export const UserEditFormEditorial = ({ user }: { user: EditableUser }) => {
   const [isTeacher, setIsTeacher] = useState(user.isTeacher);
   const [isStudent, setIsStudent] = useState(user.isStudent);
   const [isActive, setIsActive] = useState(user.isActive);
+  const [studentStatus, setStudentStatus] = useState<StudentStatus>(user.studentStatus);
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -79,7 +83,14 @@ export const UserEditFormEditorial = ({ user }: { user: EditableUser }) => {
       const res = await fetch(`/api/users/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: fullName, isAdmin, isTeacher, isStudent, isActive }),
+        body: JSON.stringify({
+          full_name: fullName,
+          isAdmin,
+          isTeacher,
+          isStudent,
+          isActive,
+          studentStatus,
+        }),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
@@ -92,7 +103,7 @@ export const UserEditFormEditorial = ({ user }: { user: EditableUser }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [user.id, fullName, isAdmin, isTeacher, isStudent, isActive, router]);
+  }, [user.id, fullName, isAdmin, isTeacher, isStudent, isActive, studentStatus, router]);
 
   return (
     <div
@@ -159,6 +170,23 @@ export const UserEditFormEditorial = ({ user }: { user: EditableUser }) => {
               <Toggle label="Student" checked={isStudent} onChange={setIsStudent} />
             </div>
           </div>
+
+          {isStudent && (
+            <div>
+              <div style={fieldLabelStyle}>Student status</div>
+              <select
+                value={studentStatus}
+                onChange={(e) => setStudentStatus(e.target.value as StudentStatus)}
+                style={inputStyle}
+              >
+                <option value="lead">Lead</option>
+                <option value="trial">Trial</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="churned">Churned</option>
+              </select>
+            </div>
+          )}
 
           <div>
             <div style={fieldLabelStyle}>Account</div>

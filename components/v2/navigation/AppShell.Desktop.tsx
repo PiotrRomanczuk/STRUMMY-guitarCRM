@@ -10,6 +10,7 @@ import { ModeToggle } from '@/components/ui/mode-toggle';
 import { NotificationBell } from '@/components/notifications';
 import { DemoBanner } from '@/components/demo/DemoBanner';
 import { Toaster } from 'sonner';
+import { resolveRoleLabel } from '@/lib/roleLabel';
 
 interface AppShellDesktopV2Props {
   children: React.ReactNode;
@@ -22,13 +23,16 @@ interface AppShellDesktopV2Props {
 
 function isActive(pathname: string | null, path: string): boolean {
   if (!pathname) return false;
-  return path === '/dashboard'
-    ? pathname === '/dashboard'
-    : pathname.startsWith(path);
+  return path === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(path);
 }
 
 export default function AppShellDesktopV2({
-  children, user, isAdmin, isTeacher, isStudent, isDevelopment,
+  children,
+  user,
+  isAdmin,
+  isTeacher,
+  isStudent,
+  isDevelopment,
 }: AppShellDesktopV2Props) {
   const pathname = usePathname();
   const groups = getMenuGroups({ isAdmin, isTeacher, isStudent, isDemoAccount: isDevelopment });
@@ -39,14 +43,17 @@ export default function AppShellDesktopV2({
     window.location.href = '/sign-in';
   };
 
-  const roleLabel = isAdmin ? 'Admin' : isTeacher ? 'Teacher' : isStudent ? 'Student' : 'User';
+  const roleLabel = resolveRoleLabel({ isAdmin, isTeacher, isStudent });
 
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside className="fixed left-0 top-0 bottom-0 w-60 bg-background flex flex-col z-40">
         {/* Logo */}
-        <Link href="/dashboard" className="h-14 flex items-center gap-2.5 px-4 shrink-0 hover:opacity-80 transition-opacity">
+        <Link
+          href="/dashboard"
+          className="h-14 flex items-center gap-2.5 px-4 shrink-0 hover:opacity-80 transition-opacity"
+        >
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ffd183] to-[#f2b127] flex items-center justify-center">
             <Guitar className="w-4.5 h-4.5 text-[#422c00]" />
           </div>
@@ -75,7 +82,7 @@ export default function AppShellDesktopV2({
                         'flex items-center gap-2.5 px-3 py-2 rounded-full text-sm transition-colors',
                         active
                           ? 'bg-primary text-[#422c00] font-medium'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted dark:text-[#d5c4ad] dark:hover:text-primary dark:hover:bg-[#353534]',
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted dark:text-[#d5c4ad] dark:hover:text-primary dark:hover:bg-[#353534]'
                       )}
                     >
                       <item.icon className="w-4 h-4 shrink-0" />
@@ -101,7 +108,7 @@ export default function AppShellDesktopV2({
             onClick={handleSignOut}
             className={cn(
               'flex items-center gap-2.5 px-3 py-2 rounded-full text-sm w-full',
-              'text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors dark:text-[#d5c4ad]',
+              'text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors dark:text-[#d5c4ad]'
             )}
           >
             <LogOut className="w-4 h-4" />
@@ -113,9 +120,7 @@ export default function AppShellDesktopV2({
       {/* Main content */}
       <main className="ml-60 flex-1 min-h-screen bg-background">
         {isDevelopment && <DemoBanner />}
-        <div className="p-6 lg:p-8">
-          {children}
-        </div>
+        <div className="p-6 lg:p-8">{children}</div>
       </main>
       <Toaster />
     </div>

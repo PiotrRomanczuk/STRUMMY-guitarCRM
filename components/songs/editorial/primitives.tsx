@@ -91,7 +91,7 @@ type ChordGridProps = {
 };
 
 export const ChordGrid = ({ name, size = 48, color = 'var(--ink-2)' }: ChordGridProps) => {
-  const shape = CHORD_SHAPES[name] ?? CHORD_SHAPES.G;
+  const shape = CHORD_SHAPES[name];
   const w = size;
   const h = size * 1.28;
   const padL = size * 0.18;
@@ -102,6 +102,53 @@ export const ChordGrid = ({ name, size = 48, color = 'var(--ink-2)' }: ChordGrid
   const innerH = h - padT - padB;
   const strings = 6;
   const frets = 4;
+
+  if (!shape) {
+    return (
+      <svg
+        width={w}
+        height={h}
+        viewBox={`0 0 ${w} ${h}`}
+        style={{ display: 'block' }}
+        role="img"
+        aria-label={`No chord diagram available for ${name}`}
+      >
+        <text
+          x={w / 2}
+          y={padT - 10}
+          textAnchor="middle"
+          fontFamily="var(--serif)"
+          fontSize={size * 0.28}
+          fill={color}
+          fontWeight="500"
+        >
+          {name}
+        </text>
+        <rect
+          x={padL}
+          y={padT}
+          width={innerW}
+          height={innerH}
+          fill="none"
+          stroke={color}
+          strokeWidth="0.8"
+          strokeDasharray="3 3"
+          opacity=".4"
+        />
+        <text
+          x={padL + innerW / 2}
+          y={padT + innerH / 2 + size * 0.09}
+          textAnchor="middle"
+          fontFamily="var(--mono)"
+          fontSize={size * 0.32}
+          fill={color}
+          opacity=".5"
+        >
+          ?
+        </text>
+      </svg>
+    );
+  }
 
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>

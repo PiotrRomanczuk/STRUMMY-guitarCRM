@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Guitar } from 'lucide-react';
 import { ModeToggle } from '@/components/ui/mode-toggle';
 import { NotificationBell } from '@/components/notifications';
+import { resolveRoleLabel } from '@/lib/roleLabel';
 
 interface HeaderV2Props {
   user: { id?: string; email?: string } | null;
@@ -16,14 +17,14 @@ interface HeaderV2Props {
 export function HeaderV2({ user, isAdmin, isTeacher, isStudent }: HeaderV2Props) {
   if (!user) return null;
 
-  const roleLabel = isAdmin ? 'Admin' : isTeacher ? 'Teacher' : isStudent ? 'Student' : 'User';
+  const roleLabel = resolveRoleLabel({ isAdmin, isTeacher, isStudent });
 
   return (
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50',
         'h-14 bg-[rgba(32,31,31,0.7)] backdrop-blur-[20px]',
-        'pt-[env(safe-area-inset-top)]',
+        'pt-[env(safe-area-inset-top)]'
       )}
     >
       <div className="h-full px-4 flex items-center justify-between">

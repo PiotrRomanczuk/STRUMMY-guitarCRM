@@ -14,6 +14,7 @@ const UpdateUserSchema = z.object({
   isParent: z.boolean().optional(),
   isActive: z.boolean().optional(),
   parentId: z.string().uuid().nullable().optional(),
+  studentStatus: z.enum(['lead', 'trial', 'active', 'inactive', 'churned']).optional(),
 });
 
 type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
@@ -45,6 +46,7 @@ function buildUserUpdatePayload(body: UpdateUserInput): Record<string, unknown> 
     payload.deleted_at = body.isActive ? null : new Date().toISOString();
   }
   if (body.parentId !== undefined) payload.parent_id = body.parentId;
+  if (body.studentStatus !== undefined) payload.student_status = body.studentStatus;
 
   return payload;
 }

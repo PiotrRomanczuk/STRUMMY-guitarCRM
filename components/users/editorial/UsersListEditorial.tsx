@@ -123,6 +123,14 @@ export const UsersListEditorial = ({ rows, filters, canEdit }: Props) => (
         <option value="">Active</option>
         <option value="false">Deactivated</option>
       </select>
+      <select name="studentStatus" defaultValue={filters.studentStatus ?? ''} style={selectStyle}>
+        <option value="">All student statuses</option>
+        <option value="lead">Lead</option>
+        <option value="trial">Trial</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="churned">Churned</option>
+      </select>
       <button
         type="submit"
         style={{

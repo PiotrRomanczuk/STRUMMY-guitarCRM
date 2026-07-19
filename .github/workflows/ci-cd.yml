@@ -253,7 +253,11 @@ jobs:
           cache: 'npm'
 
       - name: Run npm audit
-        run: npm audit --audit-level=critical || echo "::warning::npm audit found vulnerabilities — review output above"
+        # Blocking at `critical` (0 today). NOT bumped to `high` — 9 existing
+        # high-severity findings include xlsx's ReDoS/prototype-pollution
+        # advisories with no upstream fix, so that stricter bar needs a
+        # dependency decision first, not a silent CI break.
+        run: npm audit --audit-level=critical
 
       - name: Check for hardcoded secrets
         run: |

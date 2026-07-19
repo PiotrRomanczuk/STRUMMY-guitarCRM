@@ -46,7 +46,7 @@ export default async function UserEditPage({ params }: PageProps) {
   const supabase = await createClient();
   const { data } = await supabase
     .from('profiles')
-    .select('id, full_name, email, is_admin, is_teacher, is_student, is_active')
+    .select('id, full_name, email, is_admin, is_teacher, is_student, is_active, student_status')
     .eq('id', id)
     .single();
 
@@ -62,6 +62,7 @@ export default async function UserEditPage({ params }: PageProps) {
     isTeacher: data.is_teacher ?? false,
     isStudent: data.is_student ?? false,
     isActive: data.is_active ?? true,
+    studentStatus: data.student_status ?? 'active',
   };
 
   return (

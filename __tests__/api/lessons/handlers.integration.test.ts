@@ -20,11 +20,16 @@ import {
   deleteLessonHandler,
 } from '@/app/api/lessons/handlers';
 import { createMockQueryBuilder } from '@/lib/testing/integration-helpers';
+import { resolveStudent } from '@/app/actions/lesson-edit.helpers';
 
 jest.mock('@/lib/services/calendar-lesson-sync', () => ({
   syncLessonCreation: jest.fn().mockResolvedValue(undefined),
   syncLessonUpdate: jest.fn().mockResolvedValue(undefined),
   syncLessonDeletion: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/app/actions/lesson-edit.helpers', () => ({
+  resolveStudent: jest.fn(),
 }));
 
 const TEACHER_ID = '00000000-0000-4000-a000-000000000001';
@@ -137,6 +142,53 @@ describe('Lesson Handlers — Integration', () => {
       );
       expect([400, 422]).toContain(result.status);
       expect(result.error).toBeDefined();
+    });
+
+    it('resolves a student_email to a profile id (REST parity with the editorial form)', async () => {
+      (resolveStudent as jest.Mock).mockResolvedValue({ ok: true, studentId: STUDENT_ID });
+      // The mock query builder answers every `.from()` call the same way —
+      // this row doubles as the teacher-lookup, student-lookup, and the
+      // final inserted-lesson response, so it carries both role flags.
+      const qb = createMockQueryBuilder([
+        { id: LESSON_ID, student_id: STUDENT_ID, is_teacher: true, is_student: true },
+      ]);
+      const result = await createLessonHandler(
+        asAny(buildSupabase(qb)),
+        { id: TEACHER_ID },
+        teacherProfile(),
+        {
+          date: '2026-06-01',
+          scheduled_at: '2026-06-01T10:00:00.000Z',
+          student_email: 'new-student@example.com',
+          teacher_id: TEACHER_ID,
+        }
+      );
+
+      expect(resolveStudent).toHaveBeenCalledWith(undefined, 'new-student@example.com');
+      expect(result.status).toBe(201);
+    });
+
+    it('surfaces the resolveStudent error (e.g. ambiguous match) instead of a raw Zod failure', async () => {
+      (resolveStudent as jest.Mock).mockResolvedValue({
+        ok: false,
+        ambiguous: true,
+        error: 'Several students share that email — pick the existing student instead.',
+      });
+      const qb = createMockQueryBuilder();
+      const result = await createLessonHandler(
+        asAny(buildSupabase(qb)),
+        { id: TEACHER_ID },
+        teacherProfile(),
+        {
+          date: '2026-06-01',
+          scheduled_at: '2026-06-01T10:00:00.000Z',
+          student_email: 'ambiguous@example.com',
+          teacher_id: TEACHER_ID,
+        }
+      );
+
+      expect(result.status).toBe(409);
+      expect(result.error).toMatch(/several students share/i);
     });
   });
 

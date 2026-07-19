@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import { addSongsToLesson, insertLessonRecord } from '../utils';
 import { syncLessonCreation } from '@/lib/services/calendar-lesson-sync';
 import { validateMutationPermission } from '@/lib/auth/permissions';
+import { resolveStudent } from '@/app/actions/lesson-edit.helpers';
 import { logger } from '@/lib/logger';
 import type { UserProfile, SupabaseClient } from './types';
 
@@ -10,7 +11,7 @@ export async function createLessonHandler(
   supabase: SupabaseClient,
   user: { id: string } | null,
   profile: UserProfile | null,
-  body: unknown,
+  body: unknown
 ): Promise<{ lesson?: unknown; status: number; error?: string }> {
   if (!user) return { error: 'Unauthorized', status: 401 };
   if (!profile) return { error: 'Profile not found', status: 404 };
@@ -20,7 +21,20 @@ export async function createLessonHandler(
   }
 
   try {
-    const validatedData = LessonInputSchema.parse(body);
+    // Mirrors `createLessonAction` (the editorial form's server action): a
+    // caller may pass `student_email` instead of a raw `student_id` UUID —
+    // resolved to an existing profile or an inline shadow student before
+    // the strict UUID schema below ever sees it.
+    const rawBody = (body ?? {}) as Record<string, unknown>;
+    if (!rawBody.student_id && typeof rawBody.student_email === 'string') {
+      const resolved = await resolveStudent(undefined, rawBody.student_email);
+      if (!resolved.ok) {
+        return { error: resolved.error, status: resolved.ambiguous ? 409 : 400 };
+      }
+      rawBody.student_id = resolved.studentId;
+    }
+
+    const validatedData = LessonInputSchema.parse(rawBody);
     const { song_ids, ...lessonData } = validatedData;
 
     if (lessonData.teacher_id) {
