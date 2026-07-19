@@ -120,3 +120,38 @@ export async function getStudentRecentLessons(
 
 export const totalPracticeMinutes = (rows: StudentRepertoireRow[]): number =>
   rows.reduce((sum, r) => sum + r.totalPracticeMinutes, 0);
+
+export type StudentPreferences = {
+  skillLevel: string;
+  goals: string[];
+  learningStyle: string[];
+};
+
+/**
+ * Onboarding preferences (ASG-4/IDA-4) for the "About this student" line on
+ * the teacher's detail view. Null when the student never completed
+ * onboarding — the caller renders no section in that case.
+ */
+export async function getStudentPreferences(studentId: string): Promise<StudentPreferences | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('user_preferences')
+    .select('skill_level, goals, learning_style')
+    .eq('user_id', studentId)
+    .maybeSingle();
+
+  if (error) {
+    logger.warn('[student-detail-queries] preferences error', {
+      error: error.message,
+      code: error.code,
+    });
+    return null;
+  }
+  if (!data) return null;
+
+  return {
+    skillLevel: data.skill_level as string,
+    goals: (data.goals as string[]) ?? [],
+    learningStyle: (data.learning_style as string[]) ?? [],
+  };
+}

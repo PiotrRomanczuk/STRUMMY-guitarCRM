@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import type {
+  StudentPreferences,
   StudentProfile,
   StudentRecentLesson,
   StudentRepertoireRow,
@@ -92,9 +93,10 @@ type Props = {
   profile: StudentProfile;
   repertoire: StudentRepertoireRow[];
   lessons: StudentRecentLesson[];
+  preferences: StudentPreferences | null; // IDA-4 — null when onboarding was never completed
 };
 
-export const StudentDetailEditorial = ({ profile, repertoire, lessons }: Props) => {
+export const StudentDetailEditorial = ({ profile, repertoire, lessons, preferences }: Props) => {
   const totalMins = totalPracticeMinutes(repertoire);
   const mastered = repertoire.filter((r) => r.status === 'mastered').length;
   const active = repertoire.filter((r) => r.status !== 'to_learn').length;
@@ -180,6 +182,49 @@ export const StudentDetailEditorial = ({ profile, repertoire, lessons }: Props) 
             {profile.email && (
               <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--ink-3)' }}>
                 {profile.email}
+              </div>
+            )}
+            {preferences && (
+              <div
+                data-testid="student-about-line"
+                style={{
+                  marginTop: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  flexWrap: 'wrap',
+                  fontSize: 12,
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--mono)',
+                    fontSize: 10,
+                    textTransform: 'uppercase',
+                    letterSpacing: '.1em',
+                    color: 'var(--ink-2)',
+                    border: '1px solid var(--rule)',
+                    borderRadius: 4,
+                    padding: '2px 8px',
+                  }}
+                >
+                  {preferences.skillLevel}
+                </span>
+                {preferences.goals.map((goal) => (
+                  <span
+                    key={goal}
+                    style={{
+                      fontFamily: 'var(--sans)',
+                      fontSize: 11,
+                      color: 'var(--ink-3)',
+                      background: 'var(--paper)',
+                      borderRadius: 12,
+                      padding: '2px 10px',
+                    }}
+                  >
+                    {goal}
+                  </span>
+                ))}
               </div>
             )}
             <div
