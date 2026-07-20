@@ -1505,6 +1505,107 @@ Generated types: use root database.types.ts — types/database.types.ts has drif
           </section>
 
           <section class="group">
+            <div class="group-head"><h2>Core Coverage Target (100%)</h2></div>
+            <div class="group-note">
+              The blueprint targets 100% unit test coverage for the "core" domains across
+              <code>lib/services</code>, <code>app/actions</code>, and <code>schemas</code>.
+            </div>
+            <div class="tablewrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Domain</th>
+                    <th>Status (2026-07-20, `test/core-coverage`)</th>
+                    <th>Remaining for 100/100/100</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="feat">Assignments</td>
+                    <td class="num" style="color: var(--warn)">
+                      100% lines · branch rounding left
+                    </td>
+                    <td class="notes" style="max-width: none">
+                      <code>assignment-edit</code>, <code>assignment-status</code>,
+                      <code>assignments-queries</code> at 100/100/100. Branch gaps:
+                      <code>assignments.ts</code> (88%), <code>assignment-templates</code> (91%),
+                      <code>assignment-checklist</code> (87%),
+                      <code>assignment-detail-queries</code> (89%),
+                      <code>assignment-list-params</code> (89%), <code>AssignmentSchema</code> (85%,
+                      fn 80%)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="feat">Lessons</td>
+                    <td class="num" style="color: var(--warn)">
+                      100% lines · branch rounding left
+                    </td>
+                    <td class="notes" style="max-width: none">
+                      <code>lessons-queries</code>, <code>lesson-detail-queries</code> at
+                      100/100/100. Gaps: <code>lesson-edit.ts</code> (br 65%),
+                      <code>lesson-edit.helpers.ts</code> (fn 0% — largest lessons item),
+                      <code>lesson-form-data</code> (br 81%)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="feat">Songs</td>
+                    <td class="num" style="color: var(--warn)">
+                      mostly done · <code>songs.ts</code> is the big one
+                    </td>
+                    <td class="notes" style="max-width: none">
+                      <code>song-edit</code>, <code>song-form</code>,
+                      <code>song-detail-queries</code>, <code>songs-list-queries</code> at
+                      100/100/100. Gaps: <code>app/actions/songs.ts</code> (50% lines, fn 44% —
+                      largest single remaining item), <code>song-requests</code> (br 87%)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="feat">Students</td>
+                    <td class="num" style="color: var(--warn)">
+                      100% lines · branch rounding left
+                    </td>
+                    <td class="notes" style="max-width: none">
+                      <code>users-list-queries</code> at 100/100/100. Gaps:
+                      <code>student-detail-queries</code> (br 55%),
+                      <code>student-dashboard-queries</code> (br 64%),
+                      <code>student-activity-service</code> (br 64%), <code>user.service</code> (84%
+                      lines), <code>student-activity-helpers</code> (br 86%),
+                      <code>UserSchema</code>/<code>UserApiSchema</code> rounding
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="feat">Dashboards</td>
+                    <td class="num" style="color: var(--warn)">
+                      100% lines · branch rounding left
+                    </td>
+                    <td class="notes" style="max-width: none">
+                      Gaps: <code>teacher-dashboard-queries</code> (br 59%),
+                      <code>teacher-dashboard-backfill-queries</code> (br 48%)
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="group-note" style="margin-top: 16px">
+              <strong>Phase 1 done (2026-07-20):</strong> 17 of 41 core files at perfect
+              100/100/100; every previously-0% core file now at 100% lines; global 52.3% → 57.8%
+              lines; 242 suites / 3012 tests green.<br />
+              <strong
+                >Phase 2 (see <code>91-testing-strategy.md</code> for the full gap table + mock
+                recipes):</strong
+              ><br />
+              1. Close the branch/function gaps above (mostly `??` fallbacks, join-shape branches,
+              error paths).<br />
+              2. Lock in with per-path <code>coverageThreshold: 100</code> globs in
+              <code>jest.config.ts</code> — do this LAST, same PR as the final gap close.<br />
+              3. Add 2 E2E specs: student checklist toggle + teacher templates round-trip.<br />
+              4. <em>Deliberate exclusions:</em> <code>song-analytics.ts</code>,
+              <code>song-of-the-week.ts</code> (peripheral), and UI hooks (better covered by E2E
+              suite).
+            </div>
+          </section>
+
+          <section class="group">
             <div class="group-head"><h2>Environment variables</h2></div>
             <div class="group-note">
               Names only — values live in <code>.env.local</code> / Vercel. One Google OAuth client
