@@ -149,16 +149,26 @@ Task(subagent_type="test-engineer", prompt="...")
 
 Three roles enforced via Supabase RLS: **Admin**, **Teacher**, **Student**. Currently teacher dashboard displays admin view (owner is only teacher).
 
+### Database Changes (MANDATORY)
+
+**Any change to the database MUST be captured as a migration file in `supabase/migrations/`. No exceptions.** This covers tables, columns, enum values, functions/RPCs, triggers, indexes, grants, and RLS policies.
+
+- **Never** make a schema change only ad-hoc (via `psql`, Supabase Studio, or the dashboard) without committing a matching migration file. The file is the source of truth — an un-filed change is invisible to a fresh DB and every other environment, and **will** cause drift.
+- Naming: `YYYYMMDDHHMMSS_short_description.sql` (timestamp prefix keeps them ordered).
+- Write **idempotent** DDL so a migration is safe to re-apply: `create table if not exists`, `add column if not exists`, `create or replace function`, `drop policy/trigger if exists` before `create`.
+- Match the existing RLS conventions — helpers `public.is_admin()`, `public.is_teacher()`, `public.current_profile_id()`, and the `public.set_updated_at()` trigger (see `supabase/migrations/20260718090500_assignments.sql`). The DB is the security boundary (ADR-0001): students write via `SECURITY DEFINER` RPCs, never direct table UPDATEs.
+- Applying a migration by hand (e.g. `psql` into a dev container) for testing is fine, but the **file must still be committed**. Never hand-edit `types/database.types.ts` as a substitute for a migration; regenerate types (`supabase gen types`) if a typed consumer needs the new shape.
+
 ### Database Connection
 
-Dual connections: "local" Supabase for development, remote for production. Configured via `NEXT_PUBLIC_SUPABASE_LOCAL_*` and `NEXT_PUBLIC_SUPABASE_REMOTE_*` env vars.
+Dual connections: "local/dev" Supabase for development, prod for production. Configured via `NEXT_PUBLIC_SUPABASE_LOCAL_*` (dev) and the live URL / tunnel (prod).
 
-**Local Supabase host (Piotr's setup, 2026-06-08)**: the local stack does NOT run on this Mac. It runs on `uwh` (Ubuntu HP EliteDesk) as Supabase-CLI-managed containers (`supabase_*_StudentManager`). Reach it at:
+**Supabase stacks (uwh, Ubuntu HP EliteDesk — verified 2026-07-20)**: two Supabase-CLI-managed stacks run on `uwh`, NOT on this Mac. (The older `StudentManager` / `StrummyProd` names are stale.)
 
-- LAN-direct (preferred on Orange LAN): `http://192.168.1.75:54321` — but Node.js `fetch` currently fails with `EHOSTUNREACH` while curl/ping work (Tailscale-on-LAN routing quirk on macOS).
-- Tailscale fallback (used by current Node scripts): `http://100.86.245.121:54321` or `http://piotr-hp-elitedesk.tail266853.ts.net:54321`.
+- **`StudentDevelopment`** (DEV — safe to migrate/seed): API/Kong `http://192.168.1.75:55321`, Postgres `192.168.1.75:55322`. `.env.local`'s `NEXT_PUBLIC_SUPABASE_LOCAL_URL` points here. New-format keys (`sb_publishable_…` / `sb_secret_…`).
+- **`StudentProduction`** (PROD — do NOT apply unproven changes): API/Kong `http://192.168.1.75:54321`, Postgres `192.168.1.75:54322`, reached in prod via the `strummy-db.marszal-arts.online` Cloudflare tunnel. **⚠️ Port 54321 is PRODUCTION — never assume it's "local".**
 
-`.env.local` declares `NEXT_PUBLIC_SUPABASE_LOCAL_URL=http://127.0.0.1:54321`, which is stale. Override at invocation when running Node CLIs against the real local stack, or update the env. The Next dev server is configured separately (uses publishable key + the live URL).
+Node `fetch` reaches the LAN IPs fine now (the old `EHOSTUNREACH`-on-LAN quirk is resolved). Apply a migration to dev for testing with `docker exec -i supabase_db_StudentDevelopment psql -U postgres -d postgres < <file>` on `uwh`. For RLS integration tests, point `RLS_TEST_SUPABASE_URL` at the dev stack (see `lib/testing/rls/env.ts`) — the harness hard-refuses to run against prod.
 
 ## Agents Architecture
 
