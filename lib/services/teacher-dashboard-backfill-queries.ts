@@ -9,6 +9,14 @@ export type AtRiskStudent = {
   daysSincePractice: number;
 };
 
+export type OverdueAssignmentRow = {
+  id: string;
+  title: string;
+  dueDate: string | null;
+  studentName: string | null;
+  studentEmail: string | null;
+};
+
 export type RosterStudent = {
   studentId: string;
   name: string | null;
@@ -175,6 +183,43 @@ export async function getTeacherRoster(teacherId: string, limit = 8): Promise<Ro
     if (seen.size >= limit) break;
   }
   return Array.from(seen.values());
+}
+
+/** Open assignments past their due date — the teacher's follow-up list. */
+export async function getOverdueAssignments(
+  teacherId: string,
+  now: Date,
+  limit = 4
+): Promise<OverdueAssignmentRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('assignments')
+    .select('id, title, due_date, student:profiles!assignments_student_id_fkey(full_name, email)')
+    .eq('teacher_id', teacherId)
+    // 'overdue' should never be persisted (derived at read time), but legacy
+    // rows exist with it — they are open work all the same.
+    .in('status', ['not_started', 'in_progress', 'overdue'])
+    .not('due_date', 'is', null)
+    .lt('due_date', now.toISOString())
+    .is('deleted_at', null)
+    .order('due_date', { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    logger.warn('[teacher-dashboard] overdue assignments error', { error: error.message });
+    return [];
+  }
+
+  return (data ?? []).map((row) => {
+    const student = Array.isArray(row.student) ? row.student[0] : row.student;
+    return {
+      id: row.id as string,
+      title: row.title as string,
+      dueDate: (row.due_date as string) ?? null,
+      studentName: (student?.full_name as string) ?? null,
+      studentEmail: (student?.email as string) ?? null,
+    };
+  });
 }
 
 export async function getSongLibrarySummary(limit = 4): Promise<SongLibrarySummary> {

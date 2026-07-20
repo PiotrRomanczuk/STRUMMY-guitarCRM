@@ -46,9 +46,9 @@ export function SidebarFooter({ email, fullName, roleLabel }: SidebarFooterProps
         <button
           onClick={handleSignOut}
           aria-label="Sign out"
-          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 grid size-7 place-items-center rounded-md transition-colors"
+          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 grid size-9 place-items-center rounded-md transition-colors"
         >
-          <LogOut className="size-3.5" />
+          <LogOut className="size-4" />
         </button>
       </div>
     </div>

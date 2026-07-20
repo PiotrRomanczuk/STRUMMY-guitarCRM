@@ -1,6 +1,10 @@
 import Link from 'next/link';
 
-import type { StudentNextLesson, StudentSongRow } from '@/lib/services/student-dashboard-queries';
+import type {
+  StudentNextLesson,
+  StudentOpenAssignment,
+  StudentSongRow,
+} from '@/lib/services/student-dashboard-queries';
 
 import { Card, CardHeader, ComingSoonBody } from '../primitives';
 
@@ -16,7 +20,7 @@ const STATUS_LABEL: Record<string, string> = {
   to_learn: 'To learn',
   started: 'Started',
   remembered: 'Remembered',
-  with_author: 'With author',
+  with_author: 'Play-along',
   mastered: 'Mastered',
 };
 
@@ -31,6 +35,19 @@ const formatRelative = (iso: string, now: Date): string => {
   if (days < 14) return `in ${days}d`;
   return then.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
+
+/** "45m", "2h", "14h 49m" — raw minute counts read badly past the first hour. */
+const formatPracticeTime = (minutes: number): string => {
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+};
+
+const formatDueDate = (iso: string | null): string =>
+  !iso
+    ? 'No due date'
+    : new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 const formatTime = (iso: string): string =>
   new Date(iso).toLocaleString('en-US', {
@@ -64,9 +81,17 @@ type Props = {
   now: Date;
   nextLesson: StudentNextLesson | null;
   songs: StudentSongRow[];
+  openAssignments?: StudentOpenAssignment[];
 };
 
-export const StudentDashboardEditorial = ({ fullName, email, now, nextLesson, songs }: Props) => (
+export const StudentDashboardEditorial = ({
+  fullName,
+  email,
+  now,
+  nextLesson,
+  songs,
+  openAssignments = [],
+}: Props) => (
   <div
     style={{
       background: 'var(--ivory)',
@@ -129,6 +154,7 @@ export const StudentDashboardEditorial = ({ fullName, email, now, nextLesson, so
         {nextLesson ? (
           <Link
             href={`/dashboard/lessons/${nextLesson.id}`}
+            className="ed-row"
             style={{
               display: 'block',
               padding: '18px 24px 22px',
@@ -162,6 +188,75 @@ export const StudentDashboardEditorial = ({ fullName, email, now, nextLesson, so
           <ComingSoonBody note="Once a teacher schedules a lesson with you, it shows up here." />
         )}
       </Card>
+      {openAssignments.length > 0 && (
+        <Card>
+          <CardHeader
+            eyebrow="From your teacher"
+            title="Assignments due"
+            action={
+              <Link
+                href="/dashboard/assignments"
+                className="ed-chip"
+                style={{
+                  fontFamily: 'var(--mono)',
+                  fontSize: 11,
+                  color: 'var(--ink-4)',
+                  textDecoration: 'none',
+                  border: '1px solid var(--rule)',
+                  borderRadius: 999,
+                  padding: '3px 10px',
+                }}
+              >
+                View all →
+              </Link>
+            }
+          />
+          <div>
+            {openAssignments.map((a, i) => (
+              <Link
+                key={a.id}
+                href={`/dashboard/assignments/${a.id}`}
+                className="ed-row"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) auto',
+                  gap: 12,
+                  padding: '12px 24px',
+                  borderTop: i === 0 ? '1px solid var(--rule)' : 'none',
+                  borderBottom: '1px solid var(--rule)',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  alignItems: 'center',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--serif)',
+                    fontStyle: 'italic',
+                    fontSize: 14,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {a.title}
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'var(--mono)',
+                    fontSize: 11,
+                    color: a.isOverdue ? 'var(--danger)' : 'var(--ink-4)',
+                    fontWeight: a.isOverdue ? 600 : 400,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {a.isOverdue ? `Overdue · ${formatDueDate(a.dueDate)}` : formatDueDate(a.dueDate)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </Card>
+      )}
       <Card>
         <CardHeader eyebrow="Repertoire" title="Songs you’re working on" />
         {songs.length === 0 ? (
@@ -172,9 +267,10 @@ export const StudentDashboardEditorial = ({ fullName, email, now, nextLesson, so
               <Link
                 key={s.songId}
                 href={`/dashboard/songs/${s.songId}`}
+                className="ed-row"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 120px 70px',
+                  gridTemplateColumns: 'minmax(0, 1fr) auto auto',
                   gap: 12,
                   padding: '12px 24px',
                   borderTop: i === 0 ? '1px solid var(--rule)' : 'none',
@@ -229,7 +325,7 @@ export const StudentDashboardEditorial = ({ fullName, email, now, nextLesson, so
                     color: 'var(--ink-4)',
                   }}
                 >
-                  {s.totalPracticeMinutes}m
+                  {formatPracticeTime(s.totalPracticeMinutes)}
                 </span>
               </Link>
             ))}

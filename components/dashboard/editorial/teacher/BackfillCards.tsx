@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import type {
   AtRiskStudent,
+  OverdueAssignmentRow,
   RosterStudent,
   SongLibrarySummary,
   Utilization,
@@ -24,9 +25,10 @@ export const NeedsAttentionCard = ({ rows }: { rows: AtRiskStudent[] }) => (
           <Link
             key={r.studentId}
             href={`/dashboard/users/${r.studentId}`}
+            className="ed-row"
             style={{
               display: 'grid',
-              gridTemplateColumns: '32px 1fr auto',
+              gridTemplateColumns: '32px minmax(0, 1fr) auto',
               gap: 10,
               padding: '12px 22px',
               borderTop: i === 0 ? '1px solid var(--rule)' : 'none',
@@ -49,7 +51,16 @@ export const NeedsAttentionCard = ({ rows }: { rows: AtRiskStudent[] }) => (
               >
                 {r.name ?? r.email ?? 'Student'}
               </div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)' }}>
+              <div
+                style={{
+                  fontFamily: 'var(--mono)',
+                  fontSize: 11,
+                  color: 'var(--ink-4)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 last practiced {formatDate(r.lastPracticedAt)}
               </div>
             </div>
@@ -69,6 +80,93 @@ export const NeedsAttentionCard = ({ rows }: { rows: AtRiskStudent[] }) => (
     )}
   </Card>
 );
+
+export const OverdueAssignmentsCard = ({ rows }: { rows: OverdueAssignmentRow[] }) => {
+  if (rows.length === 0) return null;
+  return (
+    <Card>
+      <CardHeader
+        eyebrow="Follow up"
+        title="Overdue homework"
+        action={
+          <Link
+            href="/dashboard/assignments?status=overdue"
+            className="ed-chip"
+            style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 11,
+              color: 'var(--ink-4)',
+              textDecoration: 'none',
+              border: '1px solid var(--rule)',
+              borderRadius: 999,
+              padding: '3px 10px',
+            }}
+          >
+            View all →
+          </Link>
+        }
+      />
+      <div>
+        {rows.map((r, i) => (
+          <Link
+            key={r.id}
+            href={`/dashboard/assignments/${r.id}`}
+            className="ed-row"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) auto',
+              gap: 10,
+              padding: '12px 22px',
+              borderTop: i === 0 ? '1px solid var(--rule)' : 'none',
+              borderBottom: '1px solid var(--rule)',
+              textDecoration: 'none',
+              color: 'inherit',
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {r.studentName ?? r.studentEmail ?? 'Student'}
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--serif)',
+                  fontStyle: 'italic',
+                  fontSize: 12,
+                  color: 'var(--ink-3)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {r.title}
+              </div>
+            </div>
+            <span
+              style={{
+                fontFamily: 'var(--mono)',
+                fontSize: 11,
+                color: 'var(--danger)',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              due {formatDate(r.dueDate)}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </Card>
+  );
+};
 
 export const WeekDensityCard = ({ days }: { days: WeekDensityDay[] }) => {
   const max = Math.max(1, ...days.map((d) => d.count));
@@ -186,9 +284,10 @@ export const StudentRosterCard = ({ rows }: { rows: RosterStudent[] }) => (
           <Link
             key={r.studentId}
             href={`/dashboard/users/${r.studentId}`}
+            className="ed-row"
             style={{
               display: 'grid',
-              gridTemplateColumns: '32px 1fr auto',
+              gridTemplateColumns: '32px minmax(0, 1fr) auto',
               gap: 10,
               padding: '12px 22px',
               borderTop: i === 0 ? '1px solid var(--rule)' : 'none',
@@ -226,9 +325,21 @@ export const SongLibraryCard = ({ summary }: { summary: SongLibrarySummary }) =>
       eyebrow="Library"
       title="Songs"
       action={
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)' }}>
-          {summary.total} total
-        </span>
+        <Link
+          href="/dashboard/songs"
+          className="ed-chip"
+          style={{
+            fontFamily: 'var(--mono)',
+            fontSize: 11,
+            color: 'var(--ink-4)',
+            textDecoration: 'none',
+            border: '1px solid var(--rule)',
+            borderRadius: 999,
+            padding: '3px 10px',
+          }}
+        >
+          View all {summary.total} →
+        </Link>
       }
     />
     {summary.recent.length === 0 ? (
@@ -239,6 +350,7 @@ export const SongLibraryCard = ({ summary }: { summary: SongLibrarySummary }) =>
           <Link
             key={s.id}
             href={`/dashboard/songs/${s.id}`}
+            className="ed-row"
             style={{
               display: 'flex',
               alignItems: 'center',

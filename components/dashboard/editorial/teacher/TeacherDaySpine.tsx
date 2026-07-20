@@ -145,6 +145,10 @@ export const TeacherDaySpine = ({ lessons, now }: Props) => {
                 color: 'var(--gold-2)',
                 textAlign: 'right',
                 fontWeight: 600,
+                background: 'var(--card)',
+                justifySelf: 'end',
+                padding: '1px 3px',
+                borderRadius: 3,
               }}
             >
               {formatClock(now.toISOString())}

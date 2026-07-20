@@ -38,9 +38,11 @@ export function SidebarSearch({ value, onChange }: SidebarSearchProps) {
         aria-label="Filter navigation"
         className="placeholder:text-muted-foreground/70 min-w-0 flex-1 bg-transparent text-xs outline-none"
       />
+      {/* Keyboard hint is noise on touch devices — show it only where a
+          hardware keyboard is the norm. */}
       <kbd
         aria-hidden="true"
-        className="border-border text-muted-foreground/70 rounded border px-1 font-mono text-[10px]"
+        className="border-border text-muted-foreground/70 hidden rounded border px-1 font-mono text-[10px] md:inline-block"
       >
         ⌘K
       </kbd>

@@ -10,10 +10,15 @@ import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { getPendingInvites, getPlatformPulse } from '@/lib/services/admin-dashboard-queries';
 import { getLockedAccounts } from '@/app/actions/admin/lockout';
-import { getStudentNextLesson, getStudentTopSongs } from '@/lib/services/student-dashboard-queries';
+import {
+  getStudentNextLesson,
+  getStudentOpenAssignments,
+  getStudentTopSongs,
+} from '@/lib/services/student-dashboard-queries';
 import {
   calcUtilization,
   getAtRiskStudents,
+  getOverdueAssignments,
   getSongLibrarySummary,
   getTeacherRoster,
   getWeekDensity,
@@ -67,14 +72,16 @@ async function loadProfileName(userId: string): Promise<string | null> {
 
 async function TeacherEditorialView({ userId, email }: { userId: string; email: string }) {
   const now = new Date();
-  const [fullName, lessons, atRisk, weekDensity, roster, library] = await Promise.all([
-    loadProfileName(userId),
-    getTeacherDayLessons(userId, now),
-    getAtRiskStudents(userId, now),
-    getWeekDensity(userId, now),
-    getTeacherRoster(userId),
-    getSongLibrarySummary(),
-  ]);
+  const [fullName, lessons, atRisk, overdueAssignments, weekDensity, roster, library] =
+    await Promise.all([
+      loadProfileName(userId),
+      getTeacherDayLessons(userId, now),
+      getAtRiskStudents(userId, now),
+      getOverdueAssignments(userId, now),
+      getWeekDensity(userId, now),
+      getTeacherRoster(userId),
+      getSongLibrarySummary(),
+    ]);
   const stats = summariseDayLessons(lessons);
   const utilization = calcUtilization(weekDensity);
   return (
@@ -86,6 +93,7 @@ async function TeacherEditorialView({ userId, email }: { userId: string; email: 
         lessons={lessons}
         stats={stats}
         atRisk={atRisk}
+        overdueAssignments={overdueAssignments}
         weekDensity={weekDensity}
         utilization={utilization}
         roster={roster}
@@ -117,10 +125,11 @@ async function AdminEditorialView() {
 
 async function StudentEditorialView({ userId, email }: { userId: string; email: string }) {
   const now = new Date();
-  const [fullName, nextLesson, songs] = await Promise.all([
+  const [fullName, nextLesson, songs, openAssignments] = await Promise.all([
     loadProfileName(userId),
     getStudentNextLesson(userId),
     getStudentTopSongs(userId),
+    getStudentOpenAssignments(userId),
   ]);
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
@@ -130,6 +139,7 @@ async function StudentEditorialView({ userId, email }: { userId: string; email: 
         now={now}
         nextLesson={nextLesson}
         songs={songs}
+        openAssignments={openAssignments}
       />
     </div>
   );
