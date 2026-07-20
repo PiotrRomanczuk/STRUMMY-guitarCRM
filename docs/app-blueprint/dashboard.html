@@ -1920,9 +1920,11 @@ Generated types: use root database.types.ts — types/database.types.ts has drif
 
         const META = {
           generated: '2026-07-19',
+          updated: '2026-07-20 (testing/coverage sections · branch test/core-coverage)',
           branch: 'feature/audit-findings-implementation',
           dbCapturedAt: '2026-07-19 16:16 UTC',
-          dbNote: 'StudentManager stack on uwh (dev-conflated live prod)',
+          dbNote:
+            'StudentManager stack on uwh (dev-conflated live prod; stacks since split into StudentDevelopment 553xx / StudentProduction 543xx)',
         };
 
         const BP = [
@@ -4545,6 +4547,7 @@ Generated types: use root database.types.ts — types/database.types.ts has drif
           document.getElementById('stamp').textContent =
             'generated ' +
             META.generated +
+            (META.updated ? ' · updated ' + META.updated : '') +
             ' · branch ' +
             META.branch +
             ' · DB snapshot ' +
