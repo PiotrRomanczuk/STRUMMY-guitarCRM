@@ -1,21 +1,25 @@
 import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
+import {
+  buildAssignmentListResult,
+  deriveEffectiveStatus,
+  emptyAssignmentCounts,
+  type AssignmentListParams,
+  type AssignmentListResult,
+  type AssignmentRow,
+} from '@/lib/services/assignment-list-params';
 
-export type AssignmentRow = {
-  id: string;
-  title: string;
-  status: string;
-  dueDate: string | null;
-  teacherId: string;
-  studentId: string;
-  studentName: string | null;
-  studentEmail: string | null;
-  createdAt: string;
-};
+export type {
+  AssignmentRow,
+  AssignmentListCounts,
+  AssignmentListParams,
+  AssignmentListResult,
+  AssignmentSortField,
+} from '@/lib/services/assignment-list-params';
+export { parseAssignmentListParams } from '@/lib/services/assignment-list-params';
 
 const STATUS_LABELS: Record<string, string> = {
   not_started: 'Not started',
-  pending: 'Pending',
   in_progress: 'In progress',
   completed: 'Completed',
   overdue: 'Overdue',
@@ -24,7 +28,6 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_COLOURS: Record<string, string> = {
   not_started: 'var(--ink-4)',
-  pending: 'var(--info)',
   in_progress: 'var(--gold-2)',
   completed: 'var(--success)',
   overdue: 'var(--danger)',
@@ -34,45 +37,70 @@ const STATUS_COLOURS: Record<string, string> = {
 export const assignmentStatusLabel = (s: string): string => STATUS_LABELS[s] ?? s;
 export const assignmentStatusColour = (s: string): string => STATUS_COLOURS[s] ?? 'var(--ink-4)';
 
-export async function getAssignments(
+type RawAssignment = {
+  id: string;
+  title: string;
+  status: string;
+  due_date: string | null;
+  teacher_id: string;
+  student_id: string;
+  created_at: string;
+  updated_at: string | null;
+  student:
+    | { full_name: string | null; email: string | null }
+    | { full_name: string | null; email: string | null }[]
+    | null;
+};
+
+const mapRow = (row: RawAssignment): AssignmentRow => {
+  const student = Array.isArray(row.student) ? row.student[0] : row.student;
+  const dueDate = row.due_date ?? null;
+  return {
+    id: row.id,
+    title: row.title,
+    status: row.status,
+    effectiveStatus: deriveEffectiveStatus(dueDate, row.status),
+    dueDate,
+    teacherId: row.teacher_id,
+    studentId: row.student_id,
+    studentName: student?.full_name ?? null,
+    studentEmail: student?.email ?? null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at ?? row.created_at,
+  };
+};
+
+/**
+ * Role-scoped assignments list with filtering, effective-status counts, and
+ * ordering. Because RLS already bounds the set to the caller's own rows (tens–
+ * low hundreds), the whole set is fetched once (cap 500) and all status logic
+ * runs in JS over `effectiveStatus`, keeping counts/tabs/sort mutually
+ * consistent. Past ~500 live rows, push the overdue predicate into SQL.
+ */
+export async function getAssignmentsList(
   userId: string,
   asStudent: boolean,
-  limit = 60
-): Promise<AssignmentRow[]> {
+  params: AssignmentListParams
+): Promise<AssignmentListResult> {
   const supabase = await createClient();
-  const filter = asStudent ? 'student_id' : 'teacher_id';
-  const { data, error } = await supabase
+  let query = supabase
     .from('assignments')
     .select(
-      'id, title, status, due_date, teacher_id, student_id, created_at, student:profiles!assignments_student_id_fkey(full_name, email)'
+      'id, title, status, due_date, teacher_id, student_id, created_at, updated_at, student:profiles!assignments_student_id_fkey(full_name, email)'
     )
-    .eq(filter, userId)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+    .eq(asStudent ? 'student_id' : 'teacher_id', userId)
+    .is('deleted_at', null);
+
+  if (!asStudent && params.studentId) query = query.eq('student_id', params.studentId);
+  if (params.search) query = query.ilike('title', `%${params.search}%`);
+
+  const { data, error } = await query.limit(500);
 
   if (error) {
-    logger.warn('[assignments-queries] error', { error: error.message, code: error.code });
-    return [];
+    logger.warn('[assignments-queries] list error', { error: error.message, code: error.code });
+    return { rows: [], counts: emptyAssignmentCounts() };
   }
 
-  return (data ?? []).map((row) => {
-    const student = Array.isArray(row.student) ? row.student[0] : row.student;
-    return {
-      id: row.id as string,
-      title: row.title as string,
-      status: row.status as string,
-      dueDate: (row.due_date as string) ?? null,
-      teacherId: row.teacher_id as string,
-      studentId: row.student_id as string,
-      studentName: (student?.full_name as string) ?? null,
-      studentEmail: (student?.email as string) ?? null,
-      createdAt: row.created_at as string,
-    };
-  });
+  const rows = (data ?? []).map((row) => mapRow(row as unknown as RawAssignment));
+  return buildAssignmentListResult(rows, params);
 }
-
-export const countAssignmentsByStatus = (rows: AssignmentRow[]): Record<string, number> => {
-  const map: Record<string, number> = {};
-  for (const r of rows) map[r.status] = (map[r.status] ?? 0) + 1;
-  return map;
-};

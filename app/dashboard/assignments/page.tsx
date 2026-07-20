@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 
 import { AssignmentsListEditorial } from '@/components/assignments/editorial/AssignmentsListEditorial';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
-import { countAssignmentsByStatus, getAssignments } from '@/lib/services/assignments-queries';
+import { getAssignmentsList, parseAssignmentListParams } from '@/lib/services/assignments-queries';
+import { getStudentOptions } from '@/lib/services/lesson-form-data';
 
 const geist = Geist({
   subsets: ['latin'],
@@ -26,15 +27,26 @@ const fraunces = Fraunces({
   display: 'swap',
 });
 
-export default async function AssignmentsPage() {
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export default async function AssignmentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   const { user, isAdmin, isTeacher, isStudent } = await getUserWithRolesSSR();
   if (!user) {
     redirect('/sign-in?redirect=/dashboard/assignments');
   }
 
   const asStudent = isStudent && !isTeacher && !isAdmin;
-  const rows = await getAssignments(user.id, asStudent);
-  const counts = countAssignmentsByStatus(rows);
+  const params = parseAssignmentListParams(await searchParams);
+  const canManage = isTeacher || isAdmin;
+
+  const [{ rows, counts }, students] = await Promise.all([
+    getAssignmentsList(user.id, asStudent, params),
+    canManage ? getStudentOptions(user.id, isAdmin) : Promise.resolve(undefined),
+  ]);
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
@@ -42,7 +54,13 @@ export default async function AssignmentsPage() {
         rows={rows}
         counts={counts}
         asStudent={asStudent}
-        canCreate={isTeacher || isAdmin}
+        canCreate={canManage}
+        activeStatus={params.status}
+        sort={params.sort}
+        dir={params.dir}
+        search={params.search}
+        students={students}
+        studentId={params.studentId}
       />
     </div>
   );

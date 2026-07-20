@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — Assignments Triage (PR A)</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 860px;
+        margin: 40px auto;
+        padding: 0 20px;
+        color: #1a1a1a;
+        line-height: 1.55;
+      }
+      h1 {
+        font-size: 26px;
+        border-bottom: 2px solid #c9a227;
+        padding-bottom: 8px;
+      }
+      h2 {
+        font-size: 19px;
+        margin-top: 32px;
+        color: #333;
+      }
+      code {
+        background: #f3f3ef;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      .meta {
+        color: #666;
+        font-size: 13px;
+      }
+      ol li,
+      ul li {
+        margin: 6px 0;
+      }
+      .pill {
+        display: inline-block;
+        background: #eef6ee;
+        color: #2b662b;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 7px 10px;
+        text-align: left;
+      }
+      th {
+        background: #faf8f2;
+      }
+      .note {
+        background: #fbf7e9;
+        border-left: 3px solid #c9a227;
+        padding: 10px 14px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Assignments Triage — Manual Test</h1>
+    <p class="meta">
+      <strong>Date:</strong> 2026-07-20 · <strong>PR:</strong> A of the assignments teacher-POV
+      slice · <strong>Branch:</strong> <code>feature/assignments-triage</code>
+    </p>
+
+    <h2>What was built</h2>
+    <p>
+      The assignments list at <code>/dashboard/assignments</code> was a flat, ungrouped,
+      non-interactive list (hard 60-row cap, ordered by creation date). It now supports
+      <strong>triage</strong>:
+    </p>
+    <ul>
+      <li>
+        <strong>Status tabs</strong> — All / Not started / In progress / Overdue / Completed /
+        Cancelled, each showing a live count.
+      </li>
+      <li>
+        <strong>Search</strong> by title, <strong>sort</strong> (Needs attention / Due date / Newest
+        / Recently updated / Title / Status) with an asc/desc toggle, and a
+        <strong>per-student filter</strong> (teachers/admins only).
+      </li>
+      <li>
+        <strong>“Needs attention” default order</strong> — overdue first, then soonest due, then
+        newest. All filter/sort state lives in the URL (shareable, back-button friendly).
+      </li>
+      <li>
+        <strong>Correct counts.</strong> The summary line previously counted a
+        <code>pending</code> status that the app never produces (so it always read 0 and
+        <code>not_started</code> work was omitted). Counts are now derived from the
+        <em>effective</em> status.
+      </li>
+      <li>
+        <strong>Effective “overdue”.</strong> A past-due assignment still stored as
+        <code>not_started</code>/<code>in_progress</code> (between nightly cron runs) now shows and
+        counts as <strong>Overdue</strong> everywhere — one source of truth
+        (<code>calculateAssignmentStatus</code>).
+      </li>
+      <li>
+        <strong>Cleanup</strong> — removed the duplicated “Status” column in the teacher list and
+        the stale <code>pending</code> label/colour entries.
+      </li>
+    </ul>
+
+    <div class="note">
+      Purely UI + query-layer. No schema change, no change to the status state machine,
+      notifications or crons. RLS still bounds each user to their own rows; filtering/counting
+      happens over that already-scoped set (cap 500).
+    </div>
+
+    <h2>Automated verification (already run)</h2>
+    <ul>
+      <li><span class="pill">PASS</span> <code>npm run typecheck</code> (tsc --noEmit, clean)</li>
+      <li>
+        <span class="pill">PASS</span> <code>npx eslint</code> on all changed files (0 errors)
+      </li>
+      <li>
+        <span class="pill">PASS</span> 12 new unit tests
+        (<code>lib/services/__tests__/assignment-list-params.test.ts</code>) covering param parsing,
+        effective-overdue derivation, counts (no <code>pending</code> key), needs-attention
+        ordering, explicit sort, and tab filtering
+      </li>
+      <li>
+        <span class="pill">PASS</span> all 128 existing assignment Jest tests (12 suites), incl. the
+        detail-page and cron suites
+      </li>
+    </ul>
+
+    <h2>How to manually test</h2>
+    <p><strong>Setup:</strong> <code>npm run dev</code> against local Supabase; sign in.</p>
+    <p>
+      <strong>Dev credentials:</strong> teacher <code>p.romanczuk@gmail.com / test123_admin</code>,
+      student <code>emma@strummy.app / Demo2024!</code>.
+    </p>
+
+    <h3>As a teacher/admin</h3>
+    <ol>
+      <li>Go to <code>/dashboard/assignments</code>. Confirm the status tab row with counts.</li>
+      <li>
+        Confirm default order puts any <strong>overdue</strong> rows first (red due date). The
+        summary line reads <em>“N total · X not started · … · Z overdue”</em> — no “pending”.
+      </li>
+      <li>
+        Click each tab. The list filters; the URL gains <code>?status=…</code>; counts stay stable.
+        The <strong>Overdue</strong> tab includes any assignment whose due date has passed even if
+        its stored status is still Not started / In progress.
+      </li>
+      <li>
+        Type in <strong>Search</strong> and submit → <code>?q=…</code>; only matching titles show.
+      </li>
+      <li>
+        Change <strong>Sort</strong> (e.g. Title) and toggle <strong>asc/desc</strong> →
+        <code>?sort=title&amp;dir=…</code>; order updates.
+      </li>
+      <li>
+        Pick a student in the <strong>student filter</strong> → <code>?student=…</code>; only that
+        student’s assignments show. (Verify the dropdown lists only your own students.)
+      </li>
+      <li>
+        Reload with a filtered URL — state is restored. The “+ New assignment” button still works.
+      </li>
+      <li>
+        Empty state: filter to something with no matches → “No assignments match these filters.”
+      </li>
+    </ol>
+
+    <h3>As a student</h3>
+    <ol>
+      <li>
+        Sign in as the student, open <code>/dashboard/assignments</code>. Confirm the “From your
+        teacher” heading, tabs, sort/search — but <strong>no</strong> per-student filter and
+        <strong>no</strong> “New assignment” button.
+      </li>
+      <li>Confirm you only see your own assignments and can still open a detail page.</li>
+    </ol>
+
+    <h3>Edge cases worth a look</h3>
+    <ul>
+      <li>An assignment with no due date sorts last under “Needs attention”.</li>
+      <li>A completed/cancelled assignment never flips to Overdue regardless of due date.</li>
+      <li>
+        Deleted (soft <code>deleted_at</code>) assignments never appear (this query now filters
+        them).
+      </li>
+    </ul>
+  </body>
+</html>
