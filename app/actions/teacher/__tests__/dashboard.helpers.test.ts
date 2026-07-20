@@ -4,6 +4,8 @@ import {
   countRepertoire,
   buildWeekChartData,
   computeNeedsAttention,
+  getLevelFromLessonCount,
+  getWeekBounds,
   type LessonStub,
   type AssignmentStub,
   type RepertoireStub,
@@ -144,5 +146,68 @@ describe('computeNeedsAttention', () => {
 
   it('returns null when student has no lessons at all (not enough signal)', () => {
     expect(computeNeedsAttention('s1', [], 0, NOW)).toBeNull();
+  });
+});
+
+describe('getLevelFromLessonCount', () => {
+  it('calls a student with no lessons a Beginner', () => {
+    expect(getLevelFromLessonCount(0)).toBe('Beginner');
+  });
+
+  it('keeps Beginner right up to the Intermediate boundary', () => {
+    expect(getLevelFromLessonCount(4)).toBe('Beginner');
+  });
+
+  it('promotes to Intermediate at exactly 5 lessons', () => {
+    expect(getLevelFromLessonCount(5)).toBe('Intermediate');
+  });
+
+  it('keeps Intermediate right up to the Advanced boundary', () => {
+    expect(getLevelFromLessonCount(19)).toBe('Intermediate');
+  });
+
+  it('promotes to Advanced at exactly 20 lessons', () => {
+    expect(getLevelFromLessonCount(20)).toBe('Advanced');
+  });
+
+  it('stays Advanced well past the boundary', () => {
+    expect(getLevelFromLessonCount(500)).toBe('Advanced');
+  });
+});
+
+describe('getWeekBounds', () => {
+  const asUtcDate = (iso: string) => new Date(iso);
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('anchors weekStart on the Sunday midnight UTC preceding "now"', () => {
+    // 2026-05-13 is a Wednesday; the containing week starts Sunday 2026-05-10.
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-13T15:42:07.123Z'));
+
+    const { weekStart, weekEnd } = getWeekBounds();
+
+    expect(weekStart).toBe('2026-05-10T00:00:00.000Z');
+    expect(weekEnd).toBe('2026-05-17T00:00:00.000Z');
+  });
+
+  it('treats a Sunday as the first day of its own week, not the last', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-10T23:59:59.000Z'));
+
+    const { weekStart } = getWeekBounds();
+
+    expect(weekStart).toBe('2026-05-10T00:00:00.000Z');
+  });
+
+  it('spans exactly seven days and brackets "now"', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-05-16T06:00:00.000Z'));
+
+    const { weekStart, weekEnd } = getWeekBounds();
+    const spanMs = asUtcDate(weekEnd).getTime() - asUtcDate(weekStart).getTime();
+
+    expect(spanMs).toBe(7 * 24 * 60 * 60 * 1000);
+    expect(asUtcDate(weekStart).getTime()).toBeLessThanOrEqual(Date.now());
+    expect(asUtcDate(weekEnd).getTime()).toBeGreaterThan(Date.now());
   });
 });

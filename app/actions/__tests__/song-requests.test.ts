@@ -6,6 +6,33 @@
 
 import { submitSongRequest, getSongRequests, reviewSongRequest } from '../song-requests';
 
+// The real Zod schemas do the parsing; the override exists only to reach the
+// defensive `?? 'Invalid form data'` fallback, which a real ZodError (always
+// carrying at least one issue with a message) cannot produce.
+let formParseOverride: { success: false; error: { issues: { message?: string }[] } } | null = null;
+jest.mock('@/schemas/SongRequestSchema', () => {
+  const actual = jest.requireActual('@/schemas/SongRequestSchema');
+  return {
+    ...actual,
+    SongRequestFormSchema: {
+      safeParse: (value: unknown) =>
+        formParseOverride ?? actual.SongRequestFormSchema.safeParse(value),
+    },
+  };
+});
+
+// This action uses the bare `logger` singleton (not createLogger). The arrow
+// indirection keeps the spy resolution lazy.
+const mockLogError = jest.fn();
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    error: (...args: unknown[]) => mockLogError(...args),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
 // Mock data
 const mockStudentUser = {
   id: 'student-uuid-123',
@@ -62,6 +89,7 @@ jest.mock('next/cache', () => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  formParseOverride = null;
 });
 
 describe('submitSongRequest', () => {
@@ -148,6 +176,46 @@ describe('submitSongRequest', () => {
     const result = await submitSongRequest({ title: 'Test' });
     expect(result.success).toBe(false);
     expect(result.error).toBe('Failed to submit request');
+    expect(mockLogError).toHaveBeenCalledWith('[submitSongRequest] Error:', {
+      message: 'DB error',
+    });
+  });
+
+  it('should block demo/test accounts before any auth or validation work', async () => {
+    mockGetUserWithRoles.mockResolvedValue({
+      user: mockStudentUser,
+      isAdmin: false,
+      isTeacher: false,
+      isStudent: true,
+      isDevelopment: true,
+    });
+
+    const result = await submitSongRequest({ title: 'Wonderwall' });
+
+    expect(result).toEqual({
+      success: false,
+      error: 'This action is not available on test accounts',
+    });
+    expect(mockFrom).not.toHaveBeenCalled();
+  });
+
+  it('should fall back to a generic message when validation reports no issue detail', async () => {
+    // Defensive branch: a real ZodError always carries an issue with a message,
+    // but the action must not surface `undefined` as the error string.
+    mockGetUserWithRoles.mockResolvedValue({
+      user: mockStudentUser,
+      isAdmin: false,
+      isTeacher: false,
+      isStudent: true,
+      isDevelopment: false,
+    });
+
+    formParseOverride = { success: false, error: { issues: [] } };
+
+    const result = await submitSongRequest({ title: 'Wonderwall' });
+
+    expect(result).toEqual({ success: false, error: 'Invalid form data' });
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });
 
@@ -218,6 +286,46 @@ describe('getSongRequests', () => {
 
     const result = await getSongRequests('approved');
     expect(result.requests).toEqual([]);
+  });
+
+  it('should surface a generic error and log details when the query fails', async () => {
+    mockGetUserWithRoles.mockResolvedValue({
+      user: mockTeacherUser,
+      isAdmin: false,
+      isTeacher: true,
+      isStudent: false,
+      isDevelopment: false,
+    });
+
+    const dbError = { message: 'relation does not exist' };
+    mockOrderChain.mockResolvedValue({ data: null, error: dbError });
+    mockSelectChain.mockReturnValue({ order: mockOrderChain });
+    mockFrom.mockReturnValue({ select: mockSelectChain });
+
+    const result = await getSongRequests();
+
+    expect(result.requests).toEqual([]);
+    expect(result.error).toBe('Failed to load requests');
+    expect(mockLogError).toHaveBeenCalledWith('[getSongRequests] Error:', dbError);
+  });
+
+  it('should return an empty list when the query succeeds with a null payload', async () => {
+    mockGetUserWithRoles.mockResolvedValue({
+      user: mockTeacherUser,
+      isAdmin: false,
+      isTeacher: true,
+      isStudent: false,
+      isDevelopment: false,
+    });
+
+    mockOrderChain.mockResolvedValue({ data: null, error: null });
+    mockSelectChain.mockReturnValue({ order: mockOrderChain });
+    mockFrom.mockReturnValue({ select: mockSelectChain });
+
+    const result = await getSongRequests();
+
+    expect(result.requests).toEqual([]);
+    expect(result.error).toBeUndefined();
   });
 });
 
@@ -306,5 +414,26 @@ describe('reviewSongRequest', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Failed to review request');
+    expect(mockLogError).toHaveBeenCalledWith('[reviewSongRequest] Error:', {
+      message: 'DB error',
+    });
+  });
+
+  it('should block demo/test accounts before any auth or validation work', async () => {
+    mockGetUserWithRoles.mockResolvedValue({
+      user: mockTeacherUser,
+      isAdmin: false,
+      isTeacher: true,
+      isStudent: false,
+      isDevelopment: true,
+    });
+
+    const result = await reviewSongRequest('request-uuid-789', { status: 'approved' });
+
+    expect(result).toEqual({
+      success: false,
+      error: 'This action is not available on test accounts',
+    });
+    expect(mockFrom).not.toHaveBeenCalled();
   });
 });

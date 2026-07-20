@@ -31,6 +31,9 @@ const mockEq = jest.fn();
 const mockSelect = jest.fn();
 const mockSingle = jest.fn();
 const mockFrom = jest.fn();
+// Shared terminal result for insert/update/delete so a test can fail any of
+// the three write paths the same way.
+const mockWriteResult = jest.fn();
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(() =>
@@ -40,14 +43,14 @@ jest.mock('@/lib/supabase/server', () => ({
         return {
           insert: (data: unknown) => {
             mockInsert(data);
-            return Promise.resolve({ error: null });
+            return mockWriteResult();
           },
           update: (data: unknown) => {
             mockUpdate(data);
             return {
               eq: (field: string, value: string) => {
                 mockEq(field, value);
-                return Promise.resolve({ error: null });
+                return mockWriteResult();
               },
             };
           },
@@ -56,7 +59,7 @@ jest.mock('@/lib/supabase/server', () => ({
             return {
               eq: (field: string, value: string) => {
                 mockEq(field, value);
-                return Promise.resolve({ error: null });
+                return mockWriteResult();
               },
             };
           },
@@ -83,9 +86,22 @@ jest.mock('next/cache', () => ({
   revalidatePath: (path: string) => mockRevalidatePath(path),
 }));
 
+// This action uses the bare `logger` singleton (not createLogger). The arrow
+// indirection keeps the spy resolution lazy.
+const mockLogError = jest.fn();
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    error: (...args: unknown[]) => mockLogError(...args),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
 describe('createAssignmentTemplate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockWriteResult.mockResolvedValue({ error: null });
   });
 
   it('should create template when user is teacher', async () => {
@@ -219,11 +235,59 @@ describe('createAssignmentTemplate', () => {
       } as any)
     ).rejects.toThrow('Invalid data');
   });
+
+  it('should reject demo/test accounts before touching the database', async () => {
+    const teacherId = '123e4567-e89b-12d3-a456-426614174000';
+    mockGetUserWithRolesSSR.mockResolvedValue({
+      user: { id: teacherId },
+      isAdmin: false,
+      isTeacher: true,
+      isStudent: false,
+      isDevelopment: true,
+    });
+
+    await expect(
+      createAssignmentTemplate({
+        title: 'Scale Practice',
+        description: 'Practice major scales',
+        teacher_id: teacherId,
+      })
+    ).rejects.toThrow('This action is not available on test accounts');
+
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('should throw a generic error and log details when the insert fails', async () => {
+    const teacherId = '123e4567-e89b-12d3-a456-426614174000';
+    mockGetUserWithRolesSSR.mockResolvedValue({
+      user: { id: teacherId },
+      isAdmin: false,
+      isTeacher: true,
+      isStudent: false,
+      isDevelopment: false,
+    });
+
+    const dbError = { message: 'duplicate key value violates unique constraint' };
+    mockWriteResult.mockResolvedValue({ error: dbError });
+
+    await expect(
+      createAssignmentTemplate({
+        title: 'Scale Practice',
+        description: 'Practice major scales',
+        teacher_id: teacherId,
+      })
+    ).rejects.toThrow('Failed to create assignment template');
+
+    expect(mockLogError).toHaveBeenCalledWith('Error creating assignment template:', dbError);
+    // A failed write must not bust the cache.
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
+  });
 });
 
 describe('updateAssignmentTemplate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockWriteResult.mockResolvedValue({ error: null });
   });
 
   it('should allow teacher to update own template', async () => {
@@ -365,11 +429,39 @@ describe('updateAssignmentTemplate', () => {
       } as any)
     ).rejects.toThrow('Invalid data');
   });
+
+  it('should throw a generic error and log details when the update fails', async () => {
+    const adminId = '223e4567-e89b-12d3-a456-426614174001';
+    const templateId = '623e4567-e89b-12d3-a456-426614174005';
+
+    mockGetUserWithRolesSSR.mockResolvedValue({
+      user: { id: adminId },
+      isAdmin: true,
+      isTeacher: false,
+      isStudent: false,
+      isDevelopment: false,
+    });
+
+    const dbError = { message: 'row is locked' };
+    mockWriteResult.mockResolvedValue({ error: dbError });
+
+    await expect(
+      updateAssignmentTemplate({
+        id: templateId,
+        title: 'Updated',
+        description: 'Test',
+      })
+    ).rejects.toThrow('Failed to update assignment template');
+
+    expect(mockLogError).toHaveBeenCalledWith('Error updating assignment template:', dbError);
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
+  });
 });
 
 describe('deleteAssignmentTemplate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockWriteResult.mockResolvedValue({ error: null });
   });
 
   it('should allow teacher to delete own template', async () => {
@@ -462,5 +554,25 @@ describe('deleteAssignmentTemplate', () => {
     });
 
     await expect(deleteAssignmentTemplate('template-id')).rejects.toThrow('Unauthorized');
+  });
+
+  it('should throw a generic error and log details when the delete fails', async () => {
+    mockGetUserWithRolesSSR.mockResolvedValue({
+      user: { id: 'admin-id' },
+      isAdmin: true,
+      isTeacher: false,
+      isStudent: false,
+      isDevelopment: false,
+    });
+
+    const dbError = { message: 'foreign key violation' };
+    mockWriteResult.mockResolvedValue({ error: dbError });
+
+    await expect(deleteAssignmentTemplate('template-id')).rejects.toThrow(
+      'Failed to delete assignment template'
+    );
+
+    expect(mockLogError).toHaveBeenCalledWith('Error deleting assignment template:', dbError);
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
   });
 });

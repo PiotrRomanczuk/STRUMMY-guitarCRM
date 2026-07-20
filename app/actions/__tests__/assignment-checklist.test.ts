@@ -19,6 +19,9 @@ jest.mock('@/lib/getUserWithRolesSSR', () => ({
 const mockSingle = jest.fn();
 const mockRpc = jest.fn();
 const mockUpdate = jest.fn();
+// Shared by both write paths (student RPC and teacher/admin update) so a test
+// can fail either one the same way.
+const mockWriteResult = jest.fn();
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(() =>
@@ -27,12 +30,12 @@ jest.mock('@/lib/supabase/server', () => ({
         select: () => ({ eq: () => ({ is: () => ({ single: () => mockSingle() }) }) }),
         update: (data: unknown) => {
           mockUpdate(data);
-          return { eq: () => Promise.resolve({ error: null }) };
+          return { eq: () => mockWriteResult() };
         },
       }),
       rpc: (name: string, args: unknown) => {
         mockRpc(name, args);
-        return Promise.resolve({ error: null });
+        return mockWriteResult();
       },
     })
   ),
@@ -40,6 +43,18 @@ jest.mock('@/lib/supabase/server', () => ({
 
 const mockRevalidatePath = jest.fn();
 jest.mock('next/cache', () => ({ revalidatePath: (p: string) => mockRevalidatePath(p) }));
+
+// Resolved lazily inside the factory — the action calls createLogger() at
+// module scope, so an eagerly-captured spy would hit the TDZ.
+const mockLogError = jest.fn();
+jest.mock('@/lib/logger', () => ({
+  createLogger: () => ({
+    error: (...args: unknown[]) => mockLogError(...args),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  }),
+}));
 
 const STUDENT_ID = '123e4567-e89b-12d3-a456-426614174000';
 const TEACHER_ID = '223e4567-e89b-12d3-a456-426614174111';
@@ -88,7 +103,10 @@ describe('applyChecklistToggle', () => {
 });
 
 describe('toggleChecklistItemAction', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockWriteResult.mockResolvedValue({ error: null });
+  });
 
   it('routes an owning student through the SECURITY DEFINER RPC (not a plain update)', async () => {
     mockGetUserWithRolesSSR.mockResolvedValue(asStudent);
@@ -170,5 +188,59 @@ describe('toggleChecklistItemAction', () => {
     expect(result).toHaveProperty('error');
     expect(mockRpc).not.toHaveBeenCalled();
     expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('reports not-found when the fetch itself errors', async () => {
+    mockGetUserWithRolesSSR.mockResolvedValue(asStudent);
+    mockSingle.mockResolvedValue({ data: null, error: { message: 'connection reset' } });
+
+    const result = await toggleChecklistItemAction(ASSIGNMENT_ID, 'a', true);
+
+    expect(result).toEqual({ error: 'Assignment not found' });
+    expect(mockRpc).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('treats a malformed stored checklist as empty rather than trusting it', async () => {
+    // Legacy/hand-edited rows can hold a non-conforming `checklist` value. The
+    // action must fall back to [] instead of letting bad data reach the write.
+    mockGetUserWithRolesSSR.mockResolvedValue(asTeacher);
+    fetchRow({ checklist: 'not-a-checklist' });
+
+    const result = await toggleChecklistItemAction(ASSIGNMENT_ID, 'a', true);
+
+    expect(result).toEqual({ error: 'Checklist item not found' });
+    expect(mockRpc).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('surfaces a generic error and logs details when the student RPC fails', async () => {
+    mockGetUserWithRolesSSR.mockResolvedValue(asStudent);
+    fetchRow();
+    mockWriteResult.mockResolvedValue({ error: { message: 'rpc exploded' } });
+
+    const result = await toggleChecklistItemAction(ASSIGNMENT_ID, 'a', true);
+
+    expect(result).toEqual({ error: 'Failed to update checklist' });
+    expect(mockLogError).toHaveBeenCalledWith('Failed to toggle checklist item', {
+      assignmentId: ASSIGNMENT_ID,
+      itemId: 'a',
+      error: { message: 'rpc exploded' },
+    });
+    // A failed write must not bust the cache.
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('surfaces a generic error when the teacher update fails', async () => {
+    mockGetUserWithRolesSSR.mockResolvedValue(asTeacher);
+    fetchRow();
+    mockWriteResult.mockResolvedValue({ error: { message: 'row is locked' } });
+
+    const result = await toggleChecklistItemAction(ASSIGNMENT_ID, 'b', true);
+
+    expect(result).toEqual({ error: 'Failed to update checklist' });
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(mockLogError).toHaveBeenCalled();
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
   });
 });

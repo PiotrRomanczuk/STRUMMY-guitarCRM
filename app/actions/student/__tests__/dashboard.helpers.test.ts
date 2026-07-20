@@ -1,6 +1,8 @@
 import {
   computePracticeStreakDays,
   getMonToSunWeekBounds,
+  buildEmptyWeekChart,
+  WEEK_DAYS_MON,
 } from '@/app/actions/student/dashboard.helpers';
 
 // Helper to produce a date string N days ago from a reference date
@@ -98,5 +100,52 @@ describe('getMonToSunWeekBounds', () => {
     const sunday = new Date('2026-05-10T10:00:00Z');
     const { weekStart } = getMonToSunWeekBounds(sunday);
     expect(dateStr(weekStart)).toBe('2026-05-04');
+  });
+});
+
+describe('buildEmptyWeekChart', () => {
+  // 2026-05-11 is a Monday — the shape getMonToSunWeekBounds hands over.
+  const MONDAY = new Date('2026-05-11T00:00:00.000Z');
+
+  it('returns one row per weekday in Mon-first order', () => {
+    const rows = buildEmptyWeekChart(MONDAY);
+
+    expect(rows).toHaveLength(7);
+    expect(rows.map((r) => r.day)).toEqual([...WEEK_DAYS_MON]);
+  });
+
+  it('walks consecutive UTC dates starting from weekStart', () => {
+    const rows = buildEmptyWeekChart(MONDAY);
+
+    expect(rows.map((r) => r.date.toISOString().slice(0, 10))).toEqual([
+      '2026-05-11',
+      '2026-05-12',
+      '2026-05-13',
+      '2026-05-14',
+      '2026-05-15',
+      '2026-05-16',
+      '2026-05-17',
+    ]);
+  });
+
+  it('rolls over a month boundary without drifting', () => {
+    // 2026-06-29 is a Monday; the week spills into July.
+    const rows = buildEmptyWeekChart(new Date('2026-06-29T00:00:00.000Z'));
+
+    expect(rows[0].date.toISOString().slice(0, 10)).toBe('2026-06-29');
+    expect(rows[6].date.toISOString().slice(0, 10)).toBe('2026-07-05');
+  });
+
+  it('does not mutate the weekStart it was handed', () => {
+    const weekStart = new Date(MONDAY);
+    buildEmptyWeekChart(weekStart);
+
+    expect(weekStart.toISOString()).toBe(MONDAY.toISOString());
+  });
+
+  it('pairs each day label with the matching UTC weekday', () => {
+    const rows = buildEmptyWeekChart(MONDAY);
+    // getUTCDay: 0=Sun, so Mon-first labels map to 1,2,3,4,5,6,0.
+    expect(rows.map((r) => r.date.getUTCDay())).toEqual([1, 2, 3, 4, 5, 6, 0]);
   });
 });

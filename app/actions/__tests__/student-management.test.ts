@@ -46,11 +46,7 @@ describe('student-management actions', () => {
 
       const result = await createStudentProfile('student@example.com', 'John', 'Doe');
 
-      expect(mockCreateShadowStudent).toHaveBeenCalledWith(
-        'student@example.com',
-        'John',
-        'Doe'
-      );
+      expect(mockCreateShadowStudent).toHaveBeenCalledWith('student@example.com', 'John', 'Doe');
       expect(result).toEqual({
         success: true,
         data: {
@@ -76,11 +72,7 @@ describe('student-management actions', () => {
 
       const result = await createStudentProfile('student@example.com', 'Jane', 'Smith');
 
-      expect(mockCreateShadowStudent).toHaveBeenCalledWith(
-        'student@example.com',
-        'Jane',
-        'Smith'
-      );
+      expect(mockCreateShadowStudent).toHaveBeenCalledWith('student@example.com', 'Jane', 'Smith');
       expect(result.success).toBe(true);
     });
 
@@ -153,6 +145,23 @@ describe('student-management actions', () => {
         success: false,
         error: 'Email already exists',
       });
+    });
+
+    it('should block demo/test accounts before reaching the role check', async () => {
+      mockGetUserWithRolesSSR.mockResolvedValueOnce({
+        user: { id: 'demo-teacher-123' },
+        isTeacher: true,
+        isAdmin: false,
+        isDevelopment: true,
+      });
+
+      const result = await createStudentProfile('student@example.com', 'John', 'Doe');
+
+      expect(result).toEqual({
+        success: false,
+        error: 'This action is not available on test accounts',
+      });
+      expect(mockCreateShadowStudent).not.toHaveBeenCalled();
     });
 
     it('should handle empty email (shadow user)', async () => {
