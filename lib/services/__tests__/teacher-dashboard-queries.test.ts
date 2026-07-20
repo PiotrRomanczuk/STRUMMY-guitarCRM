@@ -94,6 +94,59 @@ describe('teacher-dashboard-queries', () => {
         code: 'ERR',
       });
     });
+
+    it('handles object-shaped joins, a keyless song, and a missing student', async () => {
+      mockOrder.mockResolvedValueOnce({
+        data: [
+          {
+            id: 'l1',
+            scheduled_at: '2026-07-20T14:00:00Z',
+            status: 'scheduled',
+            title: null,
+            student: { id: 's1', full_name: null, email: null },
+            lesson_songs: [{ song_id: 'song1', songs: { title: 'Blackbird', key: null } }],
+          },
+          {
+            id: 'l2',
+            scheduled_at: '2026-07-20T15:00:00Z',
+            status: 'scheduled',
+            title: 'Orphan',
+            student: null,
+            lesson_songs: null,
+          },
+        ],
+        error: null,
+      });
+
+      expect(await getTeacherDayLessons('t1', new Date('2026-07-20T12:00:00Z'))).toEqual([
+        {
+          id: 'l1',
+          scheduledAt: '2026-07-20T14:00:00Z',
+          status: 'scheduled',
+          title: null,
+          studentId: 's1',
+          studentName: null,
+          studentEmail: null,
+          songs: [{ songId: 'song1', title: 'Blackbird', songKey: null }],
+        },
+        {
+          id: 'l2',
+          scheduledAt: '2026-07-20T15:00:00Z',
+          status: 'scheduled',
+          title: 'Orphan',
+          studentId: '',
+          studentName: null,
+          studentEmail: null,
+          songs: [],
+        },
+      ]);
+    });
+
+    it('returns empty array when supabase resolves a null payload without error', async () => {
+      mockOrder.mockResolvedValueOnce({ data: null, error: null });
+      expect(await getTeacherDayLessons('t1', new Date('2026-07-20T12:00:00Z'))).toEqual([]);
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
   });
 
   describe('summariseDayLessons', () => {

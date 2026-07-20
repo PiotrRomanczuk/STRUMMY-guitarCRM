@@ -83,17 +83,52 @@ describe('lesson-form-data', () => {
       expect(mockIn).not.toHaveBeenCalled();
     });
 
+    it('returns empty array when the admin query resolves a null payload', async () => {
+      mockOrder.mockResolvedValueOnce({ data: null, error: null });
+      expect(await getStudentOptions('admin1', true)).toEqual([]);
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('maps a nameless student profile to a null name', async () => {
+      mockEq.mockResolvedValueOnce({ data: [{ student_id: 's1' }], error: null });
+      mockOrder.mockResolvedValueOnce({
+        data: [{ id: 's1', full_name: null, email: 'bob@example.com' }],
+        error: null,
+      });
+
+      expect(await getStudentOptions('t1', false)).toEqual([
+        { id: 's1', name: null, email: 'bob@example.com' },
+      ]);
+    });
+
+    it('returns empty array when the teacher profiles query resolves a null payload', async () => {
+      mockEq.mockResolvedValueOnce({ data: [{ student_id: 's1' }], error: null });
+      mockOrder.mockResolvedValueOnce({ data: null, error: null });
+      expect(await getStudentOptions('t1', false)).toEqual([]);
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('returns empty array when the teacher_students query errors', async () => {
+      mockEq.mockResolvedValueOnce({ data: null, error: { message: 'db error' } });
+      expect(await getStudentOptions('t1', false)).toEqual([]);
+      expect(mockIn).not.toHaveBeenCalled();
+    });
+
     it('handles errors for admin queries', async () => {
       mockOrder.mockResolvedValue({ data: null, error: { message: 'db error' } });
       expect(await getStudentOptions('admin1', true)).toEqual([]);
-      expect(logger.warn).toHaveBeenCalledWith('[lesson-form-data] admin student options error', { error: 'db error' });
+      expect(logger.warn).toHaveBeenCalledWith('[lesson-form-data] admin student options error', {
+        error: 'db error',
+      });
     });
 
     it('handles errors for teacher profiles query', async () => {
       mockEq.mockResolvedValueOnce({ data: [{ student_id: 's1' }], error: null });
       mockOrder.mockResolvedValueOnce({ data: null, error: { message: 'db error' } });
       expect(await getStudentOptions('t1', false)).toEqual([]);
-      expect(logger.warn).toHaveBeenCalledWith('[lesson-form-data] teacher student options error', { error: 'db error' });
+      expect(logger.warn).toHaveBeenCalledWith('[lesson-form-data] teacher student options error', {
+        error: 'db error',
+      });
     });
   });
 
@@ -110,10 +145,28 @@ describe('lesson-form-data', () => {
       expect(result).toEqual([{ id: 'song1', title: 'Wonderwall', author: 'Oasis' }]);
     });
 
+    it('maps an author-less song to a null author', async () => {
+      mockOrder.mockResolvedValueOnce({
+        data: [{ id: 'song1', title: 'Untitled Riff', author: null }],
+        error: null,
+      });
+      expect(await getSongOptions()).toEqual([
+        { id: 'song1', title: 'Untitled Riff', author: null },
+      ]);
+    });
+
+    it('returns empty array when the songs query resolves a null payload', async () => {
+      mockOrder.mockResolvedValueOnce({ data: null, error: null });
+      expect(await getSongOptions()).toEqual([]);
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
     it('returns empty array on error and logs', async () => {
       mockOrder.mockResolvedValue({ data: null, error: { message: 'db error' } });
       expect(await getSongOptions()).toEqual([]);
-      expect(logger.warn).toHaveBeenCalledWith('[lesson-form-data] song options error', { error: 'db error' });
+      expect(logger.warn).toHaveBeenCalledWith('[lesson-form-data] song options error', {
+        error: 'db error',
+      });
     });
   });
 
@@ -171,11 +224,16 @@ describe('lesson-form-data', () => {
     it('returns null and logs on error (except PGRST116)', async () => {
       mockSingle.mockResolvedValue({ data: null, error: { code: 'OTHER', message: 'fail' } });
       expect(await getLessonForEdit('L1')).toBeNull();
-      expect(logger.warn).toHaveBeenCalledWith('[lesson-form-data] lesson-for-edit error', { error: 'fail' });
+      expect(logger.warn).toHaveBeenCalledWith('[lesson-form-data] lesson-for-edit error', {
+        error: 'fail',
+      });
     });
 
     it('returns null silently on not found (PGRST116)', async () => {
-      mockSingle.mockResolvedValue({ data: null, error: { code: 'PGRST116', message: 'not found' } });
+      mockSingle.mockResolvedValue({
+        data: null,
+        error: { code: 'PGRST116', message: 'not found' },
+      });
       expect(await getLessonForEdit('L1')).toBeNull();
       expect(logger.warn).not.toHaveBeenCalled();
     });

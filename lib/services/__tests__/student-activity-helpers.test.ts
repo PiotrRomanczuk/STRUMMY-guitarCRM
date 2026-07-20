@@ -48,41 +48,63 @@ describe('student-activity-helpers', () => {
     });
 
     it('archives an active student with no recent or future lessons', async () => {
-      mockSingle.mockResolvedValueOnce({ data: { id: 's1', student_status: 'active' }, error: null });
+      mockSingle.mockResolvedValueOnce({
+        data: { id: 's1', student_status: 'active' },
+        error: null,
+      });
       // lastCompleted
-      mockSingle.mockResolvedValueOnce({ data: { scheduled_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() }, error: null });
+      mockSingle.mockResolvedValueOnce({
+        data: { scheduled_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
+        error: null,
+      });
       // nextScheduled
       mockSingle.mockResolvedValueOnce({ data: null, error: null });
 
       const result = await updateSingleStudentStatus('s1');
-      
+
       expect(result.updated).toBe(true);
       expect(result.previousStatus).toBe('active');
       expect(result.newStatus).toBe('archived');
-      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ student_status: 'archived' }));
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ student_status: 'archived' })
+      );
       expect(mockInsert).toHaveBeenCalled();
     });
 
     it('activates an archived student with future lessons', async () => {
-      mockSingle.mockResolvedValueOnce({ data: { id: 's2', student_status: 'archived' }, error: null });
+      mockSingle.mockResolvedValueOnce({
+        data: { id: 's2', student_status: 'archived' },
+        error: null,
+      });
       // lastCompleted
       mockSingle.mockResolvedValueOnce({ data: null, error: null });
       // nextScheduled
-      mockSingle.mockResolvedValueOnce({ data: { scheduled_at: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString() }, error: null });
+      mockSingle.mockResolvedValueOnce({
+        data: { scheduled_at: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString() },
+        error: null,
+      });
 
       const result = await updateSingleStudentStatus('s2');
 
       expect(result.updated).toBe(true);
       expect(result.previousStatus).toBe('archived');
       expect(result.newStatus).toBe('active');
-      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ student_status: 'active' }));
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ student_status: 'active' })
+      );
       expect(mockInsert).toHaveBeenCalled();
     });
 
     it('does nothing if status should not change', async () => {
-      mockSingle.mockResolvedValueOnce({ data: { id: 's3', student_status: 'active' }, error: null });
+      mockSingle.mockResolvedValueOnce({
+        data: { id: 's3', student_status: 'active' },
+        error: null,
+      });
       // lastCompleted
-      mockSingle.mockResolvedValueOnce({ data: { scheduled_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() }, error: null });
+      mockSingle.mockResolvedValueOnce({
+        data: { scheduled_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
+        error: null,
+      });
       // nextScheduled
       mockSingle.mockResolvedValueOnce({ data: null, error: null });
 
@@ -117,6 +139,22 @@ describe('student-activity-helpers', () => {
       expect(result.daysSinceLastLesson).toBe(40);
       expect(result.shouldBeInactive).toBe(true); // inactive for 40 days, no future lessons
       expect(result.shouldBeActive).toBe(false);
+    });
+
+    it('reports a null day count for a student with no completed lesson yet', async () => {
+      mockSingle.mockResolvedValueOnce({ data: { student_status: 'archived' }, error: null });
+      mockSingle.mockResolvedValueOnce({ data: null, error: null }); // no completed lesson
+      const nextScheduledDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      mockSingle.mockResolvedValueOnce({ data: { scheduled_at: nextScheduledDate }, error: null });
+
+      const result = await getStudentActivityInfo('s1');
+
+      expect(result.studentStatus).toBe('archived');
+      expect(result.lastCompletedLessonDate).toBeNull();
+      expect(result.nextScheduledLessonDate).toBe(nextScheduledDate);
+      expect(result.daysSinceLastLesson).toBeNull();
+      expect(result.shouldBeInactive).toBe(false); // a future lesson keeps them active
+      expect(result.shouldBeActive).toBe(true);
     });
   });
 });

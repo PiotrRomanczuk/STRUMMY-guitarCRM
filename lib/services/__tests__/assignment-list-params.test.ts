@@ -135,6 +135,96 @@ describe('sortAssignments', () => {
       'Angie',
     ]);
   });
+
+  it('needs-attention breaks a due-date tie by newest created first', () => {
+    const rows = [
+      makeRow({
+        id: 'older',
+        status: 'not_started',
+        dueDate: FUTURE,
+        createdAt: '2026-01-01T00:00:00Z',
+      }),
+      makeRow({
+        id: 'newer',
+        status: 'not_started',
+        dueDate: FUTURE,
+        createdAt: '2026-05-01T00:00:00Z',
+      }),
+    ];
+    expect(sortAssignments(rows, defaults).map((r) => r.id)).toEqual(['newer', 'older']);
+  });
+
+  it('sorts by status weight (overdue first, cancelled last)', () => {
+    const rows = [
+      makeRow({ id: 'cancelled', status: 'cancelled' }),
+      makeRow({ id: 'overdue', status: 'not_started', dueDate: PAST }),
+      makeRow({ id: 'in_progress', status: 'in_progress' }),
+    ];
+    expect(sortAssignments(rows, { sort: 'status', dir: 'asc' }).map((r) => r.id)).toEqual([
+      'overdue',
+      'in_progress',
+      'cancelled',
+    ]);
+    expect(sortAssignments(rows, { sort: 'status', dir: 'desc' }).map((r) => r.id)).toEqual([
+      'cancelled',
+      'in_progress',
+      'overdue',
+    ]);
+  });
+
+  it('sorts a legacy out-of-enum status last via the weight fallback', () => {
+    // `deriveEffectiveStatus` casts the raw persisted status, and
+    // `calculateAssignmentStatus` passes unknown values straight through — so a
+    // legacy row (e.g. the retired 'pending') reaches STATUS_ORDER as a miss and
+    // must fall back to weight 9 rather than NaN-poisoning the comparator.
+    const legacyA = makeRow({ id: 'legacy-a', status: 'pending' });
+    const legacyB = makeRow({ id: 'legacy-b', status: 'pending' });
+    expect(legacyA.effectiveStatus).toBe('pending');
+
+    // Two legacy rows so both comparator operands take the fallback; they tie at
+    // weight 9 and keep their input order, and both sort after every known status.
+    const rows = [legacyA, legacyB, makeRow({ id: 'cancelled', status: 'cancelled' })];
+    expect(sortAssignments(rows, { sort: 'status', dir: 'asc' }).map((r) => r.id)).toEqual([
+      'cancelled',
+      'legacy-a',
+      'legacy-b',
+    ]);
+  });
+
+  it('sorts by created_at', () => {
+    const rows = [
+      makeRow({ id: 'newer', status: 'in_progress', createdAt: '2026-05-01T00:00:00Z' }),
+      makeRow({ id: 'older', status: 'in_progress', createdAt: '2026-01-01T00:00:00Z' }),
+    ];
+    expect(sortAssignments(rows, { sort: 'created_at', dir: 'asc' }).map((r) => r.id)).toEqual([
+      'older',
+      'newer',
+    ]);
+  });
+
+  it('sorts by updated_at', () => {
+    const rows = [
+      makeRow({ id: 'stale', status: 'in_progress', updatedAt: '2026-01-01T00:00:00Z' }),
+      makeRow({ id: 'fresh', status: 'in_progress', updatedAt: '2026-05-01T00:00:00Z' }),
+    ];
+    expect(sortAssignments(rows, { sort: 'updated_at', dir: 'asc' }).map((r) => r.id)).toEqual([
+      'stale',
+      'fresh',
+    ]);
+  });
+
+  it('sorts by due_date with undated rows last', () => {
+    const rows = [
+      makeRow({ id: 'nodue', status: 'in_progress' }),
+      makeRow({ id: 'future', status: 'not_started', dueDate: FUTURE }),
+      makeRow({ id: 'past', status: 'not_started', dueDate: PAST }),
+    ];
+    expect(sortAssignments(rows, { sort: 'due_date', dir: 'asc' }).map((r) => r.id)).toEqual([
+      'past',
+      'future',
+      'nodue',
+    ]);
+  });
 });
 
 describe('buildAssignmentListResult', () => {

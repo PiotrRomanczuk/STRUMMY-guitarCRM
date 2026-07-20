@@ -1,7 +1,12 @@
 import { getAssignmentTemplate, getAssignmentTemplates } from '../assignment-template-queries';
+import { logger } from '@/lib/logger';
 
 const mockOrder = jest.fn();
 const mockSingle = jest.fn();
+
+jest.mock('@/lib/logger', () => ({
+  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn() },
+}));
 
 jest.mock('@/lib/supabase/server', () => ({
   createClient: jest.fn(() =>
@@ -66,6 +71,12 @@ describe('getAssignmentTemplates', () => {
     mockOrder.mockResolvedValue({ data: null, error: { message: 'boom' } });
     expect(await getAssignmentTemplates()).toEqual([]);
   });
+
+  it('returns [] when supabase resolves a null payload without error', async () => {
+    mockOrder.mockResolvedValue({ data: null, error: null });
+    expect(await getAssignmentTemplates()).toEqual([]);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
 });
 
 describe('getAssignmentTemplate', () => {
@@ -90,5 +101,20 @@ describe('getAssignmentTemplate', () => {
   it('returns null when not found', async () => {
     mockSingle.mockResolvedValue({ data: null, error: { code: 'PGRST116', message: 'no rows' } });
     expect(await getAssignmentTemplate('nope')).toBeNull();
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('returns null and logs on a non-PGRST116 error', async () => {
+    mockSingle.mockResolvedValue({ data: null, error: { code: '42501', message: 'denied' } });
+    expect(await getAssignmentTemplate('t1')).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith('[assignment-template-queries] detail error', {
+      error: 'denied',
+    });
+  });
+
+  it('returns null when supabase resolves a null payload without error', async () => {
+    mockSingle.mockResolvedValue({ data: null, error: null });
+    expect(await getAssignmentTemplate('t1')).toBeNull();
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 });

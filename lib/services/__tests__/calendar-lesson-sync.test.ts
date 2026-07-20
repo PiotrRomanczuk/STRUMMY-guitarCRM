@@ -110,6 +110,25 @@ describe('calendar-lesson-sync', () => {
       expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'lesson-123');
     });
 
+    it('should send undefined notes when the lesson has none', async () => {
+      mockSupabase.single
+        .mockResolvedValueOnce({ data: { access_token: 'valid-token' }, error: null })
+        .mockResolvedValueOnce({ data: { email: 'student@example.com' }, error: null });
+
+      (googleLib.createGoogleCalendarEvent as jest.Mock).mockResolvedValue({
+        eventId: 'event-456',
+      });
+
+      await syncLessonCreation(mockSupabase as never, { ...lessonData, notes: null });
+
+      expect(googleLib.createGoogleCalendarEvent).toHaveBeenCalledWith('teacher-123', {
+        title: 'Guitar Lesson',
+        scheduled_at: '2026-02-10T15:00:00Z',
+        notes: undefined,
+        student_email: 'student@example.com',
+      });
+    });
+
     it('should skip sync when teacher has no Google integration', async () => {
       mockSupabase.single.mockResolvedValue({
         data: null,
@@ -179,15 +198,11 @@ describe('calendar-lesson-sync', () => {
         scheduled_at: '2026-02-15T16:00:00Z',
       });
 
-      expect(googleLib.updateGoogleCalendarEvent).toHaveBeenCalledWith(
-        'teacher-123',
-        'event-456',
-        {
-          title: 'Updated Lesson',
-          scheduled_at: '2026-02-15T16:00:00Z',
-          notes: undefined,
-        }
-      );
+      expect(googleLib.updateGoogleCalendarEvent).toHaveBeenCalledWith('teacher-123', 'event-456', {
+        title: 'Updated Lesson',
+        scheduled_at: '2026-02-15T16:00:00Z',
+        notes: undefined,
+      });
     });
 
     it('should skip sync when lesson has no Google event ID', async () => {

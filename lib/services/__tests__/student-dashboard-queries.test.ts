@@ -1,4 +1,8 @@
-import { getStudentNextLesson, getStudentTopSongs, getStudentOpenAssignments } from '../student-dashboard-queries';
+import {
+  getStudentNextLesson,
+  getStudentTopSongs,
+  getStudentOpenAssignments,
+} from '../student-dashboard-queries';
 import { logger } from '@/lib/logger';
 import * as assignmentListParams from '@/lib/services/assignment-list-params';
 
@@ -72,13 +76,53 @@ describe('student-dashboard-queries', () => {
       mockMaybeSingle.mockResolvedValueOnce({ data: null, error: { message: 'db err' } });
       const nextLesson = await getStudentNextLesson('s1');
       expect(nextLesson).toBeNull();
-      expect(logger.warn).toHaveBeenCalledWith('[student-dashboard] next lesson error', { error: 'db err' });
+      expect(logger.warn).toHaveBeenCalledWith('[student-dashboard] next lesson error', {
+        error: 'db err',
+      });
     });
 
     it('returns null if no data', async () => {
       mockMaybeSingle.mockResolvedValueOnce({ data: null, error: null });
       const nextLesson = await getStudentNextLesson('s1');
       expect(nextLesson).toBeNull();
+    });
+
+    it('handles an object-shaped teacher join with a null name and title', async () => {
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          id: 'l1',
+          scheduled_at: '2026-07-20T10:00:00Z',
+          title: null,
+          teacher: { full_name: null },
+        },
+        error: null,
+      });
+
+      expect(await getStudentNextLesson('s1')).toEqual({
+        id: 'l1',
+        scheduledAt: '2026-07-20T10:00:00Z',
+        title: null,
+        teacherName: null,
+      });
+    });
+
+    it('returns a null teacher name when the teacher join is absent', async () => {
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          id: 'l1',
+          scheduled_at: '2026-07-20T10:00:00Z',
+          title: 'Lesson 1',
+          teacher: null,
+        },
+        error: null,
+      });
+
+      expect(await getStudentNextLesson('s1')).toEqual({
+        id: 'l1',
+        scheduledAt: '2026-07-20T10:00:00Z',
+        title: 'Lesson 1',
+        teacherName: null,
+      });
     });
   });
 
@@ -112,14 +156,55 @@ describe('student-dashboard-queries', () => {
           totalPracticeMinutes: 120,
         },
       ]);
-      expect(mockOrder).toHaveBeenCalledWith('last_practiced_at', { ascending: false, nullsFirst: false });
+      expect(mockOrder).toHaveBeenCalledWith('last_practiced_at', {
+        ascending: false,
+        nullsFirst: false,
+      });
     });
 
     it('returns empty array and logs on error', async () => {
       mockLimit.mockResolvedValueOnce({ data: null, error: { message: 'db err' } });
       const songs = await getStudentTopSongs('s1');
       expect(songs).toEqual([]);
-      expect(logger.warn).toHaveBeenCalledWith('[student-dashboard] songs error', { error: 'db err' });
+      expect(logger.warn).toHaveBeenCalledWith('[student-dashboard] songs error', {
+        error: 'db err',
+      });
+    });
+
+    it('handles an object-shaped song join and null practice minutes', async () => {
+      mockLimit.mockResolvedValueOnce({
+        data: [
+          {
+            song_id: 'song1',
+            current_status: 'started',
+            total_practice_minutes: null,
+            songs: { title: 'Blackbird', author: null },
+          },
+          {
+            song_id: 'song2',
+            current_status: 'started',
+            total_practice_minutes: 10,
+            songs: null, // unreadable under RLS
+          },
+        ],
+        error: null,
+      });
+
+      expect(await getStudentTopSongs('s1')).toEqual([
+        {
+          songId: 'song1',
+          title: 'Blackbird',
+          author: null,
+          status: 'started',
+          totalPracticeMinutes: 0,
+        },
+      ]);
+    });
+
+    it('returns empty array when supabase resolves a null payload without error', async () => {
+      mockLimit.mockResolvedValueOnce({ data: null, error: null });
+      expect(await getStudentTopSongs('s1')).toEqual([]);
+      expect(logger.warn).not.toHaveBeenCalled();
     });
   });
 
@@ -127,8 +212,18 @@ describe('student-dashboard-queries', () => {
     it('returns sorted assignments with effective status', async () => {
       mockLimit.mockResolvedValueOnce({
         data: [
-          { id: 'a1', title: 'Assignment 1', due_date: '2026-07-20T10:00:00Z', status: 'not_started' },
-          { id: 'a2', title: 'Assignment 2', due_date: '2026-07-10T10:00:00Z', status: 'in_progress' },
+          {
+            id: 'a1',
+            title: 'Assignment 1',
+            due_date: '2026-07-20T10:00:00Z',
+            status: 'not_started',
+          },
+          {
+            id: 'a2',
+            title: 'Assignment 2',
+            due_date: '2026-07-10T10:00:00Z',
+            status: 'in_progress',
+          },
         ],
         error: null,
       });
@@ -138,7 +233,7 @@ describe('student-dashboard-queries', () => {
         .mockReturnValueOnce('overdue'); // a2
 
       const assignments = await getStudentOpenAssignments('s1');
-      
+
       expect(assignments).toEqual([
         { id: 'a2', title: 'Assignment 2', dueDate: '2026-07-10T10:00:00Z', isOverdue: true },
         { id: 'a1', title: 'Assignment 1', dueDate: '2026-07-20T10:00:00Z', isOverdue: false },
@@ -150,7 +245,28 @@ describe('student-dashboard-queries', () => {
       mockLimit.mockResolvedValueOnce({ data: null, error: { message: 'db err' } });
       const assignments = await getStudentOpenAssignments('s1');
       expect(assignments).toEqual([]);
-      expect(logger.warn).toHaveBeenCalledWith('[student-dashboard] assignments error', { error: 'db err' });
+      expect(logger.warn).toHaveBeenCalledWith('[student-dashboard] assignments error', {
+        error: 'db err',
+      });
+    });
+
+    it('passes a null due date through to status derivation', async () => {
+      mockLimit.mockResolvedValueOnce({
+        data: [{ id: 'a1', title: 'Assignment 1', due_date: null, status: 'not_started' }],
+        error: null,
+      });
+      (assignmentListParams.deriveEffectiveStatus as jest.Mock).mockReturnValue('not_started');
+
+      expect(await getStudentOpenAssignments('s1')).toEqual([
+        { id: 'a1', title: 'Assignment 1', dueDate: null, isOverdue: false },
+      ]);
+      expect(assignmentListParams.deriveEffectiveStatus).toHaveBeenCalledWith(null, 'not_started');
+    });
+
+    it('returns empty array when supabase resolves a null payload without error', async () => {
+      mockLimit.mockResolvedValueOnce({ data: null, error: null });
+      expect(await getStudentOpenAssignments('s1')).toEqual([]);
+      expect(logger.warn).not.toHaveBeenCalled();
     });
   });
 });

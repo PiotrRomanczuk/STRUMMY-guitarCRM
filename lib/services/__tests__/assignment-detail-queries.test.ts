@@ -102,10 +102,41 @@ describe('getAssignmentDetail', () => {
     expect(result?.checklist).toEqual([]);
   });
 
+  it('nulls out a missing student and unset song author / lesson schedule', async () => {
+    mockSingle.mockResolvedValue({
+      data: {
+        id: 'a3',
+        title: 'Test',
+        description: null,
+        status: 'todo',
+        due_date: null,
+        teacher_id: 't1',
+        student_id: 's1',
+        checklist: null,
+        created_at: '2026-07-10T00:00:00Z',
+        updated_at: '2026-07-10T00:00:00Z',
+        student: null,
+        teacher: { full_name: 'Teacher Alice' },
+        song: { id: 'song1', title: 'Untitled Riff', author: null },
+        lesson: { id: 'lesson1', scheduled_at: null },
+      },
+      error: null,
+    });
+
+    const result = await getAssignmentDetail('a3');
+    expect(result?.studentName).toBeNull();
+    expect(result?.studentEmail).toBeNull();
+    expect(result?.song).toEqual({ id: 'song1', title: 'Untitled Riff', author: null });
+    expect(result?.lesson).toEqual({ id: 'lesson1', scheduledAt: null });
+  });
+
   it('returns null on error and logs if not PGRST116', async () => {
     mockSingle.mockResolvedValue({ data: null, error: { code: 'OTHER', message: 'boom' } });
     expect(await getAssignmentDetail('a1')).toBeNull();
-    expect(logger.warn).toHaveBeenCalledWith('[assignment-detail-queries] error', { error: 'boom', code: 'OTHER' });
+    expect(logger.warn).toHaveBeenCalledWith('[assignment-detail-queries] error', {
+      error: 'boom',
+      code: 'OTHER',
+    });
   });
 
   it('returns null silently on PGRST116 (not found)', async () => {
@@ -124,8 +155,18 @@ describe('getAssignmentHistory', () => {
     mockLimit.mockResolvedValue({
       data: [
         { id: 'h1', change_type: 'created', new_data: null, changed_at: '2026-07-10T00:00:00Z' },
-        { id: 'h2', change_type: 'status_changed', new_data: { status: 'in_progress' }, changed_at: '2026-07-11T00:00:00Z' },
-        { id: 'h3', change_type: 'custom_event', new_data: null, changed_at: '2026-07-12T00:00:00Z' },
+        {
+          id: 'h2',
+          change_type: 'status_changed',
+          new_data: { status: 'in_progress' },
+          changed_at: '2026-07-11T00:00:00Z',
+        },
+        {
+          id: 'h3',
+          change_type: 'custom_event',
+          new_data: null,
+          changed_at: '2026-07-12T00:00:00Z',
+        },
       ],
       error: null,
     });
@@ -133,14 +174,33 @@ describe('getAssignmentHistory', () => {
     const result = await getAssignmentHistory('a1');
     expect(result).toEqual([
       { id: 'h1', changeType: 'created', label: 'Created', changedAt: '2026-07-10T00:00:00Z' },
-      { id: 'h2', changeType: 'status_changed', label: 'Status changed to in progress', changedAt: '2026-07-11T00:00:00Z' },
-      { id: 'h3', changeType: 'custom_event', label: 'custom event', changedAt: '2026-07-12T00:00:00Z' },
+      {
+        id: 'h2',
+        changeType: 'status_changed',
+        label: 'Status changed to in progress',
+        changedAt: '2026-07-11T00:00:00Z',
+      },
+      {
+        id: 'h3',
+        changeType: 'custom_event',
+        label: 'custom event',
+        changedAt: '2026-07-12T00:00:00Z',
+      },
     ]);
+  });
+
+  it('returns empty array when supabase resolves a null payload without error', async () => {
+    mockLimit.mockResolvedValue({ data: null, error: null });
+    expect(await getAssignmentHistory('a1')).toEqual([]);
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('returns empty array on error and logs it', async () => {
     mockLimit.mockResolvedValue({ data: null, error: { code: 'ERR', message: 'fail' } });
     expect(await getAssignmentHistory('a1')).toEqual([]);
-    expect(logger.warn).toHaveBeenCalledWith('[assignment-detail-queries] history error', { error: 'fail', code: 'ERR' });
+    expect(logger.warn).toHaveBeenCalledWith('[assignment-detail-queries] history error', {
+      error: 'fail',
+      code: 'ERR',
+    });
   });
 });
