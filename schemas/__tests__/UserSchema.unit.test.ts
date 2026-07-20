@@ -128,7 +128,7 @@ describe('UserSchema', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        const firstNameError = result.error.issues.find(i => i.path[0] === 'firstName');
+        const firstNameError = result.error.issues.find((i) => i.path[0] === 'firstName');
         expect(firstNameError).toBeDefined();
       }
     });
@@ -515,8 +515,18 @@ describe('UserSchema', () => {
 
   describe('hasPermission', () => {
     const adminUser = { isAdmin: true, isTeacher: false, isStudent: false, canEdit: false } as any;
-    const teacherUser = { isAdmin: false, isTeacher: true, isStudent: false, canEdit: false } as any;
-    const studentUser = { isAdmin: false, isTeacher: false, isStudent: true, canEdit: false } as any;
+    const teacherUser = {
+      isAdmin: false,
+      isTeacher: true,
+      isStudent: false,
+      canEdit: false,
+    } as any;
+    const studentUser = {
+      isAdmin: false,
+      isTeacher: false,
+      isStudent: true,
+      canEdit: false,
+    } as any;
     const editorUser = { isAdmin: false, isTeacher: false, isStudent: true, canEdit: true } as any;
 
     describe('admin permission', () => {
@@ -576,6 +586,47 @@ describe('UserSchema', () => {
 
       it('should deny edit permission to teacher without canEdit', () => {
         expect(hasPermission(teacherUser, 'edit')).toBe(false);
+      });
+    });
+
+    describe('parent permission', () => {
+      const parentUser = {
+        isAdmin: false,
+        isTeacher: false,
+        isStudent: false,
+        isParent: true,
+        canEdit: false,
+      } as any;
+      const nonParentUser = {
+        isAdmin: true,
+        isTeacher: true,
+        isStudent: true,
+        isParent: false,
+        canEdit: true,
+      } as any;
+
+      it('should grant parent permission to a parent', () => {
+        expect(hasPermission(parentUser, 'parent')).toBe(true);
+      });
+
+      it('should deny parent permission to a non-parent, even an admin', () => {
+        expect(hasPermission(nonParentUser, 'parent')).toBe(false);
+      });
+
+      it('should not grant a parent any other permission', () => {
+        expect(hasPermission(parentUser, 'admin')).toBe(false);
+        expect(hasPermission(parentUser, 'teacher')).toBe(false);
+        expect(hasPermission(parentUser, 'student')).toBe(false);
+        expect(hasPermission(parentUser, 'edit')).toBe(false);
+      });
+    });
+
+    describe('unknown permission', () => {
+      // The union type forbids this, but the helper is reachable from
+      // untyped call sites (API payloads / JS callers), so the default
+      // arm must fail closed.
+      it('should deny an unrecognised permission for an admin', () => {
+        expect(hasPermission(adminUser, 'superuser' as any)).toBe(false);
       });
     });
   });

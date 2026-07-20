@@ -16,6 +16,7 @@ import {
   UserFilterSchema,
   UserIdParamSchema,
   validateCreateUserRequest,
+  validateUpdateUserRequest,
   validateUserFilters,
   validateUserId,
   safeValidateCreateUser,
@@ -530,6 +531,39 @@ describe('safeValidateUpdateUser', () => {
     if (!result.success) {
       expect(result.message).toBe('Validation failed');
     }
+  });
+});
+
+describe('validateUpdateUserRequest', () => {
+  it('should return sanitized data for a valid update', () => {
+    const result = validateUpdateUserRequest({
+      full_name: '  <b>Updated</b> Name  ',
+      isActive: false,
+    });
+
+    expect(result.full_name).toBe('Updated Name');
+    expect(result.isActive).toBe(false);
+  });
+
+  it('should accept a role-flag-only update', () => {
+    const result = validateUpdateUserRequest({ isTeacher: true });
+
+    expect(result.isTeacher).toBe(true);
+    expect(result.full_name).toBeUndefined();
+  });
+
+  it('should throw when no fields are provided', () => {
+    expect(() => validateUpdateUserRequest({})).toThrow(
+      /At least one field must be provided for update/
+    );
+  });
+
+  it('should throw on an invalid field value', () => {
+    expect(() => validateUpdateUserRequest({ isActive: 'yes' })).toThrow();
+  });
+
+  it('should throw on a non-object body', () => {
+    expect(() => validateUpdateUserRequest(null)).toThrow();
   });
 });
 

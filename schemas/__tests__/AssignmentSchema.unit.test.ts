@@ -8,6 +8,7 @@
  * - AssignmentStatusEnum (status values)
  * - AssignmentFilterSchema (filtering)
  * - calculateAssignmentStatus (status helper)
+ * - validateStatusTransition (status state machine)
  *
  * @see schemas/AssignmentSchema.ts
  */
@@ -21,6 +22,9 @@ import {
   AssignmentSortSchema,
   AssignmentWithProfilesSchema,
   calculateAssignmentStatus,
+  validateStatusTransition,
+  VALID_STATUS_TRANSITIONS,
+  type AssignmentStatus,
 } from '../AssignmentSchema';
 
 describe('AssignmentSchema', () => {
@@ -388,6 +392,106 @@ describe('AssignmentSchema', () => {
     it('should keep in_progress for null due_date', () => {
       const result = calculateAssignmentStatus(null, 'in_progress');
       expect(result).toBe('in_progress');
+    });
+
+    describe('defensive fallbacks for a missing current status', () => {
+      // Callers hand this helper raw `status` values coming from the database /
+      // API payloads, so the `currentStatus || 'not_started'` guards are
+      // reachable at runtime even though the TS signature forbids it.
+      const missingStatus = undefined as unknown as AssignmentStatus;
+
+      beforeEach(() => {
+        jest.useFakeTimers({ doNotFake: ['nextTick'] });
+        jest.setSystemTime(new Date('2026-07-20T12:00:00.000Z'));
+      });
+
+      afterEach(() => {
+        jest.useRealTimers();
+      });
+
+      it('should fall back to not_started when due_date is null and status is missing', () => {
+        expect(calculateAssignmentStatus(null, missingStatus)).toBe('not_started');
+      });
+
+      it('should fall back to not_started when due_date is in the future and status is missing', () => {
+        expect(calculateAssignmentStatus('2026-07-21T12:00:00.000Z', missingStatus)).toBe(
+          'not_started'
+        );
+      });
+
+      it('should still report overdue when due_date is in the past and status is missing', () => {
+        expect(calculateAssignmentStatus('2026-07-19T12:00:00.000Z', missingStatus)).toBe(
+          'overdue'
+        );
+      });
+    });
+  });
+
+  describe('VALID_STATUS_TRANSITIONS', () => {
+    it('should define transitions for every status enum member', () => {
+      expect(Object.keys(VALID_STATUS_TRANSITIONS).sort()).toEqual(
+        [...AssignmentStatusEnum.options].sort()
+      );
+    });
+
+    it('should mark completed and cancelled as terminal states', () => {
+      expect(VALID_STATUS_TRANSITIONS.completed).toEqual([]);
+      expect(VALID_STATUS_TRANSITIONS.cancelled).toEqual([]);
+    });
+  });
+
+  describe('validateStatusTransition', () => {
+    it('should allow a no-op transition to the same status', () => {
+      expect(validateStatusTransition('completed', 'completed')).toEqual({ valid: true });
+      expect(validateStatusTransition('not_started', 'not_started')).toEqual({ valid: true });
+    });
+
+    it.each([
+      ['not_started', 'in_progress'],
+      ['not_started', 'cancelled'],
+      ['in_progress', 'completed'],
+      ['in_progress', 'cancelled'],
+      ['overdue', 'in_progress'],
+      ['overdue', 'completed'],
+      ['overdue', 'cancelled'],
+    ])('should allow %s -> %s', (from, to) => {
+      expect(validateStatusTransition(from, to)).toEqual({ valid: true });
+    });
+
+    it('should reject an unknown current status', () => {
+      const result = validateStatusTransition('archived', 'completed');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe('Unknown current status: archived');
+    });
+
+    it('should reject a disallowed transition and list the allowed targets', () => {
+      const result = validateStatusTransition('not_started', 'completed');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe(
+        'Invalid status transition: not_started → completed. Allowed: in_progress, cancelled'
+      );
+    });
+
+    it('should reject leaving the terminal completed state', () => {
+      const result = validateStatusTransition('completed', 'in_progress');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe(
+        'Invalid status transition: completed → in_progress. Allowed: none (terminal state)'
+      );
+    });
+
+    it('should reject leaving the terminal cancelled state', () => {
+      const result = validateStatusTransition('cancelled', 'not_started');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBe(
+        'Invalid status transition: cancelled → not_started. Allowed: none (terminal state)'
+      );
+    });
+
+    it('should reject transitioning to an unknown target status', () => {
+      const result = validateStatusTransition('in_progress', 'archived');
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('Invalid status transition: in_progress → archived');
     });
   });
 });
