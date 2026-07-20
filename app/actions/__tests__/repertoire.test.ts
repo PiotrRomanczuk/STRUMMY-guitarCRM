@@ -45,6 +45,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
+import { guardTestAccountMutation } from '@/lib/auth/test-account-guard';
 import {
   getStudentRepertoireAction,
   addSongToRepertoireAction,
@@ -52,6 +53,7 @@ import {
   removeFromRepertoireAction,
   addSongToNextLessonAction,
   searchSongsForRepertoireAction,
+  getStudentSongProgressAction,
 } from '@/app/actions/repertoire';
 import { updateSelfRatingAction } from '@/app/actions/self-rating';
 
@@ -668,5 +670,179 @@ describe('updateSelfRatingAction', () => {
 
     const result = await updateSelfRatingAction(REPERTOIRE_ID, 4);
     expect(result).toEqual({ error: 'permission denied' });
+  });
+});
+
+/* ---------- getStudentSongProgressAction ---------- */
+
+describe('getStudentSongProgressAction', () => {
+  it('returns an empty map without querying when studentId is blank', async () => {
+    const client = buildClient(studentCtx.user, {});
+
+    expect(await getStudentSongProgressAction('')).toEqual({ progressMap: {} });
+    expect(client.from).not.toHaveBeenCalled();
+  });
+
+  it('returns Unauthorized when there is no session', async () => {
+    buildClient(null, {});
+
+    expect(await getStudentSongProgressAction(studentCtx.userId)).toEqual({
+      error: 'Unauthorized',
+    });
+  });
+
+  it('keys progress entries by song_id', async () => {
+    buildClient(studentCtx.user, {
+      student_repertoire: createMockQueryBuilder([
+        {
+          song_id: SONG_ID,
+          current_status: 'LEARNING',
+          last_practiced_at: '2026-07-01T00:00:00.000Z',
+          total_practice_minutes: 45,
+          self_rating: 3,
+        },
+      ]),
+    });
+
+    expect(await getStudentSongProgressAction(studentCtx.userId)).toEqual({
+      progressMap: {
+        [SONG_ID]: {
+          current_status: 'LEARNING',
+          last_practiced_at: '2026-07-01T00:00:00.000Z',
+          total_practice_minutes: 45,
+          self_rating: 3,
+        },
+      },
+    });
+  });
+
+  it('returns an empty map when the query yields nothing', async () => {
+    buildClient(studentCtx.user, {
+      student_repertoire: createMockQueryBuilder(null),
+    });
+
+    expect(await getStudentSongProgressAction(studentCtx.userId)).toEqual({ progressMap: {} });
+  });
+
+  it('surfaces a query error', async () => {
+    buildClient(studentCtx.user, {
+      student_repertoire: createMockQueryBuilder(null, { message: 'select denied' }),
+    });
+
+    expect(await getStudentSongProgressAction(studentCtx.userId)).toEqual({
+      error: 'select denied',
+    });
+  });
+});
+
+/* ---------- Remaining validation and write-failure paths ---------- */
+
+describe('repertoire write failures', () => {
+  it('rejects an invalid update payload with the first Zod message', async () => {
+    buildClient(studentCtx.user, {
+      student_repertoire: createMockQueryBuilder({
+        id: REPERTOIRE_ID,
+        student_id: studentCtx.userId,
+      }),
+    });
+
+    const result = await updateRepertoireEntryAction(REPERTOIRE_ID, {
+      difficulty_rating: 99,
+    } as never);
+
+    expect(result).toHaveProperty('error');
+    expect((result as { error: string }).error).toEqual(expect.any(String));
+  });
+
+  it('surfaces a failed repertoire update', async () => {
+    asTeacherOnce();
+    const builder = createMockQueryBuilder({
+      id: REPERTOIRE_ID,
+      student_id: studentCtx.userId,
+    });
+    builder.eq = jest
+      .fn()
+      .mockReturnValueOnce(builder)
+      .mockResolvedValue({ error: { message: 'update denied' } });
+    buildClient(studentCtx.user, { student_repertoire: builder });
+
+    const result = await updateRepertoireEntryAction(REPERTOIRE_ID, { notes: 'hi' });
+
+    expect(result).toEqual({ error: 'update denied' });
+  });
+});
+
+describe('addSongToNextLessonAction — insert failure', () => {
+  it('surfaces a failed lesson_songs insert', async () => {
+    const lessonsQb = withGt(
+      createMockQueryBuilder({ id: LESSON_ID, scheduled_at: '2026-08-01T10:00:00.000Z' })
+    );
+
+    // First lesson_songs call is the "already linked?" check — no row.
+    const checkQb = createMockQueryBuilder(null, null);
+    checkQb.single = jest.fn().mockResolvedValue({ data: null, error: null });
+
+    // Second is the insert, which fails.
+    const insertQb = createMockQueryBuilder();
+    insertQb.then = jest.fn((resolve: (v: unknown) => void) =>
+      resolve({ data: null, error: { message: 'insert denied' }, count: 0 })
+    );
+
+    let lessonSongsCallCount = 0;
+    (createClient as jest.Mock).mockResolvedValue({
+      auth: {
+        getUser: jest.fn().mockResolvedValue({ data: { user: teacherCtx.user }, error: null }),
+      },
+      from: jest.fn((table: string) => {
+        if (table === 'lessons') return lessonsQb;
+        lessonSongsCallCount++;
+        return lessonSongsCallCount === 1 ? checkQb : insertQb;
+      }),
+    });
+
+    expect(await addSongToNextLessonAction(studentCtx.userId, SONG_ID)).toEqual({
+      error: 'insert denied',
+    });
+  });
+});
+
+/* ---------- Demo-account guard and null-data coalescing ---------- */
+
+describe('repertoire demo-account guard', () => {
+  const guard = guardTestAccountMutation as jest.Mock;
+
+  it.each([
+    ['addSongToRepertoireAction', () => addSongToRepertoireAction(studentCtx.userId, SONG_ID)],
+    [
+      'updateRepertoireEntryAction',
+      () => updateRepertoireEntryAction(REPERTOIRE_ID, { notes: 'x' }),
+    ],
+    ['removeFromRepertoireAction', () => removeFromRepertoireAction(REPERTOIRE_ID)],
+    ['addSongToNextLessonAction', () => addSongToNextLessonAction(studentCtx.userId, SONG_ID)],
+  ])('%s refuses to mutate on a demo account', async (_name, run) => {
+    const client = buildClient(studentCtx.user, {});
+    guard.mockReturnValueOnce({ error: 'Demo accounts cannot make changes' });
+
+    expect(await run()).toEqual({ error: 'Demo accounts cannot make changes' });
+    expect(client.from).not.toHaveBeenCalled();
+  });
+});
+
+describe('repertoire null-data coalescing', () => {
+  it('getStudentRepertoireAction returns [] when the query yields null', async () => {
+    buildClient(studentCtx.user, { student_repertoire: createMockQueryBuilder(null) });
+
+    expect(await getStudentRepertoireAction(studentCtx.userId)).toEqual({ data: [] });
+  });
+
+  it('searchSongsForRepertoireAction copes with both queries yielding null', async () => {
+    buildClient(studentCtx.user, {
+      student_repertoire: createMockQueryBuilder(null),
+      songs: createMockQueryBuilder(null),
+    });
+
+    expect(await searchSongsForRepertoireAction('wonder', studentCtx.userId)).toEqual({
+      data: [],
+    });
   });
 });

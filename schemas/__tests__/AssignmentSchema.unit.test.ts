@@ -24,6 +24,7 @@ import {
   calculateAssignmentStatus,
   validateStatusTransition,
   VALID_STATUS_TRANSITIONS,
+  sanitizeChecklist,
   type AssignmentStatus,
 } from '../AssignmentSchema';
 
@@ -493,5 +494,36 @@ describe('AssignmentSchema', () => {
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Invalid status transition: in_progress → archived');
     });
+  });
+});
+
+describe('sanitizeChecklist', () => {
+  const item = (id: string, text: string, done = false) => ({ id, text, done });
+
+  it('trims item text', () => {
+    expect(sanitizeChecklist([item('1', '  Practice scales  ')])).toEqual([
+      item('1', 'Practice scales'),
+    ]);
+  });
+
+  it('drops rows that are blank or whitespace-only', () => {
+    const result = sanitizeChecklist([
+      item('1', 'Keep me'),
+      item('2', ''),
+      item('3', '   '),
+      item('4', '\t\n'),
+    ]);
+
+    expect(result).toEqual([item('1', 'Keep me')]);
+  });
+
+  it('preserves the done flag and any extra fields', () => {
+    expect(sanitizeChecklist([item('1', ' Done thing ', true)])).toEqual([
+      item('1', 'Done thing', true),
+    ]);
+  });
+
+  it('returns an empty array for an empty checklist', () => {
+    expect(sanitizeChecklist([])).toEqual([]);
   });
 });
