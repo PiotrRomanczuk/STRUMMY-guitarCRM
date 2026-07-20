@@ -542,10 +542,12 @@ Standing guidance as the schema lands (details in the app map — key files belo
   following `app/api/assignments/`. Retire the competing server-action create/edit
   paths for songs (`app/actions/song-form.ts`, `app/actions/song-edit.ts`). _(A1)_
 - **Ownership checks compare `profile.id`**, not `auth.uid()` (identity model). _(A-reconcile)_
-- **Trust the numbering trigger**: delete the 5 manual `calculateNextLessonNumber` /
+- **Trust the numbering trigger**: delete the 4 manual `calculateNextLessonNumber` /
   max+1 sites (`app/dashboard/calendar-actions.ts`,
-  `app/dashboard/lessons/recurring-actions.ts`, `app/actions/import-lessons.ts`,
+  `app/dashboard/lessons/recurring-actions.ts`,
   `app/api/calendar-sync/route.ts`, `app/api/lessons/utils.ts`). _(A2)_
+  (A 5th site, `app/actions/import-lessons.ts`, was deleted 2026-07-20 as superseded
+  dead code — the live import runs through `lib/services/calendar-bulk-import.ts`.)
 - **Standardize response shapes** to named keys (`song`, `songs`, `lesson`), no `data`. _(A5)_
 - **Regenerate `types/database.types.generated.ts`** after every migration and reconcile
   the Zod enums in `schemas/`. _(A3, A4)_

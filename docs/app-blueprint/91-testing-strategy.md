@@ -118,9 +118,22 @@ Also landed: `student-detail-queries`, `student-dashboard-queries`, `student-act
 | `app/actions/assignment-templates.ts`                | 92.2  | 90.9     | 100   | branch rounding                                           |
 | `schemas/SongOfTheWeekSchema.ts`                     | 100   | 80       | 100   | branch rounding                                           |
 
-**Deliberate exclusions** from the 100% mandate: `app/actions/song-of-the-week.ts` and
-`lib/services/song-analytics.ts` (peripheral features), UI hooks (`hooks/`, better served by the
-E2E suite). Revisit if these become core.
+**Deliberate exclusions** from the 100% mandate, with the actual reason for each
+(_re-derived 2026-07-20 — "peripheral" was imprecise_):
+
+- `app/actions/song-of-the-week.ts` — **not peripheral, parked.** These actions are the
+  surviving half of roadmap item [SNG-2](03-songs-repertoire.md) (v1.1); the dashboard card
+  that consumed them died in the July 2026 dead-component purge. Excluded because the
+  consumer is unbuilt, not because the code is unimportant. Test it when SNG-2 lands.
+- `lib/services/song-analytics.ts` — genuinely peripheral, but **live**:
+  `getDailyBriefingStats` feeds `app/actions/email/send-admin-report.ts`, which runs on two
+  cron paths (`/api/cron/dispatcher`, `/api/cron/daily-report`). Untested today.
+- UI hooks (`hooks/`) — better served by the E2E suite.
+
+**Deleted rather than excluded**: `app/actions/import-lessons.ts` (2026-07-20). Zero callers,
+superseded by `lib/services/calendar-bulk-import.ts`, which is what `/dashboard/calendar` →
+`HistoricalCalendarSync` → `/api/calendar/sync/stream` actually runs. It was at 85% only
+because a test existed for code nothing called.
 
 ### How to implement phase 2 (mechanical recipe)
 
