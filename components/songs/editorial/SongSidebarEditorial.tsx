@@ -118,6 +118,38 @@ export const LearnersCard = ({ learners }: { learners: SongLearner[] }) => (
   </Card>
 );
 
+/** Student-facing replacement for Usage/Learners: the viewer's own journey on
+ * this song, not studio analytics phrased for teachers. */
+export const YourProgressCard = ({ learner }: { learner: SongLearner | null }) => (
+  <Card>
+    <CardHeader eyebrow="Your practice" title="Progress" />
+    <div style={{ padding: '0 24px 22px' }}>
+      {learner ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <StageStepper status={learner.status} />
+          <SidebarStat
+            label="Practice time"
+            value={minutesLabel(learner.totalPracticeMinutes)}
+            unit="total"
+          />
+        </div>
+      ) : (
+        <div
+          style={{
+            fontStyle: 'italic',
+            color: 'var(--ink-4)',
+            fontFamily: 'var(--serif)',
+            fontSize: 14,
+            padding: '4px 0 8px',
+          }}
+        >
+          Not in your repertoire yet — ask your teacher to add it.
+        </div>
+      )}
+    </div>
+  </Card>
+);
+
 export const RelatedCard = ({ related }: { related: RelatedSongRow[] }) => {
   if (related.length === 0) return null;
   return (
@@ -135,6 +167,7 @@ export const RelatedCard = ({ related }: { related: RelatedSongRow[] }) => {
           <a
             key={r.id}
             href={`/dashboard/songs/${r.id}`}
+            className="ed-row"
             style={{
               display: 'flex',
               gap: 10,

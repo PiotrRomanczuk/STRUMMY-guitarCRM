@@ -212,6 +212,7 @@ export const LessonDetailEditorial = ({
                 <Link
                   key={s.songId}
                   href={`/dashboard/songs/${s.songId}`}
+                  className="ed-row"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: '40px 1fr 90px',
@@ -310,7 +311,9 @@ export const LessonDetailEditorial = ({
           </Card>
         </div>
 
-        {canEdit && (
+        {/* A post-lesson summary only makes sense once the lesson happened —
+            offering it on a scheduled lesson invites generating fiction. */}
+        {canEdit && lesson.status?.toLowerCase() === 'completed' && (
           <div style={{ marginTop: 20 }}>
             <PostLessonSummaryAI
               studentName={studentDisplay}

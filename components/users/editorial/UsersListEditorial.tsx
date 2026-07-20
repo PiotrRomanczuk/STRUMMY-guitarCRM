@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { UserListRow, UserListFilters } from '@/lib/services/users-list-queries';
 import { InlineInviteButton } from './InlineInviteButton';
 import { ShadowBadge } from './ShadowBadge';
+import { UsersListFiltersForm } from './UsersListEditorial.FiltersForm';
 
 const formatDate = (iso: string | null): string => {
   if (!iso) return '—';
@@ -28,16 +29,6 @@ const rolesFor = (r: UserListRow): string => {
   return roles.join(' · ') || 'No role';
 };
 
-const selectStyle: React.CSSProperties = {
-  padding: '8px 10px',
-  border: '1px solid var(--rule)',
-  borderRadius: 6,
-  background: 'var(--paper)',
-  fontFamily: 'var(--mono)',
-  fontSize: 12,
-  color: 'var(--ink)',
-};
-
 type Props = {
   rows: UserListRow[];
   filters: UserListFilters;
@@ -55,19 +46,19 @@ export const UsersListEditorial = ({ rows, filters, canEdit }: Props) => (
       padding: '28px 32px 64px',
     }}
   >
-    <div style={{ marginBottom: 18 }}>
-      <div
-        style={{
-          fontFamily: 'var(--mono)',
-          fontSize: 11,
-          color: 'var(--ink-4)',
-          textTransform: 'uppercase',
-          letterSpacing: '.16em',
-        }}
-      >
-        Studio
-      </div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
+    <div className="ed-page-head" style={{ marginBottom: 18 }}>
+      <div>
+        <div
+          style={{
+            fontFamily: 'var(--mono)',
+            fontSize: 11,
+            color: 'var(--ink-4)',
+            textTransform: 'uppercase',
+            letterSpacing: '.16em',
+          }}
+        >
+          Studio
+        </div>
         <h1
           style={{
             margin: '4px 0 6px',
@@ -80,74 +71,30 @@ export const UsersListEditorial = ({ rows, filters, canEdit }: Props) => (
         >
           People
         </h1>
-        <Link
-          href="/dashboard/users/new"
-          style={{
-            marginBottom: 10,
-            padding: '8px 16px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'var(--ink)',
-            color: 'var(--paper)',
-            fontSize: 12,
-            fontWeight: 500,
-            fontFamily: 'var(--sans)',
-            textDecoration: 'none',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          + New student
-        </Link>
+        <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>{rows.length} shown</div>
       </div>
-      <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>{rows.length} shown</div>
-    </div>
-
-    <form
-      method="get"
-      style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 18 }}
-    >
-      <input
-        name="search"
-        defaultValue={filters.search ?? ''}
-        placeholder="Search name or email"
-        style={{ ...selectStyle, fontFamily: 'var(--sans)', minWidth: 220 }}
-      />
-      <select name="role" defaultValue={filters.role ?? ''} style={selectStyle}>
-        <option value="">All roles</option>
-        <option value="student">Students</option>
-        <option value="teacher">Teachers</option>
-        <option value="admin">Admins</option>
-        <option value="shadow">Unclaimed</option>
-      </select>
-      <select name="active" defaultValue={filters.active ?? ''} style={selectStyle}>
-        <option value="">Active</option>
-        <option value="false">Deactivated</option>
-      </select>
-      <select name="studentStatus" defaultValue={filters.studentStatus ?? ''} style={selectStyle}>
-        <option value="">All student statuses</option>
-        <option value="lead">Lead</option>
-        <option value="trial">Trial</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-        <option value="churned">Churned</option>
-      </select>
-      <button
-        type="submit"
+      <Link
+        href="/dashboard/users/new"
+        className="ed-chip"
         style={{
+          marginBottom: 10,
           padding: '8px 16px',
-          borderRadius: 6,
+          borderRadius: 8,
           border: 'none',
           background: 'var(--ink)',
           color: 'var(--paper)',
           fontSize: 12,
           fontWeight: 500,
-          cursor: 'pointer',
           fontFamily: 'var(--sans)',
+          textDecoration: 'none',
+          whiteSpace: 'nowrap',
         }}
       >
-        Filter
-      </button>
-    </form>
+        + New student
+      </Link>
+    </div>
+
+    <UsersListFiltersForm filters={filters} />
 
     <div
       style={{
@@ -174,7 +121,7 @@ export const UsersListEditorial = ({ rows, filters, canEdit }: Props) => (
         rows.map((r, i) => (
           <div
             key={r.id}
-            className="grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_150px_120px_90px]"
+            className="ed-row grid grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_150px_120px_90px]"
             style={{
               gap: 14,
               padding: '14px 20px',

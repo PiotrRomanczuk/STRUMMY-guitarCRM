@@ -82,6 +82,32 @@ const CHORD_SHAPES: Record<string, ChordShape> = {
   A7: { frets: [0, 0, 2, 0, 2, 0], open: [0, 1, 3, 5], start: 1 },
   D7: { frets: [0, 0, 0, 2, 1, 2], open: [], start: 1 },
   G7: { frets: [3, 2, 0, 0, 0, 1], open: [2, 3, 4], start: 1 },
+  Em7: { frets: [0, 2, 2, 0, 3, 0], open: [0, 3, 5], start: 1 },
+  Am7: { frets: [0, 0, 2, 0, 1, 0], open: [0, 1, 3, 5], start: 1 },
+  Dm7: { frets: [0, 0, 0, 2, 1, 1], open: [0, 1, 2], start: 1 },
+  Cmaj7: { frets: [0, 3, 2, 0, 0, 0], open: [0, 3, 4, 5], start: 1 },
+  Gmaj7: { frets: [3, 2, 0, 0, 0, 2], open: [2, 3, 4], start: 1 },
+  Fmaj7: { frets: [0, 0, 3, 2, 1, 0], open: [0, 1, 5], start: 1 },
+  Dmaj7: { frets: [0, 0, 0, 2, 2, 2], open: [0, 1, 2], start: 1 },
+  B7: { frets: [0, 2, 1, 2, 0, 2], open: [0, 4], start: 1 },
+  Cadd9: { frets: [0, 3, 2, 0, 3, 3], open: [0, 3], start: 1 },
+  Asus2: { frets: [0, 0, 2, 2, 0, 0], open: [0, 1, 4, 5], start: 1 },
+  Asus4: { frets: [0, 0, 2, 2, 3, 0], open: [0, 1, 5], start: 1 },
+  A7sus4: { frets: [0, 0, 2, 0, 3, 0], open: [0, 1, 3, 5], start: 1 },
+  Dsus2: { frets: [0, 0, 0, 2, 3, 0], open: [0, 1, 2, 5], start: 1 },
+  Dsus4: { frets: [0, 0, 0, 2, 3, 3], open: [0, 1, 2], start: 1 },
+  Esus4: { frets: [0, 2, 2, 2, 0, 0], open: [0, 4, 5], start: 1 },
+  B: { frets: [2, 2, 4, 4, 4, 2], open: [], start: 2 },
+  Bb: { frets: [1, 1, 3, 3, 3, 1], open: [], start: 1 },
+  'F#m': { frets: [2, 4, 4, 2, 2, 2], open: [], start: 2 },
+  'C#m': { frets: [4, 4, 6, 6, 5, 4], open: [], start: 4 },
+  'G#m': { frets: [4, 6, 6, 4, 4, 4], open: [], start: 4 },
+  Gm: { frets: [3, 5, 5, 3, 3, 3], open: [], start: 3 },
+  Cm: { frets: [3, 3, 5, 5, 4, 3], open: [], start: 3 },
+  Fm: { frets: [1, 3, 3, 1, 1, 1], open: [], start: 1 },
+  'D/F#': { frets: [2, 0, 0, 2, 3, 2], open: [1, 2], start: 1 },
+  'G/B': { frets: [0, 2, 0, 0, 3, 3], open: [0, 2, 3], start: 1 },
+  'C/G': { frets: [3, 3, 2, 0, 1, 0], open: [3, 5], start: 1 },
 };
 
 type ChordGridProps = {
@@ -103,6 +129,8 @@ export const ChordGrid = ({ name, size = 48, color = 'var(--ink-2)' }: ChordGrid
   const strings = 6;
   const frets = 4;
 
+  // The consuming card labels each chord itself, so the SVG draws only the
+  // grid — an in-SVG name would duplicate (and clip against) that label.
   if (!shape) {
     return (
       <svg
@@ -113,56 +141,42 @@ export const ChordGrid = ({ name, size = 48, color = 'var(--ink-2)' }: ChordGrid
         role="img"
         aria-label={`No chord diagram available for ${name}`}
       >
-        <text
-          x={w / 2}
-          y={padT - 10}
-          textAnchor="middle"
-          fontFamily="var(--serif)"
-          fontSize={size * 0.28}
-          fill={color}
-          fontWeight="500"
-        >
-          {name}
-        </text>
         <rect
           x={padL}
           y={padT}
           width={innerW}
           height={innerH}
+          rx="3"
           fill="none"
           stroke={color}
           strokeWidth="0.8"
           strokeDasharray="3 3"
-          opacity=".4"
+          opacity=".35"
         />
         <text
           x={padL + innerW / 2}
-          y={padT + innerH / 2 + size * 0.09}
+          y={padT + innerH / 2 + size * 0.06}
           textAnchor="middle"
           fontFamily="var(--mono)"
-          fontSize={size * 0.32}
+          fontSize={size * 0.16}
           fill={color}
           opacity=".5"
         >
-          ?
+          no chart
         </text>
       </svg>
     );
   }
 
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-      <text
-        x={w / 2}
-        y={padT - 10}
-        textAnchor="middle"
-        fontFamily="var(--serif)"
-        fontSize={size * 0.28}
-        fill={color}
-        fontWeight="500"
-      >
-        {name}
-      </text>
+    <svg
+      width={w}
+      height={h}
+      viewBox={`0 0 ${w} ${h}`}
+      style={{ display: 'block' }}
+      role="img"
+      aria-label={`Chord diagram for ${name}`}
+    >
       <rect x={padL} y={padT} width={innerW} height={shape.start === 1 ? 2.5 : 1} fill={color} />
       {shape.start > 1 && (
         <text
@@ -228,7 +242,7 @@ export const STAGES: { key: StageKey; label: string }[] = [
   { key: 'to_learn', label: 'To learn' },
   { key: 'started', label: 'Started' },
   { key: 'remembered', label: 'Remembered' },
-  { key: 'with_author', label: 'With author' },
+  { key: 'with_author', label: 'Play-along' },
   { key: 'mastered', label: 'Mastered' },
 ];
 

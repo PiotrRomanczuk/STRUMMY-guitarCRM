@@ -31,61 +31,81 @@ const headerCellStyle = {
   color: 'var(--ink-4)',
 };
 
-const SongRow = ({ song }: { song: Song }) => (
-  <Link
-    href={`/dashboard/songs/${song.id}`}
-    className={COLUMNS_CLASS}
-    style={{
-      gap: 14,
-      padding: '14px 20px',
-      borderBottom: '1px solid var(--rule)',
-      textDecoration: 'none',
-      color: 'inherit',
-      alignItems: 'center',
-    }}
-  >
-    <div
+const SongRow = ({ song }: { song: Song }) => {
+  const mobileMeta = [song.author, song.level ? levelLabel(song.level) : null, song.key]
+    .filter(Boolean)
+    .join(' · ');
+
+  return (
+    <Link
+      href={`/dashboard/songs/${song.id}`}
+      className={`ed-row ${COLUMNS_CLASS}`}
       style={{
-        fontFamily: 'var(--serif)',
-        fontStyle: 'italic',
-        fontSize: 15,
-        color: 'var(--ink)',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
+        gap: 14,
+        padding: '14px 20px',
+        borderBottom: '1px solid var(--rule)',
+        textDecoration: 'none',
+        color: 'inherit',
+        alignItems: 'center',
       }}
     >
-      {song.title || 'Untitled'}
-    </div>
-    <div
-      style={{
-        fontSize: 13,
-        color: 'var(--ink-2)',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {song.author || '—'}
-    </div>
-    <div
-      style={{
-        fontFamily: 'var(--mono)',
-        fontSize: 11,
-        textTransform: 'uppercase',
-        letterSpacing: '.08em',
-        color: 'var(--ink-3)',
-      }}
-    >
-      {song.level ? levelLabel(song.level) : '—'}
-    </div>
-    <div
-      style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-3)' }}
-    >
-      {song.key || '—'}
-    </div>
-  </Link>
-);
+      <div
+        style={{
+          fontFamily: 'var(--serif)',
+          fontStyle: 'italic',
+          fontSize: 15,
+          color: 'var(--ink)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {song.title || 'Untitled'}
+      </div>
+      {/* Mobile: one labelled meta line instead of a stack of bare cells. */}
+      {mobileMeta && (
+        <div className="md:hidden" style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: -8 }}>
+          {mobileMeta}
+        </div>
+      )}
+      <div
+        className="hidden md:block"
+        style={{
+          fontSize: 13,
+          color: 'var(--ink-2)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {song.author || '—'}
+      </div>
+      <div
+        className="hidden md:block"
+        style={{
+          fontFamily: 'var(--mono)',
+          fontSize: 11,
+          textTransform: 'uppercase',
+          letterSpacing: '.08em',
+          color: 'var(--ink-3)',
+        }}
+      >
+        {song.level ? levelLabel(song.level) : '—'}
+      </div>
+      <div
+        className="hidden md:block"
+        style={{
+          textAlign: 'right',
+          fontFamily: 'var(--mono)',
+          fontSize: 12,
+          color: 'var(--ink-3)',
+        }}
+      >
+        {song.key || '—'}
+      </div>
+    </Link>
+  );
+};
 
 const EmptyState = ({ filters }: { filters: SongsListFilters }) => {
   const hasFilters = Boolean(filters.search || filters.level || filters.key || filters.author);

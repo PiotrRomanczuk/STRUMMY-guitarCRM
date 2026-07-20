@@ -96,6 +96,7 @@ describe('SongDetailEditorial — canSeeProduction gate', () => {
       LearnersCard: () => <div />,
       RelatedCard: () => <div />,
       UsageCard: () => <div />,
+      YourProgressCard: () => <div />,
     }));
 
     const minimalSong = {

@@ -22,7 +22,7 @@ const STATUS_LABELS: Record<string, string> = {
   to_learn: 'To learn',
   started: 'Started',
   remembered: 'Remembered',
-  with_author: 'With author',
+  with_author: 'Play-along',
   mastered: 'Mastered',
 };
 

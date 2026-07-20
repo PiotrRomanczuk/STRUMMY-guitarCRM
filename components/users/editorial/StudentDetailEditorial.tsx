@@ -278,6 +278,7 @@ export const StudentDetailEditorial = ({
                 <Link
                   key={l.id}
                   href={`/dashboard/lessons/${l.id}`}
+                  className="ed-row"
                   style={{
                     display: 'block',
                     padding: '12px 22px',
@@ -343,4 +344,3 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
     </div>
   </div>
 );
-

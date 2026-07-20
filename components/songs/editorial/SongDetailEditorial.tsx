@@ -9,7 +9,7 @@ import type {
 import { SongChordsCardEditorial } from './SongChordsCardEditorial';
 import { SongDetailTabs } from './SongDetailTabs';
 import { SongHeroEditorial } from './SongHeroEditorial';
-import { LearnersCard, RelatedCard, UsageCard } from './SongSidebarEditorial';
+import { LearnersCard, RelatedCard, UsageCard, YourProgressCard } from './SongSidebarEditorial';
 
 type Props = {
   song: Song;
@@ -46,21 +46,23 @@ export const SongDetailEditorial = ({
 }: Props) => {
   const chordTokens = chordTokensFromSong(song);
 
+  // Students get their own progress, not studio analytics phrased for staff.
+  const isStaffViewer = canSeeProduction;
+
   const overview = (
-    <div
-      style={{
-        padding: '24px 32px 0',
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr)',
-        gap: 24,
-      }}
-    >
+    <div className="ed-grid-hero" style={{ padding: '24px 32px 0' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
         <SongChordsCardEditorial title={song.title ?? 'this song'} chordTokens={chordTokens} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <UsageCard stats={stats} />
-        <LearnersCard learners={learners} />
+        {isStaffViewer ? (
+          <>
+            <UsageCard stats={stats} />
+            <LearnersCard learners={learners} />
+          </>
+        ) : (
+          <YourProgressCard learner={learners[0] ?? null} />
+        )}
         <RelatedCard related={related} />
       </div>
     </div>

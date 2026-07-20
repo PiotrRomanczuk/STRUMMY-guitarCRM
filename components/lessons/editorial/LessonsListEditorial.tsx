@@ -270,7 +270,7 @@ export const LessonsListEditorial = ({
                 <Link
                   key={l.id}
                   href={`/dashboard/lessons/${l.id}`}
-                  className={tableColClass}
+                  className={`ed-row ${tableColClass}`}
                   style={{
                     gap: 14,
                     padding: '14px 20px',

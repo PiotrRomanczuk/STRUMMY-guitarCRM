@@ -33,7 +33,7 @@ export const SongHeroEditorial = ({ song, chordTokens }: Props) => {
   const duration = msToClock(song.duration_ms ?? null);
   const tags: string[] = [];
   if (song.category) tags.push(song.category);
-  if (song.strumming_pattern) tags.push(song.strumming_pattern);
+  if (song.strumming_pattern) tags.push(`Strum · ${song.strumming_pattern}`);
   if (chordTokens.length > 0) {
     tags.push(`${chordTokens.length} chord${chordTokens.length === 1 ? '' : 's'}`);
   }

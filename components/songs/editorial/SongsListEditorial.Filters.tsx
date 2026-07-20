@@ -3,7 +3,8 @@ import Link from 'next/link';
 import type { SongsListFilters, SongsListResult } from '@/lib/services/songs-list-queries';
 
 import { levelLabel } from './format';
-import { buildHref, KEYS, LEVELS, SORTS, SORT_LABEL } from './songs-list.helpers';
+import { SongsListFiltersForm } from './SongsListEditorial.FiltersForm';
+import { buildHref, LEVELS, SORTS, SORT_LABEL } from './songs-list.helpers';
 
 type Props = {
   total: number;
@@ -31,26 +32,9 @@ const fieldLabel = {
   fontFamily: 'var(--mono)',
 };
 
-const controlStyle = {
-  padding: '6px 10px',
-  borderRadius: 8,
-  border: '1px solid var(--rule)',
-  fontSize: 12,
-  background: 'var(--paper)',
-  fontFamily: 'var(--sans)',
-  color: 'var(--ink)',
-};
-
 export const SongsListFiltersBar = ({ total, canCreate, breakdown, filters }: Props) => (
   <div style={{ padding: '0 0 18px' }}>
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'space-between',
-        marginBottom: 18,
-      }}
-    >
+    <div className="ed-page-head" style={{ marginBottom: 18 }}>
       <div>
         <div
           style={{
@@ -118,6 +102,7 @@ export const SongsListFiltersBar = ({ total, canCreate, breakdown, filters }: Pr
             href={buildHref({ level: active ? undefined : lvl }, filters)}
             role="button"
             aria-pressed={active}
+            className={active ? undefined : 'ed-chip'}
             style={chipStyle(active)}
           >
             {levelLabel(lvl)}
@@ -141,6 +126,7 @@ export const SongsListFiltersBar = ({ total, canCreate, breakdown, filters }: Pr
           href={buildHref({ sort: s }, filters)}
           role="button"
           aria-pressed={filters.sort === s}
+          className={filters.sort === s ? undefined : 'ed-chip'}
           style={chipStyle(filters.sort === s)}
         >
           {SORT_LABEL[s]}
@@ -148,62 +134,7 @@ export const SongsListFiltersBar = ({ total, canCreate, breakdown, filters }: Pr
       ))}
     </div>
 
-    {/* Key / author / search: GET form (submitting resets to page 1) */}
-    <form
-      action="/dashboard/songs"
-      method="GET"
-      style={{
-        display: 'flex',
-        gap: 10,
-        alignItems: 'center',
-        padding: '10px 14px',
-        background: 'var(--card)',
-        border: '1px solid var(--rule)',
-        borderRadius: 10,
-        flexWrap: 'wrap',
-      }}
-    >
-      {filters.level && <input type="hidden" name="level" value={filters.level} />}
-      {filters.sort !== 'newest' && <input type="hidden" name="sort" value={filters.sort} />}
-      <span style={fieldLabel}>Key</span>
-      <select name="key" defaultValue={filters.key ?? ''} style={controlStyle}>
-        <option value="">Any</option>
-        {KEYS.map((k) => (
-          <option key={k} value={k}>
-            {k}
-          </option>
-        ))}
-      </select>
-      <input
-        type="text"
-        name="author"
-        defaultValue={filters.author ?? ''}
-        placeholder="Author…"
-        style={{ ...controlStyle, minWidth: 140 }}
-      />
-      <input
-        type="search"
-        name="search"
-        defaultValue={filters.search ?? ''}
-        placeholder="Search by title…"
-        style={{ ...controlStyle, flex: 1, minWidth: 180 }}
-      />
-      <button
-        type="submit"
-        style={{
-          padding: '6px 16px',
-          borderRadius: 8,
-          border: 'none',
-          background: 'var(--ink)',
-          color: 'var(--paper)',
-          fontSize: 12,
-          fontWeight: 500,
-          cursor: 'pointer',
-          fontFamily: 'var(--sans)',
-        }}
-      >
-        Apply
-      </button>
-    </form>
+    {/* Key / author / search apply live (client component). */}
+    <SongsListFiltersForm filters={filters} />
   </div>
 );
