@@ -24,6 +24,11 @@ create table if not exists public.assignment_templates (
   updated_at  timestamptz not null default now()
 );
 
+-- Idempotent for DBs where the table pre-exists without the checklist column
+-- (the table lived in the baseline but not in this migration set).
+alter table public.assignment_templates
+  add column if not exists checklist jsonb not null default '[]'::jsonb;
+
 alter table public.assignment_templates
   drop constraint if exists assignment_templates_checklist_is_array;
 alter table public.assignment_templates
@@ -33,6 +38,7 @@ alter table public.assignment_templates
 create index if not exists idx_assignment_templates_teacher_id
   on public.assignment_templates (teacher_id);
 
+drop trigger if exists trg_assignment_templates_set_updated_at on public.assignment_templates;
 create trigger trg_assignment_templates_set_updated_at
   before update on public.assignment_templates
   for each row execute function public.set_updated_at();

@@ -5,19 +5,12 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { guardTestAccountMutation } from '@/lib/auth/test-account-guard';
-import { ChecklistSchema, type ChecklistItem } from '@/schemas/AssignmentSchema';
+import { ChecklistSchema, applyChecklistToggle } from '@/schemas/AssignmentSchema';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('assignment-checklist-action');
 
 type ChecklistResult = { success: true } | { error: string };
-
-/** Flip exactly one item's `done` flag; text, order and membership preserved. */
-export const applyChecklistToggle = (
-  checklist: ChecklistItem[],
-  itemId: string,
-  done: boolean
-): ChecklistItem[] => checklist.map((item) => (item.id === itemId ? { ...item, done } : item));
 
 /**
  * Tick/untick a single checklist item.

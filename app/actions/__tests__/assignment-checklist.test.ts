@@ -8,7 +8,8 @@
  * @see app/actions/assignment-checklist.ts
  */
 
-import { applyChecklistToggle, toggleChecklistItemAction } from '../assignment-checklist';
+import { toggleChecklistItemAction } from '../assignment-checklist';
+import { applyChecklistToggle } from '@/schemas/AssignmentSchema';
 
 const mockGetUserWithRolesSSR = jest.fn();
 jest.mock('@/lib/getUserWithRolesSSR', () => ({

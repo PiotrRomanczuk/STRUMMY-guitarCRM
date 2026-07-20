@@ -31,6 +31,13 @@ export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
 export const sanitizeChecklist = (items: ChecklistItem[]): ChecklistItem[] =>
   items.map((i) => ({ ...i, text: i.text.trim() })).filter((i) => i.text.length > 0);
 
+/** Flip exactly one item's `done` flag; text, order and membership preserved. */
+export const applyChecklistToggle = (
+  checklist: ChecklistItem[],
+  itemId: string,
+  done: boolean
+): ChecklistItem[] => checklist.map((item) => (item.id === itemId ? { ...item, done } : item));
+
 /** Derived progress from a checklist: done / total (0 when empty). */
 export const checklistProgress = (
   checklist: ChecklistItem[]
