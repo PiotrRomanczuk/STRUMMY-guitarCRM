@@ -68,9 +68,9 @@ test.describe('Users Management', { tag: ['@teacher', '@users'] }, () => {
     const searchInput = page.locator('input[name="search"]');
     await expect(searchInput).toBeVisible({ timeout: 10_000 });
 
-    // Search for a student that IS in the teacher's lesson list
+    // Search for a student that IS in the teacher's lesson list.
+    // Filters apply live (debounced ~350ms) — there is no submit button.
     await searchInput.fill(VISIBLE_STUDENT_EMAIL);
-    await page.locator('button[type="submit"], button:has-text("Filter")').first().click();
     await page.waitForLoadState('networkidle');
 
     await expect(page.locator(`text=${VISIBLE_STUDENT_EMAIL}`).first()).toBeVisible({
@@ -84,8 +84,8 @@ test.describe('Users Management', { tag: ['@teacher', '@users'] }, () => {
 
     const roleFilter = page.locator('select[name="role"]');
     await expect(roleFilter).toBeVisible({ timeout: 10_000 });
+    // Selects apply immediately (live filters) — no submit button.
     await roleFilter.selectOption('student');
-    await page.locator('button[type="submit"], button:has-text("Filter")').first().click();
     await page.waitForLoadState('networkidle');
 
     // List renders without error
