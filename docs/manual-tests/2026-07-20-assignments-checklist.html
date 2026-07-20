@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — Assignment Checklist &amp; Progress (PR B)</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 860px;
+        margin: 40px auto;
+        padding: 0 20px;
+        color: #1a1a1a;
+        line-height: 1.55;
+      }
+      h1 {
+        font-size: 26px;
+        border-bottom: 2px solid #c9a227;
+        padding-bottom: 8px;
+      }
+      h2 {
+        font-size: 19px;
+        margin-top: 32px;
+      }
+      h3 {
+        font-size: 15px;
+        margin-top: 22px;
+      }
+      code {
+        background: #f3f3ef;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      .meta {
+        color: #666;
+        font-size: 13px;
+      }
+      ol li,
+      ul li {
+        margin: 6px 0;
+      }
+      .pill {
+        display: inline-block;
+        background: #eef6ee;
+        color: #2b662b;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .warn {
+        background: #fdf0ef;
+        border-left: 3px solid #c0392b;
+        padding: 10px 14px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .note {
+        background: #fbf7e9;
+        border-left: 3px solid #c9a227;
+        padding: 10px 14px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Assignment Checklist &amp; Progress — Manual Test</h1>
+    <p class="meta">
+      <strong>Date:</strong> 2026-07-20 · <strong>PR:</strong> B of the assignments teacher-POV
+      slice · <strong>Branch:</strong> <code>feature/assignments-triage</code>
+    </p>
+
+    <h2>What was built</h2>
+    <p>
+      An assignment can now carry a <strong>checklist</strong> of sub-tasks, giving a
+      percent-complete progress signal on top of the coarse status:
+    </p>
+    <ul>
+      <li>
+        <strong>Teacher authors</strong> the checklist in the create/edit form (add / edit / reorder
+        / remove, up to 20 items).
+      </li>
+      <li>
+        <strong>Student ticks</strong> items on the assignment detail page; the Progress card shows
+        a bar and “N / M done · %”.
+      </li>
+      <li>
+        The <strong>assignments list</strong> shows a compact progress bar per row when a checklist
+        exists.
+      </li>
+      <li>
+        The <strong>status state machine is untouched</strong> — ticking items never changes status;
+        the student still explicitly marks Start / Complete.
+      </li>
+    </ul>
+
+    <div class="note">
+      <strong>Security (ADR-0001).</strong> A student’s only checklist write path is the
+      <code>student_toggle_checklist_item</code> SECURITY DEFINER RPC, which by construction flips
+      exactly one existing item’s <code>done</code> flag — it cannot add, remove, reorder, or edit
+      item text. Teachers/admins author via the existing owned update. This mirrors the ASG-3 status
+      RPC.
+    </div>
+
+    <div class="warn">
+      <strong>DB gate — not yet applied.</strong> This PR ships the migration
+      <code>supabase/migrations/20260720000001_assignment_checklist.sql</code> but it has NOT been
+      applied to any live DB in this session (the uwh <code>StudentManager</code> stack is
+      live-prod-conflated per the planner vault, and <code>StrummyProd</code> is prod). Before the
+      UI works end-to-end you must:
+      <ol>
+        <li>
+          Apply the migration to a safe stack (a throwaway/branch DB, or StrummyProd during a
+          zero-user window).
+        </li>
+        <li>
+          Run the RLS suite there: <code>npm run test:rls</code> (targets
+          <code>lib/testing/rls/__tests__/assignment-checklist.rls.test.ts</code>).
+        </li>
+      </ol>
+      Type generation was intentionally skipped — the server action client is untyped, so no
+      <code>database.types.ts</code> change is required and a regen against a drifted DB was
+      avoided.
+    </div>
+
+    <h2>Automated verification (already run, DB-free)</h2>
+    <ul>
+      <li><span class="pill">PASS</span> <code>npm run typecheck</code> (clean)</li>
+      <li><span class="pill">PASS</span> <code>eslint</code> on all changed files (0 errors)</li>
+      <li>
+        <span class="pill">PASS</span> <code>ChecklistSchema</code> / <code>checklistProgress</code>
+        unit tests (bounds, defaults, progress math)
+      </li>
+      <li>
+        <span class="pill">PASS</span> <code>toggleChecklistItemAction</code> unit tests: owning
+        student → RPC (not a plain update); owning teacher → update with the one flipped item;
+        item-not-found / non-owner / unauthenticated / test-account all rejected
+      </li>
+      <li>
+        <span class="pill">WRITTEN</span> RLS suite (runs via <code>npm run test:rls</code> against
+        a real DB): student toggles own item; cannot toggle another’s; cannot rewrite
+        text/add/remove via a direct UPDATE (core proof); teacher can edit via plain update
+      </li>
+    </ul>
+
+    <h2>How to manually test (after applying the migration)</h2>
+    <p>
+      <strong>Dev credentials:</strong> teacher <code>p.romanczuk@gmail.com / test123_admin</code>,
+      student <code>emma@strummy.app / Demo2024!</code>.
+    </p>
+
+    <h3>As a teacher</h3>
+    <ol>
+      <li>
+        Create a new assignment. Under <strong>Brief</strong>, use “+ Add checklist item” to add 3
+        steps; reorder with ↑/↓; remove one with ×. Save.
+      </li>
+      <li>On the detail page, confirm the Progress card shows the checklist with a 0% bar.</li>
+      <li>
+        Open the assignments list — the row shows a compact <code>0/2</code>-style progress bar.
+      </li>
+      <li>Edit the assignment; confirm the checklist loads pre-filled and edits persist.</li>
+      <li>
+        Optional: as the teacher, tick an item on the detail page — it should update (owner path).
+      </li>
+    </ol>
+
+    <h3>As the student</h3>
+    <ol>
+      <li>
+        Open the assignment. Tick a checklist item — the bar advances and “N / M done” updates.
+      </li>
+      <li>Reload — the tick persisted.</li>
+      <li>
+        Confirm ticking every item does NOT auto-complete the assignment — you still press the
+        explicit “Mark complete” button.
+      </li>
+    </ol>
+
+    <h3>Security spot-check (optional, requires a session token)</h3>
+    <ul>
+      <li>
+        A direct PostgREST <code>PATCH</code> to <code>/rest/v1/assignments</code> from a student
+        session that tries to rewrite <code>checklist</code> text must leave the row unchanged
+        (covered by the RLS suite).
+      </li>
+    </ul>
+  </body>
+</html>

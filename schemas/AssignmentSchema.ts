@@ -10,6 +10,28 @@ export const AssignmentStatusEnum = z.enum([
   'cancelled',
 ]);
 
+// A single homework checklist item. `id` is client-generated (nanoid/uuid);
+// students may only ever flip `done` (enforced in the DB via a SECURITY DEFINER
+// RPC — see supabase/migrations/*_assignment_checklist.sql), never text/order.
+export const ChecklistItemSchema = z.object({
+  id: z.string().min(1).max(64),
+  text: z.string().min(1, 'Item text is required').max(200),
+  done: z.boolean().default(false),
+});
+
+export const ChecklistSchema = z.array(ChecklistItemSchema).max(20).default([]);
+
+export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
+
+/** Derived progress from a checklist: done / total (0 when empty). */
+export const checklistProgress = (
+  checklist: ChecklistItem[]
+): { done: number; total: number; pct: number } => {
+  const total = checklist.length;
+  const done = checklist.filter((i) => i.done).length;
+  return { done, total, pct: total === 0 ? 0 : done / total };
+};
+
 // Assignment schema for validation
 export const AssignmentSchema = z.object({
   id: IdField, // UUID, auto-generated
@@ -21,6 +43,7 @@ export const AssignmentSchema = z.object({
   lesson_id: z.string().uuid().optional().nullable(), // Optional link to lesson
   song_id: z.string().uuid().optional().nullable(), // Optional link to song
   status: AssignmentStatusEnum.default('not_started'),
+  checklist: ChecklistSchema,
   created_at: z.string().datetime().optional(),
   updated_at: z.string().datetime().optional(),
 });
@@ -35,6 +58,7 @@ export const AssignmentInputSchema = z.object({
   lesson_id: z.string().uuid().optional().nullable(), // Optional link to lesson
   song_id: z.string().uuid().optional().nullable(), // Optional link to song
   status: AssignmentStatusEnum.optional(),
+  checklist: ChecklistSchema.optional(), // optional-no-default: only sent when authored
 });
 
 // Assignment update schema (partial of input)

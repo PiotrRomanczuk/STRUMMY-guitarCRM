@@ -46,6 +46,7 @@ export default async function EditAssignmentPage({ params }: PageProps) {
           description: assignment.description,
           dueDate: assignment.dueDate,
           songId: assignment.song?.id ?? null,
+          checklist: assignment.checklist,
         }}
       />
     </div>

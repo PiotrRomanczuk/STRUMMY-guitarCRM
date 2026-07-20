@@ -5,7 +5,11 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { guardTestAccountMutation } from '@/lib/auth/test-account-guard';
-import { AssignmentInputSchema } from '@/schemas/AssignmentSchema';
+import {
+  AssignmentInputSchema,
+  ChecklistSchema,
+  type ChecklistItem,
+} from '@/schemas/AssignmentSchema';
 import { queueNotification } from '@/lib/services/notification-service';
 import { createLogger } from '@/lib/logger';
 
@@ -19,6 +23,7 @@ export type AssignmentFormValues = {
   dueDate?: string;
   songId?: string | null;
   lessonId?: string | null;
+  checklist?: ChecklistItem[];
 };
 
 type AssignmentActionResult = { assignmentId: string } | { error: string };
@@ -52,6 +57,7 @@ export async function createAssignmentAction(
     student_id: values.studentId,
     song_id: values.songId || null,
     lesson_id: values.lessonId || null,
+    checklist: values.checklist,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues.map((i) => i.message).join(', ') };
@@ -85,17 +91,24 @@ export async function updateAssignmentAction(
   if (!user) return { error: 'Unauthorized' };
   if (!isAdmin && !isTeacher) return { error: 'Only teachers and admins can update assignments' };
 
+  const updatePayload: Record<string, unknown> = {
+    title: values.title,
+    description: values.description || null,
+    due_date: toIso(values.dueDate) ?? null,
+    song_id: values.songId || null,
+    lesson_id: values.lessonId || null,
+    updated_at: new Date().toISOString(),
+  };
+  if (values.checklist !== undefined) {
+    const checklist = ChecklistSchema.safeParse(values.checklist);
+    if (!checklist.success) return { error: 'Invalid checklist' };
+    updatePayload.checklist = checklist.data;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('assignments')
-    .update({
-      title: values.title,
-      description: values.description || null,
-      due_date: toIso(values.dueDate) ?? null,
-      song_id: values.songId || null,
-      lesson_id: values.lessonId || null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq('id', assignmentId)
     .is('deleted_at', null)
     .select('id')

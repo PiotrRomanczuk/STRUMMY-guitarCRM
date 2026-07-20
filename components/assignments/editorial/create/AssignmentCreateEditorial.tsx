@@ -12,6 +12,8 @@ import {
 } from '@/app/actions/assignment-edit';
 import type { SongOption, StudentOption } from '@/lib/services/lesson-form-data';
 import { AssignmentAI } from '@/components/assignments/form/AssignmentAI';
+import { ChecklistEditor } from '@/components/assignments/editorial/checklist/ChecklistEditor';
+import type { ChecklistItem } from '@/schemas/AssignmentSchema';
 
 const toDateInput = (iso: string | null): string => (iso ? iso.slice(0, 10) : '');
 
@@ -26,6 +28,7 @@ type Props = {
     description: string | null;
     dueDate: string | null;
     songId: string | null;
+    checklist?: ChecklistItem[];
   };
 };
 
@@ -37,6 +40,7 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, initial }: Pr
   const [description, setDescription] = useState(initial?.description ?? '');
   const [dueDate, setDueDate] = useState(toDateInput(initial?.dueDate ?? null));
   const [songId, setSongId] = useState(initial?.songId ?? '');
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(initial?.checklist ?? []);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -61,6 +65,9 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, initial }: Pr
         description: description.trim() || undefined,
         dueDate: dueDate || undefined,
         songId: songId || null,
+        checklist: checklist
+          .map((i) => ({ ...i, text: i.text.trim() }))
+          .filter((i) => i.text.length > 0),
       };
 
       setIsSaving(true);
@@ -77,7 +84,7 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, initial }: Pr
       router.push(`/dashboard/assignments/${result.assignmentId}`);
       router.refresh();
     },
-    [isSaving, title, mode, studentId, description, dueDate, songId, initial, router]
+    [isSaving, title, mode, studentId, description, dueDate, songId, checklist, initial, router]
   );
 
   return (
@@ -167,6 +174,8 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, initial }: Pr
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
+
+        <ChecklistEditor items={checklist} onChange={setChecklist} disabled={isSaving} />
 
         <div data-testid="assignment-notes-ai">
           <AssignmentAI

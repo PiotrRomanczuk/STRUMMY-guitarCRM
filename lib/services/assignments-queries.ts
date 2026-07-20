@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
+import { ChecklistSchema, checklistProgress } from '@/schemas/AssignmentSchema';
 import {
   buildAssignmentListResult,
   deriveEffectiveStatus,
@@ -46,6 +47,7 @@ type RawAssignment = {
   student_id: string;
   created_at: string;
   updated_at: string | null;
+  checklist: unknown;
   student:
     | { full_name: string | null; email: string | null }
     | { full_name: string | null; email: string | null }[]
@@ -55,6 +57,8 @@ type RawAssignment = {
 const mapRow = (row: RawAssignment): AssignmentRow => {
   const student = Array.isArray(row.student) ? row.student[0] : row.student;
   const dueDate = row.due_date ?? null;
+  const checklist = ChecklistSchema.safeParse(row.checklist).data ?? [];
+  const { done, total } = checklistProgress(checklist);
   return {
     id: row.id,
     title: row.title,
@@ -67,6 +71,7 @@ const mapRow = (row: RawAssignment): AssignmentRow => {
     studentEmail: student?.email ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at ?? row.created_at,
+    progress: { done, total },
   };
 };
 
@@ -86,7 +91,7 @@ export async function getAssignmentsList(
   let query = supabase
     .from('assignments')
     .select(
-      'id, title, status, due_date, teacher_id, student_id, created_at, updated_at, student:profiles!assignments_student_id_fkey(full_name, email)'
+      'id, title, status, due_date, teacher_id, student_id, created_at, updated_at, checklist, student:profiles!assignments_student_id_fkey(full_name, email)'
     )
     .eq(asStudent ? 'student_id' : 'teacher_id', userId)
     .is('deleted_at', null);

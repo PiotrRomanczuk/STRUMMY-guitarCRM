@@ -24,6 +24,7 @@ export type AssignmentRow = {
   studentEmail: string | null;
   createdAt: string;
   updatedAt: string;
+  progress: { done: number; total: number };
 };
 
 export type AssignmentListCounts = {

@@ -23,6 +23,7 @@ function makeRow(partial: Partial<AssignmentRow> & { id: string; status: string 
     studentEmail: partial.studentEmail ?? 'emma@example.com',
     createdAt: partial.createdAt ?? '2026-01-01T00:00:00Z',
     updatedAt: partial.updatedAt ?? partial.createdAt ?? '2026-01-01T00:00:00Z',
+    progress: partial.progress ?? { done: 0, total: 0 },
     ...partial,
   };
 }

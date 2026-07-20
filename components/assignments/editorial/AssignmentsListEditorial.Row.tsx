@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import type { AssignmentRow } from '@/lib/services/assignment-list-params';
 import { assignmentStatusColour, assignmentStatusLabel } from '@/lib/services/assignments-queries';
+import { ChecklistProgress } from '@/components/assignments/editorial/checklist/ChecklistProgress';
 
 const formatDate = (iso: string | null): string => {
   if (!iso) return '—';
@@ -112,7 +113,14 @@ export const AssignmentListRowEditorial = ({
         </div>
       )}
 
-      <div style={{ textAlign: 'right' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: 6,
+        }}
+      >
         <span
           style={{
             display: 'inline-flex',
@@ -132,6 +140,7 @@ export const AssignmentListRowEditorial = ({
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: colour }} />
           {assignmentStatusLabel(row.effectiveStatus)}
         </span>
+        <ChecklistProgress done={row.progress.done} total={row.progress.total} compact />
       </div>
     </Link>
   );
