@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — UX Audit Remediation (2026-07-20)</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        max-width: 880px;
+        margin: 40px auto;
+        padding: 0 24px;
+        color: #1a1613;
+        line-height: 1.55;
+      }
+      h1 {
+        font-size: 26px;
+      }
+      h2 {
+        margin-top: 36px;
+        border-bottom: 2px solid #e6dccb;
+        padding-bottom: 6px;
+      }
+      h3 {
+        margin-top: 24px;
+        color: #4a4037;
+      }
+      code {
+        background: #f5f1e8;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #e6dccb;
+        padding: 7px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #fbf1d3;
+      }
+      .meta {
+        color: #6a5f52;
+        font-size: 14px;
+      }
+      .step {
+        background: #fbf8f1;
+        border-left: 3px solid #c89523;
+        padding: 10px 14px;
+        margin: 10px 0;
+      }
+      kbd {
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        padding: 0 4px;
+        font-size: 0.85em;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>UX Audit Remediation — Manual Test Guide</h1>
+    <p class="meta">
+      <strong>Date:</strong> 2026-07-20 · <strong>Branch:</strong>
+      <code>fix/ux-audit-remediation</code> (off <code>feature/assignments-triage</code>) ·
+      <strong>Audit:</strong> <code>docs/analysis/2026-07-20-ux-frontend-audit.md</code>
+    </p>
+
+    <h2>What was done</h2>
+    <p>
+      All findings from the 2026-07-20 frontend UX audit were remediated. In behavioral terms, the
+      app now:
+    </p>
+    <ul>
+      <li>
+        <strong>Shows hover feedback on clickable rows and chips</strong> across dashboard cards,
+        People, Songs, Lessons, Assignments, and song sidebars (new <code>.ed-row</code>/<code
+          >.ed-chip</code
+        >
+        classes in <code>app/editorial-tokens.css</code> — inline styles can't express
+        <code>:hover</code>, so interactive styling moved to CSS). Keyboard focus now draws a gold
+        outline on editorial surfaces; every enabled button shows a pointer cursor again (Tailwind 4
+        preflight had removed it).
+      </li>
+      <li>
+        <strong>Has a working dark mode everywhere.</strong> The editorial pages' pre-built dark
+        palette is now activated by the sidebar theme toggle (<code>.dark .theme-editorial</code>
+        selector). Previously the shell went dark while all page content stayed light.
+      </li>
+      <li>
+        <strong>Is responsive on phones.</strong> Teacher dashboard columns stack below 860px (no
+        more crushed "Needs attention" card with overlapping badges); the Assignments header wraps
+        instead of pushing "+ New assignment" 126px off-screen; songs list rows collapse to a
+        labelled one-line meta instead of bare dashes.
+      </li>
+      <li>
+        <strong>Renders chord diagrams for ~40 common chords</strong> (was 14) and shows a clean "no
+        chart" placeholder — no more clipped duplicate chord names over "?" boxes.
+      </li>
+      <li>
+        <strong>Treats overdue consistently:</strong> assignment detail now derives overdue at read
+        time like the list, colors the due date red, and both dashboards surface overdue work
+        (teacher: "Overdue homework" card; student: "Assignments due" card, overdue first).
+      </li>
+      <li>
+        <strong>Fixes student-facing gaps:</strong> no more "Untitled" ghost songs on the student
+        dashboard (RLS-unreadable rows are filtered), practice time reads "14h 49m" instead of
+        "889m", and the song page shows the student's own progress instead of teacher analytics
+        ("Assigned to 1 students").
+      </li>
+      <li>
+        <strong>Improves forms and actions:</strong> assignment form validates all fields at once
+        with inline red errors and focuses the first invalid field; list filters apply live
+        (debounced typing, instant selects — the "Filter"/"Apply" buttons are gone); checklist items
+        toggle from the whole row (was a 13px checkbox); "Cancel" is now "Cancel assignment"; only
+        one primary status button.
+      </li>
+      <li>
+        <strong>Removes hydration errors</strong> on <code>/dashboard/theory</code> and
+        <code>/dashboard/ai/chat</code> (the layout-mode hook now initializes SSR-consistently),
+        gates "Generate AI summary" to completed lessons, restyles Calendar into the editorial
+        shell, hides the ⌘K hint on touch, enlarges the sign-out target, and renames the "With
+        author" status to "Play-along".
+      </li>
+    </ul>
+
+    <h2>Prerequisites</h2>
+    <div class="step">
+      <p>
+        <code>npm run dev</code> against the dev Supabase (StudentDevelopment on uwh). Accounts:
+        teacher <code>teacher@dev.local</code> / <code>test123_teacher</code>, student
+        <code>student@dev.local</code> / <code>test123_student</code> (passwords reset on the dev DB
+        2026-07-20).
+      </p>
+    </div>
+
+    <h2>Test steps</h2>
+
+    <h3>1. Hover, cursor &amp; focus (desktop, teacher)</h3>
+    <table>
+      <tr>
+        <th>Do</th>
+        <th>Expect</th>
+      </tr>
+      <tr>
+        <td>
+          Hover rows on Dashboard roster / Songs card, People list, Songs list, Lessons list,
+          Assignments list
+        </td>
+        <td>Row background tints warm beige; cursor is a hand</td>
+      </tr>
+      <tr>
+        <td>Hover the level/sort chips on Songs and status tabs on Assignments (inactive ones)</td>
+        <td>Chip border/text darkens</td>
+      </tr>
+      <tr>
+        <td>Hover any button (theme toggle, sign out, section headers)</td>
+        <td>Pointer cursor (was arrow)</td>
+      </tr>
+      <tr>
+        <td>Tab through a list page with the keyboard</td>
+        <td>Gold focus outline is visible on links/buttons/checkboxes</td>
+      </tr>
+    </table>
+
+    <h3>2. Dark mode</h3>
+    <table>
+      <tr>
+        <th>Do</th>
+        <th>Expect</th>
+      </tr>
+      <tr>
+        <td>
+          Sidebar footer → moon icon → “Dark”, then visit Dashboard, Songs, a song detail,
+          Assignments, Settings
+        </td>
+        <td>
+          Entire page renders dark (warm near-black paper, cream text, gold accents) — not just the
+          sidebar. Chord diagrams draw in light ink
+        </td>
+      </tr>
+      <tr>
+        <td>Switch back to “Light”</td>
+        <td>Everything returns to cream</td>
+      </tr>
+    </table>
+
+    <h3>3. Mobile layout (resize to ~390px or use a phone)</h3>
+    <table>
+      <tr>
+        <th>Do</th>
+        <th>Expect</th>
+      </tr>
+      <tr>
+        <td>Teacher dashboard at 390px</td>
+        <td>
+          Cards stack in one column; student names and “7d” badges don't overlap; no horizontal
+          scrolling
+        </td>
+      </tr>
+      <tr>
+        <td>Assignments at 390px</td>
+        <td>
+          “Templates” and “+ New assignment” fully visible under the title; page does not scroll
+          sideways; red “N overdue assignments need a nudge.” line replaces the old counts caption
+        </td>
+      </tr>
+      <tr>
+        <td>Songs at 390px</td>
+        <td>
+          Each row: title + one “Author · Level · Key” line (only values that exist — no floating
+          dashes)
+        </td>
+      </tr>
+      <tr>
+        <td>Open the drawer (hamburger)</td>
+        <td>No ⌘K badge in the search field on mobile</td>
+      </tr>
+    </table>
+
+    <h3>4. Chords (song detail — e.g. Wonderwall)</h3>
+    <table>
+      <tr>
+        <th>Do</th>
+        <th>Expect</th>
+      </tr>
+      <tr>
+        <td>Open Wonderwall as teacher or student</td>
+        <td>
+          Em7, G, Dsus4, A7sus4, Cadd9 all render real diagrams (dots + open-string circles), single
+          name label per card
+        </td>
+      </tr>
+      <tr>
+        <td>Open a song with an exotic chord (no shape on file)</td>
+        <td>Dashed box with small “no chart” text — no clipped duplicate name, no “?”</td>
+      </tr>
+    </table>
+
+    <h3>5. Assignments flow</h3>
+    <table>
+      <tr>
+        <th>Do</th>
+        <th>Expect</th>
+      </tr>
+      <tr>
+        <td>Type in “Search title…” on the list</td>
+        <td>List filters as you type (~350ms), no Enter needed</td>
+      </tr>
+      <tr>
+        <td>Open an overdue assignment (e.g. “Clean up timing”, due Jul 18)</td>
+        <td>Pill shows OVERDUE (matches the list), due date is red</td>
+      </tr>
+      <tr>
+        <td>Look at the status buttons</td>
+        <td>
+          One solid primary (natural next step), others outlined; cancel says “Cancel assignment”
+          and confirms
+        </td>
+      </tr>
+      <tr>
+        <td>Submit the New Assignment form empty</td>
+        <td>
+          Both Student and Title show red inline messages under the fields, first invalid field gets
+          focus, borders turn red; errors clear as you type
+        </td>
+      </tr>
+      <tr>
+        <td>As student, tap anywhere on a checklist item row (phone width)</td>
+        <td>Item toggles — the whole row is the tap target; progress bar updates instantly</td>
+      </tr>
+    </table>
+
+    <h3>6. Dashboards surface overdue work</h3>
+    <table>
+      <tr>
+        <th>Do</th>
+        <th>Expect</th>
+      </tr>
+      <tr>
+        <td>Teacher dashboard</td>
+        <td>
+          “Overdue homework” card lists overdue assignments (student + title + red due date) with
+          “View all →” to the filtered list
+        </td>
+      </tr>
+      <tr>
+        <td>Student dashboard</td>
+        <td>
+          “Assignments due” card, overdue first (“Overdue · Jul 11” in red); no “Untitled” songs in
+          the repertoire card; practice time shows hours (“14h 49m”)
+        </td>
+      </tr>
+    </table>
+
+    <h3>7. Role-adapted song page &amp; misc</h3>
+    <table>
+      <tr>
+        <th>Do</th>
+        <th>Expect</th>
+      </tr>
+      <tr>
+        <td>Open a song as the student</td>
+        <td>
+          Right rail shows “Your practice / Progress” (stage stepper + practice total) — no
+          “Assigned to N students” analytics
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Open <code>/dashboard/theory</code> and <code>/dashboard/ai/chat</code> (dev console open)
+        </td>
+        <td>No hydration error</td>
+      </tr>
+      <tr>
+        <td>Open a SCHEDULED lesson as teacher</td>
+        <td>No “Generate AI summary” section (appears only on completed lessons)</td>
+      </tr>
+      <tr>
+        <td>Open Calendar</td>
+        <td>
+          Editorial header (serif italic “Calendar”, TOOLS eyebrow) — no longer a different-looking
+          app
+        </td>
+      </tr>
+      <tr>
+        <td>Settings</td>
+        <td>
+          Email/Role fields visibly muted (disabled look); song statuses read “Play-along” instead
+          of “With author”
+        </td>
+      </tr>
+    </table>
+
+    <h2>Edge cases checked</h2>
+    <ul>
+      <li>
+        Persisted <code>status='overdue'</code> rows (legacy seed data) are included in both
+        dashboard queries.
+      </li>
+      <li>Unknown chord names never borrow a wrong diagram (unit-tested).</li>
+      <li>
+        Theory stays hidden from nav by design (<code>menuConfig.ts</code> — no seeded content yet);
+        it was flagged as “orphaned” in the audit but is intentional.
+      </li>
+    </ul>
+
+    <h2>Automated gates at time of writing</h2>
+    <p>
+      <code>npm run lint</code> — 0 errors · <code>npx tsc --noEmit</code> — clean ·
+      <code>npm test</code> — 224/224 suites, 2861 passed (2 song-component suites updated to match
+      the intentionally changed chord-card contract).
+    </p>
+  </body>
+</html>
