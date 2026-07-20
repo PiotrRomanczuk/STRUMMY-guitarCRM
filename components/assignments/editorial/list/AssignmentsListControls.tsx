@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useRef } from 'react';
 
 import type { AssignmentListCounts } from '@/lib/services/assignment-list-params';
 import type { StudentOption } from '@/lib/services/lesson-form-data';
@@ -75,6 +76,15 @@ export const AssignmentsListControls = ({
 
   const push = (patch: Record<string, string | null>) => router.push(buildHref(patch));
 
+  // Live search: filter as the user types (debounced), no Enter required.
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onSearchChange = (value: string) => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      router.replace(buildHref({ q: value.trim() || null }), { scroll: false });
+    }, 350);
+  };
+
   return (
     <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -84,6 +94,7 @@ export const AssignmentsListControls = ({
             <Link
               key={tab.key || 'all'}
               href={buildHref({ status: tab.key || null })}
+              className={active ? undefined : 'ed-chip'}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -111,15 +122,16 @@ export const AssignmentsListControls = ({
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            if (searchTimer.current) clearTimeout(searchTimer.current);
             const value = String(new FormData(e.currentTarget).get('q') ?? '').trim();
             push({ q: value || null });
           }}
           style={{ display: 'flex', gap: 6 }}
         >
           <input
-            key={search ?? ''}
             name="q"
             defaultValue={search ?? ''}
+            onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search title…"
             aria-label="Search assignments by title"
             style={{ ...selectStyle, minWidth: 180 }}
@@ -142,18 +154,34 @@ export const AssignmentsListControls = ({
           </select>
         )}
 
-        <select
-          aria-label="Sort assignments"
-          value={sort ?? ''}
-          onChange={(e) => push({ sort: e.target.value || null, dir: e.target.value ? dir : null })}
-          style={selectStyle}
+        <label
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontFamily: 'var(--mono)',
+            fontSize: 10,
+            textTransform: 'uppercase',
+            letterSpacing: '.1em',
+            color: 'var(--ink-4)',
+          }}
         >
-          {SORT_OPTIONS.map((o) => (
-            <option key={o.value || 'attention'} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+          Sort
+          <select
+            aria-label="Sort assignments"
+            value={sort ?? ''}
+            onChange={(e) =>
+              push({ sort: e.target.value || null, dir: e.target.value ? dir : null })
+            }
+            style={selectStyle}
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value || 'attention'} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
         {sort && (
           <button

@@ -20,7 +20,7 @@ import {
 const LABELS: Record<string, string> = {
   in_progress: 'Start working',
   completed: 'Mark complete',
-  cancelled: 'Cancel',
+  cancelled: 'Cancel assignment',
 };
 
 // Students may only advance to these states; teachers/admin get the full set.
@@ -72,11 +72,19 @@ export const AssignmentStatusActions = ({ assignmentId, currentStatus, canManage
     );
   }
 
+  // Exactly one primary action: the natural next step. Everything else is
+  // secondary so the choice reads at a glance.
+  const primaryTarget: AssignmentStatus | null = targets.includes('in_progress')
+    ? 'in_progress'
+    : targets.includes('completed')
+      ? 'completed'
+      : null;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {targets.map((next) => {
-          const isPrimary = next === 'completed' || next === 'in_progress';
+          const isPrimary = next === primaryTarget;
           const buttonEl = (
             <button
               type="button"

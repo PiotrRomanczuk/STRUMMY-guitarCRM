@@ -4,6 +4,7 @@ import type {
   AssignmentDetail,
   AssignmentHistoryEntry,
 } from '@/lib/services/assignment-detail-queries';
+import { deriveEffectiveStatus } from '@/lib/services/assignment-list-params';
 import { assignmentStatusColour, assignmentStatusLabel } from '@/lib/services/assignments-queries';
 import type { AssignmentStatus } from '@/schemas/AssignmentSchema';
 import { AssignmentStatusActions } from '../status/AssignmentStatusActions';
@@ -61,7 +62,11 @@ type Props = {
 };
 
 export const AssignmentDetailEditorial = ({ assignment, canManage, canAct, history }: Props) => {
-  const colour = assignmentStatusColour(assignment.status);
+  // Same read-time derivation as the list: a past-due open assignment shows
+  // OVERDUE here too, not its raw persisted status.
+  const effectiveStatus = deriveEffectiveStatus(assignment.dueDate, assignment.status);
+  const colour = assignmentStatusColour(effectiveStatus);
+  const isOverdue = effectiveStatus === 'overdue';
   const studentDisplay = assignment.studentName ?? assignment.studentEmail ?? 'Student';
 
   return (
@@ -109,7 +114,7 @@ export const AssignmentDetailEditorial = ({ assignment, canManage, canAct, histo
               }}
             >
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: colour }} />
-              {assignmentStatusLabel(assignment.status)}
+              {assignmentStatusLabel(effectiveStatus)}
             </span>
             {canManage && (
               <Link
@@ -148,7 +153,10 @@ export const AssignmentDetailEditorial = ({ assignment, canManage, canAct, histo
             >
               {studentDisplay}
             </Link>{' '}
-            · due {formatDate(assignment.dueDate)}
+            ·{' '}
+            <span style={isOverdue ? { color: 'var(--danger)', fontWeight: 500 } : undefined}>
+              due {formatDate(assignment.dueDate)}
+            </span>
           </div>
         </div>
 
@@ -212,7 +220,7 @@ export const AssignmentDetailEditorial = ({ assignment, canManage, canAct, histo
               />
             ) : (
               <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)' }}>
-                Status: {assignmentStatusLabel(assignment.status)}
+                Status: {assignmentStatusLabel(effectiveStatus)}
               </div>
             )}
           </Card>

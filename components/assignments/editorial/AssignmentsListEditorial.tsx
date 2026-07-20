@@ -47,15 +47,7 @@ export const AssignmentsListEditorial = ({
         padding: '28px 32px 64px',
       }}
     >
-      <div
-        style={{
-          marginBottom: 20,
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'space-between',
-          gap: 16,
-        }}
-      >
+      <div className="ed-page-head" style={{ marginBottom: 20 }}>
         <div>
           <div
             style={{
@@ -80,15 +72,18 @@ export const AssignmentsListEditorial = ({
           >
             Assignments
           </h1>
-          <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>
-            {counts.all} total · {counts.not_started} not started · {counts.in_progress} in progress
-            · {counts.completed} completed · {counts.overdue} overdue
-          </div>
+          {counts.overdue > 0 && (
+            <div style={{ color: 'var(--danger)', fontSize: 13 }}>
+              {counts.overdue} overdue{' '}
+              {counts.overdue === 1 ? 'assignment needs' : 'assignments need'} a nudge.
+            </div>
+          )}
         </div>
         {canCreate && (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <Link
               href="/dashboard/assignments/templates"
+              className="ed-chip"
               style={{
                 fontFamily: 'var(--mono)',
                 fontSize: 11,
@@ -104,6 +99,7 @@ export const AssignmentsListEditorial = ({
             </Link>
             <Link
               href="/dashboard/assignments/new"
+              className="ed-chip"
               style={{
                 border: '1px solid var(--rule)',
                 borderRadius: 8,

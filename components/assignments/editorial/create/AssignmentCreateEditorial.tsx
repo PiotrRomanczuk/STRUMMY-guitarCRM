@@ -45,6 +45,7 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
   const [songId, setSongId] = useState(initial?.songId ?? '');
   const [checklist, setChecklist] = useState<ChecklistItem[]>(initial?.checklist ?? []);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ student?: string; title?: string }>({});
   const [isSaving, setIsSaving] = useState(false);
 
   const applyTemplate = (t: AssignmentTemplateRow) => {
@@ -59,12 +60,15 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
       if (isSaving) return;
       setError('');
 
-      if (!title.trim()) {
-        setError('Give the assignment a title.');
-        return;
-      }
-      if (mode === 'create' && !studentId) {
-        setError('Choose the student this assignment is for.');
+      // Validate every field at once, attach errors to the fields themselves,
+      // and move focus to the first invalid one.
+      const errs: { student?: string; title?: string } = {};
+      if (mode === 'create' && !studentId) errs.student = 'Choose a student.';
+      if (!title.trim()) errs.title = 'Give the assignment a title.';
+      setFieldErrors(errs);
+      if (errs.student || errs.title) {
+        const firstInvalid = errs.student ? 'assignment-student' : 'assignment-title';
+        document.getElementById(firstInvalid)?.focus();
         return;
       }
 
@@ -113,9 +117,16 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
             </label>
             <select
               id="assignment-student"
-              style={s.input}
+              style={{
+                ...s.input,
+                ...(fieldErrors.student ? { borderColor: 'var(--danger)' } : {}),
+              }}
               value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
+              aria-invalid={Boolean(fieldErrors.student)}
+              onChange={(e) => {
+                setStudentId(e.target.value);
+                if (fieldErrors.student) setFieldErrors((f) => ({ ...f, student: undefined }));
+              }}
             >
               <option value="">Select a student…</option>
               {students.map((st) => (
@@ -124,6 +135,11 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
                 </option>
               ))}
             </select>
+            {fieldErrors.student && (
+              <div style={{ ...s.error, marginBottom: 0, marginTop: 6, fontSize: 12 }}>
+                {fieldErrors.student}
+              </div>
+            )}
           </div>
         )}
 
@@ -133,11 +149,20 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
           </label>
           <input
             id="assignment-title"
-            style={s.input}
+            style={{ ...s.input, ...(fieldErrors.title ? { borderColor: 'var(--danger)' } : {}) }}
             value={title}
             placeholder="e.g. Practise the C–Am–F–G loop"
-            onChange={(e) => setTitle(e.target.value)}
+            aria-invalid={Boolean(fieldErrors.title)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (fieldErrors.title) setFieldErrors((f) => ({ ...f, title: undefined }));
+            }}
           />
+          {fieldErrors.title && (
+            <div style={{ ...s.error, marginBottom: 0, marginTop: 6, fontSize: 12 }}>
+              {fieldErrors.title}
+            </div>
+          )}
         </div>
 
         <div style={s.field}>

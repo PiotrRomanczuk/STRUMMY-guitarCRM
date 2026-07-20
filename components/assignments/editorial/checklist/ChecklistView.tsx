@@ -55,24 +55,45 @@ export const ChecklistView = ({ assignmentId, items: initial, canToggle }: Props
         }}
       >
         {items.map((item) => (
-          <li key={item.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-            <input
-              type="checkbox"
-              checked={item.done}
-              disabled={!canToggle || pending}
-              onChange={(e) => toggle(item.id, e.target.checked)}
-              aria-label={item.text}
-              style={{ marginTop: 3, cursor: canToggle ? 'pointer' : 'default', flexShrink: 0 }}
-            />
-            <span
+          <li key={item.id}>
+            {/* Whole row is the tap target (~44px min) — a bare 13px native
+                checkbox is unusable on touch screens. */}
+            <label
               style={{
-                fontSize: 14,
-                color: item.done ? 'var(--ink-4)' : 'var(--ink)',
-                textDecoration: item.done ? 'line-through' : 'none',
+                display: 'flex',
+                gap: 10,
+                alignItems: 'flex-start',
+                padding: '6px 8px',
+                margin: '-2px -8px',
+                borderRadius: 6,
+                minHeight: 32,
+                cursor: canToggle && !pending ? 'pointer' : 'default',
               }}
             >
-              {item.text}
-            </span>
+              <input
+                type="checkbox"
+                checked={item.done}
+                disabled={!canToggle || pending}
+                onChange={(e) => toggle(item.id, e.target.checked)}
+                style={{
+                  marginTop: 3,
+                  width: 16,
+                  height: 16,
+                  accentColor: 'var(--gold-2)',
+                  cursor: 'inherit',
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 14,
+                  color: item.done ? 'var(--ink-4)' : 'var(--ink)',
+                  textDecoration: item.done ? 'line-through' : 'none',
+                }}
+              >
+                {item.text}
+              </span>
+            </label>
           </li>
         ))}
       </ul>
