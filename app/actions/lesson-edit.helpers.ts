@@ -2,8 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { matchStudentByEmail, createShadowStudent } from '@/lib/services/import-utils';
 
 export type ResolveStudentResult =
-  | { ok: true; studentId: string }
-  | { ok: false; error: string; ambiguous?: boolean };
+  { ok: true; studentId: string } | { ok: false; error: string; ambiguous?: boolean };
 
 /**
  * Resolve a lesson form's student selection to a profile id.
@@ -40,7 +39,10 @@ export async function resolveStudent(
   }
 
   const [firstName, ...rest] = trimmed.split('@')[0].split(/[._-]+/);
-  const created = await createShadowStudent(trimmed, firstName ?? 'New', rest.join(' '), admin);
+  // `||`, not `??`: split() never yields undefined, but a local part starting with
+  // a separator (".emma@…") yields an empty first segment, which is what the
+  // fallback is actually guarding against.
+  const created = await createShadowStudent(trimmed, firstName || 'New', rest.join(' '), admin);
   if (!created.success || !created.profileId) {
     return { ok: false, error: created.error ?? 'Could not create student' };
   }
