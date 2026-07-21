@@ -326,3 +326,96 @@ test.describe(
     });
   }
 );
+
+/**
+ * Student Checklist Toggle
+ *
+ * A student ticking a checklist item on their own assignment: optimistic tick,
+ * live progress %, and persistence across a reload. Ticking routes through the
+ * `student_toggle_checklist_item` SECURITY DEFINER RPC (ADR-0001 — students
+ * never UPDATE the table directly).
+ */
+test.describe(
+  'Student Checklist Toggle',
+  { tag: ['@student', '@assignments'] },
+  () => {
+    const ITEM_ONE = 'E2E checklist step one';
+    const ITEM_TWO = 'E2E checklist step two';
+    let checklistAssignmentId: string | null = null;
+
+    test.beforeAll(async () => {
+      const db = adminClient();
+      STUDENT_ID = await getStudentId(db);
+      TEACHER_ID = await getTeacherId(db);
+
+      await db
+        .from('assignments')
+        .delete()
+        .eq('student_id', STUDENT_ID)
+        .eq('title', 'E2E Checklist Assignment');
+
+      const { data } = await db
+        .from('assignments')
+        .insert({
+          teacher_id: TEACHER_ID,
+          student_id: STUDENT_ID,
+          title: 'E2E Checklist Assignment',
+          status: 'in_progress',
+          due_date: '2026-12-31T00:00:00Z',
+          checklist: [
+            { id: 'e2e-item-1', text: ITEM_ONE, done: false },
+            { id: 'e2e-item-2', text: ITEM_TWO, done: false },
+          ],
+        })
+        .select('id')
+        .single();
+      checklistAssignmentId = data?.id ?? null;
+    });
+
+    test.afterAll(async () => {
+      const db = adminClient();
+      if (checklistAssignmentId)
+        await db.from('assignments').delete().eq('id', checklistAssignmentId);
+    });
+
+    test.beforeEach(async ({ page, loginAs }) => {
+      await loginAs('student');
+      await page.evaluate(() => localStorage.setItem('strummy-demo-welcome-seen', 'true'));
+    });
+
+    test('ticks an item, updates progress %, and persists across reload', async ({ page }) => {
+      test.skip(!checklistAssignmentId, 'Checklist assignment failed to seed');
+
+      await page.goto(`/dashboard/assignments/${checklistAssignmentId}`);
+      await page.waitForLoadState('networkidle');
+
+      // Detail is a client-side fetch — wait for the checklist to render.
+      const firstItem = page.getByText(ITEM_ONE, { exact: true });
+      await expect(firstItem).toBeVisible({ timeout: 20_000 });
+
+      // Both items start unticked → 0 / 2 done.
+      await expect(page.getByText(/\b0\s*\/\s*2\s+done\b/)).toBeVisible();
+      const firstCheckbox = page
+        .locator('label', { hasText: ITEM_ONE })
+        .getByRole('checkbox');
+      await expect(firstCheckbox).not.toBeChecked();
+
+      // Tap the row (the whole label is the target) to tick it.
+      await firstItem.click();
+
+      // Optimistic: checkbox ticked and progress climbs to 1 / 2 · 50%.
+      await expect(firstCheckbox).toBeChecked();
+      await expect(page.getByText(/\b1\s*\/\s*2\s+done\b/)).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByText(/50%/)).toBeVisible();
+
+      // Persisted: a fresh load reads the RPC-updated checklist column.
+      await page.reload();
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByText(ITEM_ONE, { exact: true })).toBeVisible({ timeout: 20_000 });
+      await expect(
+        page.locator('label', { hasText: ITEM_ONE }).getByRole('checkbox')
+      ).toBeChecked();
+      await expect(page.getByText(/\b1\s*\/\s*2\s+done\b/)).toBeVisible();
+    });
+  }
+);
