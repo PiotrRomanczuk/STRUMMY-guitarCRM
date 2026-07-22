@@ -1,6 +1,6 @@
 ---
 created: 2026-07-18
-updated: 2026-07-18
+updated: 2026-07-22
 domain: Assignments
 tables: [assignments, assignment_templates, assignment_history]
 maturity: built
@@ -117,6 +117,30 @@ current status-action module), RLS test suite. **Accept**: RLS test — student 
 update succeeds; student UPDATE of `title` via PostgREST is rejected **by the database**;
 illegal transition (`not_started → completed`) rejected; teacher/admin paths unaffected;
 `tests/e2e/student/assignments-interact.spec.ts` still green.
+
+### ASG-4 — Assignable chord drills (v1.1 · first surfaced slice)
+
+**Concept**: the sanctioned path for surfacing the chord quiz (CHT-1 / CHT-2, doc 05) out of
+`nav-hidden` — make a chord drill something a **teacher assigns** and whose **score flows back**,
+rather than free self-study. Chosen (grill 2026-07-22) as the **pre-designated first v1.1 slice**:
+the chord quiz is the only nav-hidden learning tool both ship-ready and result-producing (real
+SM-2, works cold), so it is the tracer bullet for the whole "surface what's hidden" effort.
+**Approach**: reuse the existing optional-link pattern (assignments already carry optional
+`lesson_id` / `song_id`) rather than a typed-assignment overhaul — add a nullable `chord_drill`
+config (target chord IDs / due-set + target count) and a nullable `chord_drill_result` (score,
+attempted, `completed_at`) on `assignments`. The student result-write goes through the **same
+`SECURITY DEFINER` RPC discipline ASG-3 prescribes** (not a broad UPDATE policy): the student
+detail deep-links into the chord quiz seeded with the drill; on completion the quiz path
+(`app/actions/chord-quiz.ts`, already writing `chord_quiz_attempts` / `chord_srs`) stamps the
+result and marks the assignment complete; the teacher sees the score on detail. Theory and
+fretboard do **not** ride this path (theory has its own `theoretical_course_access` grant model;
+fretboard is stateless — see doc 05). **Files** (pointers — not to be built before launch):
+migration under `supabase/migrations/`, `schemas/AssignmentSchema.ts`,
+`app/actions/assignment-edit.ts`, `components/assignments/editorial/*`, `app/actions/chord-quiz.ts`.
+**Accept**: teacher assigns a chord drill → student completes the seeded quiz → `chord_drill_result`
+is stamped via the RPC (RLS: a student cannot stamp another student's assignment) → teacher sees the
+score on detail; the `menuConfig` reveal of `skills` is the **last** step (CHT-2), gated on the
+end-to-end path working.
 
 ## Test plan
 

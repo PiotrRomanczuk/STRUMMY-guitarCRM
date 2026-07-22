@@ -1,6 +1,6 @@
 ---
 created: 2026-07-18
-updated: 2026-07-19
+updated: 2026-07-22
 ---
 
 # Implementation Roadmap
@@ -57,12 +57,20 @@ paths unified onto `in-app-notification-service.ts`). Tranche 2 is now empty._
 Do **not** build before the 5 students have produced usage data. Briefs exist so any item can
 start the day it's unblocked.
 
+**First slice (grill 2026-07-22).** When v1.1 unblocks, the _first_ thing to build is the
+**chord-quiz surfacing bundle — CHT-1 + CHT-2 + ASG-4** (assignable chord drills): it's the only
+nav-hidden learning tool both ship-ready and result-producing, so it's the tracer bullet for the
+whole "surface what's hidden" effort. Theory (THY-1) trails it (blocked on content authoring); the
+fretboard has no teacher-visible result to weave. This does **not** relax the gate above — the
+bundle still waits for real usage data before it starts.
+
 | ID            | What                                                                                             | Brief                         |
 | ------------- | ------------------------------------------------------------------------------------------------ | ----------------------------- |
 | PRA-2         | Tempo ladder (BPM logging already ships; the ladder view is the feature)                         | [04](04-practice-progress.md) |
 | PRA-3         | Teacher practice view                                                                            | [04](04-practice-progress.md) |
-| CHT-1 / CHT-2 | Chord-SRS review surface + skills hub                                                            | [05](05-chords-theory.md)     |
+| CHT-1 / CHT-2 | Chord-SRS review surface + skills hub — surfaced via assignable drills (**first slice**)         | [05](05-chords-theory.md)     |
 | THY-1         | Theory LMS activation                                                                            | [05](05-chords-theory.md)     |
+| ASG-4         | Assignable chord drills — the chord-quiz surfacing mechanism (**first slice**)                   | [06](06-assignments.md)       |
 | SNG-1…4       | Song requests UI · SOTW resurface · Spotify match review · song-sections write path              | [03](03-songs-repertoire.md)  |
 | —             | Achievements / streaks — design **after** usage; open questions in [04](04-practice-progress.md) | [04](04-practice-progress.md) |
 

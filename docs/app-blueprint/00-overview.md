@@ -1,6 +1,6 @@
 ---
 created: 2026-07-18
-updated: 2026-07-18
+updated: 2026-07-22
 ---
 
 # Application Overview
@@ -51,6 +51,15 @@ Navigation is intentionally scoped to this loop (`CORE_LOOP_HIDDEN_ITEMS` in
 `components/navigation/menuConfig.ts`): teachers see Lessons / Songs / Assignments / Students;
 students see My Lessons / My Songs / My Assignments. Everything else remains URL-reachable but
 nav-hidden until individually proven.
+
+`menuConfig.ts` is a per-feature **"reveal when proven"** ledger — each hidden item carries its own
+reason, so surfacing is a per-feature readiness call, never a blanket flip. The graduation rule
+(grill 2026-07-22): a student-facing feature leaves `nav-hidden` by **attaching to the
+teacher-driven loop** — assignable, with its outcome visible to the teacher — not by floating as
+free self-study. The first such graduation is the chord quiz, via assignable drills (see
+[90-roadmap.md](90-roadmap.md) §Tranche 3 and docs 05/06). Teacher/admin-only tools (content
+planner, cohort analytics, Spotify, Drive) are a **separate** surface the student trust-pass never
+governed — they mount to staff nav on their own merits.
 
 ## UI generation
 
