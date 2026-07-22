@@ -52,15 +52,15 @@ interface AuthFixtures {
 // Test credentials from environment
 const credentials: Record<Role, AuthCredentials> = {
   admin: {
-    email: process.env.TEST_ADMIN_EMAIL || 'p.romanczuk@gmail.com',
+    email: process.env.TEST_ADMIN_EMAIL || 'admin@dev.local',
     password: process.env.TEST_ADMIN_PASSWORD || 'test123_admin',
   },
   teacher: {
-    email: process.env.TEST_TEACHER_EMAIL || 'teacher@example.com',
+    email: process.env.TEST_TEACHER_EMAIL || 'teacher@dev.local',
     password: process.env.TEST_TEACHER_PASSWORD || 'test123_teacher',
   },
   student: {
-    email: process.env.TEST_STUDENT_EMAIL || 'student@example.com',
+    email: process.env.TEST_STUDENT_EMAIL || 'student@dev.local',
     password: process.env.TEST_STUDENT_PASSWORD || 'test123_student',
   },
   // Demo teacher account (read-only, mutation-guarded). Used by tests/e2e/demo/*.

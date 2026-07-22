@@ -12,10 +12,16 @@ import { adminClient, getStudentId, getTeacherId } from '../../helpers/seed-ids'
  * tests the real surface, not the literal mockup screen.
  *
  * `getAtRiskStudents(teacherId, now)` only considers students who have a
- * (non-deleted) lesson with this teacher, then flags any of their
- * `student_repertoire` rows whose `last_practiced_at` is >= 7 days old (or
- * null). We seed a dedicated lesson + song + repertoire row so the fixture
- * is deterministic and doesn't collide with other specs' repertoire data.
+ * (non-deleted) lesson with this teacher, then — per student — takes the
+ * MOST RECENT `last_practiced_at` across ALL of their `student_repertoire`
+ * rows and flags them if that single most-recent date is >= 7 days old (or
+ * null). It is not a per-song check: seeding one additional stale song is a
+ * no-op if the student already has any fresher row elsewhere in their
+ * catalog. The shared `student@dev.local` fixture used here has its own
+ * ambient repertoire data (from other specs / dev seed generation) that can
+ * legitimately sit anywhere relative to the 7-day boundary, so to keep this
+ * deterministic we temporarily push ALL of that student's existing rows
+ * stale too (restored in `afterAll`), not just our own dedicated marker row.
  */
 
 const LESSON_TITLE = 'E2E At-Risk Backfill Lesson';
@@ -27,6 +33,7 @@ let studentId = '';
 let lessonId: string | null = null;
 let songId: string | null = null;
 let repertoireId: string | null = null;
+let otherRepertoireBackup: { id: string; last_practiced_at: string | null }[] = [];
 
 test.describe.configure({ mode: 'serial' });
 
@@ -93,10 +100,33 @@ test.describe(
         .single();
       if (repError || !rep) throw new Error(`seed repertoire failed: ${repError?.message}`);
       repertoireId = rep.id;
+
+      // getAtRiskStudents flags a student by their single MOST RECENT
+      // last_practiced_at across every song, not per-song — so any fresher
+      // pre-existing row for this shared fixture student would mask the one
+      // we just seeded. Back up and stale-out everything else too.
+      const { data: otherRows } = await db
+        .from('student_repertoire')
+        .select('id, last_practiced_at')
+        .eq('student_id', studentId)
+        .neq('id', repertoireId);
+      otherRepertoireBackup = otherRows ?? [];
+      for (const row of otherRepertoireBackup) {
+        await db
+          .from('student_repertoire')
+          .update({ last_practiced_at: stale.toISOString() })
+          .eq('id', row.id);
+      }
     });
 
     test.afterAll(async () => {
       const db = adminClient();
+      for (const row of otherRepertoireBackup) {
+        await db
+          .from('student_repertoire')
+          .update({ last_practiced_at: row.last_practiced_at })
+          .eq('id', row.id);
+      }
       if (repertoireId) await db.from('student_repertoire').delete().eq('id', repertoireId);
       if (songId) await db.from('songs').delete().eq('id', songId);
       if (lessonId) await db.from('lessons').delete().eq('id', lessonId);
@@ -144,7 +174,12 @@ test.describe(
       expect(days).toBeLessThanOrEqual(STALE_DAYS + 2);
 
       await row.click();
-      await expect(page).toHaveURL(new RegExp(`/dashboard/users/${studentId}$`));
+      // Longer timeout: first navigation to this route triggers a cold
+      // Turbopack compile in dev mode (same rationale as the login redirect
+      // wait in auth.fixture.ts).
+      await expect(page).toHaveURL(new RegExp(`/dashboard/users/${studentId}$`), {
+        timeout: 45_000,
+      });
       await expect(page.getByText(identifier).first()).toBeVisible({ timeout: 15_000 });
     });
 

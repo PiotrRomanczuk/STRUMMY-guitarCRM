@@ -39,11 +39,11 @@ if (process.env.NEXT_PUBLIC_SUPABASE_LOCAL_URL && !isLocalSupabaseRunning()) {
 
 // Load test credentials
 const testCredentials = {
-  TEST_ADMIN_EMAIL: 'p.romanczuk@gmail.com',
+  TEST_ADMIN_EMAIL: 'admin@dev.local',
   TEST_ADMIN_PASSWORD: 'test123_admin',
-  TEST_STUDENT_EMAIL: 'student1@example.com',
+  TEST_STUDENT_EMAIL: 'student@dev.local',
   TEST_STUDENT_PASSWORD: 'test123_student',
-  TEST_TEACHER_EMAIL: 'teacher@example.com',
+  TEST_TEACHER_EMAIL: 'teacher@dev.local',
   TEST_TEACHER_PASSWORD: 'test123_teacher',
 };
 

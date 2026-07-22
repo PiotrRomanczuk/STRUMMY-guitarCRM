@@ -1,5 +1,5 @@
 import { test, expect } from '../../fixtures';
-import { createClient } from '@supabase/supabase-js';
+import { adminClient, getAdminId } from '../../helpers/seed-ids';
 
 /**
  * Notifications Inbox E2E Tests (A10.1 / B8.4)
@@ -8,17 +8,6 @@ import { createClient } from '@supabase/supabase-js';
  *  A10.1/B8.4 — View inbox, mark single read, mark all read
  */
 
-// Admin profile ID = auth UUID for admin account
-const ADMIN_PROFILE_ID = 'db44f596-8ccb-4d71-837d-61de0fc791f7';
-
-function adminClient() {
-  const url =
-    process.env.NEXT_PUBLIC_SUPABASE_LOCAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const key =
-    process.env.SUPABASE_LOCAL_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-  return createClient(url, key);
-}
-
 const insertedIds: string[] = [];
 
 test.describe.configure({ mode: 'serial' });
@@ -26,19 +15,24 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Notifications Inbox', { tag: ['@admin', '@notifications'] }, () => {
   test.beforeAll(async () => {
     const db = adminClient();
+    // Resolved at runtime from TEST_ADMIN_EMAIL, not hard-coded — a stale
+    // hard-coded profile UUID here previously seeded notifications for a
+    // different admin account than whichever one loginAs('admin') actually
+    // signs in as, silently hiding these seeded rows from the test.
+    const adminProfileId = await getAdminId(db);
     // Seed 2 unread notifications for the admin
     const { data } = await db
       .from('in_app_notifications')
       .insert([
         {
-          user_id: ADMIN_PROFILE_ID,
+          user_id: adminProfileId,
           notification_type: 'assignment_created',
           title: 'E2E Notification 1',
           body: 'Test notification body one',
           is_read: false,
         },
         {
-          user_id: ADMIN_PROFILE_ID,
+          user_id: adminProfileId,
           notification_type: 'lesson_reminder_24h',
           title: 'E2E Notification 2',
           body: 'Test notification body two',

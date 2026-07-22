@@ -21,22 +21,22 @@ async function idByEmail(db: SupabaseClient, email: string): Promise<string> {
   return data.id as string;
 }
 
-/** Profile id of the E2E student login (TEST_STUDENT_EMAIL, default student1@example.com). */
+/** Profile id of the E2E student login (TEST_STUDENT_EMAIL, default student@dev.local). */
 export function getStudentId(db: SupabaseClient): Promise<string> {
-  return idByEmail(db, process.env.TEST_STUDENT_EMAIL || 'student1@example.com');
+  return idByEmail(db, process.env.TEST_STUDENT_EMAIL || 'student@dev.local');
 }
 
-/** Profile id of the E2E teacher login (TEST_TEACHER_EMAIL, default teacher@example.com). */
+/** Profile id of the E2E teacher login (TEST_TEACHER_EMAIL, default teacher@dev.local). */
 export function getTeacherId(db: SupabaseClient): Promise<string> {
-  return idByEmail(db, process.env.TEST_TEACHER_EMAIL || 'teacher@example.com');
+  return idByEmail(db, process.env.TEST_TEACHER_EMAIL || 'teacher@dev.local');
 }
 
 /**
- * Profile id of the admin (TEST_ADMIN_EMAIL, default p.romanczuk@gmail.com), who
+ * Profile id of the admin (TEST_ADMIN_EMAIL, default admin@dev.local), who
  * is also a teacher. Use as an alternate lesson teacher so specs that seed
  * lessons for the same student in parallel don't collide on the per-(teacher,
  * student) lesson-number trigger.
  */
 export function getAdminId(db: SupabaseClient): Promise<string> {
-  return idByEmail(db, process.env.TEST_ADMIN_EMAIL || 'p.romanczuk@gmail.com');
+  return idByEmail(db, process.env.TEST_ADMIN_EMAIL || 'admin@dev.local');
 }
