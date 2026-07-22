@@ -128,4 +128,38 @@ test.describe('Notifications Inbox', { tag: ['@admin', '@notifications'] }, () =
       timeout: 8_000,
     });
   });
+
+  test('A10.1 notifications inbox is usable at mobile viewport @mobile', async ({ page }) => {
+    // Re-seed unread so the "Mark read" tap target is present, regardless of
+    // what earlier tests in this serial suite left behind.
+    const db = adminClient();
+    if (insertedIds.length) {
+      await db.from('in_app_notifications').update({ is_read: false }).in('id', insertedIds);
+    }
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/dashboard/notifications');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByRole('heading', { name: /notifications/i })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Notification rows render and are readable at mobile width
+    await expect(page.locator('text=/E2E Notification 1/i').first()).toBeVisible({
+      timeout: 10_000,
+    });
+
+    // No horizontal overflow at mobile viewport
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(390 + 5);
+
+    // "Mark read" control is present with an actually tappable target
+    const markReadBtn = page.getByRole('button', { name: /Mark read/i }).first();
+    await expect(markReadBtn).toBeVisible({ timeout: 10_000 });
+    const box = await markReadBtn.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.width).toBeGreaterThan(0);
+    expect(box!.height).toBeGreaterThan(0);
+  });
 });
