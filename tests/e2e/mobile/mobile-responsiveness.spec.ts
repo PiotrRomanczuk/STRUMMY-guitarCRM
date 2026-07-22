@@ -20,21 +20,35 @@ test.describe('Mobile Responsiveness @mobile', { tag: '@mobile' }, () => {
     await loginAs('teacher');
   });
 
-  test('dashboard loads and displays stats grid on mobile', async ({ page, isMobile }) => {
-    test.skip(!isMobile, 'Mobile-only test');
+  const dashboardRoles = ['teacher', 'student', 'admin'] as const;
 
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+  for (const role of dashboardRoles) {
+    test(`dashboard loads and displays stats grid on mobile (${role})`, async ({
+      page,
+      isMobile,
+      loginAs,
+    }) => {
+      test.skip(!isMobile, 'Mobile-only test');
 
-    // Stats grid should be visible
-    const statsGrid = page.locator('[data-tour="stats-grid"], .grid').first();
-    await expect(statsGrid).toBeVisible({ timeout: 15_000 });
+      // beforeEach already logs in as teacher; only re-login when testing a
+      // different role so the teacher case reuses that cached session.
+      if (role !== 'teacher') {
+        await loginAs(role);
+      }
 
-    // Verify page doesn't have horizontal overflow
-    const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
-    const viewportWidth = await page.evaluate(() => window.innerWidth);
-    expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 1); // +1 for rounding
-  });
+      await page.goto('/dashboard');
+      await page.waitForLoadState('networkidle');
+
+      // Stats grid should be visible
+      const statsGrid = page.locator('[data-tour="stats-grid"], .grid').first();
+      await expect(statsGrid).toBeVisible({ timeout: 15_000 });
+
+      // Verify page doesn't have horizontal overflow
+      const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
+      const viewportWidth = await page.evaluate(() => window.innerWidth);
+      expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 1); // +1 for rounding
+    });
+  }
 
   test('mobile bottom nav is visible on narrow screens', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Mobile-only test');
@@ -155,6 +169,69 @@ test.describe('Mobile Responsiveness @mobile', { tag: '@mobile' }, () => {
       }
       expect(hasOverflow).toBeFalsy();
     }
+  });
+});
+
+test.describe('Landing Page Mobile @mobile', { tag: '@mobile' }, () => {
+  // The landing page (`/`) is public/unauthenticated — no loginAs beforeEach
+  // here, unlike the dashboard-focused describe block above.
+
+  test('landing page renders without horizontal overflow on mobile', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'Mobile-only test');
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    // Hero heading and primary CTA are visible without signing in
+    const heroHeading = page.getByRole('heading', { level: 1 });
+    await expect(heroHeading).toBeVisible();
+
+    const startFreeCta = page.getByRole('link', { name: 'Start free' }).first();
+    await expect(startFreeCta).toBeVisible();
+
+    // Verify page doesn't have horizontal overflow
+    const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
+    const viewportWidth = await page.evaluate(() => window.innerWidth);
+    expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 1); // +1 for rounding
+  });
+
+  test('header collapses non-essential nav on narrow mobile viewports', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'Mobile-only test');
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    // The landing header has no hamburger/drawer (unlike the dashboard shell):
+    // the nav links (Features/Pricing/Teachers/Resources) are `hidden md:flex`
+    // and the "Sign in" link is `hidden sm:inline-block` — both simply
+    // disappear below their Tailwind breakpoints (768px / 640px), leaving
+    // only the logo and the "Start free" CTA. Branch on the actual viewport
+    // width so this stays correct across every `isMobile` project — iPhone
+    // widths collapse both, but wider "isMobile" tablet projects may sit
+    // above one or both breakpoints.
+    const viewportWidth = await page.evaluate(() => window.innerWidth);
+
+    const desktopNav = page.locator('header nav').first();
+    const signInLink = page.getByRole('link', { name: 'Sign in' });
+    const startFreeCta = page.getByRole('link', { name: 'Start free' }).first();
+
+    if (viewportWidth < 768) {
+      await expect(desktopNav).toBeHidden();
+    } else {
+      await expect(desktopNav).toBeVisible();
+    }
+
+    if (viewportWidth < 640) {
+      await expect(signInLink).toBeHidden();
+    } else {
+      await expect(signInLink).toBeVisible();
+    }
+
+    // The primary CTA is always visible regardless of viewport
+    await expect(startFreeCta).toBeVisible();
   });
 });
 
