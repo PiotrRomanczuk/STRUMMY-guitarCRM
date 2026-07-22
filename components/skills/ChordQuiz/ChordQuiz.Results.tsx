@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { type ChordQuizAttemptInput } from '@/schemas/ChordQuizAttemptSchema';
 import { ChordDiagram } from './ChordDiagram';
@@ -12,6 +13,8 @@ interface ChordQuizResultsProps {
   submitState: 'idle' | 'submitting' | 'saved' | 'error';
   submitError: string | null;
   onRestart: () => void;
+  /** When set (a drill), show a "back" link once the result is saved. */
+  backHref?: string;
 }
 
 export function ChordQuizResults({
@@ -21,6 +24,7 @@ export function ChordQuizResults({
   submitState,
   submitError,
   onRestart,
+  backHref,
 }: ChordQuizResultsProps) {
   const total = questions.length;
   const missed = questions
@@ -74,9 +78,16 @@ export function ChordQuizResults({
         </div>
       )}
 
-      <Button onClick={onRestart} size="lg">
-        Play again
-      </Button>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Button onClick={onRestart} size="lg" variant={backHref ? 'outline' : 'default'}>
+          Play again
+        </Button>
+        {backHref && (
+          <Button asChild size="lg">
+            <Link href={backHref}>Back to assignment</Link>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

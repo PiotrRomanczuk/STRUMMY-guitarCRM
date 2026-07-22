@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
-import { ChecklistSchema, type ChecklistItem } from '@/schemas/AssignmentSchema';
+import {
+  ChecklistSchema,
+  ChordDrillSchema,
+  ChordDrillResultSchema,
+  type ChecklistItem,
+  type ChordDrill,
+  type ChordDrillResult,
+} from '@/schemas/AssignmentSchema';
 
 export type AssignmentDetail = {
   id: string;
@@ -16,6 +23,8 @@ export type AssignmentDetail = {
   song: { id: string; title: string; author: string | null } | null;
   lesson: { id: string; scheduledAt: string | null } | null;
   checklist: ChecklistItem[];
+  chordDrill: ChordDrill | null;
+  chordDrillResult: ChordDrillResult | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -33,7 +42,7 @@ export async function getAssignmentDetail(assignmentId: string): Promise<Assignm
   const { data, error } = await supabase
     .from('assignments')
     .select(
-      'id, title, description, status, due_date, teacher_id, student_id, checklist, created_at, updated_at, student:profiles!assignments_student_id_fkey(full_name, email), teacher:profiles!assignments_teacher_id_fkey(full_name), song:songs(id, title, author), lesson:lessons(id, scheduled_at)'
+      'id, title, description, status, due_date, teacher_id, student_id, checklist, chord_drill, chord_drill_result, created_at, updated_at, student:profiles!assignments_student_id_fkey(full_name, email), teacher:profiles!assignments_teacher_id_fkey(full_name), song:songs(id, title, author), lesson:lessons(id, scheduled_at)'
     )
     .eq('id', assignmentId)
     .is('deleted_at', null)
@@ -65,6 +74,8 @@ export async function getAssignmentDetail(assignmentId: string): Promise<Assignm
     song: song ? { id: song.id, title: song.title, author: song.author ?? null } : null,
     lesson: lesson ? { id: lesson.id, scheduledAt: lesson.scheduled_at ?? null } : null,
     checklist: ChecklistSchema.safeParse(data.checklist).data ?? [],
+    chordDrill: ChordDrillSchema.safeParse(data.chord_drill).data ?? null,
+    chordDrillResult: ChordDrillResultSchema.safeParse(data.chord_drill_result).data ?? null,
     createdAt: data.created_at as string,
     updatedAt: data.updated_at as string,
   };

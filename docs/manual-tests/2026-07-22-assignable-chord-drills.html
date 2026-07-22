@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual test — Assignable chord drills (ASG-4 / CHT-2)</title>
+    <style>
+      :root {
+        --ink: #1b1712;
+        --mute: #6b6355;
+        --paper: #faf7f0;
+        --card: #fff;
+        --rule: #e4dac4;
+        --gold: #8e661e;
+        --ok: #3b6d22;
+        --bad: #a32d2d;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        padding: 32px 20px 80px;
+      }
+      main {
+        max-width: 820px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-family: 'Iowan Old Style', Palatino, Georgia, serif;
+        font-size: 1.9rem;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-family: 'Iowan Old Style', Palatino, Georgia, serif;
+        font-size: 1.25rem;
+        margin: 34px 0 10px;
+        border-bottom: 1px solid var(--rule);
+        padding-bottom: 6px;
+      }
+      .meta {
+        color: var(--mute);
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+      }
+      code,
+      kbd {
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 0.85em;
+        background: #efe8d8;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin: 14px 0;
+      }
+      ol {
+        padding-left: 20px;
+      }
+      ol li {
+        margin: 8px 0;
+      }
+      .step-num {
+        font-weight: 600;
+        color: var(--gold);
+      }
+      .expect {
+        color: var(--ok);
+        font-weight: 600;
+      }
+      .pill {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #f0dfae;
+        color: var(--gold);
+        vertical-align: middle;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10px 0;
+        font-size: 0.9rem;
+      }
+      th,
+      td {
+        border: 1px solid var(--rule);
+        padding: 7px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #f1ead9;
+      }
+      .creds {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Assignable chord drills <span class="pill">ASG-4 · CHT-2</span></h1>
+      <div class="meta">
+        <strong>Date</strong>: 2026-07-22 · <strong>Author</strong>: Claude ·
+        <strong>Branch</strong>: <code>feature/assignable-chord-drills</code>
+      </div>
+
+      <h2>What was built</h2>
+      <div class="card">
+        <p>
+          The chord quiz — previously ship-ready but reachable only by a direct URL behind a
+          <em>"Coming soon"</em> stub — is now something a <strong>teacher can direct</strong>, and
+          the student's score flows back into the teacher-driven loop.
+        </p>
+        <ul>
+          <li>
+            <strong>Teacher</strong> attaches a <strong>chord drill</strong> (a set of chords) to
+            any assignment via a chip picker on the create/edit form.
+          </li>
+          <li>
+            <strong>Student</strong> opens the assignment, taps <em>"Start chord drill"</em>, and is
+            deep-linked into the chord quiz seeded with exactly those chords.
+          </li>
+          <li>
+            On finishing, the score (e.g. <code>8/10</code>) is stamped back onto the assignment via
+            a <code>SECURITY DEFINER</code> RPC (<code>student_complete_chord_drill</code>) — the
+            student's <em>only</em> DB write path — and the assignment is marked
+            <strong>completed</strong>.
+          </li>
+          <li><strong>Teacher</strong> sees the captured score on the assignment detail.</li>
+          <li>
+            The <strong>Skills hub</strong> (<code>/dashboard/skills</code>) was rebuilt from a stub
+            into a real hub and revealed in the teacher sidebar (CHT-2).
+          </li>
+        </ul>
+        <p style="color: var(--mute); font-size: 0.9rem">
+          Data model: two nullable <code>jsonb</code> columns on <code>assignments</code> —
+          <code>chord_drill</code> <code>{chord_ids}</code> (teacher-authored) and
+          <code>chord_drill_result</code> <code>{score,total,completed_at}</code> (server-written).
+          Migration <code>supabase/migrations/20260722000001_assignment_chord_drills.sql</code>,
+          already applied to the <code>StudentDevelopment</code> dev stack.
+        </p>
+      </div>
+
+      <h2>Setup</h2>
+      <div class="card">
+        <p>Run the dev server against the local/dev Supabase:</p>
+        <p>
+          <code>cd strummy &amp;&amp; npm run dev</code> → open <code>http://localhost:3000</code>
+        </p>
+        <p>Dev credentials (local only):</p>
+        <table class="creds">
+          <tr>
+            <th>Role</th>
+            <th>Login</th>
+          </tr>
+          <tr>
+            <td>Teacher (Demo)</td>
+            <td>sarah@strummy.app / Demo2024!</td>
+          </tr>
+          <tr>
+            <td>Student (Demo)</td>
+            <td>emma@strummy.app / Demo2024!</td>
+          </tr>
+        </table>
+        <p style="font-size: 0.9rem; color: var(--mute)">
+          (Use whichever teacher/student pair your dev stack is seeded with — the flow is
+          role-based, not account-specific.)
+        </p>
+      </div>
+
+      <h2>Happy path</h2>
+      <div class="card">
+        <ol>
+          <li>
+            <span class="step-num">Teacher —</span> go to <code>/dashboard/assignments/new</code>.
+            Pick a student, give it a title (e.g. "Open chords check"). Scroll to
+            <strong>Chord drill (optional)</strong> and click 4–5 chord chips (e.g. C, G, D, Am,
+            Em). <span class="expect">Expect:</span> selected chips highlight; a "<em
+              >N chords selected</em
+            >" line appears. Create the assignment.
+          </li>
+          <li>
+            <span class="step-num">Teacher —</span> on the assignment detail, the
+            <strong>Progress</strong> card shows the drill's chords and "<em
+              >Awaiting the student's result.</em
+            >"
+          </li>
+          <li>
+            <span class="step-num">Student —</span> log in as the student, open the same assignment
+            (Assignments → the new one). The Progress card shows the chords and a
+            <strong>"Start chord drill →"</strong> button.
+          </li>
+          <li>
+            <span class="step-num">Student —</span> click it.
+            <span class="expect">Expect:</span> the chord quiz opens titled
+            <strong>"Chord Drill"</strong> with only the assigned chords, no Random/Review toggle.
+            Answer each question.
+          </li>
+          <li>
+            <span class="step-num">Student —</span> on the results screen, see
+            <code>score / total</code> and "<em>Results saved.</em>", plus a
+            <strong>"Back to assignment"</strong> button. Click it.
+          </li>
+          <li>
+            <span class="step-num">Student —</span> the assignment now shows status
+            <strong>completed</strong> and "<em>Scored N/total · &lt;date&gt;</em>" in the Progress
+            card.
+          </li>
+          <li>
+            <span class="step-num">Teacher —</span> reopen the assignment.
+            <span class="expect">Expect:</span> the same score is visible, and status is completed.
+          </li>
+          <li>
+            <span class="step-num">Teacher —</span> confirm the <strong>Skills</strong> item now
+            appears in the sidebar → <code>/dashboard/skills</code> is a real hub (not "Coming
+            soon"), linking to the chord quiz (with a "<em>N due</em>" badge if any SRS chords are
+            due).
+          </li>
+        </ol>
+      </div>
+
+      <h2>Edge cases worth checking</h2>
+      <div class="card">
+        <table>
+          <tr>
+            <th>Case</th>
+            <th>Expected</th>
+          </tr>
+          <tr>
+            <td>Assign a <strong>1-chord</strong> drill</td>
+            <td>
+              Quiz still shows 4 answer options (distractors drawn from the full chord library).
+            </td>
+          </tr>
+          <tr>
+            <td>Create an assignment with <strong>no</strong> chords selected</td>
+            <td>No drill; detail shows no chord-drill block. Normal assignment.</td>
+          </tr>
+          <tr>
+            <td><strong>Edit</strong> an existing drill assignment</td>
+            <td>The previously-selected chords are pre-highlighted; changing them saves.</td>
+          </tr>
+          <tr>
+            <td>
+              Open <code>/dashboard/skills/chord-quiz</code> directly (no <code>?drill=</code>)
+            </td>
+            <td>Normal quiz (random, or Review if SRS chords are due) — unchanged behaviour.</td>
+          </tr>
+          <tr>
+            <td>Hit <code>/dashboard/skills/chord-quiz?drill=&lt;someone-else's-id&gt;</code></td>
+            <td>
+              RLS returns no row → falls through to the normal quiz. No leak. (A tampered
+              <code>drill</code> id at submit is rejected by the RPC's ownership check.)
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <h2>Automated coverage (already green)</h2>
+      <div class="card">
+        <ul>
+          <li>
+            <code>npm run typecheck</code> — clean; <code>npm test</code> — 244 suites, 3289
+            passing.
+          </li>
+          <li>
+            <code>buildSession</code> drill-distractor tests (1- and 2-chord drills don't starve) —
+            <code>chord-quiz.helpers.unit.test.ts</code>.
+          </li>
+          <li>
+            <code>ChordDrillSchema</code> / <code>ChordDrillResultSchema</code> validation —
+            <code>AssignmentSchema.unit.test.ts</code>.
+          </li>
+          <li>
+            Drill mapping in <code>getAssignmentDetail</code> —
+            <code>assignment-detail-queries.test.ts</code>.
+          </li>
+          <li>
+            RPC verified against the dev DB in rolled-back transactions: happy path stamps
+            <code>{score,total}</code> + completes; non-owner → "Not authorized"; non-drill → "no
+            chord drill"; empty <code>chord_ids</code> → constraint violation.
+          </li>
+        </ul>
+      </div>
+    </main>
+  </body>
+</html>

@@ -10,6 +10,7 @@ import {
   ChecklistSchema,
   type ChecklistItem,
 } from '@/schemas/AssignmentSchema';
+import { getVoicingById } from '@/lib/music-theory/chord-voicings';
 import { queueNotification } from '@/lib/services/notification-service';
 import { createLogger } from '@/lib/logger';
 
@@ -24,6 +25,8 @@ export type AssignmentFormValues = {
   songId?: string | null;
   lessonId?: string | null;
   checklist?: ChecklistItem[];
+  /** Chord IDs to drill. undefined = untouched, [] = clear the drill (ASG-4). */
+  chordDrillChordIds?: string[];
 };
 
 type AssignmentActionResult = { assignmentId: string } | { error: string };
@@ -32,6 +35,17 @@ const toIso = (value?: string): string | undefined => {
   if (!value) return undefined;
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+};
+
+/**
+ * Normalize a submitted drill: dedupe, drop unknown chord IDs. Returns the drill
+ * config, or null when there's nothing to drill; `undefined` input (field never
+ * set) passes through so an update leaves an existing drill untouched.
+ */
+const toChordDrill = (ids?: string[]): { chord_ids: string[] } | null | undefined => {
+  if (ids === undefined) return undefined;
+  const valid = Array.from(new Set(ids)).filter((id) => getVoicingById(id));
+  return valid.length > 0 ? { chord_ids: valid } : null;
 };
 
 /** Create an assignment (teacher/admin only) and notify the student in-app. */
@@ -58,6 +72,7 @@ export async function createAssignmentAction(
     song_id: values.songId || null,
     lesson_id: values.lessonId || null,
     checklist: values.checklist,
+    chord_drill: toChordDrill(values.chordDrillChordIds),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues.map((i) => i.message).join(', ') };
@@ -103,6 +118,9 @@ export async function updateAssignmentAction(
     const checklist = ChecklistSchema.safeParse(values.checklist);
     if (!checklist.success) return { error: 'Invalid checklist' };
     updatePayload.checklist = checklist.data;
+  }
+  if (values.chordDrillChordIds !== undefined) {
+    updatePayload.chord_drill = toChordDrill(values.chordDrillChordIds);
   }
 
   const supabase = await createClient();

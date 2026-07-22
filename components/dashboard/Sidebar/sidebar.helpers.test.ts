@@ -40,7 +40,7 @@ describe('getSidebarGroups', () => {
     expect(asDemo).toEqual(asTeacher);
 
     const allItems = asDemo.flatMap((g) => g.items.map((i) => i.id));
-    expect(allItems).not.toContain('skills');
+    expect(allItems).toContain('skills'); // revealed 2026-07-22 (CHT-2)
     expect(allItems).not.toContain('health');
     expect(allItems).not.toContain('cohorts');
   });

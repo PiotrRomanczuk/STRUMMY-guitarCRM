@@ -25,6 +25,8 @@ import {
   validateStatusTransition,
   VALID_STATUS_TRANSITIONS,
   sanitizeChecklist,
+  ChordDrillSchema,
+  ChordDrillResultSchema,
   type AssignmentStatus,
 } from '../AssignmentSchema';
 
@@ -525,5 +527,50 @@ describe('sanitizeChecklist', () => {
 
   it('returns an empty array for an empty checklist', () => {
     expect(sanitizeChecklist([])).toEqual([]);
+  });
+});
+
+describe('ChordDrillSchema (ASG-4)', () => {
+  it('accepts 1..30 chord ids', () => {
+    expect(ChordDrillSchema.safeParse({ chord_ids: ['C-open'] }).success).toBe(true);
+    expect(ChordDrillSchema.safeParse({ chord_ids: ['C-open', 'Am-open'] }).success).toBe(true);
+  });
+
+  it('rejects an empty chord list', () => {
+    expect(ChordDrillSchema.safeParse({ chord_ids: [] }).success).toBe(false);
+  });
+
+  it('rejects more than 30 chords', () => {
+    const ids = Array.from({ length: 31 }, (_, i) => `chord-${i}`);
+    expect(ChordDrillSchema.safeParse({ chord_ids: ids }).success).toBe(false);
+  });
+
+  it('rejects a non-array or missing chord_ids', () => {
+    expect(ChordDrillSchema.safeParse({}).success).toBe(false);
+    expect(ChordDrillSchema.safeParse({ chord_ids: 'C-open' }).success).toBe(false);
+  });
+
+  it('carries chord_drill through AssignmentInputSchema, optional', () => {
+    const base = { title: 'Drill', teacher_id: crypto.randomUUID(), student_id: crypto.randomUUID() };
+    expect(AssignmentInputSchema.safeParse(base).success).toBe(true); // absent is fine
+    expect(
+      AssignmentInputSchema.safeParse({ ...base, chord_drill: { chord_ids: ['C-open'] } }).success
+    ).toBe(true);
+    expect(AssignmentInputSchema.safeParse({ ...base, chord_drill: null }).success).toBe(true);
+  });
+});
+
+describe('ChordDrillResultSchema (ASG-4)', () => {
+  it('accepts a well-formed result', () => {
+    expect(
+      ChordDrillResultSchema.safeParse({ score: 8, total: 10, completed_at: '2026-07-22T10:00:00Z' })
+        .success
+    ).toBe(true);
+  });
+
+  it('rejects a zero total', () => {
+    expect(
+      ChordDrillResultSchema.safeParse({ score: 0, total: 0, completed_at: 'x' }).success
+    ).toBe(false);
   });
 });

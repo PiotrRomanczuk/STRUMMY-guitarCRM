@@ -1,4 +1,4 @@
-import { CHORD_VOICINGS } from '@/lib/music-theory/chord-voicings';
+import { ALL_CHORD_NAMES, CHORD_VOICINGS } from '@/lib/music-theory/chord-voicings';
 import { buildSession, pickDistractors, shuffle } from './chord-quiz.helpers';
 
 /** Deterministic RNG for repeatable tests. Mulberry32 PRNG. */
@@ -94,5 +94,32 @@ describe('buildSession', () => {
 
   it('throws when count exceeds pool size', () => {
     expect(() => buildSession(CHORD_VOICINGS.length + 1)).toThrow();
+  });
+});
+
+describe('buildSession — drill mode (distractorNames)', () => {
+  // A teacher-assigned drill (ASG-4) can be just 1-2 chords. Distractors must
+  // then come from the whole library, or a small pool would starve and throw.
+  const twoChordPool = CHORD_VOICINGS.filter((v) => ['C-open', 'Am-open'].includes(v.id));
+
+  it('builds a short drill without starving for distractors', () => {
+    const session = buildSession(twoChordPool.length, twoChordPool, seededRng(5), ALL_CHORD_NAMES);
+    expect(session).toHaveLength(2);
+    for (const q of session) {
+      expect(q.options).toHaveLength(4);
+      expect(new Set(q.options).size).toBe(4);
+      expect(q.options).toContain(q.voicing.name);
+    }
+  });
+
+  it('a single-chord drill still yields 4 options', () => {
+    const onePool = CHORD_VOICINGS.filter((v) => v.id === 'F-barre');
+    const session = buildSession(1, onePool, seededRng(9), ALL_CHORD_NAMES);
+    expect(session).toHaveLength(1);
+    expect(new Set(session[0].options).size).toBe(4);
+  });
+
+  it('without the full name pool, a 2-chord drill throws (regression guard)', () => {
+    expect(() => buildSession(twoChordPool.length, twoChordPool, seededRng(5))).toThrow();
   });
 });

@@ -47,6 +47,24 @@ export const checklistProgress = (
   return { done, total, pct: total === 0 ? 0 : done / total };
 };
 
+// A chord drill: a teacher-authored set of chord IDs (keys into the static
+// CHORD_VOICINGS library — see lib/music-theory/chord-voicings). The student
+// runs them through the chord quiz; the score is captured on the assignment.
+export const ChordDrillSchema = z.object({
+  chord_ids: z.array(z.string().min(1).max(64)).min(1, 'Pick at least one chord').max(30),
+});
+
+// The captured drill result — written server-side by the
+// student_complete_chord_drill RPC, never authored on the client.
+export const ChordDrillResultSchema = z.object({
+  score: z.number().int().min(0),
+  total: z.number().int().min(1),
+  completed_at: z.string(),
+});
+
+export type ChordDrill = z.infer<typeof ChordDrillSchema>;
+export type ChordDrillResult = z.infer<typeof ChordDrillResultSchema>;
+
 // Assignment schema for validation
 export const AssignmentSchema = z.object({
   id: IdField, // UUID, auto-generated
@@ -59,6 +77,8 @@ export const AssignmentSchema = z.object({
   song_id: z.string().uuid().optional().nullable(), // Optional link to song
   status: AssignmentStatusEnum.default('not_started'),
   checklist: ChecklistSchema,
+  chord_drill: ChordDrillSchema.nullable().optional(), // teacher-authored drill config
+  chord_drill_result: ChordDrillResultSchema.nullable().optional(), // student-captured score
   created_at: z.string().datetime().optional(),
   updated_at: z.string().datetime().optional(),
 });
@@ -74,6 +94,7 @@ export const AssignmentInputSchema = z.object({
   song_id: z.string().uuid().optional().nullable(), // Optional link to song
   status: AssignmentStatusEnum.optional(),
   checklist: ChecklistInputSchema, // only carried when authored (no default injected)
+  chord_drill: ChordDrillSchema.nullable().optional(), // only carried when a drill is authored
 });
 
 // Assignment update schema (partial of input)

@@ -13,6 +13,7 @@ import {
 import type { SongOption, StudentOption } from '@/lib/services/lesson-form-data';
 import { AssignmentAI } from '@/components/assignments/form/AssignmentAI';
 import { ChecklistEditor } from '@/components/assignments/editorial/checklist/ChecklistEditor';
+import { ChordDrillEditor } from '@/components/assignments/editorial/chord-drill/ChordDrillEditor';
 import { TemplatePicker } from '@/components/assignments/editorial/create/TemplatePicker';
 import { sanitizeChecklist, type ChecklistItem } from '@/schemas/AssignmentSchema';
 import type { AssignmentTemplateRow } from '@/lib/services/assignment-template-queries';
@@ -32,6 +33,7 @@ type Props = {
     dueDate: string | null;
     songId: string | null;
     checklist?: ChecklistItem[];
+    chordIds?: string[];
   };
 };
 
@@ -44,6 +46,7 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
   const [dueDate, setDueDate] = useState(toDateInput(initial?.dueDate ?? null));
   const [songId, setSongId] = useState(initial?.songId ?? '');
   const [checklist, setChecklist] = useState<ChecklistItem[]>(initial?.checklist ?? []);
+  const [chordIds, setChordIds] = useState<string[]>(initial?.chordIds ?? []);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ student?: string; title?: string }>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -79,6 +82,7 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
         dueDate: dueDate || undefined,
         songId: songId || null,
         checklist: sanitizeChecklist(checklist),
+        chordDrillChordIds: chordIds,
       };
 
       setIsSaving(true);
@@ -95,7 +99,19 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
       router.push(`/dashboard/assignments/${result.assignmentId}`);
       router.refresh();
     },
-    [isSaving, title, mode, studentId, description, dueDate, songId, checklist, initial, router]
+    [
+      isSaving,
+      title,
+      mode,
+      studentId,
+      description,
+      dueDate,
+      songId,
+      checklist,
+      chordIds,
+      initial,
+      router,
+    ]
   );
 
   return (
@@ -212,6 +228,8 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
         </div>
 
         <ChecklistEditor items={checklist} onChange={setChecklist} disabled={isSaving} />
+
+        <ChordDrillEditor selected={chordIds} onChange={setChordIds} disabled={isSaving} />
 
         <div data-testid="assignment-notes-ai">
           <AssignmentAI

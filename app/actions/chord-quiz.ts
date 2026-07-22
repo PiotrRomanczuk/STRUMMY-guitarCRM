@@ -12,11 +12,20 @@ const log = createLogger('chord-quiz-actions');
 
 type SubmitResult = { success: true; inserted: number } | { error: string };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Persist a batch of chord-quiz attempts for the currently authenticated student.
  * One round-trip per session. The student_id is taken from the session, never the input.
+ *
+ * When `drillAssignmentId` is given, this is a teacher-assigned chord drill (ASG-4):
+ * after logging attempts + SRS, the score is stamped back onto the assignment via
+ * the `student_complete_chord_drill` RPC (the DB-scoped student write path).
  */
-export async function submitChordQuizSession(input: unknown): Promise<SubmitResult> {
+export async function submitChordQuizSession(
+  input: unknown,
+  drillAssignmentId?: string
+): Promise<SubmitResult> {
   const { isDevelopment } = await getUserWithRolesSSR();
   const guard = guardTestAccountMutation(isDevelopment);
   if (guard) return { error: guard.error };
@@ -60,6 +69,30 @@ export async function submitChordQuizSession(input: unknown): Promise<SubmitResu
   );
   if ('error' in srsResult) {
     log.warn('SRS update failed after quiz submit', { userId: user.id, error: srsResult.error });
+  }
+
+  // ASG-4: stamp the drill result back onto the assignment. Unlike the SRS
+  // update, this is the point of a drill — surface a failure so the student can
+  // retry (attempts are append-only, so a retry is harmless).
+  if (drillAssignmentId) {
+    if (!UUID_RE.test(drillAssignmentId)) {
+      return { error: 'Invalid drill reference' };
+    }
+    const score = parsed.data.filter((a) => a.is_correct).length;
+    const { error: drillError } = await supabase.rpc('student_complete_chord_drill', {
+      p_assignment_id: drillAssignmentId,
+      p_score: score,
+      p_total: parsed.data.length,
+    });
+    if (drillError) {
+      log.error('Failed to record chord drill result', {
+        userId: user.id,
+        drillAssignmentId,
+        error: drillError,
+      });
+      return { error: drillError.message };
+    }
+    revalidatePath(`/dashboard/assignments/${drillAssignmentId}`);
   }
 
   revalidatePath('/dashboard/skills/chord-quiz');

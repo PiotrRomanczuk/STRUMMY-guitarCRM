@@ -9,6 +9,7 @@ import { assignmentStatusColour, assignmentStatusLabel } from '@/lib/services/as
 import type { AssignmentStatus } from '@/schemas/AssignmentSchema';
 import { AssignmentStatusActions } from '../status/AssignmentStatusActions';
 import { ChecklistView } from '../checklist/ChecklistView';
+import { ChordDrillView } from '../chord-drill/ChordDrillView';
 
 const formatDate = (iso: string | null): string => {
   if (!iso) return '—';
@@ -203,6 +204,16 @@ export const AssignmentDetailEditorial = ({ assignment, canManage, canAct, histo
           </Card>
 
           <Card title="Progress">
+            {assignment.chordDrill && (
+              <div style={{ marginBottom: 18 }}>
+                <ChordDrillView
+                  assignmentId={assignment.id}
+                  drill={assignment.chordDrill}
+                  result={assignment.chordDrillResult}
+                  canAct={canAct}
+                />
+              </div>
+            )}
             {assignment.checklist.length > 0 && (
               <div style={{ marginBottom: 18 }}>
                 <ChecklistView

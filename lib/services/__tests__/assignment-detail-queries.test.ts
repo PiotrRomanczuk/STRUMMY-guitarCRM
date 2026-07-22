@@ -68,8 +68,42 @@ describe('getAssignmentDetail', () => {
       song: { id: 'song1', title: 'C Major Scale', author: 'Trad' },
       lesson: { id: 'lesson1', scheduledAt: '2026-07-19T00:00:00Z' },
       checklist: [{ id: '1', text: 'Play C', done: true }],
+      chordDrill: null,
+      chordDrillResult: null,
       createdAt: '2026-07-10T00:00:00Z',
       updatedAt: '2026-07-15T00:00:00Z',
+    });
+  });
+
+  it('maps a chord drill and its result (ASG-4)', async () => {
+    mockSingle.mockResolvedValue({
+      data: {
+        id: 'a4',
+        title: 'Chord drill',
+        description: null,
+        status: 'completed',
+        due_date: null,
+        teacher_id: 't1',
+        student_id: 's1',
+        checklist: null,
+        chord_drill: { chord_ids: ['C-open', 'Am-open'] },
+        chord_drill_result: { score: 2, total: 2, completed_at: '2026-07-22T10:00:00Z' },
+        created_at: '2026-07-10T00:00:00Z',
+        updated_at: '2026-07-22T10:00:00Z',
+        student: null,
+        teacher: null,
+        song: null,
+        lesson: null,
+      },
+      error: null,
+    });
+
+    const result = await getAssignmentDetail('a4');
+    expect(result?.chordDrill).toEqual({ chord_ids: ['C-open', 'Am-open'] });
+    expect(result?.chordDrillResult).toEqual({
+      score: 2,
+      total: 2,
+      completed_at: '2026-07-22T10:00:00Z',
     });
   });
 

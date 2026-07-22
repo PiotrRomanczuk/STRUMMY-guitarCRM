@@ -60,8 +60,9 @@ export const NOTIFICATION_ITEM: NotificationItem = {
 const CORE_LOOP_HIDDEN_ITEMS = [
   // Built, but no seeded course content yet
   'theory',
+  // 'skills' revealed 2026-07-22 (CHT-2): real hub over the chord quiz, which is
+  // now teacher-directable via assignable chord drills (ASG-4).
   // "Coming soon" stub pages
-  'skills',
   'health',
   'song-stats',
   'lesson-stats',

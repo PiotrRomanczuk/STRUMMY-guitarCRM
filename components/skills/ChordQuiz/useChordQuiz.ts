@@ -11,6 +11,9 @@ export interface UseChordQuizOptions {
   questionCount: number;
   /** Override the chord pool — primarily for testing or future difficulty tiers. */
   pool?: typeof CHORD_VOICINGS;
+  /** Names to draw distractors from (default: the pool's own). A focused drill
+   *  passes the full library so a small pool doesn't starve for distractors. */
+  distractorNames?: readonly string[];
 }
 
 export interface UseChordQuizState {
@@ -30,13 +33,17 @@ export interface UseChordQuizState {
  * Owns quiz session state. Tracks per-question response time, accumulates
  * attempts in shape ready to ship to the server action.
  */
-export function useChordQuiz({ questionCount, pool }: UseChordQuizOptions): UseChordQuizState {
+export function useChordQuiz({
+  questionCount,
+  pool,
+  distractorNames,
+}: UseChordQuizOptions): UseChordQuizState {
   const [sessionKey, setSessionKey] = useState(0);
   const questions = useMemo(
-    () => buildSession(questionCount, pool ?? CHORD_VOICINGS),
+    () => buildSession(questionCount, pool ?? CHORD_VOICINGS, Math.random, distractorNames),
     // sessionKey is intentionally a dep — bumping it rebuilds the session.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [questionCount, pool, sessionKey]
+    [questionCount, pool, distractorNames, sessionKey]
   );
 
   const [currentIndex, setCurrentIndex] = useState(0);

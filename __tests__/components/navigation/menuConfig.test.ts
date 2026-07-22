@@ -3,7 +3,8 @@
  *
  * The sidebar is trimmed (CORE_LOOP_HIDDEN_ITEMS) to the core loop plus the
  * features that have been individually verified: Calendar, Fretboard, the AI
- * assistant, and — for students — Repertoire and the Practice Log.
+ * assistant, the Skills hub (chord quiz, teacher-directable via chord drills),
+ * and — for students — Repertoire and the Practice Log.
  *
  * Everything still on the hidden list is either a "Coming soon" stub or would
  * render empty. This test fails if one of those leaks back into nav.
@@ -21,6 +22,7 @@ const TEACHER_ITEMS = [
   'students',
   'calendar',
   'fretboard',
+  'skills',
   'ai',
   'ai-chat',
 ];
@@ -30,7 +32,6 @@ const STUDENT_ITEMS = ['my-lessons', 'my-songs', 'my-assignments', 'repertoire',
 /** Stub pages and empty surfaces that must never appear in nav. */
 const HIDDEN = [
   'theory',
-  'skills',
   'health',
   'song-stats',
   'lesson-stats',
@@ -73,7 +74,6 @@ describe('menuConfig — sidebar scope', () => {
   it('no role sees a nav item pointing at a "Coming soon" stub route', () => {
     const stubRoutes = [
       '/dashboard/stats',
-      '/dashboard/skills',
       '/dashboard/health',
       '/dashboard/cohorts',
       '/dashboard/admin/stats/songs',

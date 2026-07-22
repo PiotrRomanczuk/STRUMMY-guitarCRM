@@ -29,18 +29,24 @@ export function pickDistractors(
  * Build a quiz session of `count` questions. Voicings are sampled without
  * replacement from `pool`, so no chord repeats within a session.
  * Each question gets 3 unique distractors plus the correct answer, shuffled.
+ *
+ * Distractors are drawn from `distractorNames` (default: the pool's own names).
+ * A focused drill of a few chords passes the full library's names so a small
+ * pool doesn't starve for distractors (< 4 names would otherwise throw).
  */
 export function buildSession(
   count: number,
   pool: ReadonlyArray<ChordVoicing> = CHORD_VOICINGS,
-  rng: () => number = Math.random
+  rng: () => number = Math.random,
+  distractorNames?: ReadonlyArray<string>
 ): QuizQuestion[] {
   if (count > pool.length) {
     throw new Error(
       `Cannot build session of ${count} questions from a pool of ${pool.length} voicings`
     );
   }
-  const allNames = Array.from(new Set(pool.map((v) => v.name)));
+  const nameSource = distractorNames ?? pool.map((v) => v.name);
+  const allNames = Array.from(new Set(nameSource));
   const sampled = shuffle(pool, rng).slice(0, count);
   return sampled.map((voicing) => {
     const distractors = pickDistractors(voicing.name, allNames, 3, rng);

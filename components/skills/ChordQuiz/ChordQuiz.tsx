@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { submitChordQuizSession } from '@/app/actions/chord-quiz';
 import { type ChordQuizAttemptInput, QUIZ_SESSION_LENGTH } from '@/schemas/ChordQuizAttemptSchema';
-import { CHORD_VOICINGS } from '@/lib/music-theory/chord-voicings';
+import { ALL_CHORD_NAMES, CHORD_VOICINGS } from '@/lib/music-theory/chord-voicings';
 import { ChordQuizQuestion } from './ChordQuiz.Question';
 import { ChordQuizResults } from './ChordQuiz.Results';
 import { useChordQuiz } from './useChordQuiz';
@@ -14,41 +14,61 @@ type QuizMode = 'random' | 'review';
 interface ChordQuizProps {
   /** Chord IDs due for SRS review. When non-empty a Review Mode toggle is shown. */
   dueChordIds?: string[];
+  /** Teacher-assigned drill (ASG-4): a fixed chord set. The score is stamped back
+   *  onto the assignment on completion. Takes precedence over review/random. */
+  drill?: { assignmentId: string; chordIds: string[] };
 }
 
-export function ChordQuiz({ dueChordIds = [] }: ChordQuizProps) {
+export function ChordQuiz({ dueChordIds = [], drill }: ChordQuizProps) {
   const [mode, setMode] = useState<QuizMode>(dueChordIds.length > 0 ? 'review' : 'random');
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const submittedRef = useRef(false);
 
+  const drillPool = useMemo(
+    () => (drill ? CHORD_VOICINGS.filter((v) => drill.chordIds.includes(v.id)) : undefined),
+    [drill]
+  );
   const reviewPool = useMemo(
     () => CHORD_VOICINGS.filter((v) => dueChordIds.includes(v.id)),
     [dueChordIds]
   );
 
-  const activePool = mode === 'review' && reviewPool.length > 0 ? reviewPool : undefined;
+  const activePool = drill
+    ? drillPool
+    : mode === 'review' && reviewPool.length > 0
+      ? reviewPool
+      : undefined;
   const questionCount =
     activePool != null ? Math.min(activePool.length, QUIZ_SESSION_LENGTH) : QUIZ_SESSION_LENGTH;
 
-  const quiz = useChordQuiz({ questionCount, pool: activePool });
+  // A drill draws distractors from the whole library, so a short drill (< 4
+  // chords) still has enough plausible wrong answers.
+  const quiz = useChordQuiz({
+    questionCount,
+    pool: activePool,
+    distractorNames: drill ? ALL_CHORD_NAMES : undefined,
+  });
 
-  const submitSession = useCallback((attempts: ChordQuizAttemptInput[]) => {
-    if (submittedRef.current || attempts.length === 0) return;
-    submittedRef.current = true;
-    setSubmitState('submitting');
-    setSubmitError(null);
+  const submitSession = useCallback(
+    (attempts: ChordQuizAttemptInput[]) => {
+      if (submittedRef.current || attempts.length === 0) return;
+      submittedRef.current = true;
+      setSubmitState('submitting');
+      setSubmitError(null);
 
-    submitChordQuizSession(attempts)
-      .then((result) => {
-        setSubmitState('error' in result ? 'error' : 'saved');
-        if ('error' in result) setSubmitError(result.error);
-      })
-      .catch((err: unknown) => {
-        setSubmitState('error');
-        setSubmitError(err instanceof Error ? err.message : 'Unknown error');
-      });
-  }, []);
+      submitChordQuizSession(attempts, drill?.assignmentId)
+        .then((result) => {
+          setSubmitState('error' in result ? 'error' : 'saved');
+          if ('error' in result) setSubmitError(result.error);
+        })
+        .catch((err: unknown) => {
+          setSubmitState('error');
+          setSubmitError(err instanceof Error ? err.message : 'Unknown error');
+        });
+    },
+    [drill?.assignmentId]
+  );
 
   const handleNext = useCallback(() => {
     const isLast = quiz.currentIndex + 1 >= quiz.questions.length;
@@ -77,11 +97,23 @@ export function ChordQuiz({ dueChordIds = [] }: ChordQuizProps) {
   return (
     <section className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
       <header className="text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Chord Quiz</h1>
-        <p className="text-sm text-muted-foreground">Name the chord shown in the diagram.</p>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {drill ? 'Chord Drill' : 'Chord Quiz'}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {drill
+            ? 'Assigned by your teacher — name each chord to complete it.'
+            : 'Name the chord shown in the diagram.'}
+        </p>
       </header>
 
-      {dueChordIds.length > 0 && (
+      {drill && drillPool?.length === 0 && (
+        <p className="text-center text-sm text-muted-foreground">
+          This drill has no playable chords. Ask your teacher to update it.
+        </p>
+      )}
+
+      {!drill && dueChordIds.length > 0 && (
         <div className="flex justify-center gap-2">
           {(['random', 'review'] as const).map((m) => (
             <button
@@ -119,6 +151,7 @@ export function ChordQuiz({ dueChordIds = [] }: ChordQuizProps) {
           submitState={submitState}
           submitError={submitError}
           onRestart={handleRestart}
+          backHref={drill ? `/dashboard/assignments/${drill.assignmentId}` : undefined}
         />
       )}
     </section>
