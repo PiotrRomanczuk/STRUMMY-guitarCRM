@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — Design-Mockup Audit: E2E Test Coverage (2026-07-22)</title>
+    <style>
+      :root {
+        --ink: #1b1712;
+        --ink-2: #4a4239;
+        --ink-3: #79705f;
+        --rule: #e4dac4;
+        --paper: #faf7f0;
+        --card: #fff;
+        --ok: #3b6d22;
+        --ok-bg: #e9f1de;
+        --bad: #a32d2d;
+        --bad-bg: #f8e6e6;
+        --warn: #9c6a0a;
+        --warn-bg: #f5ecd8;
+        --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #f2ecdd;
+          --ink-2: #d8cfb9;
+          --ink-3: #a79a80;
+          --rule: #3a331f;
+          --paper: #16130e;
+          --card: #241f18;
+          --ok: #a9d68c;
+          --ok-bg: #22301a;
+          --bad: #e79a9a;
+          --bad-bg: #3a1e1e;
+          --warn: #e8c988;
+          --warn-bg: #362a12;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+      .page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 6px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 38px 0 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--rule);
+      }
+      h3 {
+        font-size: 15px;
+        margin: 24px 0 8px;
+      }
+      .meta {
+        color: var(--ink-3);
+        font-size: 13px;
+        margin-bottom: 28px;
+      }
+      code,
+      pre {
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+      pre {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        padding: 12px 14px;
+        overflow-x: auto;
+      }
+      code:not(pre code) {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+      }
+      th {
+        color: var(--ink-3);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .tablewrap {
+        overflow-x: auto;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .ok {
+        background: var(--ok-bg);
+        color: var(--ok);
+      }
+      .bad {
+        background: var(--bad-bg);
+        color: var(--bad);
+      }
+      .warn {
+        background: var(--warn-bg);
+        color: var(--warn);
+      }
+      .box {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-left: 3px solid var(--warn);
+        border-radius: 6px;
+        padding: 14px 16px;
+        margin: 16px 0;
+      }
+      .box.bad {
+        border-left-color: var(--bad);
+      }
+      ol li,
+      ul li {
+        margin-bottom: 7px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Design-Mockup Audit: E2E Test Coverage — manual verification</h1>
+      <div class="meta">
+        2026-07-22 · branch <code>feature/e2e-test-coverage-mockup-gaps</code> · author: Claude
+      </div>
+
+      <h2>What was built</h2>
+      <p>
+        Companion to the unit-test branch — closes the Playwright E2E gaps from
+        <code>docs/app-blueprint/93-design-mockup-audit.md</code>: 3 rows with zero E2E coverage,
+        plus 4 partial/generic rows upgraded to dedicated coverage. No product code changed.
+      </p>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Gap</th>
+              <th>File</th>
+              <th>What changed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Landing Page Mobile <span class="pill ok">zero → covered</span></td>
+              <td><code>tests/e2e/mobile/mobile-responsiveness.spec.ts</code></td>
+              <td>
+                New unauthenticated describe block: no-overflow + hero/CTA visibility, header
+                nav-collapse behavior at real Tailwind breakpoints
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Dashboard Mobile (Student/Admin) <span class="pill warn">partial → full</span>
+              </td>
+              <td><code>tests/e2e/mobile/mobile-responsiveness.spec.ts</code></td>
+              <td>Existing teacher-only case now loops all 3 roles</td>
+            </tr>
+            <tr>
+              <td>Student Detail "at-risk" <span class="pill ok">zero → covered</span></td>
+              <td><code>tests/e2e/teacher/backfill-at-risk.spec.ts</code> (new)</td>
+              <td>
+                Seeds an overdue <code>student_repertoire</code> row, asserts the Teacher
+                Dashboard's <code>NeedsAttentionCard</code> renders it and drops it once practiced
+              </td>
+            </tr>
+            <tr>
+              <td>Notifications Mobile <span class="pill ok">zero → covered</span></td>
+              <td><code>tests/e2e/notifications/inbox.spec.ts</code></td>
+              <td>
+                New <code>@mobile</code>-suffixed case matching the repo's dominant convention
+                (inline viewport + title suffix, not the <code>isMobile</code>-fixture pattern)
+              </td>
+            </tr>
+            <tr>
+              <td>Landing Page Desktop <span class="pill warn">partial → full</span></td>
+              <td><code>tests/e2e/smoke/landing-page.spec.ts</code> (new)</td>
+              <td>
+                6 tests of real hero/nav/pricing/FAQ/CTA content and hrefs, sourced from actual
+                section components — <strong>genuinely run and passing</strong> on Desktop Chrome +
+                iPhone 12
+              </td>
+            </tr>
+            <tr>
+              <td>Fretboard Explorer Mobile <span class="pill warn">partial → full</span></td>
+              <td><code>tests/e2e/teacher/fretboard.spec.ts</code></td>
+              <td>2 new mobile-only cases: no-overflow + all control interactions remain usable</td>
+            </tr>
+            <tr>
+              <td>Settings Integrations <span class="pill warn">partial → full</span></td>
+              <td><code>tests/e2e/settings/integrations.spec.ts</code> (new)</td>
+              <td>
+                Section renders directly from <code>/dashboard/settings</code>, connect/disconnect
+                state matches the DB, connect click intercepted before it would hit Google's real
+                OAuth screen
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        All 6 files parse and enumerate correctly together:
+        <code>npx playwright test --list</code> → <strong>280 tests across 6 files</strong>, no
+        config or syntax conflicts between the 4 parallel changesets that produced them.
+      </p>
+
+      <div class="box bad">
+        <strong>⚠ Known blocker — the dev Supabase stack isn't currently seeded.</strong>
+        Three of the four implementing agents independently hit this, one confirming it directly
+        against the Supabase Auth REST API (not just browser flakiness): the documented dev test
+        accounts (<code>p.romanczuk@gmail.com</code>, <code>teacher@example.com</code>,
+        <code>student@example.com</code> / <code>student1@example.com</code>) return
+        <code>invalid_credentials</code> on the shared LAN dev stack
+        (<code>192.168.1.75:55321</code>), and <code>profiles</code> has zero rows for those emails.
+        This means
+        <strong
+          >none of these new specs — nor any existing spec using <code>loginAs()</code> — can get a
+          real login-gated pass against that stack right now</strong
+        >. This is a pre-existing environment condition, not something introduced by this branch.
+        <strong>Action needed:</strong> run <code>npm run seed</code> against the
+        <code>StudentDevelopment</code> stack on <code>uwh</code> (or otherwise reseed it) before
+        trusting a live E2E run of this branch. The one spec that <em>doesn't</em> require login
+        (<code>landing-page.spec.ts</code>) was verified genuinely green on real infrastructure.
+      </div>
+
+      <div class="box">
+        <strong>Separate, unrelated finding:</strong> running any <code>@mobile</code>/<code
+          >@tablet</code
+        >
+        Playwright project (WebKit engine) against a plain-HTTP local dev server
+        (<code>localhost:3000</code>) fails every sub-resource load with a TLS error — root cause is
+        <code>proxy.ts</code>'s middleware unconditionally setting
+        <code>Content-Security-Policy: upgrade-insecure-requests</code>, which forces WebKit to
+        upgrade asset requests to HTTPS even though localhost has no TLS listener. Presumably
+        invisible in CI if CI runs against an HTTPS preview URL. Pre-existing, not caused by this
+        branch — worth a follow-up ticket if local WebKit/mobile E2E runs are expected to work.
+      </div>
+
+      <h2>How to manually verify</h2>
+      <ol>
+        <li>
+          <strong>First, reseed the dev stack</strong> (see blocker above) — otherwise every
+          login-gated spec below will fail at <code>beforeEach</code>, not because of a real bug.
+        </li>
+        <li>
+          Checkout the branch and list all changed/new specs:
+          <pre>
+cd /Users/piotr/Desktop/MainCV/strummy
+git checkout feature/e2e-test-coverage-mockup-gaps
+npx playwright test --list \
+  tests/e2e/teacher/backfill-at-risk.spec.ts \
+  tests/e2e/mobile/mobile-responsiveness.spec.ts \
+  tests/e2e/notifications/inbox.spec.ts \
+  tests/e2e/smoke/landing-page.spec.ts \
+  tests/e2e/teacher/fretboard.spec.ts \
+  tests/e2e/settings/integrations.spec.ts</pre>
+        </li>
+        <li>
+          Run the one spec that's already verified green without needing auth or seeding:
+          <pre>
+npx playwright test tests/e2e/smoke/landing-page.spec.ts --project="Desktop Chrome"</pre>
+        </li>
+        <li>
+          After reseeding, run the rest:
+          <pre>
+npx playwright test \
+  tests/e2e/teacher/backfill-at-risk.spec.ts \
+  tests/e2e/mobile/mobile-responsiveness.spec.ts \
+  tests/e2e/notifications/inbox.spec.ts \
+  tests/e2e/teacher/fretboard.spec.ts \
+  tests/e2e/settings/integrations.spec.ts \
+  --project="Desktop Chrome"</pre>
+          (Skip WebKit-based mobile/tablet projects until the CSP/localhost TLS issue above is
+          resolved, or point at an HTTPS preview URL instead of localhost.)
+        </li>
+        <li><strong>Expected:</strong> all new/modified cases pass; no existing case regresses.</li>
+      </ol>
+
+      <h2>Follow-up (not in this PR)</h2>
+      <p>
+        Companion unit-test branch (<code>feature/unit-test-coverage-mockup-gaps</code>, PR #534) is
+        already up. Remaining Tier-2 partial-unit rows (Onboarding steps, Song Detail shell, Student
+        Detail shell, Fretboard/Chord-Quiz component render, Sidebar render, Settings shell) are
+        deferred per the plan.
+      </p>
+    </div>
+  </body>
+</html>
