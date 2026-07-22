@@ -78,7 +78,8 @@ test.describe('Teacher Songs CRUD', { tag: ['@teacher', '@songs'] }, () => {
     await expect(page.getByText('E2E Test Artist').first()).toBeVisible();
 
     // ── EDIT ─────────────────────────────────────────────────────
-    await page.goto(songUrl + '/edit');
+    await page.getByRole('link', { name: 'Edit song' }).click();
+    await page.waitForURL(songUrl + '/edit', { timeout: 10_000 });
     await page.waitForLoadState('networkidle');
     await expect(page.locator('input[name="title"]')).toBeVisible({ timeout: 10_000 });
     await page.locator('input[name="title"]').fill(TEST_SONG_EDITED);

@@ -80,6 +80,7 @@ export default async function SongDetailPage({ params }: PageProps) {
         learners={learners}
         related={related}
         canSeeProduction={isAdmin || isTeacher}
+        canEdit={isAdmin || isTeacher}
       />
     </div>
   );

@@ -18,6 +18,8 @@ type Props = {
   related: RelatedSongRow[];
   /** Teacher/admin only — gates the Production tab. Students never see it. */
   canSeeProduction: boolean;
+  /** Teacher/admin only — shows the "Edit song" link in the hero. */
+  canEdit?: boolean;
 };
 
 const upperCaseChordRoots = (chords: string | null | undefined): string => {
@@ -43,6 +45,7 @@ export const SongDetailEditorial = ({
   learners,
   related,
   canSeeProduction,
+  canEdit = false,
 }: Props) => {
   const chordTokens = chordTokensFromSong(song);
 
@@ -79,7 +82,7 @@ export const SongDetailEditorial = ({
         padding: '0 0 60px',
       }}
     >
-      <SongHeroEditorial song={song} chordTokens={chordTokens} />
+      <SongHeroEditorial song={song} chordTokens={chordTokens} canEdit={canEdit} />
       {canSeeProduction ? <SongDetailTabs songId={song.id} overview={overview} /> : overview}
     </div>
   );

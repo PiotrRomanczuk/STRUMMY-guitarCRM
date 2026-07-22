@@ -3,8 +3,9 @@ import Image from 'next/image';
 import type { Song } from '@/components/songs/types';
 
 import { msToClock, levelLabel } from './format';
+import { SongHeroEditorialEditLink } from './SongHeroEditorial.EditLink';
 
-type Props = { song: Song; chordTokens: string[] };
+type Props = { song: Song; chordTokens: string[]; canEdit?: boolean };
 
 const META_ITEM: React.CSSProperties = {
   fontFamily: 'var(--mono)',
@@ -29,7 +30,7 @@ const Meta = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-export const SongHeroEditorial = ({ song, chordTokens }: Props) => {
+export const SongHeroEditorial = ({ song, chordTokens, canEdit = false }: Props) => {
   const duration = msToClock(song.duration_ms ?? null);
   const tags: string[] = [];
   if (song.category) tags.push(song.category);
@@ -40,6 +41,7 @@ export const SongHeroEditorial = ({ song, chordTokens }: Props) => {
 
   return (
     <div style={{ padding: '24px 32px 0' }}>
+      {canEdit && <SongHeroEditorialEditLink songId={song.id} />}
       <div
         className="grid grid-cols-1 md:grid-cols-[160px_1fr]"
         style={{
