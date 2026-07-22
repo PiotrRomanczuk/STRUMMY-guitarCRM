@@ -3,21 +3,23 @@ import Link from 'next/link';
 import type { LessonRow, LessonsBreakdown } from '@/lib/services/lessons-queries';
 import { lessonStatusColour, lessonStatusLabel } from '@/lib/services/lessons-queries';
 
-import { formatLessonClock, formatLessonDate, formatLessonWeekday } from './format';
-import { Card, LessonStatusPill, StudentInitials } from './primitives';
+import { Card } from './primitives';
+import { groupLessonsByTime } from './grouping';
+import { LessonRowItem } from './LessonsListEditorial.Row';
 
 type Props = {
   lessons: LessonRow[];
   breakdown: LessonsBreakdown;
   canCreate: boolean;
   showStudentColumn: boolean;
+  showTeacherColumn: boolean;
   activeStatuses: string[];
   activeSort: 'newest' | 'oldest';
 };
 
 const STATUS_KEYS = ['scheduled', 'in_progress', 'completed', 'cancelled'] as const;
 
-const buildFilterHref = (current: string[], toggle: string, sort: 'newest' | 'oldest'): string => {
+const buildFilterHref = (current: string[], toggle: string): string => {
   const next = current.includes(toggle)
     ? current.filter((s) => s !== toggle)
     : [...current, toggle];
@@ -25,35 +27,34 @@ const buildFilterHref = (current: string[], toggle: string, sort: 'newest' | 'ol
   if (next.length > 0 && next.length < STATUS_KEYS.length) {
     params.set('status', next.join(','));
   }
-  if (sort === 'oldest') params.set('sort', 'oldest');
   const qs = params.toString();
   return qs ? `/dashboard/lessons?${qs}` : '/dashboard/lessons';
 };
 
-const buildSortHref = (current: string[], nextSort: 'newest' | 'oldest'): string => {
-  const params = new URLSearchParams();
-  if (current.length > 0 && current.length < STATUS_KEYS.length) {
-    params.set('status', current.join(','));
-  }
-  if (nextSort === 'oldest') params.set('sort', 'oldest');
-  const qs = params.toString();
-  return qs ? `/dashboard/lessons?${qs}` : '/dashboard/lessons';
-};
+const eyebrow = (showTeacher: boolean, showStudent: boolean): string =>
+  showTeacher ? 'All lessons' : showStudent ? 'Teaching' : 'Your lessons';
+
+const emptyMessage = (showTeacher: boolean, showStudent: boolean): string =>
+  showTeacher
+    ? 'No lessons scheduled across your teachers yet.'
+    : showStudent
+      ? 'No lessons yet. Schedule one to get started.'
+      : 'You have no lessons scheduled yet.';
 
 const Header = ({
   count,
   canCreate,
   showStudentColumn,
+  showTeacherColumn,
   breakdown,
   activeStatuses,
-  activeSort,
 }: {
   count: number;
   canCreate: boolean;
   showStudentColumn: boolean;
+  showTeacherColumn: boolean;
   breakdown: LessonsBreakdown;
   activeStatuses: string[];
-  activeSort: 'newest' | 'oldest';
 }) => (
   <div style={{ padding: '0 0 18px' }}>
     <div
@@ -74,7 +75,7 @@ const Header = ({
             fontFamily: 'var(--mono)',
           }}
         >
-          {showStudentColumn ? 'Teaching' : 'Your lessons'}
+          {eyebrow(showTeacherColumn, showStudentColumn)}
         </div>
         <h1
           style={{
@@ -89,7 +90,7 @@ const Header = ({
           Lessons
         </h1>
         <div style={{ color: 'var(--ink-3)', fontSize: 13, marginTop: 6 }}>
-          {count} {count === 1 ? 'lesson' : 'lessons'} · newest first
+          {count} {count === 1 ? 'lesson' : 'lessons'} · grouped by date
         </div>
       </div>
       {canCreate && (
@@ -115,6 +116,7 @@ const Header = ({
         display: 'flex',
         gap: 10,
         alignItems: 'center',
+        flexWrap: 'wrap',
         padding: '10px 14px',
         background: 'var(--card)',
         border: '1px solid var(--rule)',
@@ -134,13 +136,11 @@ const Header = ({
         Status
       </span>
       {STATUS_KEYS.map((k) => {
-        const label = lessonStatusLabel(k);
-        const colour = lessonStatusColour(k);
         const active = activeStatuses.includes(k);
         return (
           <Link
             key={k}
-            href={buildFilterHref(activeStatuses, k, activeSort)}
+            href={buildFilterHref(activeStatuses, k)}
             role="button"
             aria-pressed={active}
             style={{
@@ -162,10 +162,10 @@ const Header = ({
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: colour,
+                background: lessonStatusColour(k),
               }}
             />
-            {label}
+            {lessonStatusLabel(k)}
             <span
               style={{
                 fontFamily: 'var(--mono)',
@@ -178,22 +178,29 @@ const Header = ({
           </Link>
         );
       })}
-      <span style={{ flex: 1 }} />
-      <Link
-        href={buildSortHref(activeStatuses, activeSort === 'newest' ? 'oldest' : 'newest')}
-        style={{
-          padding: '4px 10px',
-          borderRadius: 99,
-          border: '1px solid var(--rule)',
-          fontSize: 12,
-          color: 'var(--ink-3)',
-          textDecoration: 'none',
-          fontFamily: 'var(--sans)',
-        }}
-      >
-        {activeSort === 'newest' ? 'Newest first' : 'Oldest first'}
-      </Link>
     </div>
+  </div>
+);
+
+const SectionHeader = ({ label, count }: { label: string; count: number }) => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '10px 20px',
+      background: 'var(--paper)',
+      borderBottom: '1px solid var(--rule)',
+      fontFamily: 'var(--mono)',
+      fontSize: 10,
+      textTransform: 'uppercase',
+      letterSpacing: '.14em',
+      color: 'var(--ink-4)',
+    }}
+  >
+    <span style={{ color: 'var(--ink-2)' }}>{label}</span>
+    <span>·</span>
+    <span>{count}</span>
   </div>
 );
 
@@ -202,12 +209,17 @@ export const LessonsListEditorial = ({
   breakdown,
   canCreate,
   showStudentColumn,
+  showTeacherColumn,
   activeStatuses,
-  activeSort,
 }: Props) => {
   const tableColClass = showStudentColumn
-    ? 'grid grid-cols-1 md:grid-cols-[160px_1fr_130px_130px]'
+    ? showTeacherColumn
+      ? 'grid grid-cols-1 md:grid-cols-[150px_170px_150px_1fr_120px]'
+      : 'grid grid-cols-1 md:grid-cols-[160px_1fr_130px_130px]'
     : 'grid grid-cols-1 md:grid-cols-[160px_1fr_130px]';
+
+  const now = new Date();
+  const groups = groupLessonsByTime(lessons, now);
 
   return (
     <div
@@ -222,10 +234,10 @@ export const LessonsListEditorial = ({
     >
       <Header
         activeStatuses={activeStatuses}
-        activeSort={activeSort}
         count={lessons.length}
         canCreate={canCreate}
         showStudentColumn={showStudentColumn}
+        showTeacherColumn={showTeacherColumn}
         breakdown={breakdown}
       />
       <Card>
@@ -240,7 +252,7 @@ export const LessonsListEditorial = ({
               fontSize: 15,
             }}
           >
-            No lessons on file. Schedule one to get started.
+            {emptyMessage(showTeacherColumn, showStudentColumn)}
           </div>
         ) : (
           <div>
@@ -259,78 +271,25 @@ export const LessonsListEditorial = ({
             >
               <span>Date</span>
               {showStudentColumn && <span>Student</span>}
+              {showTeacherColumn && <span>Teacher</span>}
               <span>Title</span>
               <span style={{ textAlign: 'right' }}>Status</span>
             </div>
-            {lessons.map((l) => {
-              const studentDisplay = l.studentName ?? l.studentEmail ?? 'Student';
-              const colour = lessonStatusColour(l.status);
-              const label = lessonStatusLabel(l.status);
-              return (
-                <Link
-                  key={l.id}
-                  href={`/dashboard/lessons/${l.id}`}
-                  className={`ed-row ${tableColClass}`}
-                  style={{
-                    gap: 14,
-                    padding: '14px 20px',
-                    borderBottom: '1px solid var(--rule)',
-                    textDecoration: 'none',
-                    color: 'inherit',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        fontFamily: 'var(--mono)',
-                        fontSize: 11,
-                        color: 'var(--ink-4)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '.08em',
-                      }}
-                    >
-                      {formatLessonWeekday(l.scheduledAt)} · {formatLessonClock(l.scheduledAt)}
-                    </div>
-                    <div style={{ fontSize: 13, marginTop: 2 }}>
-                      {formatLessonDate(l.scheduledAt)}
-                    </div>
-                  </div>
-                  {showStudentColumn && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                      <StudentInitials name={l.studentName} email={l.studentEmail} size={28} />
-                      <span
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 500,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {studentDisplay}
-                      </span>
-                    </div>
-                  )}
-                  <div
-                    style={{
-                      fontFamily: 'var(--serif)',
-                      fontStyle: 'italic',
-                      fontSize: 14,
-                      color: 'var(--ink-2)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {l.title ?? 'Untitled lesson'}
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <LessonStatusPill label={label} colour={colour} />
-                  </div>
-                </Link>
-              );
-            })}
+            {groups.map((group) => (
+              <div key={group.key}>
+                <SectionHeader label={group.label} count={group.lessons.length} />
+                {group.lessons.map((l) => (
+                  <LessonRowItem
+                    key={l.id}
+                    lesson={l}
+                    showStudentColumn={showStudentColumn}
+                    showTeacherColumn={showTeacherColumn}
+                    tableColClass={tableColClass}
+                    now={now}
+                  />
+                ))}
+              </div>
+            ))}
           </div>
         )}
       </Card>

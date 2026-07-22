@@ -14,6 +14,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { NotificationType } from '@/types/notifications';
 import type { Database } from '@/database.types';
 import { logger } from '@/lib/logger';
+import { entityDetailUrl } from '@/lib/services/notification-in-app-content';
 
 // ============================================================================
 // TYPES
@@ -77,7 +78,9 @@ export async function createInAppNotification(
         body,
         icon,
         variant,
-        action_url: actionUrl,
+        // Prefer a deep link to the specific record when we have an entity
+        // reference; fall back to the generic action URL (e.g. a list page).
+        action_url: entityDetailUrl(entityType, entityId) ?? actionUrl,
         action_label: actionLabel,
         entity_type: entityType,
         entity_id: entityId,

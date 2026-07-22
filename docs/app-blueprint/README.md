@@ -36,7 +36,9 @@ into [reference/](reference/) and [adr/](adr/), or deleted (recoverable via git 
 `E2E_JOURNEYS` (journey catalog) · `PRODUCTION_REQUIREMENTS` (env vars, deploy checklist) ·
 `API_REFERENCE` (routes, external API, `gcrm_` keys) · `FORMS_SPECIFICATION` (field-level form
 spec) · `UI_STANDARDS` (design tokens, editorial patterns) · `USER_GUIDES` (end-user docs) ·
-`DEVELOPMENT` (local setup) · `GOOGLE_AUTH_DEV` (Google OAuth dev setup)
+`DEVELOPMENT` (local setup) · `GOOGLE_AUTH_DEV` (Google OAuth dev setup) ·
+`SAAS_HYGIENE_BENCHMARK` (vs. a generic SaaS template — MFA/legal/i18n `HYG-*` gaps) ·
+`TIKTOK_CHANNEL_DATA` (real `@justmeandguitars` capture — seed dataset for the doc-09 pipeline, CNT-4)
 
 This blueprint deliberately contains **no checkboxes, statuses, or dates-done** — the vault owns
 those. When a gap ships, delete its brief here and record completion in the vault.

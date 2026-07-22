@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 import { getInAppNotifications, markNotificationAsRead } from '@/app/actions/in-app-notifications';
 import type { InAppNotification } from '@/lib/services/in-app-notification-service';
@@ -152,12 +153,27 @@ const NotificationRowItem = ({ notification: n, now, isLast, onMarkRead }: RowPr
       >
         {n.icon ?? '·'}
       </div>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink-2)' }}>{n.title}</div>
-        <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 3, lineHeight: 1.5 }}>
-          {n.body}
+      {n.action_url ? (
+        <Link
+          href={n.action_url}
+          onClick={() => {
+            if (!n.is_read) onMarkRead(n.id);
+          }}
+          style={{ minWidth: 0, textDecoration: 'none', color: 'inherit', display: 'block' }}
+        >
+          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink-2)' }}>{n.title}</div>
+          <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 3, lineHeight: 1.5 }}>
+            {n.body}
+          </div>
+        </Link>
+      ) : (
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink-2)' }}>{n.title}</div>
+          <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 3, lineHeight: 1.5 }}>
+            {n.body}
+          </div>
         </div>
-      </div>
+      )}
       <div
         style={{
           display: 'flex',

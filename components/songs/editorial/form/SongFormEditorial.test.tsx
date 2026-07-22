@@ -2,11 +2,16 @@
  * Verifies SongNotesAI is wired into the editorial song form (the editorial
  * redesign had orphaned it — the form had no notes field). Mocks the server
  * actions + useAIStream.
+ *
+ * The AI generators are hidden in production behind SHOW_AI_FEATURES; this
+ * suite forces the flag on so the wiring guard stays meaningful for when the
+ * feature is re-enabled.
  */
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SongFormEditorial } from '@/components/songs/editorial/form/SongFormEditorial';
 
+jest.mock('@/lib/config/features', () => ({ SHOW_AI_FEATURES: true }));
 jest.mock('@/app/actions/song-form', () => ({
   createSongAction: jest.fn(),
 }));

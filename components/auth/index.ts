@@ -9,5 +9,7 @@ export { RequireAuth, RequireAdmin, RequireTeacher, RequireStudent } from './Req
 // New Stitch-based auth components
 export { AuthLayout, AuthHeader, AuthDivider } from './AuthLayout';
 export { GoogleAuthButton } from './GoogleAuthButton';
+export { DbConnectionIndicator } from './DbConnectionIndicator';
+export { DevQuickLogin } from './DevQuickLogin';
 export { PasswordInput } from './PasswordInput';
 export { PasswordStrengthIndicator } from './PasswordStrengthIndicator';

@@ -1,6 +1,6 @@
 ---
 created: 2026-07-18
-updated: 2026-07-18
+updated: 2026-07-20
 domain: Content Production & Media
 tables: [content_posts, content_post_metrics, hashtag_sets, song_videos, drive_files]
 maturity: mixed
@@ -104,6 +104,22 @@ works. Build a review UI for the scanned pool (confirm/deny auto-matches using
 `content_post_metrics` is manual entry only. Platform-API ingestion is explicitly out of scope
 until the pipeline itself is unparked.
 
+### CNT-4 — backfill the owner's real TikTok channel as seed data (parked)
+
+The owner's live channel `@justmeandguitars` is this pipeline running by hand: 24 song covers +
+5 engagement posts, captured 2026-07-19 with view counts, captions, and hashtags in
+[reference/TIKTOK_CHANNEL_DATA.md](reference/TIKTOK_CHANNEL_DATA.md) (schema mapping + a
+machine-readable seed block). Write a dev loader (`scripts/database/seeding/dev/`) that inserts,
+per cover: a `songs` row (populating the `tiktok` link + doc-03 catalog seed), a `song_videos` row
+(`production_status='ready'`, `match_source='manual'`, `match_confidence=100`), a `published`
+`content_posts` row (let `sync_song_video_published_flag()` set the `published_to_tiktok` flag),
+and one `content_post_metrics` snapshot; plus one `hashtag_sets` row (`acoustic-cover-base`).
+**Value**: un-hollows the Production tab demo (CNT-1) and gives `content_post_metrics` a real
+baseline instead of a cold start. Acceptance: loader is idempotent (keyed on title+artist), a
+seeded StrummyProd-shaped DB renders the Production tab with real rows, and
+`sync_song_video_published_flag` produces correct rollups. Parked with the rest of the domain —
+do after cutover, alongside CNT-1.
+
 ## Test plan
 
 - No dedicated E2E (parked domain; `reference/E2E_JOURNEYS.md` has no content-pipeline journey —
@@ -126,4 +142,6 @@ until the pipeline itself is unparked.
   `lib/services/drive-video-sync.ts`, `app/api/cron/drive-video-scan`
 - Schema: `supabase/baseline/cloud_schema_2026-06-22.sql` (5 tables +
   `sync_song_video_published_flag`)
+- Seed dataset: [reference/TIKTOK_CHANNEL_DATA.md](reference/TIKTOK_CHANNEL_DATA.md) — real
+  `@justmeandguitars` capture mapped onto this domain (CNT-4)
 - Related domains: songs (03) for Spotify matching; admin (10) for the drive-scan cron

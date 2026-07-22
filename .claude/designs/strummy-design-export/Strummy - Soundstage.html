@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Strummy — Soundstage</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0e0c0a;
+        --bg-2: #14110d;
+        --surface: #1a1611;
+        --surface-2: #211c16;
+        --line: #2a241d;
+        --line-2: #38302700;
+        --hair: rgba(244, 239, 230, 0.08);
+        --text: #f5f0e7;
+        --text-2: #bcb2a2;
+        --text-3: #837a6b;
+        --amber: oklch(0.83 0.135 74);
+        --amber-2: oklch(0.74 0.14 62);
+        --amber-soft: oklch(0.83 0.135 74 / 0.14);
+        --amber-line: oklch(0.83 0.135 74 / 0.35);
+        --green: oklch(0.78 0.12 150);
+        --red: oklch(0.7 0.15 28);
+
+        --display: 'Space Grotesk', system-ui, sans-serif;
+        --sans: 'Geist', system-ui, sans-serif;
+        --mono: 'Geist Mono', ui-monospace, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        line-height: 1.5;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 0 48px;
+      }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--amber);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .eyebrow::before {
+        content: '';
+        width: 22px;
+        height: 1px;
+        background: var(--amber-line);
+      }
+
+      /* ── Nav ───────────────────────────────────────── */
+      nav.top {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: color-mix(in oklab, var(--bg) 82%, transparent);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--hair);
+      }
+      nav.top .row {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        height: 68px;
+      }
+      .brand {
+        font-family: var(--display);
+        font-weight: 700;
+        font-size: 22px;
+        letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+      .brand .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--amber);
+        margin-top: 10px;
+      }
+      nav.top .links {
+        display: flex;
+        gap: 26px;
+      }
+      nav.top .links a {
+        font-size: 14px;
+        color: var(--text-2);
+        transition: color 0.15s;
+      }
+      nav.top .links a:hover {
+        color: var(--text);
+      }
+      .spacer {
+        flex: 1;
+      }
+      .btn {
+        font-family: var(--sans);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        border-radius: 999px;
+        padding: 10px 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid transparent;
+        transition:
+          transform 0.12s,
+          background 0.15s,
+          border-color 0.15s;
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn-primary {
+        background: var(--amber);
+        color: #1a1206;
+        font-weight: 600;
+      }
+      .btn-primary:hover {
+        background: oklch(0.87 0.135 74);
+      }
+      .btn-ghost {
+        border-color: var(--line);
+        color: var(--text-2);
+        background: transparent;
+      }
+      .btn-ghost:hover {
+        border-color: var(--text-3);
+        color: var(--text);
+      }
+      .btn-lg {
+        padding: 14px 26px;
+        font-size: 15px;
+      }
+      .btn svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      /* ── Hero ──────────────────────────────────────── */
+      .hero {
+        position: relative;
+        padding: 84px 0 96px;
+        overflow: hidden;
+      }
+      .hero .glow {
+        position: absolute;
+        top: -120px;
+        right: -80px;
+        width: 720px;
+        height: 620px;
+        pointer-events: none;
+        background: radial-gradient(46% 50% at 60% 40%, var(--amber-soft), transparent 72%);
+      }
+      .hero .grid {
+        display: grid;
+        grid-template-columns: 1.02fr 1.1fr;
+        gap: 64px;
+        align-items: center;
+        position: relative;
+      }
+      .hero h1 {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 66px;
+        line-height: 1.02;
+        letter-spacing: -0.035em;
+        margin: 26px 0 0;
+        text-wrap: balance;
+      }
+      .hero h1 em {
+        font-style: normal;
+        color: var(--amber);
+      }
+      .hero .sub {
+        font-size: 18px;
+        line-height: 1.6;
+        color: var(--text-2);
+        max-width: 480px;
+        margin: 24px 0 0;
+        text-wrap: pretty;
+      }
+      .hero .cta {
+        display: flex;
+        gap: 12px;
+        margin-top: 34px;
+      }
+      .hero .trust {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 30px;
+        color: var(--text-3);
+        font-size: 13px;
+      }
+      .stack {
+        display: flex;
+      }
+      .stack .av {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: #fff;
+        border: 2px solid var(--bg);
+        margin-left: -9px;
+      }
+      .stack .av:first-child {
+        margin-left: 0;
+      }
+
+      /* ── Hero product mock ─────────────────────────── */
+      .mock {
+        background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow:
+          0 40px 90px -40px rgba(0, 0, 0, 0.8),
+          0 0 0 1px rgba(244, 239, 230, 0.02);
+      }
+      .mock .bar {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--line);
+        background: var(--bg-2);
+      }
+      .mock .bar .d {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+      }
+      .mock .bar .url {
+        margin: 0 auto;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-3);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 3px 14px;
+      }
+      .mock .body {
+        padding: 20px 22px 24px;
+      }
+      .mock .greet {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+      .mock .greet b {
+        display: block;
+        font-family: var(--display);
+        font-size: 22px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        text-transform: none;
+        letter-spacing: -0.02em;
+        margin-top: 5px;
+      }
+      .mock .greet b em {
+        font-style: normal;
+        color: var(--amber);
+      }
+      .mock .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 18px 0;
+      }
+      .mock .stat {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px 14px;
+      }
+      .mock .stat .l {
+        font-family: var(--mono);
+        font-size: 8.5px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+      .mock .stat .v {
+        font-family: var(--display);
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+        margin-top: 6px;
+      }
+      .mock .stat .u {
+        font-size: 10px;
+        color: var(--text-3);
+        margin-top: 3px;
+      }
+      .agenda {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 6px 16px 8px;
+      }
+      .agenda .hd {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 10px 0 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      .agenda .hd .t {
+        font-family: var(--mono);
+        font-size: 8.5px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+      .agenda .hd .n {
+        font-family: var(--display);
+        font-size: 15px;
+        font-weight: 500;
+        margin-top: 3px;
+      }
+      .agenda .hd .link {
+        font-size: 11px;
+        color: var(--text-3);
+      }
+      .row-l {
+        display: grid;
+        grid-template-columns: 50px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 11px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .row-l:last-child {
+        border-bottom: none;
+      }
+      .row-l .time b {
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .row-l .time span {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        color: var(--text-3);
+        display: block;
+      }
+      .row-l .who {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .row-l .av-s {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 9px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .row-l .who .nm {
+        font-size: 12.5px;
+        font-weight: 500;
+      }
+      .row-l .song {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 4px;
+        padding-left: 30px;
+      }
+      .key {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--amber);
+        border: 1px solid var(--amber-line);
+        border-radius: 3px;
+        padding: 1px 5px;
+      }
+      .row-l .song .ti {
+        font-family: var(--display);
+        font-size: 11.5px;
+        font-style: italic;
+        color: var(--text-2);
+      }
+      .start {
+        font-size: 11px;
+        color: var(--text-2);
+        border: 1px solid var(--line);
+        background: var(--surface-2);
+        border-radius: 6px;
+        padding: 5px 12px;
+      }
+
+      .float-pill {
+        position: absolute;
+        right: -18px;
+        top: -20px;
+        z-index: 3;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 7px 14px 7px 7px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.8);
+        font-size: 12px;
+      }
+      .float-pill .av-s {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 9px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .float-pill .mast {
+        color: var(--green);
+        font-weight: 600;
+      }
+      .float-pill em {
+        font-style: italic;
+        font-family: var(--display);
+      }
+
+      /* ── Section frame ─────────────────────────────── */
+      section {
+        padding: 104px 0;
+      }
+      .sec-head {
+        max-width: 720px;
+      }
+      .sec-head.center {
+        margin: 0 auto;
+        text-align: center;
+      }
+      .sec-head.center .eyebrow {
+        justify-content: center;
+      }
+      .sec-head.center .eyebrow::after {
+        content: '';
+        width: 22px;
+        height: 1px;
+        background: var(--amber-line);
+      }
+      h2.disp {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 46px;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+        margin: 18px 0 0;
+        text-wrap: balance;
+      }
+      h2.disp em {
+        font-style: normal;
+        color: var(--amber);
+      }
+      .lede {
+        font-size: 17px;
+        line-height: 1.6;
+        color: var(--text-2);
+        margin-top: 18px;
+        text-wrap: pretty;
+      }
+
+      /* ── How it works ──────────────────────────────── */
+      .how {
+        background: var(--bg-2);
+        border-top: 1px solid var(--hair);
+        border-bottom: 1px solid var(--hair);
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-top: 60px;
+      }
+      .step {
+        position: relative;
+        padding-top: 26px;
+        border-top: 1px solid var(--line);
+      }
+      .step .n {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--amber);
+        letter-spacing: 0.1em;
+      }
+      .step h3 {
+        font-family: var(--display);
+        font-weight: 500;
+        font-size: 23px;
+        letter-spacing: -0.02em;
+        margin: 16px 0 0;
+      }
+      .step p {
+        font-size: 15px;
+        color: var(--text-2);
+        margin: 12px 0 0;
+        line-height: 1.6;
+        text-wrap: pretty;
+      }
+      .step .chip {
+        margin-top: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-2);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 12px;
+        background: var(--surface);
+      }
+      .step .chip .gd {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--amber);
+      }
+
+      /* progress flow strip */
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+      .flow .s {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text-3);
+        padding: 4px 9px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--surface);
+        white-space: nowrap;
+      }
+      .flow .s.on {
+        color: #1a1206;
+        background: var(--amber);
+        border-color: var(--amber);
+        font-weight: 600;
+      }
+      .flow .ar {
+        color: var(--text-3);
+        margin: 0 6px;
+        font-size: 11px;
+      }
+
+      /* ── Features ──────────────────────────────────── */
+      .feat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 60px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 32px 32px 30px;
+        position: relative;
+        overflow: hidden;
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+      .card:hover {
+        border-color: var(--line);
+        transform: translateY(-2px);
+      }
+      .card.span {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: center;
+      }
+      .card .k {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--amber);
+      }
+      .card h3 {
+        font-family: var(--display);
+        font-weight: 500;
+        font-size: 26px;
+        letter-spacing: -0.02em;
+        margin: 14px 0 0;
+      }
+      .card p {
+        font-size: 15px;
+        color: var(--text-2);
+        line-height: 1.6;
+        margin: 12px 0 0;
+        text-wrap: pretty;
+      }
+      .card ul {
+        list-style: none;
+        margin: 20px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .card li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13.5px;
+        color: var(--text-2);
+      }
+      .card li .tick {
+        width: 17px;
+        height: 17px;
+        border-radius: 50%;
+        background: var(--amber-soft);
+        color: var(--amber);
+        display: grid;
+        place-items: center;
+        flex: 0 0 17px;
+      }
+      .card li .tick svg {
+        width: 9px;
+        height: 9px;
+      }
+
+      /* mini fretboard for feature */
+      .fret {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--bg-2);
+        padding: 18px;
+      }
+      .fret .board {
+        display: grid;
+        grid-template-columns: 40px repeat(6, 1fr);
+        gap: 0;
+      }
+      .fret .lbl {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text-3);
+        display: grid;
+        place-items: center;
+        height: 30px;
+      }
+      .fret .cell {
+        height: 30px;
+        border-left: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        position: relative;
+      }
+      .fret .cell.open {
+        border-left: none;
+      }
+      .fret .dot {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--amber);
+      }
+      .fret .dot.b {
+        background: var(--surface-2);
+        border: 1px solid var(--amber-line);
+      }
+
+      /* song library mini */
+      .lib {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .lib .s {
+        display: grid;
+        grid-template-columns: 36px 1fr auto auto;
+        gap: 12px;
+        align-items: center;
+        background: var(--bg-2);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 9px 12px;
+      }
+      .lib .art {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, var(--amber-2), var(--surface-2));
+      }
+      .lib .ti {
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .lib .au {
+        font-size: 11px;
+        color: var(--text-3);
+      }
+      .lib .diff {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--text-2);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 2px 6px;
+      }
+
+      /* ── Final CTA ─────────────────────────────────── */
+      .final {
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .final .glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(40% 60% at 50% 30%, var(--amber-soft), transparent 70%);
+        pointer-events: none;
+      }
+      .final h2 {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 60px;
+        line-height: 1.02;
+        letter-spacing: -0.035em;
+        margin: 22px 0 0;
+      }
+      .final h2 em {
+        font-style: normal;
+        color: var(--amber);
+      }
+      .final .cta {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 34px;
+      }
+
+      footer {
+        border-top: 1px solid var(--hair);
+        padding: 40px 0;
+      }
+      footer .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+      footer .mono {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-3);
+      }
+
+      @media (max-width: 940px) {
+        .hero .grid,
+        .card.span {
+          grid-template-columns: 1fr;
+        }
+        .steps,
+        .feat-grid {
+          grid-template-columns: 1fr;
+        }
+        .hero h1 {
+          font-size: 48px;
+        }
+        nav.top .links {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="top">
+      <div class="wrap row">
+        <div class="brand">Strummy<span class="dot"></span></div>
+        <div class="links">
+          <a href="#how">How it works</a>
+          <a href="#features">Features</a>
+          <a href="#">Changelog</a>
+        </div>
+        <div class="spacer"></div>
+        <a href="#" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="6,4 20,12 6,20"></polygon>
+          </svg>
+          Try the demo
+        </a>
+        <a href="#" class="btn btn-primary">Get started — free</a>
+      </div>
+    </nav>
+
+    <!-- ── HERO ───────────────────────────────────────── -->
+    <header class="hero">
+      <div class="glow"></div>
+      <div class="wrap grid">
+        <div>
+          <span class="eyebrow">Guitar teacher CRM · Live beta</span>
+          <h1>Never wonder <em>“what were we doing last time?”</em> again.</h1>
+          <p class="sub">
+            Strummy keeps every student's repertoire, lesson history, and progress in one place — so
+            you walk into each lesson already knowing exactly where to pick up.
+          </p>
+          <div class="cta">
+            <a href="#" class="btn btn-primary btn-lg"
+              >Start free
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+              >
+                <path d="M5 12h14M13 5l7 7-7 7"></path>
+              </svg>
+            </a>
+            <a href="#" class="btn btn-ghost btn-lg">Watch the 2-min tour</a>
+          </div>
+          <div class="trust">
+            <div class="stack">
+              <div class="av" style="background: #c89523">EJ</div>
+              <div class="av" style="background: #b84a3a">CR</div>
+              <div class="av" style="background: #3a7d3a">LP</div>
+              <div class="av" style="background: #6d4fa0">MP</div>
+            </div>
+            <span
+              >In daily use by <b style="color: var(--text-2)">20–30 teachers and students</b> ·
+              real lessons, real progress.</span
+            >
+          </div>
+        </div>
+
+        <!-- product mock -->
+        <div style="position: relative">
+          <div class="float-pill">
+            <div class="av-s" style="background: #6d4fa0">MP</div>
+            <span>Maya <span class="mast">mastered</span> <em>Classical Gas</em></span>
+            <span
+              class="mono"
+              style="font-family: var(--mono); font-size: 10px; color: var(--text-3)"
+              >22m</span
+            >
+          </div>
+          <div class="mock">
+            <div class="bar">
+              <span class="d" style="background: #e0726a"></span>
+              <span class="d" style="background: #e6b64b"></span>
+              <span class="d" style="background: #7abf7a"></span>
+              <span class="url">app.strummy.app/dashboard</span>
+            </div>
+            <div class="body">
+              <div class="greet">
+                Thursday · April 23
+                <b>Good afternoon, <em>Sarah</em>.</b>
+              </div>
+              <div class="stats">
+                <div class="stat">
+                  <div class="l">Lessons today</div>
+                  <div class="v">3</div>
+                  <div class="u">2h 0m total</div>
+                </div>
+                <div class="stat">
+                  <div class="l">Active students</div>
+                  <div class="v">27</div>
+                  <div class="u">of 31 this week</div>
+                </div>
+                <div class="stat">
+                  <div class="l">Studio streak</div>
+                  <div class="v">11</div>
+                  <div class="u">days on average</div>
+                </div>
+              </div>
+              <div class="agenda">
+                <div class="hd">
+                  <div>
+                    <div class="t">Today's agenda</div>
+                    <div class="n">3 lessons · 2h 0m</div>
+                  </div>
+                  <div class="link">Open calendar →</div>
+                </div>
+                <div class="row-l">
+                  <div class="time"><b>4:00p</b><span>45m</span></div>
+                  <div>
+                    <div class="who">
+                      <span class="av-s" style="background: #c89523">EJ</span
+                      ><span class="nm">Emma Johnson</span>
+                    </div>
+                    <div class="song">
+                      <span class="key">G</span><span class="ti">Blackbird</span>
+                    </div>
+                  </div>
+                  <div class="start">Start</div>
+                </div>
+                <div class="row-l">
+                  <div class="time"><b>5:00p</b><span>30m</span></div>
+                  <div>
+                    <div class="who">
+                      <span class="av-s" style="background: #b84a3a">CR</span
+                      ><span class="nm">Carlos Reyes</span>
+                    </div>
+                    <div class="song">
+                      <span class="key">Em</span><span class="ti">Wonderwall</span>
+                    </div>
+                  </div>
+                  <div class="start">Start</div>
+                </div>
+                <div class="row-l">
+                  <div class="time"><b>6:30p</b><span>45m</span></div>
+                  <div>
+                    <div class="who">
+                      <span class="av-s" style="background: #3a7d3a">LP</span
+                      ><span class="nm">Lily Park</span>
+                    </div>
+                    <div class="song">
+                      <span class="key">Am</span><span class="ti">House of the Rising Sun</span>
+                    </div>
+                  </div>
+                  <div class="start">Start</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── HOW IT WORKS ───────────────────────────────── -->
+    <section class="how" id="how">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow">How it works</span>
+          <h2 class="disp">Three habits. <em>Everything else is automatic.</em></h2>
+          <p class="lede">
+            Strummy fits the way a working teacher already thinks. You teach — it keeps the record.
+          </p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="n">01</div>
+            <h3>Add students &amp; lessons</h3>
+            <p>
+              Book lessons inside Strummy, or sync them straight from Google Calendar — both
+              directions, automatically kept in step.
+            </p>
+            <div class="chip"><span class="gd"></span>Two-way Google Calendar sync</div>
+          </div>
+          <div class="step">
+            <div class="n">02</div>
+            <h3>Teach — Strummy remembers</h3>
+            <p>
+              Mark what each student played and how it's landing. Their repertoire and progress
+              status advance forward on their own, never sliding back by accident.
+            </p>
+            <div class="flow">
+              <span class="s">to learn</span><span class="ar">→</span>
+              <span class="s on">started</span><span class="ar">→</span>
+              <span class="s">remembered</span><span class="ar">→</span>
+              <span class="s">mastered</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">03</div>
+            <h3>Walk in ready</h3>
+            <p>
+              Before the lesson starts, last session's AI summary, their song list, and what to work
+              on next are already on the screen.
+            </p>
+            <div class="chip"><span class="gd"></span>AI-drafted lesson notes &amp; recap</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FEATURES ───────────────────────────────────── -->
+    <section id="features">
+      <div class="wrap">
+        <div class="sec-head center">
+          <span class="eyebrow">The product</span>
+          <h2 class="disp">One source of truth per <em>student</em>.</h2>
+        </div>
+        <div class="feat-grid">
+          <!-- big span: repertoire & progress -->
+          <div class="card span">
+            <div>
+              <div class="k">Repertoire &amp; progress</div>
+              <h3>Every student's whole journey, one click away.</h3>
+              <p>
+                One canonical answer to “where is this student on this song?” — lifetime-best
+                status, practice metrics, preferred key, capo, and strumming, all kept per student.
+                Created automatically the first time a song shows up in a lesson.
+              </p>
+              <ul>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Forward-only progress that absorbs accidental slips
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Per-student key, capo &amp; practice history
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Full progress audit trail, automatically
+                </li>
+              </ul>
+            </div>
+            <div class="lib">
+              <div class="s">
+                <div class="art"></div>
+                <div>
+                  <div class="ti">Blackbird</div>
+                  <div class="au">The Beatles</div>
+                </div>
+                <span class="key">G</span><span class="diff">started</span>
+              </div>
+              <div class="s">
+                <div
+                  class="art"
+                  style="background: linear-gradient(135deg, #3a7d3a, #211c16)"
+                ></div>
+                <div>
+                  <div class="ti">Landslide</div>
+                  <div class="au">Fleetwood Mac</div>
+                </div>
+                <span class="key">C</span><span class="diff">remembered</span>
+              </div>
+              <div class="s">
+                <div
+                  class="art"
+                  style="background: linear-gradient(135deg, #6d4fa0, #211c16)"
+                ></div>
+                <div>
+                  <div class="ti">Classical Gas</div>
+                  <div class="au">Mason Williams</div>
+                </div>
+                <span class="key">Am</span><span class="diff">mastered</span>
+              </div>
+              <div class="s">
+                <div
+                  class="art"
+                  style="background: linear-gradient(135deg, #b84a3a, #211c16)"
+                ></div>
+                <div>
+                  <div class="ti">Dust in the Wind</div>
+                  <div class="au">Kansas</div>
+                </div>
+                <span class="key">C</span><span class="diff">to learn</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- song library -->
+          <div class="card">
+            <div class="k">Song library</div>
+            <h3>Tabs already found, metadata already filled.</h3>
+            <p>
+              Hundreds of songs enriched from Spotify — album art, musical key, difficulty, chords
+              and tabs. One click adds a song to a student's repertoire.
+            </p>
+            <ul>
+              <li>
+                <span class="tick"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                  >
+                    <path d="M5 12l5 5L20 7"></path></svg></span
+                >Spotify-matched album art &amp; key
+              </li>
+              <li>
+                <span class="tick"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                  >
+                    <path d="M5 12l5 5L20 7"></path></svg></span
+                >Difficulty ratings &amp; chord data
+              </li>
+              <li>
+                <span class="tick"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                  >
+                    <path d="M5 12l5 5L20 7"></path></svg></span
+                >Shared across your whole studio
+              </li>
+            </ul>
+          </div>
+
+          <!-- fretboard -->
+          <div class="card">
+            <div class="k">Interactive fretboard</div>
+            <h3>A fretboard that plays back.</h3>
+            <p>
+              Scales, chords and CAGED positions — mapped, coloured and audible right in the
+              browser. Quiz mode turns theory into muscle memory.
+            </p>
+            <div class="fret">
+              <div class="board">
+                <div class="lbl">E</div>
+                <div class="cell open"><span class="dot"></span></div>
+                <div class="cell"></div>
+                <div class="cell"><span class="dot b"></span></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="lbl">A</div>
+                <div class="cell open"></div>
+                <div class="cell"></div>
+                <div class="cell"><span class="dot"></span></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="lbl">D</div>
+                <div class="cell open"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"><span class="dot b"></span></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="lbl">G</div>
+                <div class="cell open"><span class="dot"></span></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- lessons + ai + calendar -->
+          <div class="card span">
+            <div>
+              <div class="k">Lessons, calendar &amp; AI notes</div>
+              <h3>Schedule it. Run it. Let Strummy write it up.</h3>
+              <p>
+                Two-way Google Calendar sync means no double-booked four o'clocks. When you close a
+                session, an AI agent drafts the lesson notes, the recap, and next week's assignment
+                — with safe fallbacks so it never leaves you mid-lesson with a blank screen.
+              </p>
+              <ul>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Bidirectional Google Calendar sync
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >AI lesson notes, recaps &amp; assignments
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Automatic reminders &amp; weekly digests
+                </li>
+              </ul>
+            </div>
+            <div class="agenda" style="background: var(--bg-2)">
+              <div class="hd" style="border-color: var(--line)">
+                <div>
+                  <div class="t">Post-lesson · auto-drafted</div>
+                  <div class="n">Emma Johnson · Lesson #42</div>
+                </div>
+              </div>
+              <div
+                style="
+                  padding: 14px 0 6px;
+                  font-size: 13px;
+                  color: var(--text-2);
+                  line-height: 1.6;
+                  font-style: italic;
+                  font-family: var(--display);
+                "
+              >
+                “Alternating bass pattern is solid at 60 BPM. Right-hand independence is the next
+                hurdle — assign a 10 min/day fingerpicking drill on
+                <span style="color: var(--amber)">Blackbird</span>.”
+              </div>
+              <div style="display: flex; gap: 8px; padding: 6px 0 12px">
+                <span
+                  class="diff"
+                  style="
+                    font-family: var(--mono);
+                    font-size: 9px;
+                    color: var(--text-2);
+                    border: 1px solid var(--line);
+                    border-radius: 4px;
+                    padding: 3px 7px;
+                  "
+                  >Insert into notes</span
+                >
+                <span
+                  class="diff"
+                  style="
+                    font-family: var(--mono);
+                    font-size: 9px;
+                    color: var(--text-3);
+                    border: 1px solid var(--line);
+                    border-radius: 4px;
+                    padding: 3px 7px;
+                  "
+                  >Regenerate</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FINAL CTA ──────────────────────────────────── -->
+    <section class="how final">
+      <div class="glow"></div>
+      <div class="wrap" style="position: relative">
+        <span class="eyebrow" style="justify-content: center">Ready when you are</span>
+        <h2>Teach more.<br /><em>Admin less.</em></h2>
+        <p class="lede" style="max-width: 520px; margin: 18px auto 0">
+          Free while we're in beta — no card, no feature gates. Bring one student or twenty.
+        </p>
+        <div class="cta">
+          <a href="#" class="btn btn-primary btn-lg"
+            >Get started — free
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+            >
+              <path d="M5 12h14M13 5l7 7-7 7"></path>
+            </svg>
+          </a>
+          <a href="#" class="btn btn-ghost btn-lg">Try the demo</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap row">
+        <div class="brand" style="font-size: 18px">Strummy<span class="dot"></span></div>
+        <div class="mono">© 2026 Strummy · Public beta · strummy.app</div>
+      </div>
+    </footer>
+  </body>
+</html>

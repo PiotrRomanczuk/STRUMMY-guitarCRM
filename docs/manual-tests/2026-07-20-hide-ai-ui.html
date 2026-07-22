@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — Hide AI UI (2026-07-20)</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.55;
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+        color: #1a1a1a;
+        background: #fafafa;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #e6e6e6;
+          background: #16181c;
+        }
+        code {
+          background: #2a2d33 !important;
+        }
+        th {
+          background: #23262c !important;
+        }
+        tr:nth-child(even) td {
+          background: #1c1f24 !important;
+        }
+        .card {
+          background: #1c1f24 !important;
+          border-color: #303540 !important;
+        }
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 0.2rem;
+      }
+      h2 {
+        font-size: 1.2rem;
+        margin-top: 2rem;
+        border-bottom: 2px solid #d8b04a;
+        padding-bottom: 0.25rem;
+      }
+      .meta {
+        color: #777;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+      }
+      code {
+        background: #eee;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+        font-size: 0.88em;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1rem 0;
+        font-size: 0.92rem;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 0.5rem 0.65rem;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #f0ead6;
+      }
+      tr:nth-child(even) td {
+        background: #f4f4f4;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e2e2e2;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+      }
+      .pill {
+        display: inline-block;
+        background: #d8b04a;
+        color: #222;
+        font-weight: 600;
+        font-size: 0.72rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        vertical-align: middle;
+      }
+      ol li,
+      ul li {
+        margin: 0.35rem 0;
+      }
+      .flag {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hide the AI UI from the frontend <span class="pill">for now</span></h1>
+    <p class="meta">
+      <strong>Date:</strong> 2026-07-20 &nbsp;·&nbsp; <strong>Author:</strong> Claude &nbsp;·&nbsp;
+      <strong>Branch:</strong> feature/lessons-display
+    </p>
+
+    <h2>What was done</h2>
+    <p>
+      The app is slimmed down to the <strong>core teaching loop</strong> — Lessons, Songs,
+      Assignments (plus Students) — and every AI-powered surface is hidden from the UI. Nothing was
+      deleted: routes, server actions, and the AI components all remain in the codebase. Everything
+      is gated behind <strong>one flag</strong> so it can be brought back in a single edit.
+    </p>
+
+    <div class="card">
+      <strong>The switch:</strong> <code>lib/config/features.ts</code> →
+      <span class="flag">export const SHOW_AI_FEATURES = false;</span><br />
+      Flip it to <span class="flag">true</span> to restore the AI nav items <em>and</em> the in-form
+      generators everywhere, at once.
+    </div>
+
+    <h3>Sidebar (desktop + mobile)</h3>
+    <p>
+      All navigation goes through <code>getMenuGroups()</code> in
+      <code>components/navigation/menuConfig.ts</code>, so these changes apply to the desktop shell,
+      the mobile "More" menu, and the sidebar helpers identically.
+    </p>
+    <table>
+      <tr>
+        <th>Item</th>
+        <th>Before</th>
+        <th>Now</th>
+        <th>How it's hidden</th>
+      </tr>
+      <tr>
+        <td>Lessons / Songs / Assignments</td>
+        <td>visible</td>
+        <td><strong>visible</strong></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>Students</td>
+        <td>visible</td>
+        <td><strong>visible</strong></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>AI Assistant</td>
+        <td>visible</td>
+        <td>hidden</td>
+        <td>gated on <code>SHOW_AI_FEATURES</code></td>
+      </tr>
+      <tr>
+        <td>AI Chat</td>
+        <td>visible</td>
+        <td>hidden</td>
+        <td>gated on <code>SHOW_AI_FEATURES</code></td>
+      </tr>
+      <tr>
+        <td>Calendar</td>
+        <td>visible</td>
+        <td>hidden</td>
+        <td>added to <code>CORE_LOOP_HIDDEN_ITEMS</code></td>
+      </tr>
+      <tr>
+        <td>Fretboard</td>
+        <td>visible</td>
+        <td>hidden</td>
+        <td>added to <code>CORE_LOOP_HIDDEN_ITEMS</code></td>
+      </tr>
+    </table>
+
+    <h3>In-form AI generators</h3>
+    <p>
+      The "Generate with AI" affordances embedded in the editorial forms are hidden. The underlying
+      <strong>note/description fields stay fully editable</strong> — only the AI button disappears.
+    </p>
+    <table>
+      <tr>
+        <th>Location</th>
+        <th>Hidden component</th>
+        <th>Core field kept?</th>
+      </tr>
+      <tr>
+        <td>New/Edit Lesson form</td>
+        <td>LessonNotesAI ("Generate Lesson Notes")</td>
+        <td>Yes — notes field unaffected</td>
+      </tr>
+      <tr>
+        <td>Lesson detail (edit view)</td>
+        <td>PostLessonSummaryAI</td>
+        <td>Yes — read-only summary card only</td>
+      </tr>
+      <tr>
+        <td>New/Edit Song form</td>
+        <td>SongNotesAI ("Generate Song Notes")</td>
+        <td>Yes — <code>textarea[name="notes"]</code> still renders</td>
+      </tr>
+      <tr>
+        <td>Create Assignment form</td>
+        <td>AssignmentAI ("Generate Assignment")</td>
+        <td>Yes — description textarea unaffected</td>
+      </tr>
+    </table>
+    <p>
+      The song-form notes placeholder is also swapped from "…or generate them with AI above." to a
+      neutral "Teaching tips and practice suggestions." while AI is off.
+    </p>
+
+    <h2>How to test manually</h2>
+    <div class="card">
+      <strong>Setup</strong>
+      <ol>
+        <li><code>cd strummy &amp;&amp; npm run dev</code></li>
+        <li>Sign in as the admin/teacher: <code>p.romanczuk@gmail.com / test123_admin</code></li>
+      </ol>
+    </div>
+
+    <h3>1. Sidebar shows only the core loop</h3>
+    <ol>
+      <li>
+        Open <code>/dashboard</code>. In the sidebar, confirm you see
+        <strong>Lessons, Songs, Assignments, Students</strong> and <strong>Home</strong>.
+      </li>
+      <li>
+        Confirm there is <strong>no</strong> AI Assistant, AI Chat, Calendar, or Fretboard entry.
+      </li>
+      <li>
+        Shrink the window to mobile width → open the "More" menu → confirm the same items are absent
+        there too.
+      </li>
+    </ol>
+
+    <h3>2. In-form AI buttons are gone (but fields work)</h3>
+    <ol>
+      <li>
+        <strong>Song:</strong> go to <code>/dashboard/songs</code> → New Song. Under "Teaching
+        notes" there should be <em>no</em> "Generate Song Notes" button — just the notes textarea,
+        which you can type into and save.
+      </li>
+      <li>
+        <strong>Lesson:</strong> go to <code>/dashboard/lessons</code> → New Lesson. Confirm there
+        is no "Generate Lesson Notes" button. Open an existing lesson's detail/edit view → confirm
+        no post-lesson AI summary card.
+      </li>
+      <li>
+        <strong>Assignment:</strong> go to <code>/dashboard/assignments</code> → create one. Confirm
+        there is no "Generate Assignment" button; the description textarea still works.
+      </li>
+    </ol>
+
+    <h3>3. Routes still exist (hide is nav-only)</h3>
+    <ol>
+      <li>
+        Manually visit <code>/dashboard/ai</code>, <code>/dashboard/ai/chat</code>,
+        <code>/dashboard/calendar</code>, <code>/dashboard/fretboard</code> by typing the URL. They
+        should still load — hiding is visibility-only, not removal.
+      </li>
+    </ol>
+
+    <h3>4. Re-enable check (optional)</h3>
+    <ol>
+      <li>
+        Set <code>SHOW_AI_FEATURES = true</code> in <code>lib/config/features.ts</code>, save, and
+        refresh.
+      </li>
+      <li>
+        The AI Assistant / AI Chat sidebar items and all four in-form "Generate…" buttons should
+        reappear. (Calendar and Fretboard stay hidden — they are parked separately, not tied to the
+        AI flag.)
+      </li>
+      <li>Revert the flag back to <code>false</code>.</li>
+    </ol>
+
+    <h2>Automated checks</h2>
+    <ul>
+      <li>
+        <strong>Lint:</strong> <code>npx eslint</code> on changed files → 0 errors (pre-existing
+        file-size warnings only).
+      </li>
+      <li><strong>Typecheck:</strong> <code>npm run typecheck</code> → exit 0, no type errors.</li>
+      <li>
+        <strong>Tests:</strong> <code>menuConfig.test.ts</code> updated to lock the new scope; the
+        SongForm/AssignmentCreate "AI wiring" suites force the flag on so they still guard against
+        the AI components being orphaned when re-enabled. 10/10 pass.
+      </li>
+    </ul>
+  </body>
+</html>

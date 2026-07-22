@@ -16,16 +16,41 @@ export type InAppContent = {
 };
 
 /**
+ * Map a polymorphic entity reference to its detail-page URL, when one exists.
+ *
+ * Used to deep-link notifications straight to the record they're about
+ * (e.g. the specific lesson) instead of the generic list page. Returns null
+ * for entity types that have no dedicated detail route.
+ */
+export function entityDetailUrl(
+  entityType: string | undefined | null,
+  entityId: string | undefined | null
+): string | null {
+  if (!entityType || !entityId) return null;
+  switch (entityType) {
+    case 'lesson':
+      return `/dashboard/lessons/${entityId}`;
+    case 'song':
+      return `/dashboard/songs/${entityId}`;
+    case 'assignment':
+      return `/dashboard/assignments/${entityId}`;
+    case 'student':
+    case 'profile':
+    case 'user':
+      return `/dashboard/users/${entityId}`;
+    default:
+      return null;
+  }
+}
+
+/**
  * Generate in-app notification content from template data
  */
 export function generateInAppContent(
   type: NotificationType,
   data: Record<string, unknown>
 ): InAppContent {
-  const contentMap: Record<
-    NotificationType,
-    (d: Record<string, unknown>) => InAppContent
-  > = {
+  const contentMap: Record<NotificationType, (d: Record<string, unknown>) => InAppContent> = {
     // Lesson notifications
     lesson_reminder_24h: (d) => ({
       title: 'Lesson Tomorrow',
@@ -66,7 +91,7 @@ export function generateInAppContent(
       body: `"${d.assignmentTitle || 'New assignment'}" due ${d.dueDate || 'soon'}`,
       icon: '📋',
       variant: 'info' as const,
-      actionUrl: d.assignmentLink as string || '/dashboard/assignments',
+      actionUrl: (d.assignmentLink as string) || '/dashboard/assignments',
       actionLabel: 'View Assignment',
     }),
     assignment_due_reminder: (d) => ({
@@ -74,7 +99,7 @@ export function generateInAppContent(
       body: `"${d.assignmentTitle || 'Your assignment'}" is due ${d.dueDate || 'soon'}`,
       icon: '⏰',
       variant: 'warning' as const,
-      actionUrl: d.assignmentLink as string || '/dashboard/assignments',
+      actionUrl: (d.assignmentLink as string) || '/dashboard/assignments',
       actionLabel: 'View Assignment',
     }),
     assignment_overdue_alert: (d) => ({
@@ -82,7 +107,7 @@ export function generateInAppContent(
       body: `"${d.assignmentTitle || 'Your assignment'}" is overdue by ${d.daysOverdue || '0'} days`,
       icon: '⚠️',
       variant: 'error' as const,
-      actionUrl: d.assignmentLink as string || '/dashboard/assignments',
+      actionUrl: (d.assignmentLink as string) || '/dashboard/assignments',
       actionLabel: 'Complete Now',
     }),
     assignment_completed: (d) => ({
@@ -118,7 +143,7 @@ export function generateInAppContent(
       body: `Welcome to Guitar CRM, ${d.studentName || 'Student'}!`,
       icon: '👋',
       variant: 'info' as const,
-      actionUrl: d.loginLink as string || '/dashboard',
+      actionUrl: (d.loginLink as string) || '/dashboard',
       actionLabel: 'Get Started',
     }),
     trial_ending_reminder: (d) => ({

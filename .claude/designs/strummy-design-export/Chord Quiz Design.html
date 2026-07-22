@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Chord Quiz · Strummy design</title>
+
+    <script
+      src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+      integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+      integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+      integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Geist', 'ui-sans-serif', 'system-ui'],
+              mono: ['"Geist Mono"', 'ui-monospace'],
+              display: ['Fraunces', '"Iowan Old Style"', 'Georgia', 'serif'],
+            },
+            colors: {
+              background: 'hsl(var(--background) / <alpha-value>)',
+              foreground: 'hsl(var(--foreground) / <alpha-value>)',
+              card: 'hsl(var(--card) / <alpha-value>)',
+              'card-foreground': 'hsl(var(--card-foreground) / <alpha-value>)',
+              primary: 'hsl(var(--primary) / <alpha-value>)',
+              'primary-foreground': 'hsl(var(--primary-foreground) / <alpha-value>)',
+              secondary: 'hsl(var(--secondary) / <alpha-value>)',
+              'secondary-foreground': 'hsl(var(--secondary-foreground) / <alpha-value>)',
+              muted: 'hsl(var(--muted) / <alpha-value>)',
+              'muted-foreground': 'hsl(var(--muted-foreground) / <alpha-value>)',
+              accent: 'hsl(var(--accent) / <alpha-value>)',
+              destructive: 'hsl(var(--destructive) / <alpha-value>)',
+              border: 'hsl(var(--border) / <alpha-value>)',
+              ring: 'hsl(var(--ring) / <alpha-value>)',
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      /* ─── Strummy tokens ──────────────────────────────────────────── */
+      :root {
+        /* Light mode — warm ivory + gold */
+        --background: 40 20% 98%;
+        --foreground: 0 0% 12%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 12%;
+        --primary: 42 90% 45%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 40 10% 92%;
+        --secondary-foreground: 0 0% 15%;
+        --muted: 40 10% 93%;
+        --muted-foreground: 40 10% 40%;
+        --accent: 350 75% 45%;
+        --destructive: 0 84% 60%;
+        --border: 40 10% 86%;
+        --ring: 42 90% 45%;
+      }
+      html.dark {
+        /* M3 "Virtuoso's Studio" — obsidian + warm gold (matches Strummy globals.css) */
+        --background: 0 0% 7%;
+        --foreground: 30 14% 89%;
+        --card: 0 0% 12%;
+        --card-foreground: 30 14% 89%;
+        --primary: 38 100% 76%;
+        --primary-foreground: 32 100% 13%;
+        --secondary: 0 0% 11%;
+        --secondary-foreground: 35 30% 76%;
+        --muted: 0 0% 16%;
+        --muted-foreground: 35 30% 76%;
+        --accent: 350 75% 45%;
+        --destructive: 4 100% 84%;
+        --border: 32 21% 26%;
+        --ring: 38 100% 76%;
+      }
+      html,
+      body {
+        font-family: 'Geist', ui-sans-serif, system-ui;
+      }
+      .font-display {
+        font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+      }
+      .font-mono {
+        font-family: 'Geist Mono', ui-monospace;
+      }
+      body {
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        scrollbar-width: none;
+      }
+
+      /* Frame wrapper for mobile mockups */
+      .mobile-frame {
+        width: 390px;
+        border-radius: 36px;
+        background: hsl(var(--background));
+        border: 1px solid hsl(var(--border));
+        overflow: hidden;
+        box-shadow:
+          0 30px 60px -30px rgba(0, 0, 0, 0.5),
+          0 8px 24px -12px rgba(0, 0, 0, 0.3);
+      }
+      .desktop-frame {
+        width: 100%;
+        max-width: 1180px;
+        border-radius: 16px;
+        background: hsl(var(--background));
+        border: 1px solid hsl(var(--border));
+        overflow: hidden;
+        box-shadow:
+          0 30px 60px -30px rgba(0, 0, 0, 0.5),
+          0 8px 24px -12px rgba(0, 0, 0, 0.3);
+      }
+      .desktop-chrome {
+        height: 36px;
+        background: hsl(var(--secondary));
+        border-bottom: 1px solid hsl(var(--border));
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+      }
+      .desktop-chrome .dot {
+        height: 10px;
+        width: 10px;
+        border-radius: 99px;
+        background: hsl(var(--muted));
+      }
+
+      /* Section dividers */
+      .section-num {
+        font-family: 'Geist Mono', ui-monospace;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        color: hsl(var(--muted-foreground));
+        text-transform: uppercase;
+      }
+
+      /* Code block */
+      pre.code {
+        font-family: 'Geist Mono', ui-monospace;
+        font-size: 12px;
+        line-height: 1.55;
+        background: hsl(var(--secondary));
+        border: 1px solid hsl(var(--border));
+        border-radius: 12px;
+        padding: 18px 22px;
+        max-height: 420px;
+        overflow: auto;
+        color: hsl(var(--foreground));
+        white-space: pre;
+        tab-size: 2;
+      }
+      .code .kw {
+        color: #ffb86c;
+      }
+      .code .str {
+        color: #a5d6a7;
+      }
+      .code .cmt {
+        color: hsl(var(--muted-foreground));
+        font-style: italic;
+      }
+      .code .tag {
+        color: #82aaff;
+      }
+      .code .prop {
+        color: #c792ea;
+      }
+    </style>
+  </head>
+  <body class="bg-background text-foreground">
+    <!-- ─── Top page chrome ───────────────────────────────────────── -->
+    <div class="max-w-[1400px] mx-auto px-6 lg:px-10 pt-12 pb-24">
+      <!-- Title + theme toggle -->
+      <header class="flex items-start justify-between gap-6 mb-12">
+        <div>
+          <p class="section-num mb-3">Strummy · v0.1 spec</p>
+          <h1 class="font-display text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]">
+            Chord&nbsp;Quiz
+          </h1>
+          <p class="text-muted-foreground text-base mt-4 max-w-xl leading-relaxed">
+            Five screens for a gamified daily-practice loop, designed against Strummy's existing
+            dark "Virtuoso's Studio" tokens. Real chord voicings from
+            <code class="font-mono text-xs px-1 py-0.5 rounded bg-secondary border border-border"
+              >lib/music-theory/chord-voicings.ts</code
+            >.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            id="theme-toggle"
+            class="h-9 px-3 inline-flex items-center gap-2 rounded-md border border-border text-sm hover:bg-secondary/60"
+          >
+            <span id="theme-icon">🌙</span>
+            <span id="theme-label">Dark</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Design system note -->
+      <div class="rounded-xl border border-border bg-card p-6 mb-16 grid lg:grid-cols-3 gap-6">
+        <div>
+          <p class="section-num mb-2">Type</p>
+          <p class="font-display text-2xl">Fraunces</p>
+          <p class="font-sans text-base mt-1">Geist Sans</p>
+          <p class="font-mono text-xs mt-1 text-muted-foreground">Geist Mono · tabular nums</p>
+        </div>
+        <div>
+          <p class="section-num mb-2">Palette</p>
+          <div class="flex gap-2">
+            <div
+              class="h-10 w-10 rounded-md border border-border"
+              style="background: hsl(var(--background))"
+            ></div>
+            <div
+              class="h-10 w-10 rounded-md border border-border"
+              style="background: hsl(var(--card))"
+            ></div>
+            <div class="h-10 w-10 rounded-md" style="background: hsl(var(--primary))"></div>
+            <div class="h-10 w-10 rounded-md" style="background: #10b981" title="emerald-500"></div>
+            <div class="h-10 w-10 rounded-md" style="background: #f43f5e" title="rose-500"></div>
+            <div
+              class="h-10 w-10 rounded-md border border-border"
+              style="background: hsl(var(--border))"
+            ></div>
+          </div>
+          <p class="text-xs text-muted-foreground mt-2">
+            Strummy already runs warm gold as its primary — we use it instead of amber-500 to match
+            production. Success emerald + error rose retained from the brief.
+          </p>
+        </div>
+        <div>
+          <p class="section-num mb-2">Motion</p>
+          <p class="text-sm leading-relaxed">
+            Framer Motion springs for reveal cards (stiffness 320, damping 28). Mastery rings tween
+            over 600ms. Heatmap dots stagger-fade on mount (20ms per dot). XP bar fills with
+            <code class="font-mono text-xs">layout</code> + spring.
+          </p>
+        </div>
+      </div>
+
+      <!-- ═══ SCREEN 2 (lead) ═══════════════════════════════════════ -->
+      <section class="mb-24" data-screen-label="02 In-Quiz">
+        <div class="flex items-baseline justify-between mb-3">
+          <p class="section-num">Screen 2 of 5 · The one students see hundreds of times</p>
+          <span class="font-mono text-xs text-muted-foreground">≈ 198 LOC</span>
+        </div>
+        <h2 class="font-display text-4xl font-semibold tracking-tight mb-4">In-quiz question</h2>
+        <p class="text-base text-muted-foreground max-w-3xl leading-relaxed mb-10">
+          The chord diagram is the protagonist — large, centered, on a flat card with one faint gold
+          corner-glow to feel premium without sparkle-spam. Answers sit in a 2×2 grid on mobile and
+          a stacked single column on desktop, each prefixed with a keystroke hint (1–4) so power
+          users never have to lift hands from the keys. The progress bar replaces the page header so
+          the eye lands on the chord, not on chrome. A single heart and streak icon live on the
+          top-right — visible but never shouting.
+        </p>
+
+        <!-- Mocks: mobile + desktop -->
+        <div class="grid lg:grid-cols-[390px_minmax(0,1fr)] gap-8 items-start">
+          <div class="mobile-frame mx-auto lg:mx-0">
+            <div id="m-inquiz"></div>
+          </div>
+          <div class="desktop-frame">
+            <div class="desktop-chrome">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="font-mono text-[11px] text-muted-foreground ml-2"
+                >strummy.app / dashboard / skills / chord-quiz</span
+              >
+            </div>
+            <div id="d-inquiz"></div>
+          </div>
+        </div>
+
+        <!-- Distinctive list -->
+        <div class="mt-10 grid md:grid-cols-2 gap-x-10 gap-y-3 text-sm leading-relaxed">
+          <ul class="space-y-2">
+            <li>
+              · <strong>Keystroke hints (1–4)</strong> on every answer — desktop keyboard-first;
+              never seen in generic quiz mocks.
+            </li>
+            <li>
+              · <strong>Audio button anchored to the chord card</strong> (not a separate row) —
+              reinforces "this diagram has a sound."
+            </li>
+            <li>
+              · <strong>Hint &amp; Skip are quiet tertiary text</strong> — not buttons. Keeps focus
+              on the four answers.
+            </li>
+          </ul>
+          <ul class="space-y-2">
+            <li>
+              · <strong>Hearts and streak use weighted icons</strong>, not stroked outlines — a
+              1-pixel detail that reads as game-feel.
+            </li>
+            <li>
+              · <strong>Real Strummy voicings</strong>: Dm7 frets
+              <code class="font-mono text-xs">[—, —, 0, 2, 1, 1]</code> with finger numbers, muted
+              strings ×, open strings ○.
+            </li>
+            <li>
+              · <strong>Progress bar replaces a header</strong> so the chord owns the top of the
+              screen.
+            </li>
+          </ul>
+        </div>
+
+        <details class="mt-8 rounded-xl border border-border bg-card">
+          <summary
+            class="cursor-pointer px-5 py-3 font-mono text-xs text-muted-foreground hover:text-foreground select-none"
+          >
+            ▸ ChordQuizQuestion.tsx
+          </summary>
+          <pre
+            class="code"
+          ><span class="cmt">// components/skills/ChordQuiz/ChordQuiz.Question.tsx</span>
+<span class="kw">'use client'</span>;
+
+<span class="kw">import</span> { motion, AnimatePresence } <span class="kw">from</span> <span class="str">'framer-motion'</span>;
+<span class="kw">import</span> { Heart, Flame, X, Eye, ChevronRight, Volume2, Clock } <span class="kw">from</span> <span class="str">'lucide-react'</span>;
+<span class="kw">import</span> { Button } <span class="kw">from</span> <span class="str">'@/components/ui/button'</span>;
+<span class="kw">import</span> { Progress } <span class="kw">from</span> <span class="str">'@/components/ui/progress'</span>;
+<span class="kw">import</span> { ChordDiagram } <span class="kw">from</span> <span class="str">'./ChordDiagram'</span>;
+<span class="kw">import</span> { cn } <span class="kw">from</span> <span class="str">'@/lib/utils'</span>;
+<span class="kw">import</span> { <span class="kw">type</span> QuizQuestion } <span class="kw">from</span> <span class="str">'./chord-quiz.helpers'</span>;
+
+<span class="kw">interface</span> Props {
+  question: QuizQuestion;
+  questionNumber: <span class="kw">number</span>;
+  totalQuestions: <span class="kw">number</span>;
+  hearts: <span class="kw">number</span>;
+  streak: <span class="kw">number</span>;
+  selected: <span class="kw">string</span> | <span class="kw">null</span>;
+  onSelect: (option: <span class="kw">string</span>) =&gt; <span class="kw">void</span>;
+  onClose: () =&gt; <span class="kw">void</span>;
+}
+
+<span class="kw">export function</span> ChordQuizQuestion({
+  question, questionNumber, totalQuestions, hearts, streak, selected, onSelect, onClose,
+}: Props) {
+  <span class="kw">const</span> progressPct = (questionNumber / totalQuestions) * 100;
+
+  <span class="kw">return</span> (
+    &lt;<span class="tag">div</span> <span class="prop">className</span>=<span class="str">"flex flex-col bg-background text-foreground"</span>&gt;
+      <span class="cmt">{/* Top bar: close · progress · hearts · streak */}</span>
+      &lt;<span class="tag">header</span> <span class="prop">className</span>=<span class="str">"flex items-center gap-3 px-4 lg:px-10 pt-3 pb-3 border-b border-border/50"</span>&gt;
+        &lt;<span class="tag">Button</span> <span class="prop">variant</span>=<span class="str">"ghost"</span> <span class="prop">size</span>=<span class="str">"icon"</span> <span class="prop">onClick</span>={onClose} <span class="prop">aria-label</span>=<span class="str">"Close quiz"</span>&gt;
+          &lt;<span class="tag">X</span> <span class="prop">className</span>=<span class="str">"h-5 w-5"</span> /&gt;
+        &lt;/<span class="tag">Button</span>&gt;
+        &lt;<span class="tag">Progress</span> <span class="prop">value</span>={progressPct} <span class="prop">className</span>=<span class="str">"flex-1 h-2.5"</span> /&gt;
+        &lt;<span class="tag">div</span> <span class="prop">className</span>=<span class="str">"flex items-center gap-1.5 text-rose-500"</span>&gt;
+          &lt;<span class="tag">Heart</span> <span class="prop">className</span>=<span class="str">"h-5 w-5 fill-rose-500"</span> /&gt;
+          &lt;<span class="tag">span</span> <span class="prop">className</span>=<span class="str">"font-semibold tabular-nums text-foreground"</span>&gt;{hearts}&lt;/<span class="tag">span</span>&gt;
+        &lt;/<span class="tag">div</span>&gt;
+        &lt;<span class="tag">div</span> <span class="prop">className</span>=<span class="str">"flex items-center gap-1.5 text-amber-500"</span>&gt;
+          &lt;<span class="tag">Flame</span> <span class="prop">className</span>=<span class="str">"h-5 w-5 fill-amber-500"</span> /&gt;
+          &lt;<span class="tag">span</span> <span class="prop">className</span>=<span class="str">"font-semibold tabular-nums text-foreground"</span>&gt;{streak}&lt;/<span class="tag">span</span>&gt;
+        &lt;/<span class="tag">div</span>&gt;
+      &lt;/<span class="tag">header</span>&gt;
+
+      <span class="cmt">{/* Body — single column on mobile, 2-col on lg+ */}</span>
+      &lt;<span class="tag">div</span> <span class="prop">className</span>=<span class="str">"px-4 py-6 lg:max-w-5xl lg:mx-auto lg:px-10 lg:py-12 lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center"</span>&gt;
+        &lt;<span class="tag">section</span> <span class="prop">className</span>=<span class="str">"space-y-5"</span>&gt;
+          &lt;<span class="tag">p</span> <span class="prop">className</span>=<span class="str">"text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"</span>&gt;
+            Question {questionNumber} of {totalQuestions} · Name the chord
+          &lt;/<span class="tag">p</span>&gt;
+          &lt;<span class="tag">h1</span> <span class="prop">className</span>=<span class="str">"font-display text-[26px] lg:text-4xl font-semibold tracking-tight"</span>&gt;
+            Which chord is this?
+          &lt;/<span class="tag">h1</span>&gt;
+
+          &lt;<span class="tag">div</span> <span class="prop">className</span>=<span class="str">"relative rounded-2xl border bg-card p-5 lg:p-8 overflow-hidden"</span>&gt;
+            &lt;<span class="tag">div</span> <span class="prop">className</span>=<span class="str">"pointer-events-none absolute -top-12 -right-12 w-40 h-40 rounded-full bg-primary/10 blur-2xl"</span> /&gt;
+            &lt;<span class="tag">ChordDiagram</span> <span class="prop">voicing</span>={question.voicing} <span class="prop">size</span>=<span class="str">"xl"</span> <span class="prop">hideName</span> /&gt;
+
+            &lt;<span class="tag">Button</span> <span class="prop">variant</span>=<span class="str">"secondary"</span> <span class="prop">size</span>=<span class="str">"icon"</span> <span class="prop">aria-label</span>=<span class="str">"Play chord audio"</span>
+              <span class="prop">className</span>=<span class="str">"absolute bottom-4 right-4 h-11 w-11 rounded-full"</span>&gt;
+              &lt;<span class="tag">Volume2</span> <span class="prop">className</span>=<span class="str">"h-5 w-5"</span> /&gt;
+            &lt;/<span class="tag">Button</span>&gt;
+          &lt;/<span class="tag">div</span>&gt;
+        &lt;/<span class="tag">section</span>&gt;
+
+        &lt;<span class="tag">section</span> <span class="prop">className</span>=<span class="str">"mt-6 lg:mt-0 space-y-3 lg:space-y-4"</span>&gt;
+          &lt;<span class="tag">div</span> <span class="prop">className</span>=<span class="str">"grid grid-cols-2 lg:grid-cols-1 gap-3"</span>&gt;
+            {question.options.map((opt, i) =&gt; (
+              &lt;<span class="tag">AnswerChoice</span>
+                <span class="prop">key</span>={opt}
+                <span class="prop">index</span>={i}
+                <span class="prop">label</span>={opt}
+                <span class="prop">selected</span>={selected === opt}
+                <span class="prop">onClick</span>={() =&gt; onSelect(opt)}
+              /&gt;
+            ))}
+          &lt;/<span class="tag">div</span>&gt;
+          &lt;<span class="tag">div</span> <span class="prop">className</span>=<span class="str">"flex items-center justify-between pt-2"</span>&gt;
+            &lt;<span class="tag">button</span> <span class="prop">className</span>=<span class="str">"text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"</span>&gt;
+              &lt;<span class="tag">Eye</span> <span class="prop">className</span>=<span class="str">"h-3.5 w-3.5"</span> /&gt; Use a hint
+            &lt;/<span class="tag">button</span>&gt;
+            &lt;<span class="tag">button</span> <span class="prop">className</span>=<span class="str">"text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"</span>&gt;
+              Skip &lt;<span class="tag">ChevronRight</span> <span class="prop">className</span>=<span class="str">"h-3.5 w-3.5"</span> /&gt;
+            &lt;/<span class="tag">button</span>&gt;
+          &lt;/<span class="tag">div</span>&gt;
+        &lt;/<span class="tag">section</span>&gt;
+      &lt;/<span class="tag">div</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+  );
+}
+
+<span class="cmt">// 1.6:1 tile on mobile, full-width row on desktop. Keystroke hint top-left.</span>
+<span class="kw">function</span> AnswerChoice({ index, label, selected, onClick }: {
+  index: <span class="kw">number</span>; label: <span class="kw">string</span>; selected: <span class="kw">boolean</span>; onClick: () =&gt; <span class="kw">void</span>;
+}) {
+  <span class="kw">const</span> key = [<span class="str">'1'</span>, <span class="str">'2'</span>, <span class="str">'3'</span>, <span class="str">'4'</span>][index];
+  <span class="kw">return</span> (
+    &lt;<span class="tag">button</span>
+      <span class="prop">onClick</span>={onClick}
+      <span class="prop">aria-pressed</span>={selected}
+      <span class="prop">className</span>={cn(
+        <span class="str">'group rounded-xl border border-border bg-card hover:border-primary/60 hover:bg-secondary/40 transition-colors'</span>,
+        <span class="str">'aspect-[1.6] lg:aspect-auto grid place-items-center relative'</span>,
+        <span class="str">'lg:flex lg:items-center lg:gap-4 lg:px-5 lg:py-4 lg:text-left lg:grid-cols-[auto_1fr_auto]'</span>,
+      )}
+    &gt;
+      &lt;<span class="tag">span</span> <span class="prop">className</span>=<span class="str">"absolute top-2 left-2 font-mono text-[10px] text-muted-foreground lg:static lg:h-8 lg:w-8 lg:rounded-md lg:border lg:border-border lg:bg-secondary lg:grid lg:place-items-center lg:text-xs"</span>&gt;
+        {key}
+      &lt;/<span class="tag">span</span>&gt;
+      &lt;<span class="tag">span</span> <span class="prop">className</span>=<span class="str">"font-display text-2xl lg:text-xl font-semibold tracking-tight"</span>&gt;{label}&lt;/<span class="tag">span</span>&gt;
+      &lt;<span class="tag">ChevronRight</span> <span class="prop">className</span>=<span class="str">"hidden lg:block h-4 w-4 ml-auto text-muted-foreground group-hover:text-primary"</span> /&gt;
+    &lt;/<span class="tag">button</span>&gt;
+  );
+}
+</pre>
+        </details>
+      </section>
+
+      <!-- ═══ SCREEN 1 ═══════════════════════════════════════════════ -->
+      <section class="mb-24" data-screen-label="01 Quiz Home">
+        <div class="flex items-baseline justify-between mb-3">
+          <p class="section-num">Screen 1 of 5 · The daily landing pad</p>
+          <span class="font-mono text-xs text-muted-foreground">≈ 180 LOC</span>
+        </div>
+        <h2 class="font-display text-4xl font-semibold tracking-tight mb-4">Quiz home</h2>
+        <p class="text-base text-muted-foreground max-w-3xl leading-relaxed mb-10">
+          Greets students by name and answers three questions at a glance:
+          <em>am I on a streak, how much have I done today, and what should I play next?</em>
+          Mode cards lead with the workhorse — <strong>Name the Chord</strong> — given the strongest
+          visual weight (gold border + glow), with the audio and build modes rendered as equal peers
+          below. A small "Working on" rail at the bottom previews chords the student is struggling
+          with, pulled from the same mastery model the teacher dashboard already uses.
+        </p>
+        <div class="grid lg:grid-cols-[390px_minmax(0,1fr)] gap-8 items-start">
+          <div class="mobile-frame mx-auto lg:mx-0"><div id="m-home"></div></div>
+          <div class="desktop-frame">
+            <div class="desktop-chrome">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+            <div id="d-home"></div>
+          </div>
+        </div>
+        <div class="mt-10 grid md:grid-cols-2 gap-x-10 gap-y-3 text-sm leading-relaxed">
+          <ul class="space-y-2">
+            <li>
+              · <strong>Name personalisation</strong> ("Good evening, Maya") instead of a static
+              "Welcome back" — pulled from
+              <code class="font-mono text-xs">getUserWithRolesSSR</code>.
+            </li>
+            <li>
+              · <strong>One emphasized primary mode</strong>; the others equal. Avoids the
+              3-equal-cards-with-3-different-colors pattern.
+            </li>
+            <li>
+              · <strong>"Working on" rail</strong> uses real chord diagrams as cards — not generic
+              colored tiles.
+            </li>
+          </ul>
+          <ul class="space-y-2">
+            <li>
+              · <strong>Daily-goal copy is concrete</strong>: "12 XP to keep your streak" — not
+              "Complete daily goal."
+            </li>
+            <li>
+              · <strong>Stat tiles use icon + label + value</strong>, no donut charts. Density
+              without noise.
+            </li>
+            <li>
+              · <strong>Avg. response time</strong> shown as a stat — desktop only, surfaces what
+              the algorithm cares about.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ═══ SCREEN 3 ═══════════════════════════════════════════════ -->
+      <section class="mb-24" data-screen-label="03 Feedback">
+        <div class="flex items-baseline justify-between mb-3">
+          <p class="section-num">Screen 3 of 5 · Animated reveal</p>
+          <span class="font-mono text-xs text-muted-foreground">≈ 165 LOC</span>
+        </div>
+        <h2 class="font-display text-4xl font-semibold tracking-tight mb-4">
+          Correct / incorrect overlay
+        </h2>
+        <p class="text-base text-muted-foreground max-w-3xl leading-relaxed mb-10">
+          Bottom sheet on mobile, centred dialog on desktop. The colour comes through a
+          <em>single top border</em> on the sheet, not a saturated full background — the chord
+          itself stays the focus. Both states show the answer, the diagram, the audio button, and a
+          one-line tip tying this chord to one the student already knows ("Dm7 shares a shape with
+          Dm…"). The Continue CTA is full-width and confirmed with a Space-bar hint so a streak run
+          never breaks rhythm.
+        </p>
+        <div class="grid lg:grid-cols-2 gap-8 items-start">
+          <div>
+            <p class="font-mono text-xs text-muted-foreground mb-3">→ Correct state</p>
+            <div class="mobile-frame mx-auto"><div id="m-correct"></div></div>
+          </div>
+          <div>
+            <p class="font-mono text-xs text-muted-foreground mb-3">→ Incorrect state</p>
+            <div class="mobile-frame mx-auto"><div id="m-incorrect"></div></div>
+          </div>
+        </div>
+        <div class="mt-10 grid md:grid-cols-2 gap-x-10 gap-y-3 text-sm leading-relaxed">
+          <ul class="space-y-2">
+            <li>
+              · <strong>Bottom-sheet, not modal-takeover</strong> on mobile — feedback feels native,
+              the prior question is still visible.
+            </li>
+            <li>
+              · <strong>Single coloured top border</strong> (emerald or rose, 2px) for state — not a
+              tinted background.
+            </li>
+            <li>
+              · <strong>The tip line ties this chord to a known one</strong> — pedagogically useful,
+              not generic encouragement.
+            </li>
+          </ul>
+          <ul class="space-y-2">
+            <li>
+              · <strong>Audio replay anchored to the answer</strong>, not a separate "Listen again"
+              button.
+            </li>
+            <li>
+              · <strong>"You picked Am7"</strong> shown explicitly on incorrect — students need to
+              see their mistake.
+            </li>
+            <li>
+              · <strong>Spacebar shortcut visible</strong> so power users can chain answers without
+              a mouse.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ═══ SCREEN 4 ═══════════════════════════════════════════════ -->
+      <section class="mb-24" data-screen-label="04 Session Summary">
+        <div class="flex items-baseline justify-between mb-3">
+          <p class="section-num">Screen 4 of 5 · End of session</p>
+          <span class="font-mono text-xs text-muted-foreground">≈ 195 LOC</span>
+        </div>
+        <h2 class="font-display text-4xl font-semibold tracking-tight mb-4">Session summary</h2>
+        <p class="text-base text-muted-foreground max-w-3xl leading-relaxed mb-10">
+          The accuracy number is enormous and serif — this is the dopamine moment. Beneath it: the
+          question-by-question dot strip (a small honest receipt), then two mastery cards showing
+          <em>chords moving up</em> and <em>chords moving down</em>. The "next quiz in" timer
+          creates the spaced-repetition habit without nagging — and the Notify-me opt-in is right
+          there, not buried in settings.
+        </p>
+        <div class="grid lg:grid-cols-[390px_minmax(0,1fr)] gap-8 items-start">
+          <div class="mobile-frame mx-auto lg:mx-0"><div id="m-summary"></div></div>
+          <div class="desktop-frame">
+            <div class="desktop-chrome">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+            <div id="d-summary"></div>
+          </div>
+        </div>
+        <div class="mt-10 grid md:grid-cols-2 gap-x-10 gap-y-3 text-sm leading-relaxed">
+          <ul class="space-y-2">
+            <li>
+              · <strong>Accuracy as oversized serif numeral</strong> — Fraunces at 140px, hits like
+              an album cover.
+            </li>
+            <li>
+              · <strong>Per-question receipt</strong> (12 coloured dots) — students see exactly
+              where they slipped.
+            </li>
+            <li>
+              · <strong>Up/down mastery</strong> cards — both directions celebrated, not just wins.
+            </li>
+          </ul>
+          <ul class="space-y-2">
+            <li>
+              · <strong>"Next quiz in 3h 24m"</strong> reinforces spaced repetition without a streak
+              guilt-trip.
+            </li>
+            <li>
+              · <strong>Notify-me inline opt-in</strong> turns this screen into a retention loop.
+            </li>
+            <li>
+              · <strong>No confetti, no mascot.</strong> The gold number does all the celebrating.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ═══ SCREEN 5 ═══════════════════════════════════════════════ -->
+      <section class="mb-12" data-screen-label="05 History">
+        <div class="flex items-baseline justify-between mb-3">
+          <p class="section-num">Screen 5 of 5 · The long game</p>
+          <span class="font-mono text-xs text-muted-foreground">≈ 190 LOC</span>
+        </div>
+        <h2 class="font-display text-4xl font-semibold tracking-tight mb-4">
+          History &amp; progress
+        </h2>
+        <p class="text-base text-muted-foreground max-w-3xl leading-relaxed mb-10">
+          Tabs for <em>Progress</em>, <em>Chords</em> and <em>Leaderboard</em> (the last toggleable
+          per-studio so teachers can flip it off for younger cohorts). The heatmap uses the
+          primary-gold tints so it tonally matches the rest of the app instead of jumping out as a
+          separate widget. Mastery rings replace the more obvious bar chart — each one is tappable
+          to drill into per-chord history.
+        </p>
+        <div class="grid lg:grid-cols-[390px_minmax(0,1fr)] gap-8 items-start">
+          <div class="mobile-frame mx-auto lg:mx-0"><div id="m-history"></div></div>
+          <div class="desktop-frame">
+            <div class="desktop-chrome">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+            <div id="d-history"></div>
+          </div>
+        </div>
+        <div class="mt-10 grid md:grid-cols-2 gap-x-10 gap-y-3 text-sm leading-relaxed">
+          <ul class="space-y-2">
+            <li>
+              · <strong>Heatmap uses the brand gold</strong> (5 alpha steps), not GitHub green —
+              sits inside the design system.
+            </li>
+            <li>
+              · <strong>Mastery rings, not bars</strong> — easier to scan a dozen at a glance, each
+              is a tap target.
+            </li>
+            <li>
+              · <strong>Filters live next to the data</strong> (Open / Barre), not in a settings
+              drawer.
+            </li>
+          </ul>
+          <ul class="space-y-2">
+            <li>
+              · <strong>Leaderboard is opt-in</strong> with a per-studio toggle — respects
+              classrooms that don't want competition.
+            </li>
+            <li>
+              · <strong>"YOU" marker uses gold tint</strong>, not a coloured row — you find yourself
+              without losing context.
+            </li>
+            <li>
+              · <strong>Real student names</strong> (Priya, Maya, Jordan, Sam, Lena) instead of
+              "Player 1".
+            </li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <!-- ─── Theme toggle ──────────────────────────────────────────── -->
+    <script>
+      const root = document.documentElement;
+      const btn = document.getElementById('theme-toggle');
+      const icon = document.getElementById('theme-icon');
+      const label = document.getElementById('theme-label');
+      const update = () => {
+        const dark = root.classList.contains('dark');
+        icon.textContent = dark ? '🌙' : '☀️';
+        label.textContent = dark ? 'Dark' : 'Light';
+      };
+      btn.addEventListener('click', () => {
+        root.classList.toggle('dark');
+        localStorage.setItem(
+          'chord-quiz-theme',
+          root.classList.contains('dark') ? 'dark' : 'light'
+        );
+        update();
+      });
+      const saved = localStorage.getItem('chord-quiz-theme');
+      if (saved === 'light') root.classList.remove('dark');
+      update();
+    </script>
+
+    <!-- ─── Mount React screens ───────────────────────────────────── -->
+    <script type="text/babel" src="screens/shared.jsx"></script>
+    <script type="text/babel" src="screens/in-quiz.jsx"></script>
+    <script type="text/babel" src="screens/quiz-home.jsx"></script>
+    <script type="text/babel" src="screens/feedback.jsx"></script>
+    <script type="text/babel" src="screens/summary.jsx"></script>
+    <script type="text/babel" src="screens/history.jsx"></script>
+    <script type="text/babel">
+      function mount(id, el) {
+        const node = document.getElementById(id);
+        if (node) ReactDOM.createRoot(node).render(el);
+      }
+      mount('m-inquiz', <InQuizScreen density="mobile" />);
+      mount('d-inquiz', <InQuizScreen density="desktop" />);
+      mount('m-home', <QuizHomeScreen density="mobile" />);
+      mount('d-home', <QuizHomeScreen density="desktop" />);
+      mount('m-correct', <FeedbackOverlay density="mobile" state="correct" />);
+      mount('m-incorrect', <FeedbackOverlay density="mobile" state="incorrect" />);
+      mount('m-summary', <SummaryScreen density="mobile" />);
+      mount('d-summary', <SummaryScreen density="desktop" />);
+      mount('m-history', <HistoryScreen density="mobile" />);
+      mount('d-history', <HistoryScreen density="desktop" />);
+    </script>
+  </body>
+</html>

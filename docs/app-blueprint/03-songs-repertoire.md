@@ -1,6 +1,6 @@
 ---
 created: 2026-07-18
-updated: 2026-07-18
+updated: 2026-07-20
 domain: Songs & Repertoire
 tables:
   [
@@ -210,5 +210,7 @@ Journey catalog: `reference/E2E_JOURNEYS.md` §A3 (teacher songs), §B3 (student
 - Actions: `app/actions/{songs,song-edit,song-form,repertoire,self-rating,song-requests,song-of-the-week,import-csv-songs}.ts`
 - API: `app/api/song/`, `app/api/spotify/`, `app/api/student/song-status-history/`
 - UI: `components/songs/editorial/`, `components/repertoire/editorial/`
+- Catalog seed: [reference/TIKTOK_CHANNEL_DATA.md](reference/TIKTOK_CHANNEL_DATA.md) — 23 distinct
+  covers from the owner's TikTok become `songs` rows with `tiktok` links (via doc-09 CNT-4)
 - Superseded: `docs/specs/01-songs.md` (deleted 2026-07-18; git history), `docs/specs/05-repertoire-practice.md` (deleted 2026-07-18; git history) (repertoire half)
 - Domain language: `CONTEXT.md` (Song Progress two-path model) · RLS: `docs/app-blueprint/reference/ARCHITECTURE.md`

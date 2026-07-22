@@ -10,6 +10,18 @@ export type LessonRow = {
   studentId: string;
   studentName: string | null;
   studentEmail: string | null;
+  teacherName: string | null;
+  teacherEmail: string | null;
+};
+
+/**
+ * Who is looking at the lessons list. Admins see every teacher's lessons;
+ * teachers see the ones they teach; students see the ones they attend.
+ */
+export type LessonViewer = {
+  isAdmin: boolean;
+  isTeacher: boolean;
+  isStudent: boolean;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -43,23 +55,53 @@ export type LessonsFilters = {
   sort?: 'newest' | 'oldest';
 };
 
+const LESSON_SELECT =
+  'id, scheduled_at, status, title, teacher_id, student_id, student:profiles!lessons_student_id_fkey(id, full_name, email), teacher:profiles!lessons_teacher_id_fkey(id, full_name, email)';
+
+type RawLessonRow = Record<string, unknown> & {
+  student?:
+    { full_name?: string; email?: string } | { full_name?: string; email?: string }[] | null;
+  teacher?:
+    { full_name?: string; email?: string } | { full_name?: string; email?: string }[] | null;
+};
+
+const mapLessonRow = (row: RawLessonRow): LessonRow => {
+  const student = Array.isArray(row.student) ? row.student[0] : row.student;
+  const teacher = Array.isArray(row.teacher) ? row.teacher[0] : row.teacher;
+  return {
+    id: row.id as string,
+    scheduledAt: row.scheduled_at as string,
+    status: row.status as string,
+    title: (row.title as string | null) ?? null,
+    teacherId: row.teacher_id as string,
+    studentId: row.student_id as string,
+    studentName: student?.full_name ?? null,
+    studentEmail: student?.email ?? null,
+    teacherName: teacher?.full_name ?? null,
+    teacherEmail: teacher?.email ?? null,
+  };
+};
+
+/** Column a non-admin viewer is scoped to (null = admin, sees every lesson). */
+const scopeColumn = (viewer: LessonViewer): 'teacher_id' | 'student_id' | null =>
+  viewer.isAdmin ? null : viewer.isTeacher ? 'teacher_id' : 'student_id';
+
 export async function getRecentLessons(
   userId: string,
-  isStudent: boolean,
+  viewer: LessonViewer,
   filters: LessonsFilters = {},
   limit = 60
 ): Promise<LessonRow[]> {
   const supabase = await createClient();
 
-  const filterColumn = isStudent ? 'student_id' : 'teacher_id';
   let query = supabase
     .from('lessons')
-    .select(
-      'id, scheduled_at, status, title, teacher_id, student_id, student:profiles!lessons_student_id_fkey(id, full_name, email)'
-    )
-    .eq(filterColumn, userId)
+    .select(LESSON_SELECT)
     .is('deleted_at', null)
     .order('scheduled_at', { ascending: filters.sort === 'oldest' });
+
+  const ownerColumn = scopeColumn(viewer);
+  if (ownerColumn) query = query.eq(ownerColumn, userId);
 
   if (filters.statuses && filters.statuses.length > 0) {
     query = query.in('status', filters.statuses);
@@ -75,19 +117,44 @@ export async function getRecentLessons(
     return [];
   }
 
-  return (data ?? []).map((row) => {
-    const student = Array.isArray(row.student) ? row.student[0] : row.student;
-    return {
-      id: row.id as string,
-      scheduledAt: row.scheduled_at as string,
-      status: row.status as string,
-      title: row.title as string | null,
-      teacherId: row.teacher_id as string,
-      studentId: row.student_id as string,
-      studentName: (student?.full_name as string) ?? null,
-      studentEmail: (student?.email as string) ?? null,
-    };
-  });
+  return (data ?? []).map((row) => mapLessonRow(row as RawLessonRow));
+}
+
+/**
+ * Lessons whose `scheduled_at` falls within [startISO, endISO). Role-scoped like
+ * getRecentLessons. Used by the calendar month grid, so ordered soonest-first.
+ */
+export async function getLessonsInRange(
+  userId: string,
+  viewer: LessonViewer,
+  startISO: string,
+  endISO: string,
+  limit = 500
+): Promise<LessonRow[]> {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from('lessons')
+    .select(LESSON_SELECT)
+    .is('deleted_at', null)
+    .gte('scheduled_at', startISO)
+    .lt('scheduled_at', endISO)
+    .order('scheduled_at', { ascending: true });
+
+  const ownerColumn = scopeColumn(viewer);
+  if (ownerColumn) query = query.eq(ownerColumn, userId);
+
+  const { data, error } = await query.limit(limit);
+
+  if (error) {
+    logger.warn('[lessons-queries] lessons in range error', {
+      error: error.message,
+      code: error.code,
+    });
+    return [];
+  }
+
+  return (data ?? []).map((row) => mapLessonRow(row as RawLessonRow));
 }
 
 export type LessonsBreakdown = {

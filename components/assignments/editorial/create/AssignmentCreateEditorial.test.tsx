@@ -1,11 +1,16 @@
 /**
  * Verifies AssignmentAI is wired into the editorial assignment form (the
  * editorial redesign had orphaned it). Mocks the server actions + useAIStream.
+ *
+ * AssignmentAI is hidden in production behind SHOW_AI_FEATURES; this suite
+ * forces the flag on so the wiring guard stays meaningful for when the feature
+ * is re-enabled.
  */
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { AssignmentCreateEditorial } from '@/components/assignments/editorial/create/AssignmentCreateEditorial';
 
+jest.mock('@/lib/config/features', () => ({ SHOW_AI_FEATURES: true }));
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn(), refresh: jest.fn() }),
 }));

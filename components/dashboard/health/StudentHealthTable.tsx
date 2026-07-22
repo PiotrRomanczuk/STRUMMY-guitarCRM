@@ -52,14 +52,16 @@ export function StudentHealthTable({ students, onSendMessage }: StudentHealthTab
         {students.map((student) => {
           const healthColors = getHealthStatusColor(student.healthStatus);
           return (
-            <div
-              key={student.id}
-              className="bg-card rounded-xl border border-border p-4 space-y-4"
-            >
+            <div key={student.id} className="bg-card rounded-xl border border-border p-4 space-y-4">
               {/* Student Info & Health Score */}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-foreground truncate">{student.name}</p>
+                  <Link
+                    href={`/dashboard/users/${student.id}`}
+                    className="block font-medium text-foreground truncate hover:underline"
+                  >
+                    {student.name}
+                  </Link>
                   <p className="text-xs text-muted-foreground truncate">{student.email}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -103,12 +105,7 @@ export function StudentHealthTable({ students, onSendMessage }: StudentHealthTab
 
                 <div className="flex gap-1">
                   <Link href={`/dashboard/lessons?student=${student.id}`}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      title="Schedule Lesson"
-                    >
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Schedule Lesson">
                       <Calendar className="h-4 w-4" />
                       <span className="sr-only">Schedule Lesson</span>
                     </Button>
@@ -123,7 +120,7 @@ export function StudentHealthTable({ students, onSendMessage }: StudentHealthTab
                     <Mail className="h-4 w-4" />
                     <span className="sr-only">Send Message</span>
                   </Button>
-                  <Link href={`/dashboard/users?id=${student.id}`}>
+                  <Link href={`/dashboard/users/${student.id}`}>
                     <Button variant="ghost" size="icon" className="h-8 w-8" title="View Profile">
                       <User className="h-4 w-4" />
                       <span className="sr-only">View Profile</span>
@@ -153,10 +150,7 @@ export function StudentHealthTable({ students, onSendMessage }: StudentHealthTab
             {students.map((student) => {
               const healthColors = getHealthStatusColor(student.healthStatus);
               return (
-                <TableRow
-                  key={student.id}
-                  className="relative hover:bg-muted/50 transition-colors"
-                >
+                <TableRow key={student.id} className="relative hover:bg-muted/50 transition-colors">
                   <TableCell className="relative font-medium">
                     <Link
                       href={`/dashboard/users/${student.id}`}
@@ -198,7 +192,10 @@ export function StudentHealthTable({ students, onSendMessage }: StudentHealthTab
                       <span className="text-xs text-muted-foreground">None</span>
                     )}
                   </TableCell>
-                  <TableCell className="relative z-10 text-right" onClick={(e) => e.stopPropagation()}>
+                  <TableCell
+                    className="relative z-10 text-right"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div className="flex justify-end gap-1">
                       <Link href={`/dashboard/lessons?student=${student.id}`}>
                         <Button
@@ -219,7 +216,7 @@ export function StudentHealthTable({ students, onSendMessage }: StudentHealthTab
                       >
                         <Mail className="h-4 w-4" />
                       </Button>
-                      <Link href={`/dashboard/users?id=${student.id}`}>
+                      <Link href={`/dashboard/users/${student.id}`}>
                         <Button
                           variant="ghost"
                           size="icon"

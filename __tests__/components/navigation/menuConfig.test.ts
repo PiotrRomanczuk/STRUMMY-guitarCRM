@@ -29,7 +29,7 @@ const TEACHER_ITEMS = [
 
 const STUDENT_ITEMS = ['my-lessons', 'my-songs', 'my-assignments', 'repertoire', 'practice'];
 
-/** Stub pages and empty surfaces that must never appear in nav. */
+/** Stub pages, parked tools, and AI surfaces that must not appear in nav. */
 const HIDDEN = [
   'theory',
   'health',
@@ -39,6 +39,10 @@ const HIDDEN = [
   'cohorts',
   'logs',
   'my-stats',
+  'calendar',
+  'fretboard',
+  'ai',
+  'ai-chat',
 ];
 
 describe('menuConfig — sidebar scope', () => {

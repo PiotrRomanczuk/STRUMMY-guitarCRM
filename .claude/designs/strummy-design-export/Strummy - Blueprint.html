@@ -1,0 +1,1546 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Strummy — Blueprint</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper: #f4f4f1;
+        --paper-2: #fbfbf9;
+        --card: #ffffff;
+        --ink: #14161a;
+        --ink-2: #2b2f36;
+        --ink-3: #565b64;
+        --ink-4: #898e97;
+        --line: #deded8;
+        --line-2: #ebebe5;
+        --grid: rgba(20, 24, 28, 0.045);
+        --blue: oklch(0.5 0.115 256);
+        --blue-2: oklch(0.42 0.125 258);
+        --blue-soft: oklch(0.5 0.115 256 / 0.09);
+        --blue-line: oklch(0.5 0.115 256 / 0.28);
+        --red: oklch(0.56 0.17 25);
+        --green: oklch(0.5 0.11 150);
+
+        --serif: 'Spectral', Georgia, serif;
+        --sans: 'Geist', system-ui, sans-serif;
+        --mono: 'IBM Plex Mono', ui-monospace, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        line-height: 1.5;
+        background-image:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 44px;
+      }
+
+      .tag {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--blue);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .tag .br {
+        color: var(--ink-4);
+      }
+
+      /* ── Nav ───────────────────────────────────────── */
+      nav.top {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: color-mix(in oklab, var(--paper) 86%, transparent);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+      }
+      nav.top .row {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        height: 66px;
+      }
+      .brand {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: 23px;
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+      }
+      .brand .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--blue);
+        align-self: flex-end;
+        margin-bottom: 4px;
+      }
+      nav.top .links {
+        display: flex;
+        gap: 24px;
+      }
+      nav.top .links a {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        color: var(--ink-3);
+        transition: color 0.15s;
+      }
+      nav.top .links a:hover {
+        color: var(--ink);
+      }
+      .spacer {
+        flex: 1;
+      }
+      .btn {
+        font-family: var(--sans);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        border-radius: 7px;
+        padding: 9px 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid transparent;
+        transition:
+          transform 0.12s,
+          background 0.15s,
+          border-color 0.15s;
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn-primary {
+        background: var(--blue);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--blue-2);
+      }
+      .btn-ghost {
+        border-color: var(--line);
+        color: var(--ink-2);
+        background: var(--card);
+      }
+      .btn-ghost:hover {
+        border-color: var(--ink-4);
+      }
+      .btn-lg {
+        padding: 13px 22px;
+        font-size: 15px;
+        border-radius: 8px;
+      }
+      .btn svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      /* ── Hero ──────────────────────────────────────── */
+      .hero {
+        position: relative;
+        padding: 78px 0 92px;
+      }
+      .hero .grid {
+        display: grid;
+        grid-template-columns: 1fr 1.08fr;
+        gap: 60px;
+        align-items: center;
+      }
+      .hero h1 {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: 64px;
+        line-height: 1.04;
+        letter-spacing: -0.02em;
+        margin: 26px 0 0;
+        text-wrap: balance;
+      }
+      .hero h1 em {
+        font-style: italic;
+        color: var(--blue);
+      }
+      .hero .sub {
+        font-size: 18px;
+        line-height: 1.62;
+        color: var(--ink-3);
+        max-width: 470px;
+        margin: 24px 0 0;
+        text-wrap: pretty;
+      }
+      .hero .cta {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+      }
+      .hero .trust {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin-top: 30px;
+        color: var(--ink-4);
+        font-size: 13px;
+      }
+      .stack {
+        display: flex;
+      }
+      .stack .av {
+        width: 29px;
+        height: 29px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 10px;
+        font-weight: 600;
+        color: #fff;
+        border: 2px solid var(--paper);
+        margin-left: -9px;
+      }
+      .stack .av:first-child {
+        margin-left: 0;
+      }
+
+      /* coordinate frame around mock */
+      .blueprint {
+        position: relative;
+        padding: 30px 30px 14px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: color-mix(in oklab, var(--paper-2) 70%, transparent);
+      }
+      .blueprint::before,
+      .blueprint::after {
+        content: '';
+        position: absolute;
+        background: var(--blue-line);
+      }
+      .corner {
+        position: absolute;
+        width: 9px;
+        height: 9px;
+        border: 1px solid var(--blue);
+        background: var(--paper-2);
+      }
+      .corner.tl {
+        top: -5px;
+        left: -5px;
+      }
+      .corner.tr {
+        top: -5px;
+        right: -5px;
+      }
+      .corner.bl {
+        bottom: -5px;
+        left: -5px;
+      }
+      .corner.br {
+        bottom: -5px;
+        right: -5px;
+      }
+      .ruler {
+        position: absolute;
+        top: 8px;
+        left: 30px;
+        right: 30px;
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 8px;
+        color: var(--ink-4);
+      }
+      .ruler span {
+        position: relative;
+      }
+      .ruler span::after {
+        content: '';
+        position: absolute;
+        top: 11px;
+        left: 50%;
+        width: 1px;
+        height: 5px;
+        background: var(--line);
+      }
+
+      /* ── Mock window ───────────────────────────────── */
+      .mock {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 24px 50px -28px rgba(20, 24, 28, 0.3);
+      }
+      .mock .bar {
+        height: 38px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 13px;
+        border-bottom: 1px solid var(--line-2);
+        background: var(--paper-2);
+      }
+      .mock .bar .d {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+      }
+      .mock .bar .url {
+        margin: 0 auto;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--ink-4);
+      }
+      .mock .body {
+        padding: 18px 20px 22px;
+      }
+      .mock .greet {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-4);
+      }
+      .mock .greet b {
+        display: block;
+        font-family: var(--serif);
+        font-size: 22px;
+        font-weight: 500;
+        color: var(--ink);
+        text-transform: none;
+        letter-spacing: -0.01em;
+        margin-top: 5px;
+      }
+      .mock .greet b em {
+        font-style: italic;
+        color: var(--blue);
+      }
+      .mock .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin: 16px 0;
+      }
+      .mock .stat {
+        border: 1px solid var(--line-2);
+        border-radius: 7px;
+        padding: 11px 13px;
+      }
+      .mock .stat .l {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-4);
+      }
+      .mock .stat .v {
+        font-family: var(--serif);
+        font-size: 27px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        margin-top: 5px;
+      }
+      .mock .stat .u {
+        font-size: 9.5px;
+        color: var(--ink-4);
+        margin-top: 3px;
+      }
+      .agenda {
+        border: 1px solid var(--line-2);
+        border-radius: 8px;
+        padding: 4px 15px 7px;
+      }
+      .agenda .hd {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 10px 0 8px;
+        border-bottom: 1px solid var(--line-2);
+      }
+      .agenda .hd .t {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-4);
+      }
+      .agenda .hd .n {
+        font-family: var(--serif);
+        font-size: 15px;
+        font-weight: 500;
+        margin-top: 3px;
+      }
+      .agenda .hd .link {
+        font-size: 11px;
+        color: var(--ink-4);
+      }
+      .row-l {
+        display: grid;
+        grid-template-columns: 48px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line-2);
+      }
+      .row-l:last-child {
+        border-bottom: none;
+      }
+      .row-l .time b {
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .row-l .time span {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--ink-4);
+        display: block;
+      }
+      .row-l .who {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .av-s {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 9px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .row-l .who .nm {
+        font-size: 12.5px;
+        font-weight: 500;
+      }
+      .row-l .song {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 4px;
+        padding-left: 30px;
+      }
+      .key {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--blue);
+        border: 1px solid var(--blue-line);
+        border-radius: 3px;
+        padding: 1px 5px;
+      }
+      .row-l .song .ti {
+        font-family: var(--serif);
+        font-size: 12px;
+        font-style: italic;
+        color: var(--ink-2);
+      }
+      .start {
+        font-size: 11px;
+        color: var(--ink-2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 5px 11px;
+      }
+
+      /* ── Section ───────────────────────────────────── */
+      section {
+        padding: 100px 0;
+      }
+      .sec-head {
+        max-width: 700px;
+      }
+      .sec-head.center {
+        margin: 0 auto;
+        text-align: center;
+      }
+      .sec-head.center .tag {
+        justify-content: center;
+      }
+      h2.disp {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: 46px;
+        line-height: 1.07;
+        letter-spacing: -0.02em;
+        margin: 16px 0 0;
+        text-wrap: balance;
+      }
+      h2.disp em {
+        font-style: italic;
+        color: var(--blue);
+      }
+      .lede {
+        font-size: 17px;
+        line-height: 1.62;
+        color: var(--ink-3);
+        margin-top: 18px;
+        text-wrap: pretty;
+      }
+
+      .band {
+        background: var(--paper-2);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        background-image: none;
+      }
+
+      /* ── How it works ──────────────────────────────── */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        margin-top: 56px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--card);
+      }
+      .step {
+        padding: 30px 28px 32px;
+        border-left: 1px solid var(--line);
+        position: relative;
+      }
+      .step:first-child {
+        border-left: none;
+      }
+      .step .n {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--blue);
+        letter-spacing: 0.12em;
+      }
+      .step .n::before {
+        content: 'STEP ';
+        color: var(--ink-4);
+      }
+      .step h3 {
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: 22px;
+        letter-spacing: -0.01em;
+        margin: 14px 0 0;
+      }
+      .step p {
+        font-size: 14.5px;
+        color: var(--ink-3);
+        margin: 11px 0 0;
+        line-height: 1.6;
+        text-wrap: pretty;
+      }
+      .step .chip {
+        margin-top: 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--ink-2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 7px 11px;
+        background: var(--paper-2);
+      }
+      .step .chip .gd {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--blue);
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 16px;
+        gap: 3px 0;
+      }
+      .flow .s {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        color: var(--ink-3);
+        padding: 4px 8px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: var(--paper-2);
+        white-space: nowrap;
+      }
+      .flow .s.on {
+        color: #fff;
+        background: var(--blue);
+        border-color: var(--blue);
+      }
+      .flow .ar {
+        color: var(--ink-4);
+        margin: 0 5px;
+        font-size: 10px;
+      }
+
+      /* ── Features ──────────────────────────────────── */
+      .feat {
+        margin-top: 56px;
+        border-top: 1px solid var(--line);
+      }
+      .frow {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 56px;
+        align-items: center;
+        padding: 60px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .frow .idx {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--ink-4);
+        letter-spacing: 0.1em;
+      }
+      .frow .k {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--blue);
+        margin-top: 10px;
+      }
+      .frow h3 {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: 32px;
+        line-height: 1.12;
+        letter-spacing: -0.02em;
+        margin: 12px 0 0;
+        max-width: 420px;
+      }
+      .frow p {
+        font-size: 15.5px;
+        color: var(--ink-3);
+        line-height: 1.62;
+        margin: 14px 0 0;
+        max-width: 440px;
+        text-wrap: pretty;
+      }
+      .frow ul {
+        list-style: none;
+        margin: 20px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+      .frow li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        color: var(--ink-2);
+      }
+      .frow li .tick {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        background: var(--blue-soft);
+        color: var(--blue);
+        display: grid;
+        place-items: center;
+        flex: 0 0 16px;
+      }
+      .frow li .tick svg {
+        width: 9px;
+        height: 9px;
+      }
+      .frow .visual {
+        position: relative;
+      }
+      .frow.flip .copy {
+        order: 2;
+      }
+      .frow.flip .visual {
+        order: 1;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--card);
+        padding: 18px;
+        box-shadow: 0 16px 36px -26px rgba(20, 24, 28, 0.25);
+      }
+      .panel .cap {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-4);
+        margin-bottom: 12px;
+      }
+
+      /* repertoire list */
+      .lib {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .lib .s {
+        display: grid;
+        grid-template-columns: 34px 1fr auto auto;
+        gap: 11px;
+        align-items: center;
+        border: 1px solid var(--line-2);
+        border-radius: 8px;
+        padding: 8px 11px;
+      }
+      .lib .art {
+        width: 34px;
+        height: 34px;
+        border-radius: 5px;
+        background: linear-gradient(135deg, var(--blue), #c9cdd6);
+      }
+      .lib .ti {
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .lib .au {
+        font-size: 10.5px;
+        color: var(--ink-4);
+      }
+      .lib .diff {
+        font-family: var(--mono);
+        font-size: 8.5px;
+        color: var(--ink-2);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 2px 6px;
+      }
+
+      /* fretboard schematic */
+      .fret {
+      }
+      .fret .board {
+        display: grid;
+        grid-template-columns: 34px repeat(6, 1fr);
+      }
+      .fret .lbl {
+        font-family: var(--mono);
+        font-size: 9px;
+        color: var(--ink-4);
+        display: grid;
+        place-items: center;
+        height: 34px;
+      }
+      .fret .hh {
+        font-family: var(--mono);
+        font-size: 8px;
+        color: var(--ink-4);
+        display: grid;
+        place-items: center;
+        padding-bottom: 6px;
+      }
+      .fret .cell {
+        height: 34px;
+        border-left: 1px solid var(--line);
+        border-bottom: 1px solid var(--line-2);
+        position: relative;
+      }
+      .fret .cell.open {
+        border-left: none;
+      }
+      .fret .dot {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--blue);
+      }
+      .fret .dot.b {
+        background: var(--card);
+        border: 1px solid var(--blue);
+      }
+
+      /* roman numeral progression */
+      .roman {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        margin-top: 4px;
+      }
+      .roman .col {
+        flex: 1;
+        text-align: center;
+      }
+      .roman .chord {
+        font-family: var(--serif);
+        font-size: 18px;
+        color: var(--ink);
+      }
+      .roman .rn {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--blue);
+        margin-top: 6px;
+      }
+      .roman .bar {
+        height: 1px;
+        background: var(--line);
+        margin: 8px 0 0;
+      }
+      .arch {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--ink-3);
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line-2);
+      }
+      .arch b {
+        color: var(--blue);
+      }
+
+      /* AI note */
+      .note {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 14px;
+        color: var(--ink-2);
+        line-height: 1.6;
+      }
+      .note .hl {
+        color: var(--blue);
+        font-style: normal;
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+
+      /* ── Final ─────────────────────────────────────── */
+      .final {
+        text-align: center;
+      }
+      .final h2 {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: 56px;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        margin: 18px 0 0;
+      }
+      .final h2 em {
+        font-style: italic;
+        color: var(--blue);
+      }
+      .final .cta {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 32px;
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 38px 0;
+      }
+      footer .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      footer .mono {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--ink-4);
+      }
+
+      @media (max-width: 940px) {
+        .hero .grid,
+        .frow,
+        .frow.flip .copy,
+        .frow.flip .visual {
+          grid-template-columns: 1fr;
+          order: 0;
+        }
+        .steps {
+          grid-template-columns: 1fr;
+        }
+        .step {
+          border-left: none;
+          border-top: 1px solid var(--line);
+        }
+        .step:first-child {
+          border-top: none;
+        }
+        .hero h1 {
+          font-size: 48px;
+        }
+        nav.top .links {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="top">
+      <div class="wrap row">
+        <div class="brand">Strummy<span class="dot"></span></div>
+        <div class="links">
+          <a href="#how">How it works</a>
+          <a href="#features">Features</a>
+          <a href="#">Changelog</a>
+        </div>
+        <div class="spacer"></div>
+        <a href="#" class="btn btn-ghost">Try the demo</a>
+        <a href="#" class="btn btn-primary">Get started — free</a>
+      </div>
+    </nav>
+
+    <!-- ── HERO ───────────────────────────────────────── -->
+    <header class="hero">
+      <div class="wrap grid">
+        <div>
+          <span class="tag">Guitar teacher CRM <span class="br">/ live beta</span></span>
+          <h1>A single source of truth for <em>every student</em> you teach.</h1>
+          <p class="sub">
+            Repertoire, lesson history and progress — one canonical record per student, kept in step
+            automatically. So the lesson starts with answers, not “where were we?”
+          </p>
+          <div class="cta">
+            <a href="#" class="btn btn-primary btn-lg"
+              >Start free
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+              >
+                <path d="M5 12h14M13 5l7 7-7 7"></path>
+              </svg>
+            </a>
+            <a href="#" class="btn btn-ghost btn-lg">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="6,4 20,12 6,20"></polygon>
+              </svg>
+              Watch the tour
+            </a>
+          </div>
+          <div class="trust">
+            <div class="stack">
+              <div class="av" style="background: #c89523">EJ</div>
+              <div class="av" style="background: #b84a3a">CR</div>
+              <div class="av" style="background: #3a7d3a">LP</div>
+              <div class="av" style="background: #6d4fa0">MP</div>
+            </div>
+            <span
+              >In daily use by
+              <b style="color: var(--ink-3)">20–30 teachers &amp; students</b>.</span
+            >
+          </div>
+        </div>
+
+        <div class="blueprint">
+          <span class="corner tl"></span><span class="corner tr"></span
+          ><span class="corner bl"></span><span class="corner br"></span>
+          <div class="ruler">
+            <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+          </div>
+          <div class="mock">
+            <div class="bar">
+              <span class="d" style="background: #e0726a"></span>
+              <span class="d" style="background: #e6b64b"></span>
+              <span class="d" style="background: #7abf7a"></span>
+              <span class="url">app.strummy.app/dashboard</span>
+            </div>
+            <div class="body">
+              <div class="greet">
+                Thursday · April 23
+                <b>Good afternoon, <em>Sarah</em>.</b>
+              </div>
+              <div class="stats">
+                <div class="stat">
+                  <div class="l">Lessons today</div>
+                  <div class="v">3</div>
+                  <div class="u">2h 0m total</div>
+                </div>
+                <div class="stat">
+                  <div class="l">Active students</div>
+                  <div class="v">27</div>
+                  <div class="u">of 31 this week</div>
+                </div>
+                <div class="stat">
+                  <div class="l">Studio streak</div>
+                  <div class="v">11</div>
+                  <div class="u">days on average</div>
+                </div>
+              </div>
+              <div class="agenda">
+                <div class="hd">
+                  <div>
+                    <div class="t">Today's agenda</div>
+                    <div class="n">3 lessons · 2h 0m</div>
+                  </div>
+                  <div class="link">Open calendar →</div>
+                </div>
+                <div class="row-l">
+                  <div class="time"><b>4:00p</b><span>45m</span></div>
+                  <div>
+                    <div class="who">
+                      <span class="av-s" style="background: #c89523">EJ</span
+                      ><span class="nm">Emma Johnson</span>
+                    </div>
+                    <div class="song">
+                      <span class="key">G</span><span class="ti">Blackbird</span>
+                    </div>
+                  </div>
+                  <div class="start">Start</div>
+                </div>
+                <div class="row-l">
+                  <div class="time"><b>5:00p</b><span>30m</span></div>
+                  <div>
+                    <div class="who">
+                      <span class="av-s" style="background: #b84a3a">CR</span
+                      ><span class="nm">Carlos Reyes</span>
+                    </div>
+                    <div class="song">
+                      <span class="key">Em</span><span class="ti">Wonderwall</span>
+                    </div>
+                  </div>
+                  <div class="start">Start</div>
+                </div>
+                <div class="row-l">
+                  <div class="time"><b>6:30p</b><span>45m</span></div>
+                  <div>
+                    <div class="who">
+                      <span class="av-s" style="background: #3a7d3a">LP</span
+                      ><span class="nm">Lily Park</span>
+                    </div>
+                    <div class="song">
+                      <span class="key">Am</span><span class="ti">House of the Rising Sun</span>
+                    </div>
+                  </div>
+                  <div class="start">Start</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── HOW IT WORKS ───────────────────────────────── -->
+    <section class="band" id="how">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="tag">How it works <span class="br">/ 03 steps</span></span>
+          <h2 class="disp">You teach. <em>Strummy keeps the record.</em></h2>
+          <p class="lede">
+            No new workflow to learn — Strummy maps onto the way a working teacher already runs a
+            studio.
+          </p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="n">01</div>
+            <h3>Add students &amp; lessons</h3>
+            <p>
+              Book lessons in Strummy or sync them straight from Google Calendar. Changes on either
+              side stay in step.
+            </p>
+            <div class="chip"><span class="gd"></span>Two-way calendar sync</div>
+          </div>
+          <div class="step">
+            <div class="n">02</div>
+            <h3>Mark what was played</h3>
+            <p>
+              Set each song's status during the lesson. The repertoire advances forward-only —
+              accidental slips never regress a student.
+            </p>
+            <div class="flow">
+              <span class="s">to_learn</span><span class="ar">→</span>
+              <span class="s on">started</span><span class="ar">→</span>
+              <span class="s">remembered</span><span class="ar">→</span>
+              <span class="s">mastered</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">03</div>
+            <h3>Walk in ready</h3>
+            <p>
+              Last session's AI recap, the student's song list and what's next are on screen before
+              they sit down.
+            </p>
+            <div class="chip"><span class="gd"></span>AI recap, ready on open</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FEATURES ───────────────────────────────────── -->
+    <section id="features">
+      <div class="wrap">
+        <div class="sec-head center">
+          <span class="tag">The product</span>
+          <h2 class="disp">An instrument, modelled as a <em>system</em>.</h2>
+        </div>
+
+        <div class="feat">
+          <!-- 01 repertoire -->
+          <div class="frow">
+            <div class="copy">
+              <div class="idx">01 / 04</div>
+              <div class="k">Repertoire &amp; progress</div>
+              <h3>Every student's whole journey, one click away.</h3>
+              <p>
+                One canonical answer to “where is this student on this song?” Lifetime-best status,
+                practice metrics, preferred key, capo and strumming — created automatically the
+                first time a song appears in a lesson.
+              </p>
+              <ul>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Forward-only progress, with a deliberate override path
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Per-student key, capo &amp; practice history
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >An automatic, append-only progress audit trail
+                </li>
+              </ul>
+            </div>
+            <div class="visual">
+              <div class="panel">
+                <div class="cap">student_repertoire · Emma Johnson</div>
+                <div class="lib">
+                  <div class="s">
+                    <div class="art"></div>
+                    <div>
+                      <div class="ti">Blackbird</div>
+                      <div class="au">The Beatles</div>
+                    </div>
+                    <span class="key">G</span><span class="diff">started</span>
+                  </div>
+                  <div class="s">
+                    <div
+                      class="art"
+                      style="background: linear-gradient(135deg, #3a7d3a, #c9cdd6)"
+                    ></div>
+                    <div>
+                      <div class="ti">Landslide</div>
+                      <div class="au">Fleetwood Mac</div>
+                    </div>
+                    <span class="key">C</span><span class="diff">remembered</span>
+                  </div>
+                  <div class="s">
+                    <div
+                      class="art"
+                      style="background: linear-gradient(135deg, #6d4fa0, #c9cdd6)"
+                    ></div>
+                    <div>
+                      <div class="ti">Classical Gas</div>
+                      <div class="au">Mason Williams</div>
+                    </div>
+                    <span class="key">Am</span><span class="diff">mastered</span>
+                  </div>
+                  <div class="s">
+                    <div
+                      class="art"
+                      style="background: linear-gradient(135deg, #b84a3a, #c9cdd6)"
+                    ></div>
+                    <div>
+                      <div class="ti">Dust in the Wind</div>
+                      <div class="au">Kansas</div>
+                    </div>
+                    <span class="key">C</span><span class="diff">to_learn</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 02 library -->
+          <div class="frow flip">
+            <div class="copy">
+              <div class="idx">02 / 04</div>
+              <div class="k">Song library</div>
+              <h3>Tabs already found, metadata already filled.</h3>
+              <p>
+                Hundreds of songs enriched from Spotify — album art, musical key, difficulty, chords
+                and tabs. Fuzzy matching even cleans up typo-ridden titles before it searches. One
+                click adds a song to a student's repertoire.
+              </p>
+              <ul>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Spotify-matched art, key &amp; difficulty
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Chord data parsed from messy real-world input
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Shared across your whole studio
+                </li>
+              </ul>
+            </div>
+            <div class="visual">
+              <div class="panel">
+                <div class="cap">chord analysis · Hotel California</div>
+                <div class="roman">
+                  <div class="col">
+                    <div class="chord">Bm</div>
+                    <div class="rn">i</div>
+                    <div class="bar"></div>
+                  </div>
+                  <div class="col">
+                    <div class="chord">F♯</div>
+                    <div class="rn">V</div>
+                    <div class="bar"></div>
+                  </div>
+                  <div class="col">
+                    <div class="chord">A</div>
+                    <div class="rn">♭VII</div>
+                    <div class="bar"></div>
+                  </div>
+                  <div class="col">
+                    <div class="chord">E</div>
+                    <div class="rn">IV</div>
+                    <div class="bar"></div>
+                  </div>
+                  <div class="col">
+                    <div class="chord">G</div>
+                    <div class="rn">♭VI</div>
+                    <div class="bar"></div>
+                  </div>
+                  <div class="col">
+                    <div class="chord">D</div>
+                    <div class="rn">♭III</div>
+                    <div class="bar"></div>
+                  </div>
+                </div>
+                <div class="arch">
+                  archetype detected → <b>Andalusian descent</b> · key of Bm · capo 7
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 03 fretboard -->
+          <div class="frow">
+            <div class="copy">
+              <div class="idx">03 / 04</div>
+              <div class="k">Interactive fretboard</div>
+              <h3>The fretboard isn't a widget — it's a theory engine.</h3>
+              <p>
+                Scales, chords and the five CAGED shapes computed from chromatic pitch math, not
+                lookup tables. Click a note, hear a note. Quiz mode turns recognition into muscle
+                memory — all in the browser.
+              </p>
+              <ul>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Scales · CAGED · arpeggios, any root
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Real audio synthesis per string &amp; fret
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Note-identification quiz mode
+                </li>
+              </ul>
+            </div>
+            <div class="visual">
+              <div class="panel fret">
+                <div class="cap">G major · CAGED position</div>
+                <div class="board">
+                  <div class="hh"></div>
+                  <div class="hh">0</div>
+                  <div class="hh">1</div>
+                  <div class="hh">2</div>
+                  <div class="hh">3</div>
+                  <div class="hh">4</div>
+                  <div class="hh">5</div>
+                  <div class="lbl">e</div>
+                  <div class="cell open"><span class="dot"></span></div>
+                  <div class="cell"></div>
+                  <div class="cell"><span class="dot b"></span></div>
+                  <div class="cell"><span class="dot"></span></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                  <div class="lbl">B</div>
+                  <div class="cell open"><span class="dot"></span></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                  <div class="cell"><span class="dot b"></span></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                  <div class="lbl">G</div>
+                  <div class="cell open"><span class="dot"></span></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                  <div class="lbl">D</div>
+                  <div class="cell open"></div>
+                  <div class="cell"></div>
+                  <div class="cell"><span class="dot"></span></div>
+                  <div class="cell"></div>
+                  <div class="cell"><span class="dot b"></span></div>
+                  <div class="cell"></div>
+                  <div class="lbl">A</div>
+                  <div class="cell open"></div>
+                  <div class="cell"></div>
+                  <div class="cell"><span class="dot"></span></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                  <div class="lbl">E</div>
+                  <div class="cell open"><span class="dot"></span></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                  <div class="cell"><span class="dot"></span></div>
+                  <div class="cell"></div>
+                  <div class="cell"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 04 lessons + ai -->
+          <div class="frow flip">
+            <div class="copy">
+              <div class="idx">04 / 04</div>
+              <div class="k">Lessons, calendar &amp; AI notes</div>
+              <h3>Schedule it. Run it. Let Strummy write it up.</h3>
+              <p>
+                Two-way Google Calendar sync, so no double-booked four o'clocks. Close a session and
+                an AI agent drafts the notes, recap and next assignment — with safe fallback
+                templates, so it never leaves you with a blank screen mid-lesson.
+              </p>
+              <ul>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Bidirectional Google Calendar sync
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >AI lesson notes, recaps &amp; assignments
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    >
+                      <path d="M5 12l5 5L20 7"></path></svg></span
+                  >Automatic reminders &amp; weekly digests
+                </li>
+              </ul>
+            </div>
+            <div class="visual">
+              <div class="panel">
+                <div class="cap">post-lesson · auto-drafted · Lesson #42</div>
+                <div class="note">
+                  “Alternating bass pattern is solid at 60 BPM. Right-hand independence is the next
+                  hurdle — assign a <span class="hl">10 min/day</span> fingerpicking drill on
+                  Blackbird.”
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 16px">
+                  <span
+                    class="diff"
+                    style="
+                      font-family: var(--mono);
+                      font-size: 9px;
+                      color: #fff;
+                      background: var(--blue);
+                      border: 1px solid var(--blue);
+                      border-radius: 5px;
+                      padding: 5px 9px;
+                    "
+                    >Insert into notes</span
+                  >
+                  <span
+                    class="diff"
+                    style="
+                      font-family: var(--mono);
+                      font-size: 9px;
+                      color: var(--ink-3);
+                      border: 1px solid var(--line);
+                      border-radius: 5px;
+                      padding: 5px 9px;
+                    "
+                    >Regenerate</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FINAL CTA ──────────────────────────────────── -->
+    <section class="band final">
+      <div class="wrap">
+        <span class="tag" style="justify-content: center">Ready when you are</span>
+        <h2>Teach more.<br /><em>Admin less.</em></h2>
+        <p class="lede" style="max-width: 500px; margin: 18px auto 0">
+          Free while we're in beta — no card, no feature gates. Bring one student or twenty.
+        </p>
+        <div class="cta">
+          <a href="#" class="btn btn-primary btn-lg"
+            >Get started — free
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+            >
+              <path d="M5 12h14M13 5l7 7-7 7"></path>
+            </svg>
+          </a>
+          <a href="#" class="btn btn-ghost btn-lg">Try the demo</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap row">
+        <div class="brand" style="font-size: 19px">Strummy<span class="dot"></span></div>
+        <div class="mono">© 2026 Strummy · Public beta · strummy.app</div>
+      </div>
+    </footer>
+  </body>
+</html>

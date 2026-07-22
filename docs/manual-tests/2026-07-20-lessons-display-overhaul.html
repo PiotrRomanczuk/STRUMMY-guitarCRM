@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — Lessons Display Overhaul (2026-07-20)</title>
+    <style>
+      :root {
+        --ink: #1a1613;
+        --ink3: #4a4037;
+        --ink4: #8a7e70;
+        --paper: #fbf8f1;
+        --card: #fff;
+        --rule: #e6dccb;
+        --gold: #b17f12;
+        --good: #3a7d3a;
+        --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.6;
+        padding: 40px 20px;
+      }
+      .wrap {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0 0 4px;
+      }
+      .sub {
+        color: var(--ink4);
+        font-family: var(--mono);
+        font-size: 13px;
+        margin-bottom: 26px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 32px 0 6px;
+        padding-top: 20px;
+        border-top: 1px solid var(--rule);
+      }
+      code,
+      .path {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        background: #f1ead9;
+        color: var(--gold);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-top: 12px;
+      }
+      ol {
+        margin: 8px 0 0;
+        padding-left: 20px;
+      }
+      li {
+        margin: 5px 0;
+      }
+      .expect {
+        color: var(--good);
+        font-weight: 600;
+      }
+      .gate {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 3px 9px;
+        border-radius: 6px;
+        background: #e8f0e2;
+        color: var(--good);
+        margin: 2px 6px 2px 0;
+      }
+      .note {
+        background: #fbf1d3;
+        border: 1px solid #e9c874;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 13.5px;
+        margin-top: 14px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 8px;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+      }
+      th {
+        font-family: var(--mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink4);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Lessons — display overhaul</h1>
+      <div class="sub">2026-07-20 · branch <code>feature/lessons-display</code></div>
+
+      <p>
+        Three phases, from the "I don't see any lessons locally" thread. Root cause: the lessons
+        page filtered <code>teacher_id = you</code> for admins too, so an admin (who teaches nothing
+        in the seed) saw an empty page even though the local DB has 45 lessons.
+      </p>
+
+      <p>
+        <span class="gate">tsc: 0 errors</span>
+        <span class="gate">lint: 0 errors (changed files)</span>
+        <span class="gate">admin query → 45 lessons</span>
+        <span class="gate">July grid → 33 events</span>
+      </p>
+
+      <div class="note">
+        <b>Log in as needed.</b> On the sign-in page use <b>Dev quick login</b>. Admin now sees
+        <em>all</em> lessons; Teacher sees their own (28); Student sees theirs. Password is
+        <code>DevTest123!</code>.
+      </div>
+
+      <h2>Phase 1 — Admin sees all lessons + Teacher column</h2>
+      <div class="card">
+        <p>
+          <b>What changed:</b> <code>getRecentLessons</code> is now role-aware — admin → every
+          teacher's lessons (no owner filter), teacher → own, student → own. Admins get a new
+          <b>Teacher</b> column. RLS already allowed admins to read all lessons, so no migration was
+          needed.
+          <span class="path"
+            >lib/services/lessons-queries.ts · app/dashboard/lessons/page.tsx ·
+            LessonsListEditorial.tsx</span
+          >
+        </p>
+        <ol>
+          <li>
+            Quick-login as <b>Admin</b> → open <code>/dashboard/lessons</code>.
+            <span class="expect"
+              >→ all 45 lessons appear, with a Teacher column showing "Dev Teacher" / "Marta
+              Zielinski".</span
+            >
+            Eyebrow reads "All lessons".
+          </li>
+          <li>
+            Quick-login as <b>Teacher</b> →
+            <span class="expect">28 lessons, no Teacher column, eyebrow "Teaching".</span>
+          </li>
+          <li>
+            Quick-login as <b>Student</b> →
+            <span class="expect">only their own lessons, eyebrow "Your lessons".</span>
+          </li>
+        </ol>
+      </div>
+
+      <h2>Phase 2 — Grouped, polished list</h2>
+      <div class="card">
+        <p>
+          <b>What changed:</b> the flat table is now grouped into
+          <b>Today / This week / Upcoming / Past</b> sections (future soonest-first, past
+          most-recent-first). Each row shows a relative time ("in 2 days"). The redundant
+          Newest/Oldest sort toggle is gone (grouping defines the order); status filters remain.
+          Empty state is role-aware. Row markup extracted to
+          <code>LessonsListEditorial.Row.tsx</code>; grouping logic in <code>grouping.ts</code>.
+        </p>
+        <ol>
+          <li>
+            On <code>/dashboard/lessons</code>:
+            <span class="expect"
+              >rows sit under time sections with counts; each shows a relative-time line.</span
+            >
+          </li>
+          <li>
+            Click a status chip (e.g. Completed) →
+            <span class="expect">list filters; grouping still applies to the filtered set.</span>
+          </li>
+          <li>
+            Click any row → <span class="expect">opens <code>/dashboard/lessons/[id]</code>.</span>
+          </li>
+        </ol>
+      </div>
+
+      <h2>Phase 3 — Calendar month view</h2>
+      <div class="card">
+        <p>
+          <b>What changed:</b> the Calendar page (which previously showed only Google-sync settings)
+          now renders a <b>month grid</b> of lessons as clickable events, above the sync section.
+          Month navigation via <code>?month=YYYY-MM</code> (‹ / Today / ›). Events are role-scoped
+          and colour-dotted by status; admins/teachers see the student name, students see the title.
+          New query <code>getLessonsInRange</code>.
+          <span class="path"
+            >app/dashboard/calendar/page.tsx · components/lessons/editorial/MonthCalendar.tsx</span
+          >
+        </p>
+        <ol>
+          <li>
+            Open <code>/dashboard/calendar</code> (as Admin or Teacher).
+            <span class="expect"
+              >→ July 2026 grid shows lesson chips (time + student). ~33 events across the visible
+              weeks for admin.</span
+            >
+          </li>
+          <li>
+            Click a lesson chip → <span class="expect">opens that lesson's detail page.</span>
+          </li>
+          <li>
+            Click <b>›</b> / <b>‹</b> to change month, <b>Today</b> to return.
+            <span class="expect"
+              >URL updates to <code>?month=…</code>; today's cell is highlighted.</span
+            >
+          </li>
+          <li>
+            Narrow the window →
+            <span class="expect"
+              >grid scrolls horizontally; the page itself doesn't break sideways.</span
+            >
+            The Google-sync section still renders below.
+          </li>
+        </ol>
+      </div>
+
+      <h2>Data facts (local dev DB, verified via real JWTs)</h2>
+      <div class="card">
+        <table>
+          <tr>
+            <th>Login</th>
+            <th>Role</th>
+            <th>Lessons visible</th>
+          </tr>
+          <tr>
+            <td>admin@dev.local</td>
+            <td>admin</td>
+            <td>45 (all)</td>
+          </tr>
+          <tr>
+            <td>teacher@dev.local</td>
+            <td>teacher</td>
+            <td>28 (own)</td>
+          </tr>
+          <tr>
+            <td>student@dev.local</td>
+            <td>student</td>
+            <td>3 (own)</td>
+          </tr>
+        </table>
+        <p style="margin-top: 10px; font-size: 13px; color: var(--ink4)">
+          <code>p.romanczuk@gmail.com</code> does not exist in the local DB — use the dev accounts
+          locally.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

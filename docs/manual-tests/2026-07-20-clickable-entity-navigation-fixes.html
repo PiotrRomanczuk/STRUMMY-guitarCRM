@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Manual Test — Clickable Entity Navigation Fixes (2026-07-20)</title>
+<style>
+  :root{--ink:#1a1613;--ink3:#4a4037;--ink4:#8a7e70;--paper:#fbf8f1;--card:#fff;--rule:#e6dccb;
+    --gold:#b17f12;--good:#3a7d3a;--bad:#b84a3a;--adj:#c56a2a;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6;padding:40px 20px}
+  .wrap{max-width:860px;margin:0 auto}
+  h1{font-size:28px;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--ink4);font-family:var(--mono);font-size:13px;margin-bottom:28px}
+  h2{font-size:19px;margin:34px 0 6px;padding-top:20px;border-top:1px solid var(--rule)}
+  .tag{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:6px;color:#fff}
+  .p0{background:var(--bad)}.p1{background:var(--adj)}
+  code,.path{font-family:var(--mono);font-size:12.5px;background:#f1ead9;color:var(--gold);padding:1px 5px;border-radius:4px}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:18px 20px;margin-top:12px}
+  ol{margin:8px 0 0;padding-left:20px}li{margin:4px 0}
+  .expect{color:var(--good);font-weight:600}
+  table{border-collapse:collapse;width:100%;margin-top:10px;font-size:13.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink4)}
+  .gate{display:inline-block;font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:#e8f0e2;color:var(--good);margin-right:6px}
+  .note{background:#fbf1d3;border:1px solid #e9c874;border-radius:8px;padding:12px 14px;font-size:13.5px;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Clickable Entity Navigation — fixes</h1>
+  <div class="sub">2026-07-20 · branch <code>fix/clickable-entity-navigation</code> · follows the 2026-07-20 admin-POV audit</div>
+
+  <p>Four fixes from the audit's P0/P1 list. Each makes a place where a Student, Lesson, or Song is named actually click through to that record.</p>
+
+  <p>
+    <span class="gate">lint: 0 errors (my files)</span>
+    <span class="gate">tsc: 0 errors</span>
+    <span class="gate">jest: 5 suites green</span>
+  </p>
+
+  <div class="note"><b>Scope note.</b> P1c (making the student/teacher name inside <em>list rows</em> individually clickable, and surfacing the teacher on lesson detail) was intentionally deferred — it's a row-link restructure using an absolute-overlay pattern that needs visual QA, and is a better fit for its own branch. Everything below is shipped here.</p>
+
+  <!-- FIX 1 -->
+  <h2><span class="tag p0">P0 · bug</span> &nbsp;Student Health “View Profile” route</h2>
+  <div class="card">
+    <p><b>What changed:</b> the desktop “View Profile” icon and the mobile card both linked to <code>/dashboard/users?id=X</code> — a query param on the roster <em>list</em>, which dead-ends there. Both now link to the detail route <code>/dashboard/users/[id]</code>. The mobile student <em>name</em> is now a link too (it was plain text; the desktop table already linked it). <span class="path">components/dashboard/health/StudentHealthTable.tsx</span></p>
+    <ol>
+      <li>Log in as admin/teacher → go to <code>/dashboard/health</code>.</li>
+      <li><b>Desktop:</b> click the person icon in the Actions column of any row. <span class="expect">→ lands on that student's profile <code>/dashboard/users/&lt;id&gt;</code>, not the roster.</span></li>
+      <li>Also click the student's <b>name</b> cell → same profile.</li>
+      <li><b>Mobile</b> (narrow the window &lt; 768px): tap the person icon <em>and</em> the student name at the top of the card. <span class="expect">→ both open the student profile.</span></li>
+    </ol>
+  </div>
+
+  <!-- FIX 2 -->
+  <h2><span class="tag p1">P1</span> &nbsp;Notifications become clickable &amp; deep-link to the record</h2>
+  <div class="card">
+    <p><b>What changed (two parts):</b></p>
+    <ul>
+      <li><b>Inbox now navigates.</b> The full-page inbox rendered every row as plain text and never used <code>action_url</code>. The title/body is now a link when the notification has an action URL, and clicking also marks it read. (The “Mark read” button stays separate — no nested links.) <span class="path">components/notifications/editorial/NotificationsEditorial.List.tsx</span></li>
+      <li><b>Deep links, not list pages.</b> New notifications now derive <code>action_url</code> from the notification's own entity reference (<code>entity_type</code> + <code>entity_id</code>), so a lesson notification opens <code>/dashboard/lessons/&lt;id&gt;</code> instead of the generic <code>/dashboard/lessons</code> list. Covers lesson, song, assignment, and student. <span class="path">lib/services/in-app-notification-service.ts</span> · <span class="path">lib/services/notification-in-app-content.ts</span> (<code>entityDetailUrl</code>)</li>
+    </ul>
+    <p style="margin-top:10px"><b>Test the inbox link:</b></p>
+    <ol>
+      <li>Go to <code>/dashboard/notifications</code>. Any notification with an action opens its target on click; the unread highlight clears.</li>
+    </ol>
+    <p style="margin-top:10px"><b>Test the deep-link derivation</b> (needs a freshly-created notification — existing rows keep their old URL):</p>
+    <ol>
+      <li>Trigger a lesson notification — e.g. open a completed lesson and send its recap (<code>app/dashboard/lessons/actions.ts</code>), or run the lesson-reminders cron locally.</li>
+      <li>Open the new notification from the bell or the inbox. <span class="expect">→ it opens the specific lesson <code>/dashboard/lessons/&lt;id&gt;</code>, not the lessons list.</span></li>
+      <li>Quick DB check (new rows): <code>action_url</code> should be <code>/dashboard/lessons/&lt;uuid&gt;</code> for a lesson notification.</li>
+    </ol>
+    <table>
+      <tr><th>entity_type</th><th>action_url now</th></tr>
+      <tr><td>lesson</td><td><code>/dashboard/lessons/&lt;id&gt;</code></td></tr>
+      <tr><td>song</td><td><code>/dashboard/songs/&lt;id&gt;</code></td></tr>
+      <tr><td>assignment</td><td><code>/dashboard/assignments/&lt;id&gt;</code></td></tr>
+      <tr><td>student / profile / user</td><td><code>/dashboard/users/&lt;id&gt;</code></td></tr>
+      <tr><td>(none / unknown)</td><td>falls back to the content's URL (e.g. list page)</td></tr>
+    </table>
+  </div>
+
+  <!-- FIX 3 -->
+  <h2><span class="tag p1">P1</span> &nbsp;Song titles link in Repertoire &amp; Practice history</h2>
+  <div class="card">
+    <p><b>What changed:</b> song titles were plain text in the repertoire grid and the practice-history list — despite the near-identical student-detail repertoire already linking. Both now link to <code>/dashboard/songs/[id]</code>. Practice sessions with no song (“General technique”) stay plain text. <span class="path">components/repertoire/editorial/RepertoireCard.tsx</span> · <span class="path">components/practice/editorial/PracticeHistoryList.tsx</span></p>
+    <ol>
+      <li>Go to <code>/dashboard/repertoire</code> → click a song title on any card. <span class="expect">→ opens that song's detail page.</span></li>
+      <li>Go to <code>/dashboard/practice</code> → click a song title in the history list. <span class="expect">→ opens that song. “General technique” entries remain non-clickable.</span></li>
+    </ol>
+  </div>
+
+  <h2>Automated gates run</h2>
+  <div class="card">
+    <ul>
+      <li><code>npx tsc --noEmit</code> → <span class="expect">0 errors</span> (whole repo).</li>
+      <li><code>npx eslint</code> on the 6 changed files → <span class="expect">0 errors</span> (only pre-existing max-lines style warnings).</li>
+      <li><code>npx jest</code> notifications + in-app service + repertoire suites → <span class="expect">31 passed, 1 skipped</span>.</li>
+    </ul>
+    <p class="note" style="margin-top:0"><b>Unrelated pre-existing issue:</b> repo-wide <code>npm run lint</code> reports 10 errors — all in <code>app/dashboard/button-audit/page.tsx</code>, an <em>untracked</em> file not on <code>main</code> and not part of this change. It won't be included in this branch's commit.</p>
+  </div>
+</div>
+</body>
+</html>

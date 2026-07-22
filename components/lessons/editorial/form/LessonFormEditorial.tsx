@@ -9,6 +9,7 @@ import type { SongOption, StudentOption } from '@/lib/services/lesson-form-data'
 import { LessonFormFields } from './LessonForm.Fields';
 import { LessonFormRecurring } from './LessonForm.Recurring';
 import { LessonNotesAI } from '@/components/lessons/form/LessonNotesAI';
+import { SHOW_AI_FEATURES } from '@/lib/config/features';
 import { useLessonFormSubmit } from './useLessonFormSubmit';
 
 const NEW_STUDENT = '__new__';
@@ -109,16 +110,18 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
           />
         )}
 
-        <div data-testid="lesson-notes-ai">
-          <LessonNotesAI
-            studentName={aiStudentName}
-            studentId={isNewStudent ? undefined : studentId || undefined}
-            songsCovered={aiSongsCovered}
-            lessonTopic={title}
-            onNotesGenerated={setNotes}
-            disabled={isSaving}
-          />
-        </div>
+        {SHOW_AI_FEATURES && (
+          <div data-testid="lesson-notes-ai">
+            <LessonNotesAI
+              studentName={aiStudentName}
+              studentId={isNewStudent ? undefined : studentId || undefined}
+              songsCovered={aiSongsCovered}
+              lessonTopic={title}
+              onNotesGenerated={setNotes}
+              disabled={isSaving}
+            />
+          </div>
+        )}
 
         <div style={s.actions}>
           <button type="submit" style={s.primary} disabled={isSaving}>

@@ -17,6 +17,7 @@ import { ChordDrillEditor } from '@/components/assignments/editorial/chord-drill
 import { TemplatePicker } from '@/components/assignments/editorial/create/TemplatePicker';
 import { sanitizeChecklist, type ChecklistItem } from '@/schemas/AssignmentSchema';
 import type { AssignmentTemplateRow } from '@/lib/services/assignment-template-queries';
+import { SHOW_AI_FEATURES } from '@/lib/config/features';
 
 const toDateInput = (iso: string | null): string => (iso ? iso.slice(0, 10) : '');
 
@@ -231,20 +232,22 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
 
         <ChordDrillEditor selected={chordIds} onChange={setChordIds} disabled={isSaving} />
 
-        <div data-testid="assignment-notes-ai">
-          <AssignmentAI
-            studentName={students.find((stu) => stu.id === studentId)?.name ?? ''}
-            studentId={studentId || undefined}
-            studentLevel="beginner"
-            recentSongs={[songs.find((song) => song.id === songId)?.title].filter(
-              (t): t is string => Boolean(t)
-            )}
-            focusArea={title}
-            duration="1 week"
-            onAssignmentGenerated={setDescription}
-            disabled={isSaving}
-          />
-        </div>
+        {SHOW_AI_FEATURES && (
+          <div data-testid="assignment-notes-ai">
+            <AssignmentAI
+              studentName={students.find((stu) => stu.id === studentId)?.name ?? ''}
+              studentId={studentId || undefined}
+              studentLevel="beginner"
+              recentSongs={[songs.find((song) => song.id === songId)?.title].filter(
+                (t): t is string => Boolean(t)
+              )}
+              focusArea={title}
+              duration="1 week"
+              onAssignmentGenerated={setDescription}
+              disabled={isSaving}
+            />
+          </div>
+        )}
 
         <div style={s.actions}>
           <button type="submit" style={s.primary} disabled={isSaving}>

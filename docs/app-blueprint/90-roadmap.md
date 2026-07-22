@@ -105,6 +105,22 @@ _Shipped 2026-07-19: CNT-1 (ProductionTab re-enabled), ADM-2/ADM-3 (dead audit_l
 dropped · debug dashboard mounted), AIA-2 (`is_helpful` feedback buttons wired), ASG-2
 (assignment_history surfaced as a detail timeline), IDA-2 (avatar storage upload)._
 
+## Cross-cutting — SaaS hygiene (external benchmark, 2026-07-20)
+
+From benchmarking Strummy against a generic Supabase + Next.js SaaS starter
+([Razikus/supabase-nextjs-template](https://github.com/Razikus/supabase-nextjs-template)). These
+are table-stakes the template bundles that Strummy skipped — **not** grill-locked, so the owner
+decides placement against the launch critical path. Full briefs:
+[reference/SAAS_HYGIENE_BENCHMARK.md](reference/SAAS_HYGIENE_BENCHMARK.md).
+
+| ID    | What                              | Priority | Brief                                                              |
+| ----- | --------------------------------- | -------- | ------------------------------------------------------------------ |
+| HYG-1 | MFA (TOTP 2FA) enrollment         | high     | [benchmark](reference/SAAS_HYGIENE_BENCHMARK.md) (→ IDA on pickup) |
+| HYG-2 | Legal pages + GDPR cookie consent | high     | [benchmark](reference/SAAS_HYGIENE_BENCHMARK.md) (→ IDA on pickup) |
+| HYG-3 | i18n (Polish locale pilot)        | medium   | [benchmark](reference/SAAS_HYGIENE_BENCHMARK.md)                   |
+| HYG-4 | Generic file-storage UX           | parked   | [benchmark](reference/SAAS_HYGIENE_BENCHMARK.md)                   |
+| HYG-5 | Native mobile (Expo) companion    | backlog  | [benchmark](reference/SAAS_HYGIENE_BENCHMARK.md)                   |
+
 ## Open questions (cross-doc index)
 
 Each domain doc keeps its own `## Open questions`; the grill-worthy ones as of 2026-07-18:

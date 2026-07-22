@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2, Music, Clock, Gauge } from 'lucide-react';
@@ -59,7 +60,13 @@ function PracticeRow({
       <div className="min-w-0">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Music className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span className="truncate">{session.song?.title ?? 'General technique'}</span>
+          {session.song ? (
+            <Link href={`/dashboard/songs/${session.song.id}`} className="truncate hover:underline">
+              {session.song.title}
+            </Link>
+          ) : (
+            <span className="truncate">General technique</span>
+          )}
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">

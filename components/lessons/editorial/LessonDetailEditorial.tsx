@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { PostLessonSummaryAI } from '@/components/lessons/PostLessonSummaryAI';
+import { SHOW_AI_FEATURES } from '@/lib/config/features';
 import type { LessonDetail } from '@/lib/services/lesson-detail-queries';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -313,7 +314,7 @@ export const LessonDetailEditorial = ({
 
         {/* A post-lesson summary only makes sense once the lesson happened —
             offering it on a scheduled lesson invites generating fiction. */}
-        {canEdit && lesson.status?.toLowerCase() === 'completed' && (
+        {SHOW_AI_FEATURES && canEdit && lesson.status?.toLowerCase() === 'completed' && (
           <div style={{ marginTop: 20 }}>
             <PostLessonSummaryAI
               studentName={studentDisplay}

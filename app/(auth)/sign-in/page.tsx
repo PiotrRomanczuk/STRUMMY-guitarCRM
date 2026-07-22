@@ -6,7 +6,14 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { SignInSchema } from '@/schemas/AuthSchema';
 import { signIn as signInAction, resendVerificationEmail } from '@/app/auth/actions';
-import { AuthLayout, AuthHeader, AuthDivider, GoogleAuthButton } from '@/components/auth';
+import {
+  AuthLayout,
+  AuthHeader,
+  AuthDivider,
+  GoogleAuthButton,
+  DbConnectionIndicator,
+  DevQuickLogin,
+} from '@/components/auth';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -87,19 +94,13 @@ export default function SignInPage() {
     return errors;
   }, [email, password, touched]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setTouched({ email: true, password: true });
-
-    const validation = SignInSchema.safeParse({ email, password });
-    if (!validation.success) return;
-
+  const performSignIn = async (emailValue: string, passwordValue: string) => {
     setLoading(true);
     setError(null);
     setEmailNotConfirmed(false);
     setResendStatus(null);
 
-    const signInResult = await signInAction(email, password);
+    const signInResult = await signInAction(emailValue, passwordValue);
 
     setLoading(false);
 
@@ -113,6 +114,23 @@ export default function SignInPage() {
       router.refresh();
       router.push('/dashboard');
     }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setTouched({ email: true, password: true });
+
+    const validation = SignInSchema.safeParse({ email, password });
+    if (!validation.success) return;
+
+    await performSignIn(email, password);
+  };
+
+  // One-click dev role logins (only rendered when connected to the dev DB).
+  const handleQuickLogin = (quickEmail: string, quickPassword: string) => {
+    setEmail(quickEmail);
+    setPassword(quickPassword);
+    void performSignIn(quickEmail, quickPassword);
   };
 
   const handleGoogleSignIn = async () => {
@@ -151,7 +169,10 @@ export default function SignInPage() {
 
   return (
     <AuthLayout>
+      <DbConnectionIndicator />
       <AuthHeader title="Sign in to Strummy" subtitle="Manage your studio with AI-powered tools." />
+
+      <DevQuickLogin onLogin={handleQuickLogin} disabled={loading} />
 
       {/* Google Auth */}
       <GoogleAuthButton onClick={handleGoogleSignIn} disabled={loading} loading={loading} />

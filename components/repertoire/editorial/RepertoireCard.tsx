@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2, Clock } from 'lucide-react';
@@ -51,7 +52,12 @@ export function RepertoireCard({ entry, canEdit }: RepertoireCardProps) {
     <div className="rounded-xl border border-border p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-medium">{entry.song.title}</p>
+          <Link
+            href={`/dashboard/songs/${entry.song.id}`}
+            className="block truncate font-medium hover:underline"
+          >
+            {entry.song.title}
+          </Link>
           {entry.song.author && (
             <p className="truncate text-sm text-muted-foreground">{entry.song.author}</p>
           )}

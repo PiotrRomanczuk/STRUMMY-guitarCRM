@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 
 import { createSongAction, type SongFormState } from '@/app/actions/song-form';
 import { SongNotesAI } from '@/components/songs/form/SongNotesAI';
+import { SHOW_AI_FEATURES } from '@/lib/config/features';
 
 import { Field } from './Field';
 
@@ -192,26 +193,32 @@ export const SongFormEditorial = () => {
       </Field>
 
       <Field label="Teaching notes" error={state.errors?.notes} optional>
-        <SongNotesAI
-          songData={{
-            title,
-            author,
-            level,
-            key,
-            chords,
-            tempo,
-            strumming_pattern: '',
-            capo_fret: capoFret,
-          }}
-          currentNotes={notes}
-          onNotesGenerated={setNotes}
-          disabled={pending}
-        />
+        {SHOW_AI_FEATURES && (
+          <SongNotesAI
+            songData={{
+              title,
+              author,
+              level,
+              key,
+              chords,
+              tempo,
+              strumming_pattern: '',
+              capo_fret: capoFret,
+            }}
+            currentNotes={notes}
+            onNotesGenerated={setNotes}
+            disabled={pending}
+          />
+        )}
         <textarea
           name="notes"
           maxLength={4000}
-          placeholder="Teaching tips and practice suggestions — or generate them with AI above."
-          style={{ ...textareaStyle, marginTop: 10 }}
+          placeholder={
+            SHOW_AI_FEATURES
+              ? 'Teaching tips and practice suggestions — or generate them with AI above.'
+              : 'Teaching tips and practice suggestions.'
+          }
+          style={{ ...textareaStyle, marginTop: SHOW_AI_FEATURES ? 10 : 0 }}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />

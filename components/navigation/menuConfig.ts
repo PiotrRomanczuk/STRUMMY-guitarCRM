@@ -18,6 +18,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+import { SHOW_AI_FEATURES } from '@/lib/config/features';
+
 export interface MenuItem {
   id: string;
   label: string;
@@ -54,8 +56,10 @@ export const NOTIFICATION_ITEM: NotificationItem = {
 // feature is backed by real data and has been clicked through end to end.
 //
 // Revealed 2026-07-19 after verification: fretboard (self-contained, no data
-// needed), ai + ai-chat (OpenRouter key verified live), repertoire and practice
-// (both seeded with real history). Still hidden below: surfaces that are either
+// needed), ai + ai-chat (OpenRouter key verified live, gated on
+// SHOW_AI_FEATURES so nav and the in-form generators toggle in lockstep),
+// repertoire and practice (both seeded with real history). Calendar stayed
+// visible throughout. Still hidden below: surfaces that are either
 // "Coming soon" stubs or would render empty.
 const CORE_LOOP_HIDDEN_ITEMS = [
   // Built, but no seeded course content yet
@@ -73,11 +77,18 @@ const CORE_LOOP_HIDDEN_ITEMS = [
   'logs',
 ];
 
+// AI surfaces are gated on the master switch, not the static list above, so the
+// sidebar items and the in-form generators toggle in lockstep.
+const AI_ITEMS = ['ai', 'ai-chat'];
+
 function hideNonCore(groups: MenuGroup[]): MenuGroup[] {
+  const hidden = SHOW_AI_FEATURES
+    ? CORE_LOOP_HIDDEN_ITEMS
+    : [...CORE_LOOP_HIDDEN_ITEMS, ...AI_ITEMS];
   return groups
     .map((g) => ({
       ...g,
-      items: g.items.filter((item) => !CORE_LOOP_HIDDEN_ITEMS.includes(item.id)),
+      items: g.items.filter((item) => !hidden.includes(item.id)),
     }))
     .filter((g) => g.items.length > 0);
 }

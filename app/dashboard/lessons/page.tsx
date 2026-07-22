@@ -51,13 +51,19 @@ export default async function LessonsPage({ searchParams }: { searchParams: Sear
   const activeStatuses = parseStatuses(params.status);
   const activeSort: 'newest' | 'oldest' = params.sort === 'oldest' ? 'oldest' : 'newest';
 
-  const lessons = await getRecentLessons(user.id, isStudent && !isTeacher && !isAdmin, {
-    statuses: activeStatuses.length > 0 ? activeStatuses : undefined,
-    sort: activeSort,
-  });
+  const lessons = await getRecentLessons(
+    user.id,
+    { isAdmin, isTeacher, isStudent },
+    {
+      statuses: activeStatuses.length > 0 ? activeStatuses : undefined,
+      sort: activeSort,
+    }
+  );
   const breakdown = summariseLessons(lessons);
   const canCreate = isTeacher || isAdmin;
   const showStudentColumn = isTeacher || isAdmin;
+  // Admins view multiple teachers' lessons, so surface who teaches each one.
+  const showTeacherColumn = isAdmin;
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
@@ -66,6 +72,7 @@ export default async function LessonsPage({ searchParams }: { searchParams: Sear
         breakdown={breakdown}
         canCreate={canCreate}
         showStudentColumn={showStudentColumn}
+        showTeacherColumn={showTeacherColumn}
         activeStatuses={activeStatuses}
         activeSort={activeSort}
       />

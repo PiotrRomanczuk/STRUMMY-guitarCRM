@@ -1,0 +1,8 @@
+{
+  "sections": {
+    "sidebars": { "labels": { "classic": "01 · Classic Wide — light, grouped, conventional" } },
+    "teacher": { "title": "Teacher Dashboard" },
+    "notifications": { "title": "Notifications / Activity" },
+    "dashboards": { "title": "Role-Specific Dashboards" }
+  }
+}
