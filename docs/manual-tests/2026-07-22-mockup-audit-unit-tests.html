@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — Design-Mockup Audit: Unit Test Coverage (2026-07-22)</title>
+    <style>
+      :root {
+        --ink: #1b1712;
+        --ink-2: #4a4239;
+        --ink-3: #79705f;
+        --rule: #e4dac4;
+        --paper: #faf7f0;
+        --card: #fff;
+        --ok: #3b6d22;
+        --ok-bg: #e9f1de;
+        --bad: #a32d2d;
+        --bad-bg: #f8e6e6;
+        --warn: #9c6a0a;
+        --warn-bg: #f5ecd8;
+        --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #f2ecdd;
+          --ink-2: #d8cfb9;
+          --ink-3: #a79a80;
+          --rule: #3a331f;
+          --paper: #16130e;
+          --card: #241f18;
+          --ok: #a9d68c;
+          --ok-bg: #22301a;
+          --bad: #e79a9a;
+          --bad-bg: #3a1e1e;
+          --warn: #e8c988;
+          --warn-bg: #362a12;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+      .page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 6px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 38px 0 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--rule);
+      }
+      h3 {
+        font-size: 15px;
+        margin: 24px 0 8px;
+      }
+      .meta {
+        color: var(--ink-3);
+        font-size: 13px;
+        margin-bottom: 28px;
+      }
+      code,
+      pre {
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+      pre {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        padding: 12px 14px;
+        overflow-x: auto;
+      }
+      code:not(pre code) {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+      }
+      th {
+        color: var(--ink-3);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .tablewrap {
+        overflow-x: auto;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .ok {
+        background: var(--ok-bg);
+        color: var(--ok);
+      }
+      .bad {
+        background: var(--bad-bg);
+        color: var(--bad);
+      }
+      .warn {
+        background: var(--warn-bg);
+        color: var(--warn);
+      }
+      .box {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-left: 3px solid var(--warn);
+        border-radius: 6px;
+        padding: 14px 16px;
+        margin: 16px 0;
+      }
+      ol li,
+      ul li {
+        margin-bottom: 7px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Design-Mockup Audit: Unit Test Coverage — manual verification</h1>
+      <div class="meta">
+        2026-07-22 · branch <code>feature/unit-test-coverage-mockup-gaps</code> · author: Claude
+      </div>
+
+      <h2>What was built</h2>
+      <p>
+        <code>docs/app-blueprint/93-design-mockup-audit.md</code> cross-referenced all 45 Strummy
+        design mockups against real test coverage and found
+        <strong>14 rows with zero unit-test coverage</strong> (plus 2 adjacent partial rows worth
+        closing at the same time). This change adds direct render-test coverage for the 10
+        underlying components behind those rows — no product behavior changed, this is test-only.
+      </p>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Mockup row(s) closed</th>
+              <th>New test file</th>
+              <th>Cases</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>LandingPage</code></td>
+              <td>Landing Page Desktop + Mobile</td>
+              <td><code>components/landing/LandingPage.test.tsx</code></td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td><code>TeacherDashboardEditorial</code></td>
+              <td>Teacher Dashboard (+ Mobile)</td>
+              <td>
+                <code
+                  >components/dashboard/editorial/teacher/TeacherDashboardEditorial.test.tsx</code
+                >
+              </td>
+              <td>7</td>
+            </tr>
+            <tr>
+              <td><code>StudentDashboardEditorial</code></td>
+              <td>Student Dashboard (+ Mobile)</td>
+              <td>
+                <code
+                  >components/dashboard/editorial/student/StudentDashboardEditorial.test.tsx</code
+                >
+              </td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <td><code>AdminDashboardEditorial</code></td>
+              <td>Admin Dashboard (partial → full, bonus parity)</td>
+              <td>
+                <code>components/dashboard/editorial/admin/AdminDashboardEditorial.test.tsx</code>
+              </td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <td><code>LessonsListEditorial</code></td>
+              <td>Lesson List / Mobile / Student</td>
+              <td><code>components/lessons/editorial/LessonsListEditorial.test.tsx</code></td>
+              <td>7</td>
+            </tr>
+            <tr>
+              <td><code>LessonDetailEditorial</code></td>
+              <td>Lesson Detail (+ Mobile)</td>
+              <td><code>components/lessons/editorial/LessonDetailEditorial.test.tsx</code></td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td><code>AssignmentsListEditorial</code></td>
+              <td>Assignments Student</td>
+              <td>
+                <code>components/assignments/editorial/AssignmentsListEditorial.test.tsx</code>
+              </td>
+              <td>10</td>
+            </tr>
+            <tr>
+              <td><code>AssignmentDetailEditorial</code></td>
+              <td>Assignments Teacher (partial → full)</td>
+              <td>
+                <code
+                  >components/assignments/editorial/detail/AssignmentDetailEditorial.test.tsx</code
+                >
+              </td>
+              <td>17</td>
+            </tr>
+            <tr>
+              <td><code>IntegrationsSection</code></td>
+              <td>Settings Integrations</td>
+              <td><code>components/settings/IntegrationsSection.test.tsx</code></td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <td><code>EmptyState</code> (shared)</td>
+              <td>Empty State</td>
+              <td><code>components/shared/EmptyState.test.tsx</code></td>
+              <td>9</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>Totals:</strong> 10 new test files, 86 new test cases, all passing.</p>
+
+      <div class="box">
+        <strong>Skipped by design:</strong> the plan proposed two optional integration tests
+        (<code>getAtRiskStudents</code>, <code>IntegrationsSection</code>'s disconnect flow) hitting
+        the real dev Supabase. On inspection, this repo's <code>*.integration.test.ts</code> suite
+        actually mocks Supabase (via <code>lib/testing/integration-helpers.ts</code>) to test
+        cross-module business logic, and the only suite that hits a real dev-branch DB is the
+        separate <code>*.rls.test.ts</code> harness, scoped specifically to row-level-security
+        policy assertions. Neither convention fit what was proposed, so — rather than invent a third
+        pattern — these were skipped. Flagging here instead of silently dropping them.
+      </div>
+
+      <h2>Full-suite results</h2>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>npm run lint</code></td>
+              <td>
+                <span class="pill ok">0 errors</span> (275 pre-existing warnings elsewhere in the
+                repo, none in the new files)
+              </td>
+            </tr>
+            <tr>
+              <td><code>npm test</code></td>
+              <td>
+                <span class="pill ok">254 suites / 3375 tests passed</span> (5 pre-existing skips, 0
+                failures)
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>How to manually verify</h2>
+      <ol>
+        <li>
+          Checkout the branch and run the full suite yourself:
+          <pre>
+cd /Users/piotr/Desktop/MainCV/strummy
+git checkout feature/unit-test-coverage-mockup-gaps
+npm run lint
+npm test</pre>
+        </li>
+        <li>
+          Run just the 10 new files in isolation to see the case-by-case output:
+          <pre>
+npx jest \
+  components/landing/LandingPage.test.tsx \
+  components/dashboard/editorial/teacher/TeacherDashboardEditorial.test.tsx \
+  components/dashboard/editorial/student/StudentDashboardEditorial.test.tsx \
+  components/dashboard/editorial/admin/AdminDashboardEditorial.test.tsx \
+  components/lessons/editorial/LessonsListEditorial.test.tsx \
+  components/lessons/editorial/LessonDetailEditorial.test.tsx \
+  components/assignments/editorial/AssignmentsListEditorial.test.tsx \
+  components/assignments/editorial/detail/AssignmentDetailEditorial.test.tsx \
+  components/settings/IntegrationsSection.test.tsx \
+  components/shared/EmptyState.test.tsx</pre>
+        </li>
+        <li>
+          Since no product code changed, there's nothing new to click through in the browser — the
+          useful manual check is a quick sanity pass on the actual pages these tests now cover, to
+          confirm the tests' assumptions about markup/copy still match reality:
+          <code>/</code>, <code>/dashboard</code> (as teacher/student/admin — see CLAUDE.md dev
+          credentials), <code>/dashboard/lessons</code>, <code>/dashboard/lessons/[id]</code>,
+          <code>/dashboard/assignments</code> (as teacher and student),
+          <code>/dashboard/assignments/[id]</code>, and <code>/dashboard/settings</code>
+          (Integrations section).
+        </li>
+        <li>
+          <strong>Expected:</strong> everything renders exactly as before — this PR adds
+          verification, it doesn't touch behavior.
+        </li>
+      </ol>
+
+      <h2>Follow-up (not in this PR)</h2>
+      <p>
+        A companion branch, <code>feature/e2e-test-coverage-mockup-gaps</code>, closes the remaining
+        Playwright E2E gaps from the same audit. A further ~10 partial-unit rows (Onboarding steps,
+        Song Detail shell, Student Detail shell, Fretboard/Chord-Quiz component render, Sidebar
+        render, Settings shell) are intentionally deferred — see the plan's "Tier 2" section.
+      </p>
+    </div>
+  </body>
+</html>
