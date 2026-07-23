@@ -7,6 +7,7 @@ export type LessonDetail = {
   status: string;
   title: string | null;
   notes: string | null;
+  lessonTeacherNumber: number | null;
   teacherId: string;
   teacherName: string | null;
   studentId: string;
@@ -21,12 +22,28 @@ export type LessonDetail = {
   }[];
 };
 
+export type LessonAssignment = {
+  id: string;
+  title: string;
+  dueDate: string | null;
+  status: string;
+};
+
+export type ContinuityLesson = {
+  id: string;
+  lessonTeacherNumber: number | null;
+  scheduledAt: string;
+  title: string | null;
+  notes: string | null;
+  status: string;
+};
+
 export async function getLessonDetail(lessonId: string): Promise<LessonDetail | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('lessons')
     .select(
-      'id, scheduled_at, status, title, notes, teacher_id, student_id, teacher:profiles!lessons_teacher_id_fkey(full_name), student:profiles!lessons_student_id_fkey(full_name, email), lesson_songs(song_id, status, songs(title, author, key))'
+      'id, scheduled_at, status, title, notes, lesson_teacher_number, teacher_id, student_id, teacher:profiles!lessons_teacher_id_fkey(full_name), student:profiles!lessons_student_id_fkey(full_name, email), lesson_songs(song_id, status, songs(title, author, key))'
     )
     .eq('id', lessonId)
     .is('deleted_at', null)
@@ -61,6 +78,7 @@ export async function getLessonDetail(lessonId: string): Promise<LessonDetail | 
     status: data.status as string,
     title: (data.title as string) ?? null,
     notes: (data.notes as string) ?? null,
+    lessonTeacherNumber: (data.lesson_teacher_number as number) ?? null,
     teacherId: data.teacher_id as string,
     teacherName: (teacher?.full_name as string) ?? null,
     studentId: data.student_id as string,
@@ -68,4 +86,64 @@ export async function getLessonDetail(lessonId: string): Promise<LessonDetail | 
     studentEmail: (student?.email as string) ?? null,
     songs,
   };
+}
+
+/** Homework attached to this lesson (assignments whose lesson_id matches). */
+export async function getLessonAssignments(lessonId: string): Promise<LessonAssignment[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('assignments')
+    .select('id, title, due_date, status')
+    .eq('lesson_id', lessonId)
+    .is('deleted_at', null)
+    .order('due_date', { ascending: true, nullsFirst: false });
+
+  if (error) {
+    logger.warn('[lesson-detail-queries] assignments error', {
+      error: error.message,
+      code: error.code,
+    });
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    title: row.title as string,
+    dueDate: (row.due_date as string) ?? null,
+    status: (row.status as string) ?? 'not_started',
+  }));
+}
+
+/** Recent previous lessons with the same student (for the continuity card). */
+export async function getLessonContinuity(
+  studentId: string,
+  excludeLessonId: string,
+  limit = 3
+): Promise<ContinuityLesson[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('lessons')
+    .select('id, lesson_teacher_number, scheduled_at, title, notes, status')
+    .eq('student_id', studentId)
+    .neq('id', excludeLessonId)
+    .is('deleted_at', null)
+    .order('scheduled_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    logger.warn('[lesson-detail-queries] continuity error', {
+      error: error.message,
+      code: error.code,
+    });
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    lessonTeacherNumber: (row.lesson_teacher_number as number) ?? null,
+    scheduledAt: row.scheduled_at as string,
+    title: (row.title as string) ?? null,
+    notes: (row.notes as string) ?? null,
+    status: (row.status as string) ?? 'SCHEDULED',
+  }));
 }

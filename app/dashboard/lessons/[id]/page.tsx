@@ -5,7 +5,11 @@ import { notFound, redirect } from 'next/navigation';
 
 import { LessonDetailEditorial } from '@/components/lessons/editorial/LessonDetailEditorial';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
-import { getLessonDetail } from '@/lib/services/lesson-detail-queries';
+import {
+  getLessonAssignments,
+  getLessonContinuity,
+  getLessonDetail,
+} from '@/lib/services/lesson-detail-queries';
 
 const geist = Geist({
   subsets: ['latin'],
@@ -41,10 +45,19 @@ export default async function LessonDetailPage({ params }: PageProps) {
   }
 
   const canEdit = isAdmin || (isTeacher && lesson.teacherId === user.id);
+  const [assignments, continuity] = await Promise.all([
+    getLessonAssignments(id),
+    getLessonContinuity(lesson.studentId, id),
+  ]);
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <LessonDetailEditorial lesson={lesson} canEdit={canEdit} />
+      <LessonDetailEditorial
+        lesson={lesson}
+        canEdit={canEdit}
+        assignments={assignments}
+        continuity={continuity}
+      />
     </div>
   );
 }
