@@ -4,6 +4,7 @@ import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
 import { redirect } from 'next/navigation';
 
 import { AdminDashboardEditorial } from '@/components/dashboard/editorial/admin/AdminDashboardEditorial';
+import { ParentEditorialView } from '@/components/dashboard/editorial/parent';
 import { StudentDashboardEditorial } from '@/components/dashboard/editorial/student/StudentDashboardEditorial';
 import { TeacherDashboardEditorial } from '@/components/dashboard/editorial/teacher/TeacherDashboardEditorial';
 import { createClient } from '@/lib/supabase/server';
@@ -55,13 +56,16 @@ function resolveActiveView(
   view: string | undefined,
   isAdmin: boolean,
   isTeacher: boolean,
-  isStudent: boolean
-): 'admin' | 'teacher' | 'student' {
+  isStudent: boolean,
+  isParent: boolean
+): 'admin' | 'teacher' | 'student' | 'parent' {
   if (view === 'admin' && isAdmin) return 'admin';
   if (view === 'student' && isStudent) return 'student';
   if (view === 'teacher' && isTeacher) return 'teacher';
+  if (view === 'parent' && isParent) return 'parent';
   if (isTeacher) return 'teacher';
   if (isStudent) return 'student';
+  if (isParent) return 'parent';
   if (isAdmin) return 'admin';
   return 'teacher';
 }
@@ -170,13 +174,14 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { view } = await searchParams;
-  const { user, isAdmin, isTeacher, isStudent } = await getUserWithRolesSSR();
+  const { view, child } = await searchParams;
+  const { user, isAdmin, isTeacher, isStudent, isParent } = await getUserWithRolesSSR();
   const activeView = resolveActiveView(
     typeof view === 'string' ? view : undefined,
     isAdmin,
     isTeacher,
-    isStudent
+    isStudent,
+    isParent
   );
 
   if (activeView === 'teacher' && user) {
@@ -185,6 +190,15 @@ export default async function DashboardPage({
 
   if (activeView === 'student' && user) {
     return <StudentEditorialView userId={user.id} email={user.email ?? ''} />;
+  }
+
+  if (activeView === 'parent' && user) {
+    return (
+      <ParentEditorialView
+        userId={user.id}
+        childParam={typeof child === 'string' ? child : undefined}
+      />
+    );
   }
 
   if (activeView === 'admin' && user) {

@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/dashboard/Sidebar';
 import { Topbar } from '@/components/dashboard/Topbar';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, isTeacher, isStudent } = await getUserWithRolesSSR();
+  const { user, isAdmin, isTeacher, isStudent, isParent } = await getUserWithRolesSSR();
   if (!user) {
     redirect('/sign-in?redirect=/dashboard');
   }
@@ -13,8 +13,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Onboarding gate: a user with no role hasn't finished onboarding. The
   // /auth/callback route only enforces this for the OAuth/email-code flow, so
   // password sign-ins would otherwise reach the dashboard role-less. Centralize
-  // the gate here so every entry path is covered.
-  if (!isAdmin && !isTeacher && !isStudent) {
+  // the gate here so every entry path is covered. Parents carry no admin/
+  // teacher/student role, so `isParent` must count as a completed account here
+  // or the Family portal would be unreachable.
+  if (!isAdmin && !isTeacher && !isStudent && !isParent) {
     redirect('/onboarding');
   }
 

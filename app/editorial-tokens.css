@@ -241,6 +241,25 @@
   background: transparent;
 }
 
+/* --- Parent dashboard (Family portal) ----------------------------------- */
+/* Child switcher tabs — hover + selected state can't be expressed inline. The
+   selected tab is marked with aria-current="true" by the component. */
+.theme-editorial .ed-parent-tab {
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.theme-editorial .ed-parent-tab:hover {
+  border-color: var(--gold) !important;
+  color: var(--ink) !important;
+}
+.theme-editorial .ed-parent-tab[aria-current='true'] {
+  border-color: var(--gold) !important;
+  background: var(--gold-tint);
+  color: var(--ink);
+}
+
 @keyframes strummy-pulse {
   0% {
     transform: scale(1);
