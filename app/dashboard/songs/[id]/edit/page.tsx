@@ -1,7 +1,6 @@
 import '@/app/editorial-tokens.css';
 
 import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
 import { SongEditFormEditorial } from '@/components/songs/editorial/edit/SongEditFormEditorial';
@@ -47,49 +46,7 @@ export default async function EditSongPage({ params }: PageProps) {
 
   return (
     <div className={`theme-editorial ${geist.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <div
-        style={{
-          background: 'var(--ivory)',
-          color: 'var(--ink)',
-          minHeight: '100%',
-          padding: '32px 32px 64px',
-        }}
-      >
-        <div style={{ maxWidth: 640, margin: '0 auto' }}>
-          <Link
-            href={`/dashboard/songs/${id}`}
-            style={{
-              fontFamily: 'var(--mono)',
-              fontSize: 11,
-              color: 'var(--ink-4)',
-              textDecoration: 'none',
-              textTransform: 'uppercase',
-              letterSpacing: '.14em',
-            }}
-          >
-            ← Song
-          </Link>
-          <h1
-            style={{
-              margin: '8px 0 6px',
-              fontFamily: 'var(--serif)',
-              fontWeight: 400,
-              fontSize: 40,
-              letterSpacing: '-0.02em',
-              fontStyle: 'italic',
-            }}
-          >
-            Edit {data.title ?? 'song'}
-          </h1>
-          <p style={{ margin: '0 0 22px', fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.55 }}>
-            The basics plus sections &amp; lyrics. Cover art, audio, and tab notation get edited
-            from the detail view.
-          </p>
-          <SongEditFormEditorial
-            song={data as Parameters<typeof SongEditFormEditorial>[0]['song']}
-          />
-        </div>
-      </div>
+      <SongEditFormEditorial song={data as Parameters<typeof SongEditFormEditorial>[0]['song']} />
     </div>
   );
 }

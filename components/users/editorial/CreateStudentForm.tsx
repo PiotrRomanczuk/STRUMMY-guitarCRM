@@ -4,26 +4,9 @@ import { useCallback, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-const fieldLabel: React.CSSProperties = {
-  fontFamily: 'var(--mono)',
-  fontSize: 10,
-  color: 'var(--ink-4)',
-  textTransform: 'uppercase',
-  letterSpacing: '.12em',
-  marginBottom: 6,
-};
-
-const input: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 12px',
-  border: '1px solid var(--rule)',
-  borderRadius: 6,
-  background: 'var(--paper)',
-  fontFamily: 'var(--sans)',
-  fontSize: 14,
-  color: 'var(--ink)',
-  boxSizing: 'border-box',
-};
+import { FormPreviewPanel } from '@/components/_editorial/FormPreviewPanel';
+import { CreateStudentFormFields } from './CreateStudentForm.Fields';
+import { CreateStudentFormPreview } from './CreateStudentForm.Preview';
 
 export const CreateStudentForm = () => {
   const router = useRouter();
@@ -68,6 +51,8 @@ export const CreateStudentForm = () => {
     [firstName, lastName, inviteEmail, phone, router]
   );
 
+  const previewName = [firstName, lastName].filter(Boolean).join(' ');
+
   return (
     <div
       style={{
@@ -77,7 +62,7 @@ export const CreateStudentForm = () => {
         padding: '28px 32px 64px',
       }}
     >
-      <div style={{ maxWidth: 560, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1040, margin: '0 auto' }}>
         <Link
           href="/dashboard/users"
           style={{
@@ -93,7 +78,7 @@ export const CreateStudentForm = () => {
         </Link>
         <h1
           style={{
-            margin: '12px 0 28px',
+            margin: '12px 0 24px',
             fontFamily: 'var(--serif)',
             fontWeight: 400,
             fontSize: 40,
@@ -105,112 +90,68 @@ export const CreateStudentForm = () => {
         </h1>
 
         <form onSubmit={handleSubmit}>
-          <div
-            style={{
-              background: 'var(--card)',
-              border: '1px solid var(--rule)',
-              borderRadius: 10,
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 18,
-            }}
-          >
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <div>
-                <div style={fieldLabel}>First name *</div>
-                <input
-                  required
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  maxLength={120}
-                  style={input}
-                />
-              </div>
-              <div>
-                <div style={fieldLabel}>Last name *</div>
-                <input
-                  required
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  maxLength={120}
-                  style={input}
-                />
-              </div>
-            </div>
-
+          <div className="ed-grid-form">
             <div>
-              <div style={fieldLabel}>
-                Invite email *{' '}
-                <span style={{ color: 'var(--ink-3)', textTransform: 'none', letterSpacing: 0 }}>
-                  — stored now, sent when you&apos;re ready
-                </span>
-              </div>
-              <input
-                required
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="student@email.com"
-                style={input}
+              <CreateStudentFormFields
+                firstName={firstName}
+                lastName={lastName}
+                inviteEmail={inviteEmail}
+                phone={phone}
+                onFirstName={setFirstName}
+                onLastName={setLastName}
+                onInviteEmail={setInviteEmail}
+                onPhone={setPhone}
               />
-            </div>
 
-            <div>
-              <div style={fieldLabel}>Phone</div>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                maxLength={50}
-                style={input}
-              />
-            </div>
+              {error && (
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--danger)' }}>
+                  {error}
+                </div>
+              )}
 
-            {error && (
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--danger)' }}>
-                {error}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 4 }}>
+                <Link
+                  href="/dashboard/users"
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: 8,
+                    border: '1px solid var(--rule)',
+                    background: 'transparent',
+                    color: 'var(--ink)',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    fontFamily: 'var(--sans)',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: isPending ? 'var(--ink-4)' : 'var(--ink)',
+                    color: 'var(--paper)',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: isPending ? 'wait' : 'pointer',
+                    fontFamily: 'var(--sans)',
+                  }}
+                >
+                  {isPending ? 'Creating…' : 'Create student'}
+                </button>
               </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 4 }}>
-              <Link
-                href="/dashboard/users"
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: 8,
-                  border: '1px solid var(--rule)',
-                  background: 'transparent',
-                  color: 'var(--ink)',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  fontFamily: 'var(--sans)',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                }}
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                disabled={isPending}
-                style={{
-                  padding: '10px 24px',
-                  borderRadius: 8,
-                  border: 'none',
-                  background: isPending ? 'var(--ink-4)' : 'var(--ink)',
-                  color: 'var(--paper)',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: isPending ? 'wait' : 'pointer',
-                  fontFamily: 'var(--sans)',
-                }}
-              >
-                {isPending ? 'Creating…' : 'Create student'}
-              </button>
             </div>
+
+            <FormPreviewPanel>
+              <CreateStudentFormPreview name={previewName} inviteEmail={inviteEmail} />
+            </FormPreviewPanel>
           </div>
         </form>
       </div>

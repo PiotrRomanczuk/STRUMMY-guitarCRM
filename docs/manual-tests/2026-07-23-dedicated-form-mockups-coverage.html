@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      Manual Test — Dedicated Form Mockups: Analysis, Redesign & Test Coverage (2026-07-23)
+    </title>
+    <style>
+      :root {
+        --ink: #1b1712;
+        --ink-2: #4a4239;
+        --ink-3: #79705f;
+        --rule: #e4dac4;
+        --paper: #faf7f0;
+        --card: #fff;
+        --ok: #3b6d22;
+        --ok-bg: #e9f1de;
+        --bad: #a32d2d;
+        --bad-bg: #f8e6e6;
+        --warn: #9c6a0a;
+        --warn-bg: #f5ecd8;
+        --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #f2ecdd;
+          --ink-2: #d8cfb9;
+          --ink-3: #a79a80;
+          --rule: #3a331f;
+          --paper: #16130e;
+          --card: #241f18;
+          --ok: #a9d68c;
+          --ok-bg: #22301a;
+          --bad: #e79a9a;
+          --bad-bg: #3a1e1e;
+          --warn: #e8c988;
+          --warn-bg: #362a12;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+      }
+      .page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      h1 {
+        font-size: 26px;
+        margin: 0 0 6px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 38px 0 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--rule);
+      }
+      h3 {
+        font-size: 15px;
+        margin: 24px 0 8px;
+      }
+      .meta {
+        color: var(--ink-3);
+        font-size: 13px;
+        margin-bottom: 28px;
+      }
+      code,
+      pre {
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+      pre {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        padding: 12px 14px;
+        overflow-x: auto;
+      }
+      code:not(pre code) {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+      }
+      th {
+        color: var(--ink-3);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .tablewrap {
+        overflow-x: auto;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .ok {
+        background: var(--ok-bg);
+        color: var(--ok);
+      }
+      .warn {
+        background: var(--warn-bg);
+        color: var(--warn);
+      }
+      .box {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-left: 3px solid var(--ok);
+        border-radius: 6px;
+        padding: 14px 16px;
+        margin: 16px 0;
+      }
+      ol li,
+      ul li {
+        margin-bottom: 7px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Dedicated Form Mockups: analysis, redesign & test coverage</h1>
+      <div class="meta">
+        2026-07-23 · branch <code>feature/design-mockup-forms-coverage</code> · author: Claude
+      </div>
+
+      <h2>What was built</h2>
+      <p>
+        The user added a first local batch of 9 "Standalone" single-file mockup exports to
+        <code>claude design - mockups/</code>. Each <code>.html</code> is a self-contained
+        compressed bundle (base64+gzip virtual filesystem embedding React/ReactDOM/Babel-standalone
+        plus the mockup's own JSX), not plain static markup — reading them required extracting and
+        decompressing the embedded <code>{"mime","compressed","data"}</code> blobs, or rendering
+        them in a browser directly.
+      </p>
+      <p>
+        Of the 9 files, 6 re-export screens already covered by
+        <code>docs/app-blueprint/93-design-mockup-audit.md</code> (Lesson List, Lesson Detail, Song
+        Form A/B, Assignments Teacher/Student). The other 3 — <strong>Lesson Form</strong>,
+        <strong>Student Form</strong>, and a dedicated full-page <strong>Assignment Form</strong> —
+        are screens not in the original 44-file design-project list. All three map to real,
+        already-routed forms.
+      </p>
+      <p>
+        Comparing the rendered mockups against the live app revealed the real gap wasn't
+        implementation or tests — it was <strong>visual design</strong>. The mockups show a
+        two-column layout with numbered sections and a live-preview sidebar; the shipped forms
+        (including the pre-existing Song Form, used elsewhere in the codebase as the "matching
+        SongFormA style" reference) were a single plain column. This pass closed both gaps:
+      </p>
+
+      <div class="box">
+        <strong>Result:</strong>
+        <ul style="margin: 8px 0 0">
+          <li>
+            4 forms redesigned to the mockup's sectioned two-column + live-preview layout — Lesson
+            Form, Student Form, Assignment Form, and Song Form (create + edit) — using new shared
+            primitives (<code>FormSection</code>, <code>FormPreviewPanel</code>,
+            <code>FormAvatar</code>, the <code>.ed-grid-form</code> CSS utility) so every dedicated
+            form now looks consistent.
+          </li>
+          <li>
+            Every native field kept its exact <code>id</code>/<code>name</code> attribute — no
+            existing E2E selector needed to change.
+          </li>
+          <li>
+            26 new/expanded unit test cases across 4 test files, plus one stale-skipped E2E case
+            unskipped and passing.
+          </li>
+        </ul>
+      </div>
+
+      <h3>Layout redesign — files touched</h3>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Form</th>
+              <th>Route(s)</th>
+              <th>Split into</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Lesson</td>
+              <td><code>/dashboard/lessons/new</code>, <code>/[id]/edit</code></td>
+              <td>
+                <code>LessonFormEditorial</code>, <code>.Fields.WhoWhen</code>,
+                <code>.Fields.SongsNotes</code>, <code>.Preview</code> (+ existing
+                <code>.Recurring</code>)
+              </td>
+            </tr>
+            <tr>
+              <td>Student</td>
+              <td><code>/dashboard/users/new</code></td>
+              <td><code>CreateStudentForm</code>, <code>.Fields</code>, <code>.Preview</code></td>
+            </tr>
+            <tr>
+              <td>Assignment</td>
+              <td><code>/dashboard/assignments/new</code>, <code>/[id]/edit</code></td>
+              <td>
+                <code>AssignmentCreateEditorial</code>, <code>.Fields</code>, <code>.Preview</code>,
+                <code>useAssignmentFormSubmit</code>
+              </td>
+            </tr>
+            <tr>
+              <td>Song (create)</td>
+              <td><code>/dashboard/songs/new</code></td>
+              <td>
+                <code>SongFormEditorial</code>, <code>.Fields.Identity</code>,
+                <code>.Fields.Details</code>, <code>.Fields.Notes</code>, <code>.Preview</code>
+              </td>
+            </tr>
+            <tr>
+              <td>Song (edit)</td>
+              <td><code>/dashboard/songs/[id]/edit</code></td>
+              <td>
+                <code>SongEditFormEditorial</code>, <code>.Fields.Identity</code>,
+                <code>.Fields.Details</code>, <code>.Fields.Lyrics</code> (reuses the create form's
+                <code>.Preview</code>)
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Unit test coverage added/expanded</h3>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Test file</th>
+              <th>Cases</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>LessonFormEditorial</code></td>
+              <td>new</td>
+              <td>8</td>
+            </tr>
+            <tr>
+              <td><code>CreateStudentForm</code></td>
+              <td>new</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td><code>AssignmentCreateEditorial</code></td>
+              <td>broadened (was AI-wiring-only)</td>
+              <td>+5 (7 total)</td>
+            </tr>
+            <tr>
+              <td><code>SongEditFormEditorial</code></td>
+              <td>new (had none before)</td>
+              <td>3</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>E2E fix</h3>
+      <p>
+        <code>tests/e2e/teacher/lessons-crud.spec.ts</code>'s
+        <code>lesson CRUD lifecycle: create → view → edit → delete</code> test was
+        <code>test.skip</code>'d with the reason "Lesson create/edit forms are Coming Soon stubs —
+        unskip when routes are built." The routes have existed for some time (proven by
+        <code>tests/e2e/teacher/lesson-repeat-weekly.spec.ts</code> already exercising create
+        successfully) — the skip reason was stale. Unskipped and verified locally against the dev
+        Supabase stack, both before and after the layout redesign: create → view → edit → delete all
+        pass.
+      </p>
+
+      <h3>Design-fidelity notes (deliberately not implemented)</h3>
+      <ul>
+        <li>
+          <strong>Lesson Form</strong>: mockup's separate Date / Time / Duration / Format fields
+          collapse into one <code>datetime-local</code> input; no in-person/video "format" field
+          exists in the schema.
+        </li>
+        <li>
+          <strong>Student Form</strong>: intentionally minimal invite flow (first/last name, invite
+          email, phone). The mockup's richer fields — skill level, avatar color, parent contact,
+          billing rate, recurring lesson schedule — would require new DB columns + RLS work; a
+          separate, larger initiative.
+        </li>
+        <li>
+          <strong>Assignment Form</strong>: kept single-student (mockup shows multi-student chips) —
+          true multi-assign is a behavior change, not a layout one, so deliberately out of scope.
+          Has a checklist editor and chord-drill editor the mockup doesn't show.
+        </li>
+      </ul>
+
+      <h2>How to manually test</h2>
+      <ol>
+        <li>
+          <strong>Unit tests</strong> — from the repo root:
+          <pre>
+npx jest components/lessons/editorial/form \
+  components/users/editorial \
+  components/assignments/editorial/create \
+  components/songs/editorial</pre>
+          Expect all suites green.
+        </li>
+        <li>
+          <strong>Full regression</strong>:
+          <pre>npm test</pre>
+          Expect 267/267 suites passing.
+        </li>
+        <li>
+          <strong>E2E</strong> (requires the dev server on <code>localhost:3000</code> and the local
+          Supabase stack reachable):
+          <pre>
+npx playwright test tests/e2e/teacher/lessons-crud.spec.ts \
+  tests/e2e/teacher/lesson-repeat-weekly.spec.ts \
+  tests/e2e/teacher/assignments-crud.spec.ts \
+  tests/e2e/teacher/student-onboarding.spec.ts \
+  tests/e2e/teacher/songs-crud.spec.ts --project="Desktop Chrome"</pre>
+          Note: on a fresh <code>next dev</code> server, the first hit to each route/API handler
+          pays a one-time compile cost that can exceed default timeouts — a dev-mode-only artifact,
+          not present against a production build (CI).
+        </li>
+        <li>
+          <strong>Manual UI walkthrough</strong>: sign in as a teacher, visit
+          <code>/dashboard/lessons/new</code>, <code>/dashboard/users/new</code>,
+          <code>/dashboard/assignments/new</code>, <code>/dashboard/songs/new</code>, and
+          <code>/dashboard/songs/[id]/edit</code>. Confirm each renders the numbered-section
+          two-column layout with a live preview sidebar that updates as you type/select, and that a
+          valid submit still redirects correctly.
+        </li>
+        <li>
+          <strong>Docs</strong>: open <code>docs/app-blueprint/93-design-mockup-audit.md</code>,
+          section "Dedicated forms (2026-07-23 Standalone batch)" and the updated Song Form A/B row.
+        </li>
+      </ol>
+    </div>
+  </body>
+</html>

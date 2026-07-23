@@ -17,7 +17,8 @@ into [reference/](reference/) and [adr/](adr/), or deleted (recoverable via git 
 3. [90-roadmap.md](90-roadmap.md) — the ordered implementation plan across all domains
 4. [91-testing-strategy.md](91-testing-strategy.md) — how anything gets proven
 5. [92-launch-runbook.md](92-launch-runbook.md) — self-host cutover procedure + hard gates
-6. [reference/](reference/) — living how-the-system-works docs · [adr/](adr/) — settled decisions
+6. [93-design-mockup-audit.md](93-design-mockup-audit.md) — Claude Design mockup set vs. what's mounted
+7. [reference/](reference/) — living how-the-system-works docs · [adr/](adr/) — settled decisions
 
 ## Precedence rules
 

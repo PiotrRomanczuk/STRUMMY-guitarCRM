@@ -107,9 +107,17 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 20px;
 }
+/* Form + sticky preview rail: main column flexible, preview fixed-width. */
+.theme-editorial .ed-grid-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: flex-start;
+}
 @media (max-width: 860px) {
   .theme-editorial .ed-grid-hero,
-  .theme-editorial .ed-grid-2 {
+  .theme-editorial .ed-grid-2,
+  .theme-editorial .ed-grid-form {
     grid-template-columns: minmax(0, 1fr);
   }
 }

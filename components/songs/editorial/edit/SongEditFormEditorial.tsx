@@ -1,80 +1,17 @@
 'use client';
 
-import { useActionState } from 'react';
+import Link from 'next/link';
+import { useActionState, useState } from 'react';
 
+import { FormSection } from '@/components/_editorial/FormSection';
+import { FormPreviewPanel } from '@/components/_editorial/FormPreviewPanel';
 import { updateSongAction, type SongEditState } from '@/app/actions/song-edit';
-
-const LEVELS = ['beginner', 'intermediate', 'advanced'] as const;
-const KEYS = [
-  'C',
-  'C#',
-  'D',
-  'D#',
-  'E',
-  'F',
-  'F#',
-  'G',
-  'G#',
-  'A',
-  'A#',
-  'B',
-  'Cm',
-  'C#m',
-  'Dm',
-  'D#m',
-  'Em',
-  'Fm',
-  'F#m',
-  'Gm',
-  'G#m',
-  'Am',
-  'A#m',
-  'Bm',
-] as const;
-
-const inputStyle = {
-  width: '100%',
-  padding: '10px 12px',
-  border: '1px solid var(--rule)',
-  borderRadius: 6,
-  background: 'var(--paper)',
-  fontFamily: 'var(--sans)',
-  fontSize: 14,
-  color: 'var(--ink)',
-} as const;
-
-const monoStyle = { ...inputStyle, fontFamily: 'var(--mono)', fontSize: 13 } as const;
+import { SongFormEditorialPreview } from '../form/SongFormEditorial.Preview';
+import { SongEditFormEditorialFieldsIdentity } from './SongEditFormEditorial.Fields.Identity';
+import { SongEditFormEditorialFieldsDetails } from './SongEditFormEditorial.Fields.Details';
+import { SongEditFormEditorialFieldsLyrics } from './SongEditFormEditorial.Fields.Lyrics';
 
 const INITIAL: SongEditState = {};
-
-const Label = ({ children, optional }: { children: React.ReactNode; optional?: boolean }) => (
-  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-    <span
-      style={{
-        fontFamily: 'var(--mono)',
-        fontSize: 10,
-        color: 'var(--ink-4)',
-        textTransform: 'uppercase',
-        letterSpacing: '.12em',
-      }}
-    >
-      {children}
-    </span>
-    {optional && (
-      <span
-        style={{
-          fontFamily: 'var(--mono)',
-          fontSize: 9,
-          color: 'var(--ink-5)',
-          textTransform: 'uppercase',
-          letterSpacing: '.12em',
-        }}
-      >
-        Optional
-      </span>
-    )}
-  </div>
-);
 
 type Song = {
   id: string;
@@ -88,168 +25,145 @@ type Song = {
   lyrics_with_chords: string | null;
 };
 
-const textareaStyle = {
-  ...monoStyle,
-  minHeight: 160,
-  resize: 'vertical' as const,
-  lineHeight: 1.5,
-} as const;
-
 export const SongEditFormEditorial = ({ song }: { song: Song }) => {
   const [state, formAction, pending] = useActionState(updateSongAction, INITIAL);
+  const [title, setTitle] = useState(song.title ?? '');
+  const [author, setAuthor] = useState(song.author ?? '');
+  const [level, setLevel] = useState(song.level ?? 'beginner');
+  const [key, setKey] = useState(song.key ?? 'C');
 
   return (
-    <form
-      action={formAction}
+    <div
       style={{
-        background: 'var(--card)',
-        border: '1px solid var(--rule)',
-        borderRadius: 10,
-        padding: '24px 28px 28px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 16,
+        background: 'var(--ivory)',
+        color: 'var(--ink)',
+        minHeight: '100%',
+        padding: '28px 32px 64px',
       }}
     >
-      <input type="hidden" name="id" value={song.id} />
-      <div>
-        <Label>Title</Label>
-        <input
-          name="title"
-          required
-          maxLength={200}
-          defaultValue={song.title ?? ''}
-          style={inputStyle}
-          aria-describedby={state.errors?.title ? 'error-title' : undefined}
-        />
-        {state.errors?.title && <Error id="error-title" msg={state.errors.title} />}
-      </div>
-      <div>
-        <Label>Author</Label>
-        <input
-          name="author"
-          required
-          maxLength={100}
-          defaultValue={song.author ?? ''}
-          style={inputStyle}
-          aria-describedby={state.errors?.author ? 'error-author' : undefined}
-        />
-        {state.errors?.author && <Error id="error-author" msg={state.errors.author} />}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
-        <div>
-          <Label>Level</Label>
-          <select name="level" required defaultValue={song.level ?? 'beginner'} style={inputStyle}>
-            {LEVELS.map((l) => (
-              <option key={l} value={l}>
-                {l[0].toUpperCase() + l.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <Label>Key</Label>
-          <select name="key" required defaultValue={song.key ?? 'C'} style={inputStyle}>
-            {KEYS.map((k) => (
-              <option key={k} value={k}>
-                {k}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
-        <div>
-          <Label optional>Capo (fret)</Label>
-          <input
-            name="capo_fret"
-            type="number"
-            min={0}
-            max={20}
-            defaultValue={song.capo_fret ?? ''}
-            style={monoStyle}
-          />
-        </div>
-        <div>
-          <Label optional>Tempo (BPM)</Label>
-          <input
-            name="tempo"
-            type="number"
-            min={0}
-            max={300}
-            defaultValue={song.tempo ?? ''}
-            style={monoStyle}
-          />
-        </div>
-      </div>
-      <div>
-        <Label optional>Chords</Label>
-        <input
-          name="chords"
-          maxLength={500}
-          defaultValue={song.chords ?? ''}
-          placeholder="C, G, Am, F"
-          style={monoStyle}
-        />
-      </div>
-      <div>
-        <Label optional>Sections &amp; lyrics</Label>
-        <textarea
-          name="lyrics_with_chords"
-          maxLength={20000}
-          defaultValue={song.lyrics_with_chords ?? ''}
-          placeholder={'[Verse 1]\nC        G\nLyrics line one…'}
-          style={textareaStyle}
-          aria-describedby={state.errors?.lyrics_with_chords ? 'error-lyrics' : undefined}
-        />
-        {state.errors?.lyrics_with_chords && (
-          <Error id="error-lyrics" msg={state.errors.lyrics_with_chords} />
-        )}
-      </div>
-
-      {state.errors?._form && (
-        <div
+      <div style={{ maxWidth: 1040, margin: '0 auto' }}>
+        <Link
+          href={`/dashboard/songs/${song.id}`}
           style={{
-            padding: '10px 14px',
-            background: 'rgba(184,74,58,.06)',
-            border: '1px solid rgba(184,74,58,.2)',
-            borderRadius: 6,
-            color: 'var(--danger)',
-            fontSize: 13,
+            fontFamily: 'var(--mono)',
+            fontSize: 11,
+            color: 'var(--ink-4)',
+            textDecoration: 'none',
+            textTransform: 'uppercase',
+            letterSpacing: '.14em',
           }}
         >
-          {state.errors._form}
-        </div>
-      )}
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-        <button
-          type="submit"
-          disabled={pending}
+          ← Song
+        </Link>
+        <h1
           style={{
-            padding: '10px 20px',
-            borderRadius: 8,
-            border: 'none',
-            background: pending ? 'var(--ink-4)' : 'var(--ink)',
-            color: 'var(--paper)',
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: pending ? 'wait' : 'pointer',
-            fontFamily: 'var(--sans)',
+            margin: '8px 0 6px',
+            fontFamily: 'var(--serif)',
+            fontWeight: 400,
+            fontSize: 40,
+            letterSpacing: '-0.02em',
+            fontStyle: 'italic',
           }}
         >
-          {pending ? 'Saving…' : 'Save changes'}
-        </button>
+          Edit {song.title ?? 'song'}
+        </h1>
+        <p style={{ margin: '0 0 22px', fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.55 }}>
+          The basics plus sections &amp; lyrics. Cover art, audio, and tab notation get edited from
+          the detail view.
+        </p>
+
+        <form action={formAction}>
+          <input type="hidden" name="id" value={song.id} />
+          <div className="ed-grid-form">
+            <div>
+              <FormSection
+                numeral="I · IDENTITY"
+                title="Title & author"
+                count={2}
+                populated={[title, author].filter(Boolean).length}
+              >
+                <SongEditFormEditorialFieldsIdentity
+                  title={title}
+                  author={author}
+                  titleError={state.errors?.title}
+                  authorError={state.errors?.author}
+                  onTitle={setTitle}
+                  onAuthor={setAuthor}
+                />
+              </FormSection>
+
+              <FormSection
+                numeral="II · DETAILS"
+                title="Level, key & rhythm"
+                count={2}
+                populated={2}
+              >
+                <SongEditFormEditorialFieldsDetails
+                  level={level}
+                  keyName={key}
+                  capoFret={song.capo_fret}
+                  tempo={song.tempo}
+                  chords={song.chords}
+                  onLevel={setLevel}
+                  onKey={setKey}
+                />
+              </FormSection>
+
+              <FormSection
+                numeral="III · LYRICS"
+                title="Sections & lyrics"
+                count={1}
+                populated={song.lyrics_with_chords ? 1 : 0}
+              >
+                <SongEditFormEditorialFieldsLyrics
+                  lyrics={song.lyrics_with_chords}
+                  error={state.errors?.lyrics_with_chords}
+                />
+              </FormSection>
+
+              {state.errors?._form && (
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    background: 'rgba(184,74,58,.06)',
+                    border: '1px solid rgba(184,74,58,.2)',
+                    borderRadius: 6,
+                    color: 'var(--danger)',
+                    fontSize: 13,
+                    marginBottom: 16,
+                  }}
+                >
+                  {state.errors._form}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  type="submit"
+                  disabled={pending}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: pending ? 'var(--ink-4)' : 'var(--ink)',
+                    color: 'var(--paper)',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: pending ? 'wait' : 'pointer',
+                    fontFamily: 'var(--sans)',
+                  }}
+                >
+                  {pending ? 'Saving…' : 'Save changes'}
+                </button>
+              </div>
+            </div>
+
+            <FormPreviewPanel>
+              <SongFormEditorialPreview title={title} author={author} level={level} keyName={key} />
+            </FormPreviewPanel>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   );
 };
-
-const Error = ({ id, msg }: { id?: string; msg: string }) => (
-  <div
-    id={id}
-    style={{ marginTop: 4, fontSize: 11, color: 'var(--danger)', fontFamily: 'var(--mono)' }}
-  >
-    {msg}
-  </div>
-);

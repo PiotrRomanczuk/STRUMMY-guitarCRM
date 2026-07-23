@@ -4,9 +4,13 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { formStyles as s } from '@/components/_editorial/form-styles';
+import { FormSection } from '@/components/_editorial/FormSection';
+import { FormPreviewPanel } from '@/components/_editorial/FormPreviewPanel';
 import { WEEK_OPTIONS } from '@/schemas/RecurringLessonSchema';
 import type { SongOption, StudentOption } from '@/lib/services/lesson-form-data';
-import { LessonFormFields } from './LessonForm.Fields';
+import { LessonFormFieldsWhoWhen } from './LessonForm.Fields.WhoWhen';
+import { LessonFormFieldsSongsNotes } from './LessonForm.Fields.SongsNotes';
+import { LessonFormPreview } from './LessonForm.Preview';
 import { LessonFormRecurring } from './LessonForm.Recurring';
 import { LessonNotesAI } from '@/components/lessons/form/LessonNotesAI';
 import { SHOW_AI_FEATURES } from '@/lib/config/features';
@@ -73,55 +77,90 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
 
   return (
     <div style={s.page}>
-      <form style={s.shell} onSubmit={handleSubmit}>
+      <form style={{ maxWidth: 1040, margin: '0 auto' }} onSubmit={handleSubmit}>
         <div style={s.eyebrow}>{mode === 'edit' ? 'Edit lesson' : 'New lesson'}</div>
         <h1 style={s.title}>{mode === 'edit' ? 'Edit lesson' : 'Schedule a lesson'}</h1>
 
         {error && <div style={s.error}>{error}</div>}
 
-        <LessonFormFields
-          mode={mode}
-          students={students}
-          songs={songs}
-          newStudentValue={NEW_STUDENT}
-          studentId={studentId}
-          studentEmail={studentEmail}
-          title={title}
-          notes={notes}
-          scheduledLocal={scheduledLocal}
-          status={status}
-          songIds={songIds}
-          onStudentId={setStudentId}
-          onStudentEmail={setStudentEmail}
-          onTitle={setTitle}
-          onNotes={setNotes}
-          onScheduled={setScheduledLocal}
-          onStatus={setStatus}
-          onSongIds={setSongIds}
-        />
+        <div className="ed-grid-form">
+          <div>
+            <FormSection
+              numeral="I · WHO & WHEN"
+              title="Student & schedule"
+              count={mode === 'create' ? 4 : 3}
+              populated={
+                [studentId || studentEmail, title, scheduledLocal, status].filter(Boolean).length
+              }
+            >
+              <LessonFormFieldsWhoWhen
+                mode={mode}
+                students={students}
+                newStudentValue={NEW_STUDENT}
+                studentId={studentId}
+                studentEmail={studentEmail}
+                title={title}
+                scheduledLocal={scheduledLocal}
+                status={status}
+                onStudentId={setStudentId}
+                onStudentEmail={setStudentEmail}
+                onTitle={setTitle}
+                onScheduled={setScheduledLocal}
+                onStatus={setStatus}
+              />
+            </FormSection>
 
-        {mode === 'create' && (
-          <LessonFormRecurring
-            repeatWeekly={repeatWeekly}
-            weeks={repeatWeeks}
-            disabled={isSaving}
-            onRepeatWeekly={setRepeatWeekly}
-            onWeeks={setRepeatWeeks}
-          />
-        )}
+            {mode === 'create' && (
+              <FormSection numeral="II · REPEAT" title="Recurrence" count={1} populated={1}>
+                <LessonFormRecurring
+                  repeatWeekly={repeatWeekly}
+                  weeks={repeatWeeks}
+                  disabled={isSaving}
+                  onRepeatWeekly={setRepeatWeekly}
+                  onWeeks={setRepeatWeeks}
+                />
+              </FormSection>
+            )}
 
-        {SHOW_AI_FEATURES && (
-          <div data-testid="lesson-notes-ai">
-            <LessonNotesAI
-              studentName={aiStudentName}
-              studentId={isNewStudent ? undefined : studentId || undefined}
-              songsCovered={aiSongsCovered}
-              lessonTopic={title}
-              onNotesGenerated={setNotes}
-              disabled={isSaving}
-            />
+            <FormSection
+              numeral="III · PLAN"
+              title="Songs & notes"
+              count={songs.length}
+              populated={songIds.length}
+            >
+              <LessonFormFieldsSongsNotes
+                songs={songs}
+                songIds={songIds}
+                notes={notes}
+                onSongIds={setSongIds}
+                onNotes={setNotes}
+              />
+            </FormSection>
+
+            {SHOW_AI_FEATURES && (
+              <div data-testid="lesson-notes-ai">
+                <LessonNotesAI
+                  studentName={aiStudentName}
+                  studentId={isNewStudent ? undefined : studentId || undefined}
+                  songsCovered={aiSongsCovered}
+                  lessonTopic={title}
+                  onNotesGenerated={setNotes}
+                  disabled={isSaving}
+                />
+              </div>
+            )}
           </div>
-        )}
+
+          <FormPreviewPanel>
+            <LessonFormPreview
+              student={selectedStudent}
+              studentEmail={studentEmail}
+              scheduledLocal={scheduledLocal}
+              songs={songs}
+              songIds={songIds}
+            />
+          </FormPreviewPanel>
+        </div>
 
         <div style={s.actions}>
           <button type="submit" style={s.primary} disabled={isSaving}>

@@ -46,10 +46,6 @@ test.describe('Teacher Lessons CRUD', { tag: ['@teacher', '@lessons'] }, () => {
   });
 
   test('lesson CRUD lifecycle: create → view → edit → delete', async ({ page }) => {
-    test.skip(
-      true,
-      'Lesson create/edit forms are Coming Soon stubs — unskip when routes are built'
-    );
     test.setTimeout(120_000);
 
     // ── CREATE ───────────────────────────────────────────────────
