@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual test — Teacher Dashboard, Direction A deltas (2026-07-23)</title>
+    <style>
+      :root {
+        --ink: #1a1613;
+        --ink-3: #4a4037;
+        --ink-4: #8a7e70;
+        --rule: #e6dccb;
+        --gold: #b17f12;
+        --card: #fff;
+        --ivory: #f6f2ea;
+        --ok: #3a7d3a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--ivory);
+        color: var(--ink);
+        font:
+          15px/1.55 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          system-ui,
+          sans-serif;
+        padding: 32px 20px 80px;
+      }
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 26px;
+        letter-spacing: -0.01em;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 34px 0 10px;
+        border-bottom: 1px solid var(--rule);
+        padding-bottom: 6px;
+      }
+      h3 {
+        font-size: 15px;
+        margin: 18px 0 6px;
+      }
+      .meta {
+        color: var(--ink-4);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin: 14px 0;
+      }
+      code {
+        background: #efe7d6;
+        padding: 1px 6px;
+        border-radius: 5px;
+        font-size: 13px;
+      }
+      pre {
+        background: #211c17;
+        color: #f5efe4;
+        padding: 14px 16px;
+        border-radius: 10px;
+        overflow: auto;
+        font-size: 13px;
+      }
+      ol,
+      ul {
+        padding-left: 22px;
+      }
+      li {
+        margin: 5px 0;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10px 0;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid var(--rule);
+        padding: 7px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #efe7d6;
+      }
+      .ok {
+        color: var(--ok);
+        font-weight: 600;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--gold);
+      }
+      .expect {
+        color: var(--ink-3);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Teacher Dashboard — Direction A deltas</h1>
+      <div class="meta">
+        Date: 2026-07-23 · Branch: <code>feature/teacher-dashboard-direction-a</code>
+      </div>
+
+      <div class="card">
+        <span class="tag">Summary</span>
+        <p>
+          The teacher dashboard already matched Direction A's information architecture (greeting,
+          day spine, needs-attention, week density, roster). This change layers on three additions
+          from the chosen mockup, without redesigning the existing dashboard:
+        </p>
+        <ol>
+          <li>
+            <strong>Quick actions</strong> card — a 2×2 grid of shortcuts to the four most common
+            create flows: New lesson, Assignment, Add song, Invite student.
+          </li>
+          <li>
+            <strong>Activity feed</strong> card ("Recent across your studio") — a new server query
+            aggregating recent student practice sessions, completed assignments, and completed
+            lessons, merged and sorted newest-first, rendered as a compact feed with actor · action
+            · relative time.
+          </li>
+          <li>
+            <strong>Song of the week</strong> card — replaces the old song-library summary. Shows
+            the currently active song of the week (title, author, key/capo/tempo/level, teacher
+            note) with an <em>Assign →</em> CTA. Falls back to an empty state when none is selected.
+          </li>
+        </ol>
+      </div>
+
+      <h2>What changed</h2>
+      <table>
+        <tr>
+          <th>File</th>
+          <th>Change</th>
+        </tr>
+        <tr>
+          <td><code>lib/services/teacher-dashboard-activity.ts</code></td>
+          <td>
+            New. <code>getStudioActivity()</code> query + pure <code>mergeStudioActivity()</code> /
+            <code>relativeTimeLabel()</code> helpers + types.
+          </td>
+        </tr>
+        <tr>
+          <td><code>components/dashboard/editorial/teacher/TeacherDeltaCards.tsx</code></td>
+          <td>
+            New. <code>QuickActionsCard</code>, <code>ActivityFeedCard</code>,
+            <code>SongOfWeekCard</code> (presentational, reuse Card/CardHeader/StudentInitials
+            primitives).
+          </td>
+        </tr>
+        <tr>
+          <td><code>components/dashboard/editorial/teacher/TeacherDashboardEditorial.tsx</code></td>
+          <td>
+            Wires the three new cards in; swaps the <code>library</code> prop for
+            <code>activity</code> + <code>songOfWeek</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>app/dashboard/page.tsx</code></td>
+          <td>
+            Fetches <code>getStudioActivity()</code> +
+            <code>getCurrentSongOfTheWeek()</code> server-side; drops the now-unused library summary
+            fetch.
+          </td>
+        </tr>
+        <tr>
+          <td><code>app/editorial-tokens.css</code></td>
+          <td>
+            Adds <code>.ed-quick-action</code> and <code>.ed-assign</code> hover/focus classes.
+          </td>
+        </tr>
+        <tr>
+          <td>tests</td>
+          <td>
+            <code>teacher-dashboard-activity.test.ts</code> (new) + extended
+            <code>TeacherDashboardEditorial.test.tsx</code>.
+          </td>
+        </tr>
+      </table>
+
+      <h2>Studio-activity query approach</h2>
+      <div class="card">
+        <p>
+          <code>getStudioActivity(teacherId, now, limit=8)</code> runs a lessons query to find the
+          teacher's distinct student IDs, then three parallel reads bounded to the last 30 days:
+        </p>
+        <ul>
+          <li>
+            <strong>practice_sessions</strong> for those students → "practiced
+            <em>&lt;song&gt;</em>"
+          </li>
+          <li>
+            <strong>assignments</strong> with <code>status = 'completed'</code> for this teacher →
+            "completed <em>&lt;title&gt;</em>"
+          </li>
+          <li>
+            <strong>lessons</strong> with <code>status = 'COMPLETED'</code> for this teacher →
+            "finished a lesson"
+          </li>
+        </ul>
+        <p>
+          Rows are mapped to a common <code>StudioActivityItem</code> shape and passed through the
+          pure <code>mergeStudioActivity()</code> helper (flatten → sort by
+          <code>occurredAt</code> desc → slice to limit). The pure merge/sort and the
+          <code>relativeTimeLabel()</code>
+          formatter are unit-tested in isolation; the query itself is tested with a mocked Supabase
+          builder. A per-source query error is logged but does not fail the whole feed.
+        </p>
+      </div>
+
+      <h2>How to manually test</h2>
+      <h3>Setup</h3>
+      <pre>
+cd strummy
+npm run dev
+# Sign in as the teacher/admin account (see CLAUDE.md dev credentials)
+# Open http://localhost:3000/dashboard  (teacher view is the default)</pre>
+
+      <h3>1. Quick actions</h3>
+      <ol>
+        <li>Locate the <strong>Quick actions</strong> card at the top of the right rail.</li>
+        <li>Confirm four tiles in a 2×2 grid: New lesson, Assignment, Add song, Invite student.</li>
+        <li>
+          Click each and confirm the destination:
+          <ul>
+            <li>New lesson → <code>/dashboard/lessons/new</code></li>
+            <li>Assignment → <code>/dashboard/assignments/new</code></li>
+            <li>Add song → <code>/dashboard/songs/new</code></li>
+            <li>Invite student → <code>/dashboard/users/new</code></li>
+          </ul>
+        </li>
+        <li>
+          <span class="expect">Expected:</span> each route loads its create form; tiles show a
+          gold-border hover.
+        </li>
+      </ol>
+
+      <h3>2. Activity feed</h3>
+      <ol>
+        <li>
+          Find the full-width <strong>Activity — Recent across your studio</strong> card near the
+          bottom.
+        </li>
+        <li>
+          With seeded data present, confirm rows show: student initials, "<em>Name</em>
+          practiced/completed/finished a lesson …", and a relative time (e.g. <code>2h</code>,
+          <code>3d</code>) on the right.
+        </li>
+        <li>Confirm newest events appear first.</li>
+        <li>
+          <span class="expect">Empty state:</span> a studio with no activity in the last 30 days
+          shows "No studio activity in the last month."
+        </li>
+      </ol>
+
+      <h3>3. Song of the week</h3>
+      <ol>
+        <li>
+          Find the <strong>Song of the week</strong> card (bottom row, next to Roster) with the
+          gold-tint gradient.
+        </li>
+        <li>
+          If a song of the week is active: confirm the cover initials, title (links to
+          <code>/dashboard/songs/&lt;id&gt;</code>), author, and the KEY / CAPO / ♩tempo / level
+          meta row.
+        </li>
+        <li>
+          Confirm the <em>Assign →</em> button links to <code>/dashboard/assignments/new</code>.
+        </li>
+        <li>
+          <span class="expect">Empty state:</span> when no SOTW is set, the card shows "No song of
+          the week selected yet." and no Assign button.
+        </li>
+      </ol>
+
+      <h3>4. Dark mode &amp; responsive</h3>
+      <ul>
+        <li>Toggle dark mode — all new cards use editorial CSS vars, so colors invert cleanly.</li>
+        <li>
+          Narrow the window below ~860px — the hero grid and the 2-column row collapse to a single
+          column.
+        </li>
+      </ul>
+
+      <h2>Automated gate results</h2>
+      <table>
+        <tr>
+          <th>Gate</th>
+          <th>Result</th>
+        </tr>
+        <tr>
+          <td>Jest (new + dashboard suites)</td>
+          <td class="ok">64 passed / 6 suites</td>
+        </tr>
+        <tr>
+          <td><code>tsc --noEmit</code></td>
+          <td class="ok">0 errors</td>
+        </tr>
+        <tr>
+          <td><code>eslint</code> (changed files)</td>
+          <td class="ok">0 errors (3 length warnings)</td>
+        </tr>
+        <tr>
+          <td><code>npm run build</code></td>
+          <td class="ok">Compiled successfully</td>
+        </tr>
+      </table>
+
+      <h2>Known scope decisions / gaps</h2>
+      <ul>
+        <li>
+          The mockup's "Assigned to N students this week" sub-line on the SOTW card was
+          <strong>omitted</strong>: assignments have no direct <code>song_id</code> link, so the
+          count is not cheaply derivable. The card shows the teacher note (or a default prompt)
+          instead.
+        </li>
+        <li>
+          The activity feed's filter pills (All / Practice / Lessons / Songs) from the mockup were
+          <strong>not</strong> implemented — they require a client component; the card is kept
+          server/presentational per the editorial boundary rule. Candidate follow-up.
+        </li>
+        <li>
+          <em>Assign →</em> links to the generic assignment-create page (no song pre-fill, since
+          that page does not yet accept a <code>songId</code> param).
+        </li>
+      </ul>
+    </main>
+  </body>
+</html>

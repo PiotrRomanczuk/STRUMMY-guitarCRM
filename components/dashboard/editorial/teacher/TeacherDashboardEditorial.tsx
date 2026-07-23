@@ -2,20 +2,21 @@ import type {
   AtRiskStudent,
   OverdueAssignmentRow,
   RosterStudent,
-  SongLibrarySummary,
   Utilization,
   WeekDensityDay,
 } from '@/lib/services/teacher-dashboard-backfill-queries';
+import type { StudioActivityItem } from '@/lib/services/teacher-dashboard-activity';
 import type { DayLesson, TeacherDayStats } from '@/lib/services/teacher-dashboard-queries';
 
 import {
   NeedsAttentionCard,
   OverdueAssignmentsCard,
-  SongLibraryCard,
   StudentRosterCard,
   UtilizationCard,
   WeekDensityCard,
 } from './BackfillCards';
+import { ActivityFeedCard, QuickActionsCard, SongOfWeekCard } from './TeacherDeltaCards';
+import type { SongOfWeekView } from './TeacherDeltaCards';
 import { TeacherDaySpine } from './TeacherDaySpine';
 import { TeacherGreeting } from './TeacherGreeting';
 
@@ -30,7 +31,8 @@ type Props = {
   weekDensity: WeekDensityDay[];
   utilization: Utilization;
   roster: RosterStudent[];
-  library: SongLibrarySummary;
+  activity: StudioActivityItem[];
+  songOfWeek: SongOfWeekView | null;
 };
 
 export const TeacherDashboardEditorial = ({
@@ -44,7 +46,8 @@ export const TeacherDashboardEditorial = ({
   weekDensity,
   utilization,
   roster,
-  library,
+  activity,
+  songOfWeek,
 }: Props) => (
   <div
     style={{
@@ -60,6 +63,7 @@ export const TeacherDashboardEditorial = ({
     <div className="ed-grid-hero">
       <TeacherDaySpine lessons={lessons} now={now} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <QuickActionsCard />
         <OverdueAssignmentsCard rows={overdueAssignments} />
         <NeedsAttentionCard rows={atRisk} />
         <WeekDensityCard days={weekDensity} />
@@ -68,7 +72,10 @@ export const TeacherDashboardEditorial = ({
     </div>
     <div className="ed-grid-2" style={{ marginTop: 20 }}>
       <StudentRosterCard rows={roster} />
-      <SongLibraryCard summary={library} />
+      <SongOfWeekCard song={songOfWeek} />
+    </div>
+    <div style={{ marginTop: 20 }}>
+      <ActivityFeedCard items={activity} now={now} />
     </div>
   </div>
 );

@@ -1,8 +1,9 @@
 /**
  * Shell-level render coverage for TeacherDashboardEditorial — the component
- * that composes TeacherGreeting, TeacherDaySpine, and the BackfillCards
- * widgets (NeedsAttentionCard, OverdueAssignmentsCard, WeekDensityCard,
- * UtilizationCard, StudentRosterCard, SongLibraryCard) into the teacher
+ * that composes TeacherGreeting, TeacherDaySpine, the BackfillCards widgets
+ * (NeedsAttentionCard, OverdueAssignmentsCard, WeekDensityCard,
+ * UtilizationCard, StudentRosterCard) and the Direction-A delta cards
+ * (QuickActionsCard, ActivityFeedCard, SongOfWeekCard) into the teacher
  * dashboard page.
  *
  * @see components/dashboard/editorial/teacher/TeacherDashboardEditorial.tsx
@@ -12,14 +13,15 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import { TeacherDashboardEditorial } from './TeacherDashboardEditorial';
+import type { SongOfWeekView } from './TeacherDeltaCards';
 import type {
   AtRiskStudent,
   OverdueAssignmentRow,
   RosterStudent,
-  SongLibrarySummary,
   Utilization,
   WeekDensityDay,
 } from '@/lib/services/teacher-dashboard-backfill-queries';
+import type { StudioActivityItem } from '@/lib/services/teacher-dashboard-activity';
 import type { DayLesson, TeacherDayStats } from '@/lib/services/teacher-dashboard-queries';
 
 // Local time components (not a 'Z' ISO literal) so greetingFor()/getHours()
@@ -82,9 +84,28 @@ const ROSTER: RosterStudent[] = [
   },
 ];
 
-const LIBRARY: SongLibrarySummary = {
-  total: 42,
-  recent: [{ id: 'song-wonderwall', title: 'Wonderwall', author: 'Oasis' }],
+const ACTIVITY: StudioActivityItem[] = [
+  {
+    id: 'practice-p1',
+    type: 'practice',
+    actorName: 'Ava Reyes',
+    actorEmail: 'ava@example.com',
+    action: 'practiced',
+    object: 'Blackbird',
+    // ~2h before NOW (2026-07-20 14:05 local) so the label is deterministic.
+    occurredAt: new Date(2026, 6, 20, 12, 5, 0).toISOString(),
+  },
+];
+
+const SONG_OF_WEEK: SongOfWeekView = {
+  id: 'song-hotel-california',
+  title: 'Hotel California',
+  author: 'Eagles',
+  level: 'intermediate',
+  songKey: 'Bm',
+  capoFret: 7,
+  tempo: 74,
+  teacherMessage: 'Focus on the intro arpeggio.',
 };
 
 const baseProps = {
@@ -98,7 +119,8 @@ const baseProps = {
   weekDensity: WEEK_DENSITY,
   utilization: UTILIZATION,
   roster: ROSTER,
-  library: LIBRARY,
+  activity: ACTIVITY,
+  songOfWeek: SONG_OF_WEEK,
 };
 
 describe('TeacherDashboardEditorial', () => {
@@ -156,7 +178,7 @@ describe('TeacherDashboardEditorial', () => {
     expect(screen.queryByText('Overdue homework')).not.toBeInTheDocument();
   });
 
-  it('renders week density, utilization, roster, and song library sections', () => {
+  it('renders week density, utilization, and roster sections', () => {
     render(<TeacherDashboardEditorial {...baseProps} />);
 
     expect(screen.getByText('Week density')).toBeInTheDocument();
@@ -167,13 +189,68 @@ describe('TeacherDashboardEditorial', () => {
     expect(screen.getByText('12.5h / 40h')).toBeInTheDocument();
 
     expect(screen.getByText('Roster')).toBeInTheDocument();
-    expect(screen.getByText('Ivy Chen')).toBeInTheDocument();
     const rosterLink = screen.getByText('Ivy Chen').closest('a');
     expect(rosterLink).toHaveAttribute('href', '/dashboard/users/student-ivy');
+  });
 
-    expect(screen.getByText('Wonderwall')).toBeInTheDocument();
-    expect(screen.getByText('Oasis')).toBeInTheDocument();
-    const viewAllLink = screen.getByText('View all 42 →');
-    expect(viewAllLink).toHaveAttribute('href', '/dashboard/songs');
+  it('renders the quick-actions card with verified routes', () => {
+    render(<TeacherDashboardEditorial {...baseProps} />);
+
+    expect(screen.getByText('Quick actions')).toBeInTheDocument();
+    expect(screen.getByText('New lesson').closest('a')).toHaveAttribute(
+      'href',
+      '/dashboard/lessons/new'
+    );
+    expect(screen.getByText('Assignment').closest('a')).toHaveAttribute(
+      'href',
+      '/dashboard/assignments/new'
+    );
+    expect(screen.getByText('Add song').closest('a')).toHaveAttribute(
+      'href',
+      '/dashboard/songs/new'
+    );
+    expect(screen.getByText('Invite student').closest('a')).toHaveAttribute(
+      'href',
+      '/dashboard/users/new'
+    );
+  });
+
+  it('renders the studio activity feed with actor, action and relative time', () => {
+    render(<TeacherDashboardEditorial {...baseProps} />);
+
+    expect(screen.getByText('Recent across your studio')).toBeInTheDocument();
+    expect(screen.getByText('practiced')).toBeInTheDocument();
+    expect(screen.getByText('Blackbird')).toBeInTheDocument();
+    expect(screen.getByText('2h')).toBeInTheDocument();
+  });
+
+  it('shows an empty activity message when there is no studio activity', () => {
+    render(<TeacherDashboardEditorial {...baseProps} activity={[]} />);
+
+    expect(screen.getByText(/No studio activity in the last month\./)).toBeInTheDocument();
+  });
+
+  it('renders the song of the week with metadata and an assign CTA', () => {
+    render(<TeacherDashboardEditorial {...baseProps} />);
+
+    expect(screen.getByText('Song of the week')).toBeInTheDocument();
+    const songTitle = screen.getByText('Hotel California');
+    expect(songTitle.closest('a')).toHaveAttribute(
+      'href',
+      '/dashboard/songs/song-hotel-california'
+    );
+    expect(screen.getByText('KEY Bm')).toBeInTheDocument();
+    expect(screen.getByText('CAPO 7')).toBeInTheDocument();
+    expect(screen.getByText('Focus on the intro arpeggio.')).toBeInTheDocument();
+
+    const assign = screen.getByText('Assign →');
+    expect(assign.closest('a')).toHaveAttribute('href', '/dashboard/assignments/new');
+  });
+
+  it('shows an empty song-of-the-week message when none is selected', () => {
+    render(<TeacherDashboardEditorial {...baseProps} songOfWeek={null} />);
+
+    expect(screen.getByText(/No song of the week selected yet\./)).toBeInTheDocument();
+    expect(screen.queryByText('Assign →')).not.toBeInTheDocument();
   });
 });

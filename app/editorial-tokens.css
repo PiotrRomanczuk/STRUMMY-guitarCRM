@@ -83,6 +83,26 @@
   outline-offset: -2px;
 }
 
+/* Teacher-dashboard Direction A deltas: quick-action tiles + SOTW assign CTA.
+   Static layout stays inline in the components; hover/focus lives here. */
+.theme-editorial .ed-quick-action {
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.theme-editorial .ed-quick-action:hover {
+  border-color: var(--gold) !important;
+  background-color: var(--rule-2) !important;
+  color: var(--ink) !important;
+}
+.theme-editorial .ed-assign {
+  transition: opacity 0.15s ease;
+}
+.theme-editorial .ed-assign:hover {
+  opacity: 0.85;
+}
+
 /* Filter / sort chips and small text actions. */
 .theme-editorial .ed-chip {
   transition:

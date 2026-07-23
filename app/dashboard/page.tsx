@@ -19,14 +19,16 @@ import {
   calcUtilization,
   getAtRiskStudents,
   getOverdueAssignments,
-  getSongLibrarySummary,
   getTeacherRoster,
   getWeekDensity,
 } from '@/lib/services/teacher-dashboard-backfill-queries';
+import { getStudioActivity } from '@/lib/services/teacher-dashboard-activity';
 import {
   getTeacherDayLessons,
   summariseDayLessons,
 } from '@/lib/services/teacher-dashboard-queries';
+import { getCurrentSongOfTheWeek } from '@/app/actions/song-of-the-week';
+import type { SongOfWeekView } from '@/components/dashboard/editorial/teacher/TeacherDeltaCards';
 
 const geist = Geist({
   subsets: ['latin'],
@@ -70,9 +72,25 @@ async function loadProfileName(userId: string): Promise<string | null> {
   return (data?.full_name as string | null) ?? null;
 }
 
+function toSongOfWeekView(
+  sotw: Awaited<ReturnType<typeof getCurrentSongOfTheWeek>>
+): SongOfWeekView | null {
+  if (!sotw) return null;
+  return {
+    id: sotw.song.id,
+    title: sotw.song.title,
+    author: sotw.song.author ?? null,
+    level: sotw.song.level ?? null,
+    songKey: sotw.song.key ?? null,
+    capoFret: sotw.song.capo_fret ?? null,
+    tempo: sotw.song.tempo ?? null,
+    teacherMessage: sotw.teacher_message ?? null,
+  };
+}
+
 async function TeacherEditorialView({ userId, email }: { userId: string; email: string }) {
   const now = new Date();
-  const [fullName, lessons, atRisk, overdueAssignments, weekDensity, roster, library] =
+  const [fullName, lessons, atRisk, overdueAssignments, weekDensity, roster, activity, sotw] =
     await Promise.all([
       loadProfileName(userId),
       getTeacherDayLessons(userId, now),
@@ -80,7 +98,8 @@ async function TeacherEditorialView({ userId, email }: { userId: string; email: 
       getOverdueAssignments(userId, now),
       getWeekDensity(userId, now),
       getTeacherRoster(userId),
-      getSongLibrarySummary(),
+      getStudioActivity(userId, now),
+      getCurrentSongOfTheWeek(),
     ]);
   const stats = summariseDayLessons(lessons);
   const utilization = calcUtilization(weekDensity);
@@ -97,7 +116,8 @@ async function TeacherEditorialView({ userId, email }: { userId: string; email: 
         weekDensity={weekDensity}
         utilization={utilization}
         roster={roster}
-        library={library}
+        activity={activity}
+        songOfWeek={toSongOfWeekView(sotw)}
       />
     </div>
   );
