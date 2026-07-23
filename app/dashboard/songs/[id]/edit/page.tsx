@@ -37,7 +37,9 @@ export default async function EditSongPage({ params }: PageProps) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('songs')
-    .select('id, title, author, level, key, capo_fret, tempo, chords, lyrics_with_chords')
+    .select(
+      'id, title, author, level, key, capo_fret, tempo, time_signature, release_year, chords, strumming_pattern, category, youtube_url, spotify_link_url, ultimate_guitar_link, tiktok_short_url, cover_image_url, lyrics_with_chords'
+    )
     .eq('id', id)
     .is('deleted_at', null)
     .single();

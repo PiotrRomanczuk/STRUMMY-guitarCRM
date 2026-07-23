@@ -28,6 +28,7 @@ type Props = {
     chords: string;
     tempo: number | null;
     capo_fret: number | null;
+    strumming_pattern: string;
   };
   onNotes: (v: string) => void;
 };
@@ -43,7 +44,7 @@ export const SongFormEditorialFieldsNotes = ({
   <Field label="Teaching notes" error={notesError} optional>
     {SHOW_AI_FEATURES && (
       <SongNotesAI
-        songData={{ ...songData, strumming_pattern: '' }}
+        songData={songData}
         currentNotes={notes}
         onNotesGenerated={onNotes}
         disabled={pending}

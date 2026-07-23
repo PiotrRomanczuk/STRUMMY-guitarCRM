@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState, useState } from 'react';
+import { useActionState, useRef, useState } from 'react';
 
 import { FormSection } from '@/components/_editorial/FormSection';
 import { FormPreviewPanel } from '@/components/_editorial/FormPreviewPanel';
@@ -9,18 +9,29 @@ import { createSongAction, type SongFormState } from '@/app/actions/song-form';
 
 import { SongFormEditorialFieldsIdentity } from './SongFormEditorial.Fields.Identity';
 import { SongFormEditorialFieldsDetails } from './SongFormEditorial.Fields.Details';
+import { SongFormEditorialFieldsChords } from './SongFormEditorial.Fields.Chords';
+import { SongFormEditorialFieldsStrumming } from './SongFormEditorial.Fields.Strumming';
+import { SongFormEditorialFieldsExternal } from './SongFormEditorial.Fields.External';
 import { SongFormEditorialFieldsNotes } from './SongFormEditorial.Fields.Notes';
+import { SongFormEditorialFieldsLyrics } from './SongFormEditorial.Fields.Lyrics';
 import { SongFormEditorialPreview } from './SongFormEditorial.Preview';
+import { SongFormEditorialCompletionTracker } from './SongFormEditorial.CompletionTracker';
+import {
+  SongFormEditorialSpotifyAccelerator,
+  type SpotifyAutoFill,
+} from './SongFormEditorial.SpotifyAccelerator';
+import { SongFormEditorialDuplicateWarning } from './SongFormEditorial.DuplicateWarning';
 
 type Level = 'beginner' | 'intermediate' | 'advanced';
 
 const INITIAL_STATE: SongFormState = {};
 
+// eslint-disable-next-line max-lines-per-function -- single-page editorial form wiring 9 sub-sections
 export const SongFormEditorial = () => {
   const [state, formAction, pending] = useActionState(createSongAction, INITIAL_STATE);
 
-  // Controlled fields — kept in state so the AI assistant can read the song
-  // context and write generated notes back into the form. `name` attributes are
+  // Controlled fields — kept in state so the AI assistant, Spotify accelerator,
+  // and live preview can all read/write the same values. `name` attributes are
   // preserved so the native form-action submission still carries every value.
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
@@ -28,8 +39,41 @@ export const SongFormEditorial = () => {
   const [key, setKey] = useState('C');
   const [capoFret, setCapoFret] = useState<number | null>(null);
   const [tempo, setTempo] = useState<number | null>(null);
-  const [chords, setChords] = useState('');
+  const [timeSignature, setTimeSignature] = useState<number | null>(null);
+  const [releaseYear, setReleaseYear] = useState<number | null>(null);
+  const [chords, setChords] = useState<string[]>([]);
+  const [strumming, setStrumming] = useState('');
   const [notes, setNotes] = useState('');
+  const [lyrics, setLyrics] = useState('');
+  const [category, setCategory] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [spotifyLinkUrl, setSpotifyLinkUrl] = useState('');
+  const [ultimateGuitarLink, setUltimateGuitarLink] = useState('');
+  const [tiktokShortUrl, setTiktokShortUrl] = useState('');
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const isDraftRef = useRef<HTMLInputElement>(null);
+
+  const applySpotifyAutoFill = (fill: SpotifyAutoFill) => {
+    setTitle(fill.title);
+    setAuthor(fill.author);
+    setSpotifyLinkUrl(fill.spotifyLinkUrl);
+    setCoverImageUrl(fill.coverImageUrl);
+    if (fill.releaseYear) setReleaseYear(fill.releaseYear);
+    if (fill.key) setKey(fill.key);
+    if (fill.tempo) setTempo(fill.tempo);
+    if (fill.timeSignature) setTimeSignature(fill.timeSignature);
+  };
+
+  const essentialsPopulated = [title, author].filter(Boolean).length;
+  const musicalPopulated = [capoFret, tempo, timeSignature, releaseYear].filter(
+    (v) => v !== null
+  ).length;
+  const resourcesPopulated = [
+    youtubeUrl,
+    spotifyLinkUrl,
+    ultimateGuitarLink,
+    tiktokShortUrl,
+  ].filter(Boolean).length;
 
   return (
     <div
@@ -67,18 +111,26 @@ export const SongFormEditorial = () => {
           Add a song
         </h1>
         <p style={{ margin: '0 0 22px', fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.55 }}>
-          The basics — title, author, level, key. Cover art, audio, lyrics, and tab notation get
-          attached after the song lands in your library.
+          Search Spotify to auto-fill, or enter manually. Only title, artist, level, and key are
+          required.
         </p>
 
+        <SongFormEditorialSpotifyAccelerator onAutoFill={applySpotifyAutoFill} />
+        <SongFormEditorialDuplicateWarning title={title} author={author} />
+
         <form action={formAction}>
+          <input type="hidden" name="cover_image_url" value={coverImageUrl ?? ''} />
+          <input type="hidden" name="chords" value={chords.join(', ')} />
+          <input type="hidden" name="strumming_pattern" value={strumming} />
+          <input type="hidden" name="is_draft" ref={isDraftRef} defaultValue="false" />
+
           <div className="ed-grid-form">
             <div>
               <FormSection
-                numeral="I · IDENTITY"
-                title="Title & author"
+                numeral="I · ESSENTIALS"
+                title="The basics"
                 count={2}
-                populated={[title, author].filter(Boolean).length}
+                populated={essentialsPopulated}
               >
                 <SongFormEditorialFieldsIdentity
                   title={title}
@@ -91,41 +143,106 @@ export const SongFormEditorial = () => {
               </FormSection>
 
               <FormSection
-                numeral="II · DETAILS"
-                title="Level, key & rhythm"
-                count={2}
-                populated={2}
+                numeral="II · MUSICAL"
+                title="Performance details"
+                count={4}
+                populated={musicalPopulated}
               >
                 <SongFormEditorialFieldsDetails
                   level={level}
                   key_={key}
                   capoFret={capoFret}
                   tempo={tempo}
-                  chords={chords}
+                  timeSignature={timeSignature}
+                  releaseYear={releaseYear}
                   levelError={state.errors?.level}
                   keyError={state.errors?.key}
-                  capoError={state.errors?.capo_fret}
-                  tempoError={state.errors?.tempo}
-                  chordsError={state.errors?.chords}
                   onLevel={setLevel}
                   onKey={setKey}
                   onCapoFret={setCapoFret}
                   onTempo={setTempo}
-                  onChords={setChords}
+                  onTimeSignature={setTimeSignature}
+                  onReleaseYear={setReleaseYear}
+                />
+                <div style={{ marginTop: 16 }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--mono)',
+                      fontSize: 10,
+                      color: 'var(--ink-4)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '.12em',
+                      marginBottom: 6,
+                    }}
+                  >
+                    Chords <span style={{ color: 'var(--ink-5)' }}>Optional</span>
+                  </div>
+                  <SongFormEditorialFieldsChords chords={chords} onChange={setChords} />
+                </div>
+                <div style={{ marginTop: 16 }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--mono)',
+                      fontSize: 10,
+                      color: 'var(--ink-4)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '.12em',
+                      marginBottom: 6,
+                    }}
+                  >
+                    Strumming pattern <span style={{ color: 'var(--ink-5)' }}>Optional</span>
+                  </div>
+                  <SongFormEditorialFieldsStrumming value={strumming} onChange={setStrumming} />
+                </div>
+              </FormSection>
+
+              <FormSection
+                numeral="III · RESOURCES"
+                title="External links"
+                count={4}
+                populated={resourcesPopulated}
+              >
+                <SongFormEditorialFieldsExternal
+                  category={category}
+                  youtubeUrl={youtubeUrl}
+                  spotifyLinkUrl={spotifyLinkUrl}
+                  ultimateGuitarLink={ultimateGuitarLink}
+                  tiktokShortUrl={tiktokShortUrl}
+                  onCategory={setCategory}
+                  onYoutubeUrl={setYoutubeUrl}
+                  onSpotifyLinkUrl={setSpotifyLinkUrl}
+                  onUltimateGuitarLink={setUltimateGuitarLink}
+                  onTiktokShortUrl={setTiktokShortUrl}
                 />
               </FormSection>
 
               <FormSection
-                numeral="III · NOTES"
-                title="Teaching notes"
-                count={1}
-                populated={notes ? 1 : 0}
+                numeral="IV · CONTENT"
+                title="Lyrics & notes"
+                count={2}
+                populated={[lyrics, notes].filter(Boolean).length}
               >
+                <div style={{ marginBottom: 16 }}>
+                  <SongFormEditorialFieldsLyrics
+                    value={lyrics}
+                    onChange={setLyrics}
+                    error={state.errors?.lyrics_with_chords}
+                  />
+                </div>
                 <SongFormEditorialFieldsNotes
                   notes={notes}
                   notesError={state.errors?.notes}
                   pending={pending}
-                  songData={{ title, author, level, key, chords, tempo, capo_fret: capoFret }}
+                  songData={{
+                    title,
+                    author,
+                    level,
+                    key,
+                    chords: chords.join(', '),
+                    tempo,
+                    capo_fret: capoFret,
+                    strumming_pattern: strumming,
+                  }}
                   onNotes={setNotes}
                 />
               </FormSection>
@@ -150,6 +267,29 @@ export const SongFormEditorial = () => {
                 <button
                   type="submit"
                   disabled={pending}
+                  onClick={() => {
+                    if (isDraftRef.current) isDraftRef.current.value = 'true';
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: 8,
+                    border: '1px solid var(--rule)',
+                    background: 'var(--card)',
+                    color: 'var(--ink)',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: pending ? 'wait' : 'pointer',
+                    fontFamily: 'var(--sans)',
+                  }}
+                >
+                  Save draft
+                </button>
+                <button
+                  type="submit"
+                  disabled={pending}
+                  onClick={() => {
+                    if (isDraftRef.current) isDraftRef.current.value = 'false';
+                  }}
                   style={{
                     padding: '10px 20px',
                     borderRadius: 8,
@@ -162,14 +302,40 @@ export const SongFormEditorial = () => {
                     fontFamily: 'var(--sans)',
                   }}
                 >
-                  {pending ? 'Saving…' : 'Add song'}
+                  {pending ? 'Saving…' : 'Create song'}
                 </button>
               </div>
             </div>
 
-            <FormPreviewPanel>
-              <SongFormEditorialPreview title={title} author={author} level={level} keyName={key} />
-            </FormPreviewPanel>
+            <div>
+              <FormPreviewPanel>
+                <SongFormEditorialPreview
+                  title={title}
+                  author={author}
+                  level={level}
+                  keyName={key}
+                  capoFret={capoFret}
+                  tempo={tempo}
+                  chords={chords}
+                  category={category}
+                  coverImageUrl={coverImageUrl}
+                  hasYoutube={Boolean(youtubeUrl)}
+                  hasSpotify={Boolean(spotifyLinkUrl)}
+                />
+              </FormPreviewPanel>
+              <SongFormEditorialCompletionTracker
+                sections={[
+                  { label: 'Essentials', populated: essentialsPopulated, total: 2 },
+                  { label: 'Musical', populated: musicalPopulated, total: 4 },
+                  { label: 'Resources', populated: resourcesPopulated, total: 4 },
+                  {
+                    label: 'Content',
+                    populated: [lyrics, notes].filter(Boolean).length,
+                    total: 2,
+                  },
+                ]}
+              />
+            </div>
           </div>
         </form>
       </div>
