@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      Manual test — Assignments teacher progress column + student submit polish (2026-07-23)
+    </title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family:
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        line-height: 1.55;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+        color: #1a1a1a;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #14140f;
+          color: #ece7db;
+        }
+        code {
+          background: #2a2a22;
+        }
+        th {
+          background: #232319;
+        }
+      }
+      h1 {
+        font-size: 26px;
+        margin-bottom: 4px;
+      }
+      h2 {
+        font-size: 18px;
+        margin-top: 34px;
+        border-bottom: 1px solid #ccc3;
+        padding-bottom: 6px;
+      }
+      .meta {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 12px;
+        color: #8a8a7a;
+      }
+      code {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 12.5px;
+        background: #f0ede4;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc4;
+        padding: 7px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #f5f2ea;
+      }
+      ol li,
+      ul li {
+        margin: 4px 0;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .ok {
+        background: #d8ecd8;
+        color: #245b24;
+      }
+      .defer {
+        background: #efe2c6;
+        color: #6b5115;
+      }
+      .bar {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .track {
+        width: 44px;
+        height: 5px;
+        border-radius: 999px;
+        background: #0002;
+        overflow: hidden;
+      }
+      .fill {
+        height: 100%;
+        background: #b8912f;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Assignments — teacher progress column + student submit polish</h1>
+    <p class="meta">
+      Date: 2026-07-23 · Branch: feature/assignments-progress · Scope: editorial assignments list +
+      detail
+    </p>
+
+    <h2>What was built</h2>
+    <p>
+      Two visible changes, both driven entirely by existing data (the per-assignment
+      <code>checklist</code> JSON already loaded by the list query — no new DB columns, no media
+      upload).
+    </p>
+    <ol>
+      <li>
+        <strong>Teacher list — dedicated “Progress” column.</strong> The teacher/admin assignments
+        list now shows a fourth column between the student/title and the status pill: a thin
+        completion bar plus a <code>done/total</code> count (<span class="bar"
+          ><span class="track"><span class="fill" style="width: 50%"></span></span>
+          <code>2/4</code></span
+        >), derived from the checklist via <code>checklistProgress</code>. Assignments with no
+        checklist show a muted <code>—</code> placeholder (hover title: “No checklist on this
+        assignment”). The column is <strong>teacher/admin only</strong> — the student list stays
+        three columns (Due / Title / Status); a student sees their own progress in the detail view
+        instead. Previously the compact bar was crammed under the status pill for every role; it now
+        has its own labelled column and header.
+      </li>
+      <li>
+        <strong>Student detail — clearer “hand it in” submit path.</strong> The detail Progress card
+        body was extracted into <code>AssignmentSubmitPanel</code>. For an acting student the card
+        is titled <em>“Your practice”</em> and the status action is framed with a
+        <em>“Hand it in”</em> eyebrow plus the line
+        <em>“Tick off what you’ve practised, then mark it complete to send it to your teacher.”</em>
+        A teacher/admin sees the neutral <em>“Progress” / “Update status”</em> framing with no
+        hand-in copy. The underlying checklist tick-offs, chord-drill view, and status transitions
+        are unchanged.
+      </li>
+    </ol>
+
+    <h2>Data / query changes</h2>
+    <ul>
+      <li>
+        No query change was required: <code>getAssignmentsList</code> already selects
+        <code>checklist</code> and <code>mapRow</code> already computes
+        <code>progress: { done, total }</code> onto every <code>AssignmentRow</code> (from a prior
+        PR). This wave only surfaces that field as a real column.
+      </li>
+      <li>
+        No migration. No new columns. No <code>daily_target</code> /
+        <code>submission_type</code> invented.
+      </li>
+    </ul>
+
+    <h2>How to test manually</h2>
+    <p>
+      Run <code>npm run dev</code> and sign in with the seeded accounts (see CLAUDE.md dev
+      credentials).
+    </p>
+    <table>
+      <tr>
+        <th>#</th>
+        <th>Steps</th>
+        <th>Expected</th>
+      </tr>
+      <tr>
+        <td>1</td>
+        <td>
+          As <strong>admin/teacher</strong> (<code>p.romanczuk@gmail.com</code>) open
+          <code>/dashboard/assignments</code>.
+        </td>
+        <td>
+          List header shows columns <code>Due · Student / Title · Progress · Status</code>. Each row
+          with a checklist shows a thin bar + <code>done/total</code>; rows with no checklist show
+          <code>—</code>.
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Narrow the browser to a phone width.</td>
+        <td>
+          Columns collapse to a single stacked column (no horizontal scroll); the progress bar still
+          renders inline.
+        </td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>
+          As a <strong>student</strong> (<code>emma@strummy.app</code>) open
+          <code>/dashboard/assignments</code>.
+        </td>
+        <td>
+          List shows only <code>Due · Title · Status</code> — no Progress column, no
+          <code>done/total</code> text.
+        </td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>As the student, open one of your assignments that has a checklist.</td>
+        <td>
+          Right card is titled <strong>“Your practice”</strong>. Below the checklist, a
+          <strong>“Hand it in”</strong> section shows the helper line and a primary
+          <code>Start working</code> / <code>Mark complete</code> button.
+        </td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Tick a checklist item, then click the primary status button.</td>
+        <td>
+          The item persists (optimistic, survives refresh) and the status advances; the bar in the
+          teacher list reflects the new <code>done/total</code>.
+        </td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>As teacher, open the same assignment.</td>
+        <td>
+          Card is titled <strong>“Progress”</strong> with an
+          <strong>“Update status”</strong> framing (full transition set, including Cancel) — no
+          “send it to your teacher” copy.
+        </td>
+      </tr>
+    </table>
+
+    <h2>Intentionally deferred (later feature wave)</h2>
+    <ul>
+      <li>
+        <span class="pill defer">deferred</span> Audio/video recording <strong>upload</strong> on
+        the student submit card (mockup’s mic dropzone).
+      </li>
+      <li>
+        <span class="pill defer">deferred</span> The 7-day <strong>practice-log chart</strong> and
+        “last practiced N days ago” (needs a practice-minutes source that does not exist yet).
+      </li>
+      <li>
+        <span class="pill defer">deferred</span> <code>daily_target</code> /
+        <code>submission_type</code> columns and the create-form / multi-student changes — out of
+        scope here.
+      </li>
+    </ul>
+
+    <h2>Quality gates</h2>
+    <ul>
+      <li><span class="pill ok">pass</span> <code>npx tsc --noEmit</code> — 0 errors.</li>
+      <li>
+        <span class="pill ok">pass</span>
+        <code>npx jest components/assignments lib/services schemas/AssignmentSchema</code> — 33
+        suites, 453 passed (1 skipped).
+      </li>
+      <li>
+        <span class="pill ok">pass</span> <code>npx eslint &lt;changed files&gt;</code> — 0 errors
+        (2 pre-existing <code>max-lines</code> warnings on the detail file, which the extraction
+        reduced from 274 → 235 lines).
+      </li>
+    </ul>
+
+    <h2>Files touched</h2>
+    <ul>
+      <li>
+        <code>components/assignments/editorial/AssignmentsListEditorial.tsx</code> — dynamic
+        teacher/student grid template + “Progress” header cell.
+      </li>
+      <li>
+        <code>components/assignments/editorial/AssignmentsListEditorial.Row.tsx</code> — new
+        <code>ProgressCell</code>, progress moved to its own teacher-only column, status cell
+        slimmed to the pill.
+      </li>
+      <li>
+        <code>components/assignments/editorial/detail/AssignmentDetailEditorial.tsx</code> —
+        Progress-card body extracted to the panel; role-aware card title.
+      </li>
+      <li>
+        <code
+          >components/assignments/editorial/detail/AssignmentDetailEditorial.SubmitPanel.tsx</code
+        >
+        — new sub-component (chord drill + checklist + framed status action).
+      </li>
+      <li>
+        <code>…AssignmentsListEditorial.test.tsx</code> /
+        <code>…AssignmentDetailEditorial.test.tsx</code> — new coverage for the column + submit
+        framing.
+      </li>
+    </ul>
+  </body>
+</html>

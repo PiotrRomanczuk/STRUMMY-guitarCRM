@@ -212,4 +212,50 @@ describe('AssignmentsListEditorial', () => {
     const rowLink = screen.getByRole('link', { name: /Barre chord drill/i });
     expect(within(rowLink).getByText('Completed')).toBeInTheDocument();
   });
+
+  describe('checklist progress column', () => {
+    it('shows a Progress header and per-row done/total in the teacher view', () => {
+      render(
+        <AssignmentsListEditorial
+          rows={[buildRow({ progress: { done: 2, total: 4 } })]}
+          counts={buildCounts({ all: 1, in_progress: 1 })}
+          asStudent={false}
+          dir="asc"
+        />
+      );
+
+      expect(screen.getByText('Progress', { selector: 'span' })).toBeInTheDocument();
+      const rowLink = screen.getByRole('link', { name: /Barre chord drill/i });
+      expect(within(rowLink).getByText('2/4')).toBeInTheDocument();
+    });
+
+    it('renders a dash placeholder for a teacher row with no checklist', () => {
+      render(
+        <AssignmentsListEditorial
+          rows={[buildRow({ progress: { done: 0, total: 0 } })]}
+          counts={buildCounts({ all: 1, in_progress: 1 })}
+          asStudent={false}
+          dir="asc"
+        />
+      );
+
+      const rowLink = screen.getByRole('link', { name: /Barre chord drill/i });
+      expect(within(rowLink).getByTitle('No checklist on this assignment')).toBeInTheDocument();
+    });
+
+    it('hides the Progress column and count from the student view', () => {
+      render(
+        <AssignmentsListEditorial
+          rows={[buildRow({ progress: { done: 2, total: 4 } })]}
+          counts={buildCounts({ all: 1, in_progress: 1 })}
+          asStudent={true}
+          dir="asc"
+        />
+      );
+
+      expect(screen.queryByText('Progress', { selector: 'span' })).not.toBeInTheDocument();
+      const rowLink = screen.getByRole('link', { name: /Barre chord drill/i });
+      expect(within(rowLink).queryByText('2/4')).not.toBeInTheDocument();
+    });
+  });
 });

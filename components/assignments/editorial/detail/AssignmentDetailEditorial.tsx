@@ -6,10 +6,7 @@ import type {
 } from '@/lib/services/assignment-detail-queries';
 import { deriveEffectiveStatus } from '@/lib/services/assignment-list-params';
 import { assignmentStatusColour, assignmentStatusLabel } from '@/lib/services/assignments-queries';
-import type { AssignmentStatus } from '@/schemas/AssignmentSchema';
-import { AssignmentStatusActions } from '../status/AssignmentStatusActions';
-import { ChecklistView } from '../checklist/ChecklistView';
-import { ChordDrillView } from '../chord-drill/ChordDrillView';
+import { AssignmentSubmitPanel } from './AssignmentDetailEditorial.SubmitPanel';
 
 const formatDate = (iso: string | null): string => {
   if (!iso) return '—';
@@ -68,6 +65,7 @@ export const AssignmentDetailEditorial = ({ assignment, canManage, canAct, histo
   const effectiveStatus = deriveEffectiveStatus(assignment.dueDate, assignment.status);
   const colour = assignmentStatusColour(effectiveStatus);
   const isOverdue = effectiveStatus === 'overdue';
+  const isStudentView = canAct && !canManage;
   const studentDisplay = assignment.studentName ?? assignment.studentEmail ?? 'Student';
 
   return (
@@ -203,37 +201,13 @@ export const AssignmentDetailEditorial = ({ assignment, canManage, canAct, histo
             )}
           </Card>
 
-          <Card title="Progress">
-            {assignment.chordDrill && (
-              <div style={{ marginBottom: 18 }}>
-                <ChordDrillView
-                  assignmentId={assignment.id}
-                  drill={assignment.chordDrill}
-                  result={assignment.chordDrillResult}
-                  canAct={canAct}
-                />
-              </div>
-            )}
-            {assignment.checklist.length > 0 && (
-              <div style={{ marginBottom: 18 }}>
-                <ChecklistView
-                  assignmentId={assignment.id}
-                  items={assignment.checklist}
-                  canToggle={canAct}
-                />
-              </div>
-            )}
-            {canAct ? (
-              <AssignmentStatusActions
-                assignmentId={assignment.id}
-                currentStatus={assignment.status as AssignmentStatus}
-                canManage={canManage}
-              />
-            ) : (
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)' }}>
-                Status: {assignmentStatusLabel(effectiveStatus)}
-              </div>
-            )}
+          <Card title={isStudentView ? 'Your practice' : 'Progress'}>
+            <AssignmentSubmitPanel
+              assignment={assignment}
+              canManage={canManage}
+              canAct={canAct}
+              effectiveStatus={effectiveStatus}
+            />
           </Card>
 
           {canManage && history.length > 0 && (

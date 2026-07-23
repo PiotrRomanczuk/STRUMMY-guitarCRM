@@ -383,4 +383,39 @@ describe('AssignmentDetailEditorial', () => {
       expect(screen.getByText('2/2')).toBeInTheDocument();
     });
   });
+
+  describe('submit panel framing', () => {
+    it('frames the status action as a hand-in for an acting student', () => {
+      render(
+        <AssignmentDetailEditorial
+          assignment={buildAssignment({ status: 'not_started' })}
+          canManage={false}
+          canAct={true}
+          history={[]}
+        />
+      );
+
+      expect(screen.getByText('Your practice')).toBeInTheDocument();
+      expect(screen.getByText('Hand it in')).toBeInTheDocument();
+      expect(screen.getByText(/mark it complete to send it to your teacher/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Start working' })).toBeInTheDocument();
+    });
+
+    it('uses neutral status framing (no hand-in copy) for a managing teacher', () => {
+      render(
+        <AssignmentDetailEditorial
+          assignment={buildAssignment({ status: 'not_started' })}
+          canManage={true}
+          canAct={true}
+          history={[]}
+        />
+      );
+
+      expect(screen.getByText('Update status')).toBeInTheDocument();
+      expect(screen.getByText('Progress')).toBeInTheDocument();
+      expect(
+        screen.queryByText(/mark it complete to send it to your teacher/i)
+      ).not.toBeInTheDocument();
+    });
+  });
 });
