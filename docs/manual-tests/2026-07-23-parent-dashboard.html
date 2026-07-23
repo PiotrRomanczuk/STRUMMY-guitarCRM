@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manual Test · Parent Dashboard (family portal)</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+        line-height: 1.55;
+        color: #1a1613;
+        background: #f6f2ea;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 4px;
+      }
+      h2 {
+        margin-top: 30px;
+        border-bottom: 2px solid #d8cdb8;
+        padding-bottom: 6px;
+      }
+      .meta {
+        color: #6b5f4e;
+        font-size: 0.9rem;
+      }
+      code {
+        background: #ece3d2;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 0.88em;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+      }
+      th,
+      td {
+        border: 1px solid #d8cdb8;
+        padding: 8px 10px;
+        text-align: left;
+        font-size: 0.92rem;
+        vertical-align: top;
+      }
+      th {
+        background: #ece3d2;
+      }
+      .ok {
+        color: #2f7d4f;
+        font-weight: 700;
+      }
+      .warn {
+        color: #b3801f;
+        font-weight: 700;
+      }
+      li {
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Parent Dashboard — family portal (net-new)</h1>
+    <p class="meta">
+      <strong>Date:</strong> 2026-07-23 · <strong>Role:</strong> parent (<code>is_parent</code>) ·
+      integrated to <code>main</code>
+    </p>
+
+    <h2>1. What was built</h2>
+    <p>
+      A net-new parent-role dashboard implementing the batch-02 "Family portal" mockup: a parent
+      checks in on their child.
+    </p>
+    <ul>
+      <li>
+        Child check-in (name, instrument, level, teacher),
+        <strong>recent practice</strong> (on-track this week, minutes, goal/day),
+        <strong>upcoming lessons</strong>, and the <strong>latest teacher note</strong>.
+      </li>
+      <li>
+        Reuses child data via a dedicated <code>parent-health.{helpers,queries}</code> module
+        (streak, week summary, upcoming lessons). Parent-read RLS migration
+        <code>20260723150000_parent_read_repertoire_preferences.sql</code>.
+      </li>
+      <li>
+        <strong>Billing is stubbed</strong> (parked per current scope) — no Stripe/invoice logic.
+      </li>
+    </ul>
+
+    <h2>2. How to manually test</h2>
+    <ol>
+      <li>
+        <code>npm run dev</code>. Sign in as a user with the <strong>parent</strong> role that is
+        linked to at least one child.
+      </li>
+      <li>
+        Confirm the dashboard renders the child check-in, practice summary (on-track vs
+        needs-attention), upcoming lessons, and the latest teacher note.
+      </li>
+      <li>Confirm the billing section shows only a disabled placeholder (no live billing).</li>
+      <li>
+        <strong>Isolation check (important):</strong> confirm a parent sees <em>only</em> their
+        linked child's data — never another student's.
+      </li>
+    </ol>
+
+    <h2>3. Edge cases</h2>
+    <table>
+      <tr>
+        <th>Case</th>
+        <th>Expected</th>
+      </tr>
+      <tr>
+        <td>Parent with no linked child</td>
+        <td>Empty state, no crash.</td>
+      </tr>
+      <tr>
+        <td>Child on track vs inactive</td>
+        <td>Practice summary reflects status.</td>
+      </tr>
+      <tr>
+        <td>Mobile width</td>
+        <td>Cards stack (editorial responsive).</td>
+      </tr>
+    </table>
+
+    <h2>4. Gates (re-verified after spend-limit interruption)</h2>
+    <ul>
+      <li>
+        <span class="ok">PASS</span> 11 component/query tests + parent-health helper tests ·
+        <code>tsc</code> 0 · <code>eslint</code> 0 errors · <code>npm run build</code> compiles ·
+        full suite green after integration.
+      </li>
+    </ul>
+
+    <h2>5. Needs your review before shipping (do NOT ship to real families yet)</h2>
+    <ul>
+      <li class="warn">
+        <strong>Parent↔child linkage &amp; RLS</strong> — the agent added
+        <code>…_parent_read_repertoire_preferences.sql</code> and a linkage approach that was
+        <em>not human-reviewed</em> (the agent was spend-limit-interrupted before its report).
+        Verify exactly how a parent is scoped to their child and that the RLS truly prevents
+        cross-child reads before any real parent account exists.
+      </li>
+      <li class="warn">
+        <strong>Minors/GDPR</strong> — parental-consent flow is out of scope here; required before
+        collecting a minor's data.
+      </li>
+    </ul>
+  </body>
+</html>

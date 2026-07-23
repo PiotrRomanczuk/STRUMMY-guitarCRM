@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manual Test · Onboarding (editorial wizard)</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+        line-height: 1.55;
+        color: #1a1613;
+        background: #f6f2ea;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 4px;
+      }
+      h2 {
+        margin-top: 30px;
+        border-bottom: 2px solid #d8cdb8;
+        padding-bottom: 6px;
+      }
+      .meta {
+        color: #6b5f4e;
+        font-size: 0.9rem;
+      }
+      code {
+        background: #ece3d2;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 0.88em;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+      }
+      th,
+      td {
+        border: 1px solid #d8cdb8;
+        padding: 8px 10px;
+        text-align: left;
+        font-size: 0.92rem;
+        vertical-align: top;
+      }
+      th {
+        background: #ece3d2;
+      }
+      .ok {
+        color: #2f7d4f;
+        font-weight: 700;
+      }
+      .warn {
+        color: #b3801f;
+        font-weight: 700;
+      }
+      li {
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Onboarding — editorial wizard (Teacher + Student)</h1>
+    <p class="meta">
+      <strong>Date:</strong> 2026-07-23 · <strong>Route:</strong> <code>/onboarding</code> ·
+      integrated to <code>main</code>
+    </p>
+
+    <h2>1. What was built</h2>
+    <p>
+      The <code>v2/onboarding</code> wizard was extended and restyled to the editorial system,
+      implementing the batch-02 Onboarding mockups.
+    </p>
+    <ul>
+      <li>
+        <strong>Teacher flow</strong> — multi-step: About you → Your studio (name, tagline,
+        timezone, what you teach, default lesson length) → Invite students → Schedule first lesson →
+        Done, with a <strong>live-preview rail</strong> that reflects entered values.
+      </li>
+      <li><strong>Student flow</strong> — current level, goals, daily practice target.</li>
+      <li>
+        New server action <code>app/actions/onboarding-editorial.ts</code>; migration
+        <code>20260723130000_teacher_settings_and_daily_goal.sql</code> (teacher studio settings +
+        daily goal).
+      </li>
+    </ul>
+
+    <h2>2. How to manually test</h2>
+    <ol>
+      <li>
+        <code>npm run dev</code>. Register a fresh account (a brand-new teacher has no role until
+        onboarding) — you land on <code>/onboarding</code>.
+      </li>
+      <li>
+        <strong>Teacher path:</strong> pick "I teach guitar", then walk the steps. Type a studio
+        name/tagline/city — confirm the <strong>live preview updates</strong>. Set default lesson
+        length; reach Invite → Schedule → Done.
+      </li>
+      <li>
+        <strong>Student path:</strong> pick "I take lessons"; set level, goals, and daily practice
+        target; finish.
+      </li>
+      <li>
+        Confirm completion lands you on the correct dashboard and the choices persist (revisit
+        profile / student detail).
+      </li>
+    </ol>
+
+    <h2>3. Edge cases</h2>
+    <table>
+      <tr>
+        <th>Case</th>
+        <th>Expected</th>
+      </tr>
+      <tr>
+        <td>Back/forward between steps</td>
+        <td>Entered values retained; live preview stays in sync.</td>
+      </tr>
+      <tr>
+        <td>Skip optional fields</td>
+        <td>Wizard still completes; preview shows sensible defaults.</td>
+      </tr>
+      <tr>
+        <td>Mobile width</td>
+        <td>Steps + preview rail stack (editorial responsive classes).</td>
+      </tr>
+    </table>
+
+    <h2>4. Gates (re-verified after spend-limit interruption)</h2>
+    <ul>
+      <li>
+        <span class="ok">PASS</span> 36 tests · <code>tsc --noEmit</code> 0 · <code>eslint</code> 0
+        errors · <code>npm run build</code> compiles · full suite green after integration.
+      </li>
+    </ul>
+
+    <h2>5. Needs your review before shipping to students</h2>
+    <ul>
+      <li class="warn">
+        The new teacher studio-settings persistence (migration
+        <code>…_teacher_settings_and_daily_goal.sql</code>) was written by the interrupted agent and
+        passes gates, but the <strong>schema shape + RLS</strong> should get a human eye before it
+        hits the prod stack.
+      </li>
+    </ul>
+  </body>
+</html>
