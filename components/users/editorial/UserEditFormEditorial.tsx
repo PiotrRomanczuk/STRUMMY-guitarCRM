@@ -1,33 +1,20 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
-export type StudentStatus = 'lead' | 'trial' | 'active' | 'inactive' | 'churned';
+import { FormSection } from '@/components/_editorial/FormSection';
+import { StudentFieldsBilling } from './StudentFields.Billing';
+import { StudentFieldsContact } from './StudentFields.Contact';
+import { StudentFieldsIdentity } from './StudentFields.Identity';
+import { StudentFieldsSchedule } from './StudentFields.Schedule';
+import { inputStyle } from './StudentFields.shared';
+import { UserEditFormAccount } from './UserEditFormEditorial.Account';
+import { useUserEditForm } from './useUserEditForm';
+import type { EditableUser, StudentStatus } from './UserEditFormEditorial.types';
 
-export type EditableUser = {
-  id: string;
-  fullName: string | null;
-  email: string | null;
-  isAdmin: boolean;
-  isTeacher: boolean;
-  isStudent: boolean;
-  isActive: boolean;
-  studentStatus: StudentStatus;
-};
+export type { EditableUser, StudentStatus };
 
-const fieldLabelStyle: React.CSSProperties = {
+const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--mono)',
   fontSize: 10,
   color: 'var(--ink-4)',
@@ -36,74 +23,9 @@ const fieldLabelStyle: React.CSSProperties = {
   marginBottom: 6,
 };
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 12px',
-  border: '1px solid var(--rule)',
-  borderRadius: 6,
-  background: 'var(--paper)',
-  fontFamily: 'var(--sans)',
-  fontSize: 14,
-  color: 'var(--ink)',
-};
-
-const Toggle = ({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) => (
-  <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-    <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-    <span style={{ fontSize: 14 }}>{label}</span>
-  </label>
-);
-
 export const UserEditFormEditorial = ({ user }: { user: EditableUser }) => {
-  const router = useRouter();
-  const [fullName, setFullName] = useState(user.fullName ?? '');
-  const [isAdmin, setIsAdmin] = useState(user.isAdmin);
-  const [isTeacher, setIsTeacher] = useState(user.isTeacher);
-  const [isStudent, setIsStudent] = useState(user.isStudent);
-  const [isActive, setIsActive] = useState(user.isActive);
-  const [studentStatus, setStudentStatus] = useState<StudentStatus>(user.studentStatus);
-  const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [saved, setSaved] = useState(false);
-
-  const handleSave = useCallback(async () => {
-    setIsSaving(true);
-    setError('');
-    setSaved(false);
-    try {
-      const res = await fetch(`/api/users/${user.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          full_name: fullName,
-          isAdmin,
-          isTeacher,
-          isStudent,
-          isActive,
-          studentStatus,
-        }),
-      });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? 'Failed to save');
-      }
-      setSaved(true);
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
-    } finally {
-      setIsSaving(false);
-    }
-  }, [user.id, fullName, isAdmin, isTeacher, isStudent, isActive, studentStatus, router]);
+  const form = useUserEditForm(user);
+  const { values, setField, isStudent } = form;
 
   return (
     <div
@@ -114,7 +36,7 @@ export const UserEditFormEditorial = ({ user }: { user: EditableUser }) => {
         padding: '28px 32px 64px',
       }}
     >
-      <div style={{ maxWidth: 640, margin: '0 auto' }}>
+      <div style={{ maxWidth: 780, margin: '0 auto' }}>
         <Link
           href={`/dashboard/users/${user.id}`}
           style={{
@@ -141,131 +63,83 @@ export const UserEditFormEditorial = ({ user }: { user: EditableUser }) => {
           Edit {user.fullName ?? user.email ?? 'profile'}
         </h1>
 
-        <div
-          style={{
-            background: 'var(--card)',
-            border: '1px solid var(--rule)',
-            borderRadius: 10,
-            padding: '24px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 18,
-          }}
-        >
-          <div>
-            <div style={fieldLabelStyle}>Display name</div>
+        {isStudent ? (
+          <>
+            <StudentFieldsIdentity values={values} onChange={setField} />
+            <StudentFieldsContact values={values} onChange={setField} showStudentEmail={false} />
+            <StudentFieldsSchedule values={values} onChange={setField} />
+            <StudentFieldsBilling values={values} onChange={setField} />
+          </>
+        ) : (
+          <FormSection numeral="I · IDENTITY" title="Display name">
+            <div style={labelStyle}>Full name</div>
             <input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              maxLength={120}
+              value={values.fullName}
+              onChange={(e) => setField('fullName', e.target.value)}
+              maxLength={200}
               style={inputStyle}
             />
-          </div>
+          </FormSection>
+        )}
 
-          <div>
-            <div style={fieldLabelStyle}>Roles</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <Toggle label="Admin" checked={isAdmin} onChange={setIsAdmin} />
-              <Toggle label="Teacher" checked={isTeacher} onChange={setIsTeacher} />
-              <Toggle label="Student" checked={isStudent} onChange={setIsStudent} />
-            </div>
-          </div>
+        <UserEditFormAccount
+          isAdmin={form.isAdmin}
+          isTeacher={form.isTeacher}
+          isStudent={form.isStudent}
+          isActive={form.isActive}
+          studentStatus={form.studentStatus}
+          onIsAdmin={form.setIsAdmin}
+          onIsTeacher={form.setIsTeacher}
+          onIsStudent={form.setIsStudent}
+          onIsActive={form.setIsActive}
+          onStudentStatus={form.setStudentStatus}
+        />
 
-          {isStudent && (
-            <div>
-              <div style={fieldLabelStyle}>Student status</div>
-              <select
-                value={studentStatus}
-                onChange={(e) => setStudentStatus(e.target.value as StudentStatus)}
-                style={inputStyle}
-              >
-                <option value="lead">Lead</option>
-                <option value="trial">Trial</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="churned">Churned</option>
-              </select>
-            </div>
-          )}
-
-          <div>
-            <div style={fieldLabelStyle}>Account</div>
-            <Toggle
-              label="Active (login enabled)"
-              checked={isActive}
-              onChange={(v) => {
-                if (!v && isActive) {
-                  setShowDeactivateDialog(true);
-                } else {
-                  setIsActive(v);
-                }
-              }}
-            />
-          </div>
-
-          <AlertDialog open={showDeactivateDialog} onOpenChange={setShowDeactivateDialog}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Deactivate this student?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  They won&apos;t be able to log in until reactivated.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    setIsActive(false);
-                    setShowDeactivateDialog(false);
-                  }}
-                >
-                  Deactivate
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          {error && (
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--danger)' }}>
-              {error}
-            </div>
-          )}
-
+        {form.error && (
           <div
-            style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'flex-end' }}
+            style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 12,
+              color: 'var(--danger)',
+              marginBottom: 12,
+            }}
           >
-            {saved && !error && (
-              <span
-                style={{
-                  fontFamily: 'var(--mono)',
-                  fontSize: 11,
-                  color: 'var(--success)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '.12em',
-                }}
-              >
-                ✓ Saved
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving}
+            {form.error}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'flex-end' }}>
+          {form.saved && !form.error && (
+            <span
               style={{
-                padding: '10px 20px',
-                borderRadius: 8,
-                border: 'none',
-                background: isSaving ? 'var(--ink-4)' : 'var(--ink)',
-                color: 'var(--paper)',
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: isSaving ? 'wait' : 'pointer',
-                fontFamily: 'var(--sans)',
+                fontFamily: 'var(--mono)',
+                fontSize: 11,
+                color: 'var(--success)',
+                textTransform: 'uppercase',
+                letterSpacing: '.12em',
               }}
             >
-              {isSaving ? 'Saving…' : 'Save changes'}
-            </button>
-          </div>
+              ✓ Saved
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={form.save}
+            disabled={form.isSaving}
+            style={{
+              padding: '10px 20px',
+              borderRadius: 8,
+              border: 'none',
+              background: form.isSaving ? 'var(--ink-4)' : 'var(--ink)',
+              color: 'var(--paper)',
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: form.isSaving ? 'wait' : 'pointer',
+              fontFamily: 'var(--sans)',
+            }}
+          >
+            {form.isSaving ? 'Saving…' : 'Save changes'}
+          </button>
         </div>
       </div>
     </div>

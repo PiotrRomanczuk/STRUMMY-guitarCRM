@@ -11,20 +11,27 @@ import {
   logShadowInviteSent,
 } from '@/lib/auth/auth-event-logger';
 import { logger } from '@/lib/logger';
+import { StudentIntakeFieldsSchema, toProfileColumns } from '@/schemas/StudentIntakeSchema';
+import type { Database } from '@/database.types';
 
-const CreateUserSchema = z.object({
-  email: z.string().email().optional().or(z.literal('')),
-  firstName: z.string().max(255).optional(),
-  lastName: z.string().max(255).optional(),
-  full_name: z.string().max(255).optional(),
-  phone: z.string().max(50).optional(),
-  notes: z.string().max(5000).optional(),
-  isAdmin: z.boolean().optional(),
-  isTeacher: z.boolean().optional(),
-  isStudent: z.boolean().optional(),
-  isShadow: z.boolean().optional(),
-  inviteEmail: z.string().email().optional().or(z.literal('')),
-});
+type ProfilesUpdate = Database['public']['Tables']['profiles']['Update'];
+
+const CreateUserSchema = z
+  .object({
+    email: z.string().email().optional().or(z.literal('')),
+    firstName: z.string().max(255).optional(),
+    lastName: z.string().max(255).optional(),
+    full_name: z.string().max(255).optional(),
+    phone: z.string().max(50).optional(),
+    notes: z.string().max(5000).optional(),
+    goals: z.string().max(5000).optional(),
+    isAdmin: z.boolean().optional(),
+    isTeacher: z.boolean().optional(),
+    isStudent: z.boolean().optional(),
+    isShadow: z.boolean().optional(),
+    inviteEmail: z.string().email().optional().or(z.literal('')),
+  })
+  .merge(StudentIntakeFieldsSchema);
 
 const PatchUserSchema = z.object({
   userId: z.string().uuid(),
@@ -251,6 +258,7 @@ export async function POST(request: Request) {
       finalEmail = `shadow_${newId}@placeholder.com`;
 
       const inviteEmailValue = inviteEmail?.trim() || null;
+      const studentColumns = toProfileColumns(parsed.data);
 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -266,6 +274,7 @@ export async function POST(request: Request) {
             is_student: reqIsStudent || true,
             is_shadow: true,
             invite_email: inviteEmailValue,
+            ...studentColumns,
           },
         ])
         .select()
@@ -319,17 +328,20 @@ export async function POST(request: Request) {
     logAdminUserCreated(email, user.id, userId);
 
     // Update the profile with additional fields (trigger creates basic profile)
+    const realUserUpdate: Record<string, unknown> = {
+      full_name: finalFullName || null,
+      phone: phone || null,
+      notes: notes || null,
+      is_admin: reqIsAdmin || false,
+      is_teacher: reqIsTeacher || false,
+      is_student: reqIsStudent !== false, // Default to true unless explicitly false
+      is_shadow: false,
+      ...toProfileColumns(parsed.data),
+    };
+
     const { data: profileData, error: updateError } = await supabaseAdmin
       .from('profiles')
-      .update({
-        full_name: finalFullName || null,
-        phone: phone || null,
-        notes: notes || null,
-        is_admin: reqIsAdmin || false,
-        is_teacher: reqIsTeacher || false,
-        is_student: reqIsStudent !== false, // Default to true unless explicitly false
-        is_shadow: false,
-      })
+      .update(realUserUpdate as ProfilesUpdate)
       .eq('id', userId)
       .select()
       .single();
