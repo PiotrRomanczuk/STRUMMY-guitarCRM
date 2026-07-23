@@ -52,6 +52,7 @@ describe('getLessonDetail', () => {
     mockSingle.mockResolvedValue({
       data: {
         ...baseLesson,
+        lesson_teacher_number: 7,
         teacher: [{ full_name: 'Sarah' }],
         student: [{ full_name: 'Emma', email: 'emma@x.com' }],
         lesson_songs: [
@@ -83,6 +84,7 @@ describe('getLessonDetail', () => {
       studentId: 's1',
       studentName: 'Emma',
       studentEmail: 'emma@x.com',
+      lessonTeacherNumber: 7,
       songs: [
         { songId: 'sg1', title: 'Song A', author: 'AC/DC', key: 'A', status: 'started' },
         { songId: 'sg2', title: 'Song B', author: null, key: null, status: null },
@@ -116,6 +118,7 @@ describe('getLessonDetail', () => {
       studentId: 's1',
       studentName: null,
       studentEmail: null,
+      lessonTeacherNumber: null,
       songs: [],
     });
   });
