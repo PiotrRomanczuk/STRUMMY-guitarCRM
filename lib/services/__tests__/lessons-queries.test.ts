@@ -2,6 +2,7 @@ import {
   getRecentLessons,
   lessonStatusLabel,
   lessonStatusColour,
+  songStatusColour,
   summariseLessons,
   type LessonRow,
   type LessonViewer,
@@ -25,6 +26,8 @@ type Chain = {
   is: (col: string, val: unknown) => Chain;
   order: (col: string, opts: unknown) => Chain;
   in: (col: string, vals: unknown) => Chain;
+  gte: (col: string, val: unknown) => Chain;
+  lt: (col: string, val: unknown) => Chain;
   limit: (n: number) => unknown;
 };
 
@@ -32,6 +35,8 @@ const mockEq = jest.fn();
 const mockIs = jest.fn();
 const mockOrder = jest.fn();
 const mockIn = jest.fn();
+const mockGte = jest.fn();
+const mockLt = jest.fn();
 const mockLimit = jest.fn();
 
 jest.mock('@/lib/supabase/server', () => ({
@@ -56,6 +61,14 @@ jest.mock('@/lib/supabase/server', () => ({
             mockIn(col, vals);
             return chain;
           },
+          gte: (col, val) => {
+            mockGte(col, val);
+            return chain;
+          },
+          lt: (col, val) => {
+            mockLt(col, val);
+            return chain;
+          },
           limit: (n) => mockLimit(n),
         };
         return chain;
@@ -66,11 +79,13 @@ jest.mock('@/lib/supabase/server', () => ({
 
 const baseRow = {
   id: 'l1',
+  lesson_teacher_number: 7,
   scheduled_at: '2026-07-20T10:00:00Z',
   status: 'SCHEDULED',
   title: 'Intro lesson',
   teacher_id: 't1',
   student_id: 's1',
+  lesson_songs: [{ status: 'started' }, { status: 'mastered' }],
 };
 
 describe('getRecentLessons', () => {
@@ -94,9 +109,12 @@ describe('getRecentLessons', () => {
     expect(mockOrder).toHaveBeenCalledWith('scheduled_at', { ascending: false });
     expect(mockIn).not.toHaveBeenCalled();
     expect(mockLimit).toHaveBeenCalledWith(60);
+    expect(mockGte).not.toHaveBeenCalled();
+    expect(mockLt).not.toHaveBeenCalled();
     expect(rows).toEqual([
       {
         id: 'l1',
+        lessonNumber: 7,
         scheduledAt: '2026-07-20T10:00:00Z',
         status: 'SCHEDULED',
         title: 'Intro lesson',
@@ -106,9 +124,12 @@ describe('getRecentLessons', () => {
         studentEmail: 'emma@x.com',
         teacherName: null,
         teacherEmail: null,
+        songCount: 2,
+        songStatuses: ['started', 'mastered'],
       },
       {
         id: 'l2',
+        lessonNumber: 7,
         scheduledAt: '2026-07-20T10:00:00Z',
         status: 'SCHEDULED',
         title: null,
@@ -118,8 +139,42 @@ describe('getRecentLessons', () => {
         studentEmail: null,
         teacherName: null,
         teacherEmail: null,
+        songCount: 2,
+        songStatuses: ['started', 'mastered'],
       },
     ]);
+  });
+
+  it('aggregates song count/statuses and defaults number + songs when columns are absent', async () => {
+    mockLimit.mockResolvedValue({
+      data: [
+        {
+          id: 'l9',
+          scheduled_at: '2026-07-20T10:00:00Z',
+          status: 'SCHEDULED',
+          title: 'Bare row',
+          teacher_id: 't1',
+          student_id: 's1',
+          // no lesson_teacher_number, no lesson_songs, no joined profiles
+        },
+      ],
+      error: null,
+    });
+
+    const rows = await getRecentLessons('t1', TEACHER_VIEWER);
+
+    expect(rows[0].lessonNumber).toBe(0);
+    expect(rows[0].songCount).toBe(0);
+    expect(rows[0].songStatuses).toEqual([]);
+  });
+
+  it('applies a year range filter as gte/lt UTC boundaries', async () => {
+    mockLimit.mockResolvedValue({ data: [], error: null });
+
+    await getRecentLessons('t1', TEACHER_VIEWER, { year: 2025 });
+
+    expect(mockGte).toHaveBeenCalledWith('scheduled_at', '2025-01-01T00:00:00.000Z');
+    expect(mockLt).toHaveBeenCalledWith('scheduled_at', '2026-01-01T00:00:00.000Z');
   });
 
   it('filters by student, oldest sort, and statuses (student as array)', async () => {
@@ -200,9 +255,24 @@ describe('lessonStatusColour', () => {
   });
 });
 
+describe('songStatusColour', () => {
+  it('maps each lesson_songs.status to its editorial token', () => {
+    expect(songStatusColour('to_learn')).toBe('var(--ink-4)');
+    expect(songStatusColour('started')).toBe('var(--info)');
+    expect(songStatusColour('remembered')).toBe('var(--warn)');
+    expect(songStatusColour('with_author')).toBe('#7a6aa0');
+    expect(songStatusColour('mastered')).toBe('var(--success)');
+  });
+
+  it('falls back to the muted colour for unknown values', () => {
+    expect(songStatusColour('???')).toBe('var(--ink-4)');
+  });
+});
+
 describe('summariseLessons', () => {
   const makeLesson = (id: string, status: string): LessonRow => ({
     id,
+    lessonNumber: 1,
     scheduledAt: '2026-07-20T10:00:00Z',
     status,
     title: null,
@@ -212,6 +282,8 @@ describe('summariseLessons', () => {
     studentEmail: null,
     teacherName: null,
     teacherEmail: null,
+    songCount: 0,
+    songStatuses: [],
   });
 
   it('returns zero totals for an empty list', () => {

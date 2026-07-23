@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual test — Lessons list: Songs/Time columns + sort &amp; year filters</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        max-width: 860px;
+        margin: 40px auto;
+        padding: 0 20px;
+        color: #1a1613;
+        line-height: 1.55;
+      }
+      h1 {
+        font-size: 26px;
+        letter-spacing: -0.02em;
+      }
+      h2 {
+        margin-top: 34px;
+        border-bottom: 1px solid #e6dccb;
+        padding-bottom: 6px;
+      }
+      code {
+        background: #f6f2ea;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 90%;
+      }
+      .meta {
+        color: #6b6257;
+        font-size: 13px;
+      }
+      ol li,
+      ul li {
+        margin: 6px 0;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+      }
+      th,
+      td {
+        border: 1px solid #e6dccb;
+        padding: 8px 10px;
+        text-align: left;
+        font-size: 14px;
+      }
+      th {
+        background: #f6f2ea;
+      }
+      .ok {
+        color: #3a7d3a;
+        font-weight: 600;
+      }
+      .path {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 12px;
+        color: #4a4037;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Lessons list — Songs &amp; Time columns + sort/year filters</h1>
+    <p class="meta">
+      <strong>Date:</strong> 2026-07-23 · <strong>Branch:</strong> feature/lesson-list-columns ·
+      <strong>Area:</strong> /dashboard/lessons (editorial)
+    </p>
+
+    <h2>What was built</h2>
+    <p>
+      The editorial Lessons list now matches its mockup, using only existing data (no new DB
+      columns):
+    </p>
+    <ul>
+      <li>
+        <strong>Songs column</strong> — per-lesson count of attached <code>lesson_songs</code> plus
+        up to four colored progress dots (dot colour by each song's
+        <code>lesson_songs.status</code>).
+      </li>
+      <li>
+        <strong>Time column</strong> — the time-of-day of <code>scheduled_at</code> (reuses the
+        existing <code>formatLessonClock</code> formatter). No duration is shown — there is no
+        duration column in the schema.
+      </li>
+      <li>
+        <strong>#number badge</strong> — the lesson's <code>lesson_teacher_number</code> rendered in
+        the title cell.
+      </li>
+      <li>
+        <strong>Sort toggle</strong> — a <code>?sort=</code> URL-param link (Newest/Oldest first) in
+        the filter row; activating it flips the grouped timeline into a flat, fully-sorted table
+        (mockup behaviour).
+      </li>
+      <li>
+        <strong>Year filter</strong> — <code>?year=</code> URL-param chips (All + current year and
+        the two prior); narrows the query by the calendar year of <code>scheduled_at</code>.
+      </li>
+    </ul>
+    <p>
+      Status chips, sort, and year are all plain <code>&lt;Link&gt;</code>s (Server-Component
+      friendly, no client JS) and preserve each other in the query string. With no
+      <code>sort=</code> param the list keeps the existing date-grouping (Today / This week /
+      Upcoming / Past). Mobile keeps the existing responsive stack (<code>grid-cols-1</code> under
+      the <code>md</code> breakpoint).
+    </p>
+
+    <h2>How to test manually</h2>
+    <ol>
+      <li>
+        Run <code>npm run dev</code> and sign in (teacher/admin: full columns; student: no
+        student/teacher columns).
+      </li>
+      <li>
+        Open <code>/dashboard/lessons</code>. Confirm each row shows a <code>#number</code> badge, a
+        <strong>Songs</strong> count with colored dots, and a <strong>Time</strong> value. The list
+        is grouped by time bucket.
+      </li>
+      <li>
+        Click <strong>Newest first</strong> in the filter row. URL gains <code>?sort=oldest</code>;
+        the section headers disappear and rows render as one flat, oldest-first table. Click again →
+        <code>?sort=newest</code>, newest-first flat table. The summary line reads "…· sorted by
+        newest/oldest first".
+      </li>
+      <li>
+        Click a <strong>Year</strong> chip (e.g. 2025). URL gains <code>?year=2025</code>; only that
+        year's lessons show. Click <strong>All</strong> to clear it. Combine with a status chip and
+        the sort toggle — all three params persist together.
+      </li>
+      <li>
+        Open a lesson with several songs and confirm the dot colours match song status (to_learn =
+        muted, started = blue, remembered = gold, with_author = violet, mastered = green).
+      </li>
+      <li>
+        Edge cases: a lesson with 0 songs shows "0 songs" and no dots; 1 song shows the singular
+        "song"; more than 4 songs shows only the first four dots.
+      </li>
+    </ol>
+
+    <h2>Automated gate results</h2>
+    <table>
+      <tr>
+        <th>Gate</th>
+        <th>Command</th>
+        <th>Result</th>
+      </tr>
+      <tr>
+        <td>Types</td>
+        <td><code>npx tsc --noEmit</code></td>
+        <td class="ok">0 errors</td>
+      </tr>
+      <tr>
+        <td>Unit tests</td>
+        <td><code>npx jest components/lessons lib/services</code></td>
+        <td class="ok">36 suites, 468 passed (1 skipped)</td>
+      </tr>
+      <tr>
+        <td>Lint</td>
+        <td><code>npx eslint &lt;changed files&gt;</code></td>
+        <td class="ok">0 errors, 0 warnings</td>
+      </tr>
+    </table>
+
+    <h2>Files touched</h2>
+    <ul>
+      <li class="path">
+        lib/services/lessons-queries.ts — LessonRow fields, songStatusColour, lesson_songs/number in
+        select, year filter
+      </li>
+      <li class="path">
+        app/dashboard/lessons/page.tsx — parse ?year, compute flat, pass new props
+      </li>
+      <li class="path">
+        components/lessons/editorial/LessonsListEditorial.tsx — new columns, flat/grouped body
+      </li>
+      <li class="path">
+        components/lessons/editorial/LessonsListEditorial.Header.tsx — title block + composed header
+      </li>
+      <li class="path">
+        components/lessons/editorial/LessonsListEditorial.Filters.tsx — status/year chips + sort
+        toggle (new)
+      </li>
+      <li class="path">
+        components/lessons/editorial/LessonsListEditorial.Row.tsx — #number, Songs, Time cells
+      </li>
+      <li class="path">
+        components/lessons/editorial/LessonsListEditorial.helpers.ts — pure href builders +
+        yearOptions (new)
+      </li>
+      <li class="path">…plus unit tests for the above</li>
+    </ul>
+  </body>
+</html>

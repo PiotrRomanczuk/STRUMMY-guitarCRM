@@ -3,6 +3,8 @@ import { logger } from '@/lib/logger';
 
 export type LessonRow = {
   id: string;
+  /** Per-teacher sequential number (`lessons.lesson_teacher_number`). */
+  lessonNumber: number;
   scheduledAt: string;
   status: string;
   title: string | null;
@@ -12,6 +14,10 @@ export type LessonRow = {
   studentEmail: string | null;
   teacherName: string | null;
   teacherEmail: string | null;
+  /** Number of songs attached to the lesson via `lesson_songs`. */
+  songCount: number;
+  /** Per-song `lesson_songs.status`, for the progress dots (unbounded — UI slices). */
+  songStatuses: string[];
 };
 
 /**
@@ -50,26 +56,43 @@ export const lessonStatusLabel = (status: string): string => STATUS_LABELS[statu
 export const lessonStatusColour = (status: string): string =>
   STATUS_COLOURS[status] ?? 'var(--ink-4)';
 
+/** Editorial-token colours for each `lesson_songs.status`, used by the progress dots. */
+const SONG_STATUS_COLOURS: Record<string, string> = {
+  to_learn: 'var(--ink-4)',
+  started: 'var(--info)',
+  remembered: 'var(--warn)',
+  with_author: '#7a6aa0',
+  mastered: 'var(--success)',
+};
+
+export const songStatusColour = (status: string): string =>
+  SONG_STATUS_COLOURS[status] ?? 'var(--ink-4)';
+
 export type LessonsFilters = {
   statuses?: string[];
   sort?: 'newest' | 'oldest';
+  /** Calendar year of `scheduled_at` (UTC) to restrict to. */
+  year?: number;
 };
 
 const LESSON_SELECT =
-  'id, scheduled_at, status, title, teacher_id, student_id, student:profiles!lessons_student_id_fkey(id, full_name, email), teacher:profiles!lessons_teacher_id_fkey(id, full_name, email)';
+  'id, lesson_teacher_number, scheduled_at, status, title, teacher_id, student_id, student:profiles!lessons_student_id_fkey(id, full_name, email), teacher:profiles!lessons_teacher_id_fkey(id, full_name, email), lesson_songs(status)';
 
 type RawLessonRow = Record<string, unknown> & {
   student?:
     { full_name?: string; email?: string } | { full_name?: string; email?: string }[] | null;
   teacher?:
     { full_name?: string; email?: string } | { full_name?: string; email?: string }[] | null;
+  lesson_songs?: { status?: string | null }[] | null;
 };
 
 const mapLessonRow = (row: RawLessonRow): LessonRow => {
   const student = Array.isArray(row.student) ? row.student[0] : row.student;
   const teacher = Array.isArray(row.teacher) ? row.teacher[0] : row.teacher;
+  const songs = Array.isArray(row.lesson_songs) ? row.lesson_songs : [];
   return {
     id: row.id as string,
+    lessonNumber: (row.lesson_teacher_number as number | null) ?? 0,
     scheduledAt: row.scheduled_at as string,
     status: row.status as string,
     title: (row.title as string | null) ?? null,
@@ -79,6 +102,8 @@ const mapLessonRow = (row: RawLessonRow): LessonRow => {
     studentEmail: student?.email ?? null,
     teacherName: teacher?.full_name ?? null,
     teacherEmail: teacher?.email ?? null,
+    songCount: songs.length,
+    songStatuses: songs.map((s) => s?.status ?? 'to_learn'),
   };
 };
 
@@ -105,6 +130,12 @@ export async function getRecentLessons(
 
   if (filters.statuses && filters.statuses.length > 0) {
     query = query.in('status', filters.statuses);
+  }
+
+  if (filters.year !== undefined) {
+    const start = `${filters.year}-01-01T00:00:00.000Z`;
+    const end = `${filters.year + 1}-01-01T00:00:00.000Z`;
+    query = query.gte('scheduled_at', start).lt('scheduled_at', end);
   }
 
   const { data, error } = await query.limit(limit);

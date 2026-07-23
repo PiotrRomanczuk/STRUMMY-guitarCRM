@@ -17,6 +17,7 @@ const NOW = new Date('2026-07-22T12:00:00.000Z');
 
 const makeLesson = (overrides: Partial<LessonRow> = {}): LessonRow => ({
   id: 'lesson-1',
+  lessonNumber: 12,
   scheduledAt: NOW.toISOString(),
   status: 'scheduled',
   title: 'Fingerstyle basics',
@@ -26,6 +27,8 @@ const makeLesson = (overrides: Partial<LessonRow> = {}): LessonRow => ({
   studentEmail: 'emma@strummy.app',
   teacherName: 'Sarah Chen',
   teacherEmail: 'sarah@strummy.app',
+  songCount: 0,
+  songStatuses: [],
   ...overrides,
 });
 
@@ -35,6 +38,9 @@ const baseProps = {
   breakdown: emptyBreakdown,
   activeStatuses: [] as string[],
   activeSort: 'newest' as const,
+  activeYear: undefined,
+  flat: false,
+  years: [2026, 2025, 2024],
 };
 
 beforeEach(() => {
@@ -243,5 +249,156 @@ describe('LessonsListEditorial — status filter pills', () => {
     // Breakdown counts render next to each pill label.
     expect(scheduledPill).toHaveTextContent('2');
     expect(inProgressPill).toHaveTextContent('1');
+  });
+});
+
+describe('LessonsListEditorial — songs, time, and number columns', () => {
+  it('renders the Songs and Time column labels', () => {
+    render(
+      <LessonsListEditorial
+        {...baseProps}
+        lessons={[makeLesson()]}
+        canCreate={false}
+        showStudentColumn={false}
+        showTeacherColumn={false}
+      />
+    );
+
+    expect(screen.getByText('Songs')).toBeInTheDocument();
+    expect(screen.getByText('Time')).toBeInTheDocument();
+  });
+
+  it('shows the song count, colored progress dots, #number badge, and time-of-day per row', () => {
+    render(
+      <LessonsListEditorial
+        {...baseProps}
+        lessons={[
+          makeLesson({
+            id: 'row-1',
+            lessonNumber: 7,
+            title: 'Fingerstyle basics',
+            songCount: 2,
+            songStatuses: ['started', 'mastered'],
+          }),
+        ]}
+        canCreate={false}
+        showStudentColumn={false}
+        showTeacherColumn={false}
+      />
+    );
+
+    const row = screen.getByRole('link', { name: /Fingerstyle basics/ });
+    expect(within(row).getByText('#7')).toBeInTheDocument();
+    expect(within(row).getByText('2')).toBeInTheDocument();
+    expect(within(row).getByText('songs')).toBeInTheDocument();
+    // Time-of-day cell renders a clock like "2:00 PM" (timezone-agnostic shape).
+    expect(within(row).getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument();
+  });
+
+  it('uses the singular "song" label and omits dots when a lesson has one/no songs', () => {
+    render(
+      <LessonsListEditorial
+        {...baseProps}
+        lessons={[
+          makeLesson({ id: 'one', title: 'One song', songCount: 1, songStatuses: ['to_learn'] }),
+        ]}
+        canCreate={false}
+        showStudentColumn={false}
+        showTeacherColumn={false}
+      />
+    );
+
+    const row = screen.getByRole('link', { name: /One song/ });
+    expect(within(row).getByText('song')).toBeInTheDocument();
+  });
+});
+
+describe('LessonsListEditorial — sort toggle and year filter', () => {
+  it('renders a sort toggle link that flips to the opposite order', () => {
+    render(
+      <LessonsListEditorial
+        {...baseProps}
+        lessons={[makeLesson()]}
+        canCreate={false}
+        showStudentColumn={false}
+        showTeacherColumn={false}
+      />
+    );
+
+    const sortToggle = screen.getByRole('button', { name: /Newest first/i });
+    expect(sortToggle).toHaveAttribute('href', '/dashboard/lessons?sort=oldest');
+  });
+
+  it('reflects the active sort direction in the toggle label and summary', () => {
+    render(
+      <LessonsListEditorial
+        {...baseProps}
+        activeSort="oldest"
+        flat={true}
+        lessons={[makeLesson()]}
+        canCreate={false}
+        showStudentColumn={false}
+        showTeacherColumn={false}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /Oldest first/i })).toBeInTheDocument();
+    expect(screen.getByText(/sorted by oldest first/)).toBeInTheDocument();
+  });
+
+  it('renders year filter links including All and the offered years', () => {
+    render(
+      <LessonsListEditorial
+        {...baseProps}
+        activeYear={2025}
+        lessons={[makeLesson()]}
+        canCreate={false}
+        showStudentColumn={false}
+        showTeacherColumn={false}
+      />
+    );
+
+    const allYears = screen.getByRole('button', { name: 'All' });
+    expect(allYears).toHaveAttribute('href', '/dashboard/lessons');
+
+    const year2025 = screen.getByRole('button', { name: '2025' });
+    expect(year2025).toHaveAttribute('aria-pressed', 'true');
+    expect(year2025).toHaveAttribute('href', '/dashboard/lessons?year=2025');
+
+    const year2024 = screen.getByRole('button', { name: '2024' });
+    expect(year2024).toHaveAttribute('href', '/dashboard/lessons?year=2024');
+  });
+});
+
+describe('LessonsListEditorial — flat vs grouped rendering', () => {
+  it('drops the time-bucket section headers when a sort is active (flat table)', () => {
+    const lessons: LessonRow[] = [
+      makeLesson({
+        id: 'a',
+        title: 'Newest lesson',
+        scheduledAt: new Date(NOW.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+      }),
+      makeLesson({
+        id: 'b',
+        title: 'Older lesson',
+        scheduledAt: new Date(NOW.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    ];
+
+    render(
+      <LessonsListEditorial
+        {...baseProps}
+        flat={true}
+        lessons={lessons}
+        canCreate={false}
+        showStudentColumn={false}
+        showTeacherColumn={false}
+      />
+    );
+
+    expect(screen.queryByText('Today')).not.toBeInTheDocument();
+    expect(screen.queryByText('Past')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Newest lesson/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Older lesson/ })).toBeInTheDocument();
   });
 });
