@@ -45,6 +45,8 @@ const makeLesson = (overrides: Partial<LessonDetail> = {}): LessonDetail => ({
   status: 'completed',
   title: 'Fingerstyle basics',
   notes: 'Great progress on the intro riff.',
+  durationMinutes: 45,
+  format: 'in_person',
   teacherId: 'teacher-1',
   teacherName: 'Sarah Chen',
   studentId: 'student-1',
@@ -72,6 +74,22 @@ describe('LessonDetailEditorial — content rendering', () => {
     expect(screen.getByText('Oasis')).toBeInTheDocument();
     expect(screen.getByText('Blackbird')).toBeInTheDocument();
     expect(screen.getByText('Great progress on the intro riff.')).toBeInTheDocument();
+  });
+
+  it('shows the duration and format in the meta line', () => {
+    render(<LessonDetailEditorial lesson={makeLesson()} canEdit={false} />);
+    expect(screen.getByText(/45 min · In person/)).toBeInTheDocument();
+  });
+
+  it('omits duration and format from the meta line when unset', () => {
+    render(
+      <LessonDetailEditorial
+        lesson={makeLesson({ durationMinutes: null, format: null })}
+        canEdit={false}
+      />
+    );
+    expect(screen.queryByText(/min/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/In person/)).not.toBeInTheDocument();
   });
 
   it('falls back to "Untitled lesson" and the student email when data is missing', () => {

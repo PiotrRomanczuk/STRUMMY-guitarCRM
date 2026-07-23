@@ -2,6 +2,8 @@
 
 import { formStyles as s } from '@/components/_editorial/form-styles';
 import type { StudentOption } from '@/lib/services/lesson-form-data';
+import type { LessonFormat } from '@/schemas/LessonSchema';
+import { LessonFormFormatToggle } from './LessonForm.Fields.Format';
 
 const LESSON_STATUSES = [
   { value: 'SCHEDULED', label: 'Scheduled' },
@@ -9,6 +11,8 @@ const LESSON_STATUSES = [
   { value: 'COMPLETED', label: 'Completed' },
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
+
+const DURATION_OPTIONS = [30, 45, 60];
 
 type Props = {
   mode: 'create' | 'edit';
@@ -19,11 +23,15 @@ type Props = {
   title: string;
   scheduledLocal: string;
   status: string;
+  durationMinutes: number;
+  format: LessonFormat;
   onStudentId: (v: string) => void;
   onStudentEmail: (v: string) => void;
   onTitle: (v: string) => void;
   onScheduled: (v: string) => void;
   onStatus: (v: string) => void;
+  onDurationMinutes: (v: number) => void;
+  onFormat: (v: LessonFormat) => void;
 };
 
 /** Section I — "who and when": student, title, scheduled time, status. */
@@ -36,11 +44,15 @@ export const LessonFormFieldsWhoWhen = ({
   title,
   scheduledLocal,
   status,
+  durationMinutes,
+  format,
   onStudentId,
   onStudentEmail,
   onTitle,
   onScheduled,
   onStatus,
+  onDurationMinutes,
+  onFormat,
 }: Props) => {
   const isNewStudent = studentId === newStudentValue;
 
@@ -127,6 +139,28 @@ export const LessonFormFieldsWhoWhen = ({
             ))}
           </select>
         </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={s.field}>
+          <label style={s.label} htmlFor="lesson-duration">
+            Duration
+          </label>
+          <select
+            id="lesson-duration"
+            style={s.input}
+            value={durationMinutes}
+            onChange={(e) => onDurationMinutes(Number(e.target.value))}
+          >
+            {DURATION_OPTIONS.map((minutes) => (
+              <option key={minutes} value={minutes}>
+                {minutes} min
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <LessonFormFormatToggle value={format} onChange={onFormat} />
       </div>
     </>
   );

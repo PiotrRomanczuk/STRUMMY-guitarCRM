@@ -65,6 +65,8 @@ export default async function EditLessonPage({ params }: PageProps) {
           notes: lesson.notes,
           scheduledAt: lesson.scheduledAt,
           status: lesson.status,
+          durationMinutes: lesson.durationMinutes,
+          format: lesson.format,
           songIds: lesson.songIds,
         }}
       />

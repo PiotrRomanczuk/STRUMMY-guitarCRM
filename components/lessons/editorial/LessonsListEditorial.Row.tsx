@@ -4,7 +4,12 @@ import { formatDistance } from 'date-fns';
 import type { LessonRow } from '@/lib/services/lessons-queries';
 import { lessonStatusColour, lessonStatusLabel } from '@/lib/services/lessons-queries';
 
-import { formatLessonClock, formatLessonDate, formatLessonWeekday } from './format';
+import {
+  formatLessonClock,
+  formatLessonDate,
+  formatLessonDuration,
+  formatLessonWeekday,
+} from './format';
 import { LessonStatusPill, StudentInitials } from './primitives';
 
 type Props = {
@@ -30,6 +35,7 @@ export const LessonRowItem = ({
 }: Props) => {
   const studentDisplay = l.studentName ?? l.studentEmail ?? 'Student';
   const relative = formatDistance(new Date(l.scheduledAt), now, { addSuffix: true });
+  const duration = formatLessonDuration(l.durationMinutes);
 
   return (
     <Link
@@ -55,6 +61,7 @@ export const LessonRowItem = ({
           }}
         >
           {formatLessonWeekday(l.scheduledAt)} · {formatLessonClock(l.scheduledAt)}
+          {duration ? ` · ${duration}` : ''}
         </div>
         <div style={{ fontSize: 13, marginTop: 2 }}>{formatLessonDate(l.scheduledAt)}</div>
         <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2, fontStyle: 'italic' }}>

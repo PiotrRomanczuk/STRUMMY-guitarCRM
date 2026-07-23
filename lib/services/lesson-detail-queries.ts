@@ -7,6 +7,8 @@ export type LessonDetail = {
   status: string;
   title: string | null;
   notes: string | null;
+  durationMinutes: number | null;
+  format: string | null;
   teacherId: string;
   teacherName: string | null;
   studentId: string;
@@ -26,7 +28,7 @@ export async function getLessonDetail(lessonId: string): Promise<LessonDetail | 
   const { data, error } = await supabase
     .from('lessons')
     .select(
-      'id, scheduled_at, status, title, notes, teacher_id, student_id, teacher:profiles!lessons_teacher_id_fkey(full_name), student:profiles!lessons_student_id_fkey(full_name, email), lesson_songs(song_id, status, songs(title, author, key))'
+      'id, scheduled_at, status, title, notes, duration_minutes, format, teacher_id, student_id, teacher:profiles!lessons_teacher_id_fkey(full_name), student:profiles!lessons_student_id_fkey(full_name, email), lesson_songs(song_id, status, songs(title, author, key))'
     )
     .eq('id', lessonId)
     .is('deleted_at', null)
@@ -61,6 +63,8 @@ export async function getLessonDetail(lessonId: string): Promise<LessonDetail | 
     status: data.status as string,
     title: (data.title as string) ?? null,
     notes: (data.notes as string) ?? null,
+    durationMinutes: (data.duration_minutes as number | null) ?? null,
+    format: (data.format as string | null) ?? null,
     teacherId: data.teacher_id as string,
     teacherName: (teacher?.full_name as string) ?? null,
     studentId: data.student_id as string,

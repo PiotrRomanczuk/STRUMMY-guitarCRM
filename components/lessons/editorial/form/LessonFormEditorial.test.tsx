@@ -65,6 +65,8 @@ describe('LessonFormEditorial', () => {
           notes: null,
           scheduledAt: '2026-04-30T16:00:00.000Z',
           status: 'SCHEDULED',
+          durationMinutes: 45,
+          format: 'in_person',
           songIds: [],
         }}
       />
@@ -142,6 +144,8 @@ describe('LessonFormEditorial', () => {
           notes: 'Focus on scales',
           scheduledAt: '2026-04-30T16:00:00.000Z',
           status: 'SCHEDULED',
+          durationMinutes: 60,
+          format: 'video',
           songIds: ['sg1'],
         }}
       />
@@ -153,5 +157,67 @@ describe('LessonFormEditorial', () => {
 
     await waitFor(() => expect(updateLessonAction).toHaveBeenCalledWith('l1', expect.anything()));
     expect(mockPush).toHaveBeenCalledWith('/dashboard/lessons/l1');
+  });
+
+  it('renders the duration select and format toggle in create mode', () => {
+    render(<LessonFormEditorial mode="create" students={students} songs={songs} />);
+
+    const duration = screen.getByLabelText('Duration') as HTMLSelectElement;
+    expect(duration).toBeInTheDocument();
+    // Defaults to 45 min per the mockup.
+    expect(duration.value).toBe('45');
+
+    // In-person is the default-selected format toggle.
+    const inPerson = screen.getByRole('button', { name: 'In-person' });
+    expect(inPerson).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Video call' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+  });
+
+  it('submits the chosen duration and format on create', async () => {
+    (createLessonAction as jest.Mock).mockResolvedValue({ lessonId: 'new-lesson-id' });
+    render(<LessonFormEditorial mode="create" students={students} songs={songs} />);
+
+    fireEvent.change(screen.getByLabelText('Student'), { target: { value: 's1' } });
+    fireEvent.change(screen.getByLabelText('Scheduled'), {
+      target: { value: '2026-04-30T16:00' },
+    });
+    fireEvent.change(screen.getByLabelText('Duration'), { target: { value: '60' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Video call' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create lesson' }));
+
+    await waitFor(() => expect(createLessonAction).toHaveBeenCalled());
+    expect(createLessonAction).toHaveBeenCalledWith(
+      expect.objectContaining({ durationMinutes: 60, format: 'video' })
+    );
+  });
+
+  it('seeds the duration and format from initial on edit', () => {
+    render(
+      <LessonFormEditorial
+        mode="edit"
+        students={students}
+        songs={songs}
+        initial={{
+          lessonId: 'l1',
+          studentId: 's1',
+          title: 'Warm-up',
+          notes: null,
+          scheduledAt: '2026-04-30T16:00:00.000Z',
+          status: 'SCHEDULED',
+          durationMinutes: 30,
+          format: 'video',
+          songIds: [],
+        }}
+      />
+    );
+
+    expect((screen.getByLabelText('Duration') as HTMLSelectElement).value).toBe('30');
+    expect(screen.getByRole('button', { name: 'Video call' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
   });
 });

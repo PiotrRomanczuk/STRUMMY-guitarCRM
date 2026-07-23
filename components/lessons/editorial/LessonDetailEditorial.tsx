@@ -4,6 +4,8 @@ import { PostLessonSummaryAI } from '@/components/lessons/PostLessonSummaryAI';
 import { SHOW_AI_FEATURES } from '@/lib/config/features';
 import type { LessonDetail } from '@/lib/services/lesson-detail-queries';
 
+import { formatLessonDuration, formatLessonFormat } from './format';
+
 const STATUS_LABELS: Record<string, string> = {
   SCHEDULED: 'Scheduled',
   IN_PROGRESS: 'In progress',
@@ -84,6 +86,14 @@ export const LessonDetailEditorial = ({
 }) => {
   const colour = lessonStatusColour(lesson.status);
   const studentDisplay = lesson.studentName ?? lesson.studentEmail ?? 'Student';
+  const metaLine = [
+    'Lesson',
+    formatLong(lesson.scheduledAt),
+    formatLessonDuration(lesson.durationMinutes),
+    formatLessonFormat(lesson.format),
+  ]
+    .filter((part): part is string => Boolean(part))
+    .join(' · ');
 
   return (
     <div
@@ -137,7 +147,7 @@ export const LessonDetailEditorial = ({
               letterSpacing: '.16em',
             }}
           >
-            Lesson · {formatLong(lesson.scheduledAt)}
+            {metaLine}
           </div>
           <h1
             style={{

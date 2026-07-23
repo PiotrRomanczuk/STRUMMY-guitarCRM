@@ -21,6 +21,8 @@ export type LessonEditData = {
   notes: string | null;
   scheduledAt: string;
   status: string;
+  durationMinutes: number | null;
+  format: string | null;
   songIds: string[];
 };
 
@@ -101,7 +103,9 @@ export async function getLessonForEdit(lessonId: string): Promise<LessonEditData
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('lessons')
-    .select('id, student_id, teacher_id, title, notes, scheduled_at, status, lesson_songs(song_id)')
+    .select(
+      'id, student_id, teacher_id, title, notes, scheduled_at, status, duration_minutes, format, lesson_songs(song_id)'
+    )
     .eq('id', lessonId)
     .is('deleted_at', null)
     .single();
@@ -121,6 +125,8 @@ export async function getLessonForEdit(lessonId: string): Promise<LessonEditData
     notes: (data.notes as string) ?? null,
     scheduledAt: data.scheduled_at as string,
     status: data.status as string,
+    durationMinutes: (data.duration_minutes as number | null) ?? null,
+    format: (data.format as string | null) ?? null,
     songIds: (data.lesson_songs ?? []).map((ls: { song_id: string }) => ls.song_id),
   };
 }

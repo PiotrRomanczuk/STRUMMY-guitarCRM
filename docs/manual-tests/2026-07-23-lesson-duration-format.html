@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual test — Lesson duration + format (2026-07-23)</title>
+    <style>
+      body {
+        font:
+          15px/1.55 -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        max-width: 860px;
+        margin: 40px auto;
+        padding: 0 20px;
+        color: #1c1a17;
+      }
+      h1 {
+        font-size: 26px;
+        margin-bottom: 4px;
+      }
+      h2 {
+        margin-top: 32px;
+        border-bottom: 1px solid #e6e1d8;
+        padding-bottom: 6px;
+      }
+      code {
+        background: #f4f1ea;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      .meta {
+        color: #6b655c;
+        font-size: 13px;
+      }
+      .pill {
+        display: inline-block;
+        background: #1c1a17;
+        color: #f7f3ea;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 12px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+      }
+      th,
+      td {
+        border: 1px solid #e6e1d8;
+        padding: 7px 10px;
+        text-align: left;
+        font-size: 13px;
+        vertical-align: top;
+      }
+      th {
+        background: #f4f1ea;
+      }
+      ol li,
+      ul li {
+        margin: 4px 0;
+      }
+      .ok {
+        color: #1f7a3d;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Lesson duration + in-person/video format</h1>
+    <p class="meta">
+      <strong>Date:</strong> 2026-07-23 · <strong>Branch:</strong> feature/lesson-duration-format ·
+      <span class="pill">schema → form → display</span>
+    </p>
+
+    <h2>What was built</h2>
+    <p>
+      The two Lesson-Form gaps from the design mockup are now wired end to end: a
+      <strong>Duration</strong> select (30 / 45 / 60 min) and a <strong>Format</strong> toggle
+      (In-person / Video call). Both persist on lesson create and edit, seed correctly when editing
+      an existing lesson, and now surface on the read surfaces.
+    </p>
+    <ul>
+      <li>
+        <strong>Migration</strong> adds two nullable columns to <code>public.lessons</code>:
+        <code>duration_minutes integer</code> and <code>format text</code>, each guarded by an
+        idempotent CHECK constraint (<code>format in ('in_person','video')</code>,
+        <code>duration_minutes</code> between 15 and 180). No backfill — existing rows stay NULL and
+        the form supplies defaults (45 min / in_person) on the next save. RLS inherits the table's
+        existing policies.
+      </li>
+      <li>
+        <strong>Form</strong>: Duration select + Format segmented toggle live in Section I of the
+        editorial lesson form. Duration defaults to 45; Format defaults to In-person.
+      </li>
+      <li>
+        <strong>Preview panel</strong> shows <code>… · 45 min</code> next to the scheduled time.
+      </li>
+      <li>
+        <strong>Lesson detail</strong> meta line reads e.g.
+        <code>Lesson · Mon, Jul 20, 2026, 3:00 PM · 45 min · In person</code> (duration/format
+        omitted cleanly when NULL).
+      </li>
+      <li>
+        <strong>Lessons list</strong> Time column appends the duration:
+        <code>Mon · 4:00 PM · 45 min</code>.
+      </li>
+    </ul>
+
+    <h2>How to test manually</h2>
+    <p>
+      <strong>Prerequisites:</strong> apply the migration to the dev Supabase stack, then run the
+      app.
+    </p>
+    <ol>
+      <li>
+        Apply migration on <code>uwh</code>:
+        <code
+          >docker exec -i supabase_db_StudentDevelopment psql -U postgres -d postgres &lt;
+          supabase/migrations/20260723120000_lessons_duration_format.sql</code
+        >, then regenerate types with <code>supabase gen types</code> (see note below).
+      </li>
+      <li><code>npm run dev</code> and sign in as the admin/teacher (see CLAUDE.md dev creds).</li>
+      <li>
+        Go to <code>/dashboard/lessons/new</code>. Confirm the <strong>Duration</strong> select
+        shows 30/45/60 (defaulting to 45) and the <strong>Format</strong> toggle shows In-person
+        (selected) / Video call. The preview card should read <code>… · 45 min</code>.
+      </li>
+      <li>
+        Pick a student + time, change Duration to 60, click <strong>Video call</strong>, and create.
+        On the new lesson detail page the meta line should read
+        <code>… · 60 min · Video call</code>.
+      </li>
+      <li>
+        Return to <code>/dashboard/lessons</code>. The new row's Time column should show
+        <code>· 60 min</code>.
+      </li>
+      <li>
+        Open the lesson's <strong>Edit</strong> page. Duration should be pre-selected to 60 and
+        Video call pre-pressed. Change them back to 45 / In-person, save, and confirm the detail +
+        list update.
+      </li>
+      <li>
+        <strong>Edge — legacy rows:</strong> a lesson that predates the migration (duration/format
+        NULL) should render its detail meta line and list row with no duration/format fragment, and
+        its edit form should fall back to 45 / In-person.
+      </li>
+    </ol>
+
+    <h2>Automated gate results</h2>
+    <table>
+      <tr>
+        <th>Gate</th>
+        <th>Command</th>
+        <th>Result</th>
+      </tr>
+      <tr>
+        <td>Typecheck</td>
+        <td><code>npx tsc --noEmit</code></td>
+        <td class="ok">0 errors</td>
+      </tr>
+      <tr>
+        <td>Unit tests</td>
+        <td><code>npx jest components/lessons lib/services schemas app/actions</code></td>
+        <td class="ok">102 suites, 1538 passed / 1 skipped</td>
+      </tr>
+      <tr>
+        <td>Lint</td>
+        <td><code>eslint &lt;changed files&gt;</code></td>
+        <td class="ok">0 errors (5 pre-existing max-lines warnings)</td>
+      </tr>
+    </table>
+
+    <h2>Notes &amp; scope</h2>
+    <ul>
+      <li>
+        <code>types/database.types.ts</code> was hand-edited as a stopgap; the migration is the
+        source of truth. Run <code>supabase gen types</code> against the dev stack after applying to
+        regenerate the canonical types.
+      </li>
+      <li>
+        The recurring (repeat-weekly) create path goes through
+        <code>generateRecurringLessons</code> and does not yet carry duration/format — out of scope
+        for this change; single create + edit do persist them.
+      </li>
+    </ul>
+  </body>
+</html>

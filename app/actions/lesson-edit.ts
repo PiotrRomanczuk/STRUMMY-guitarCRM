@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { guardTestAccountMutation } from '@/lib/auth/test-account-guard';
-import { LessonInputSchema, type LessonInput } from '@/schemas/LessonSchema';
+import { LessonInputSchema, type LessonInput, type LessonFormat } from '@/schemas/LessonSchema';
 import {
   insertLessonRecord,
   addSongsToLesson,
@@ -26,12 +26,21 @@ export type LessonFormValues = {
   notes?: string;
   scheduledAt: string;
   status?: LessonInput['status'];
+  durationMinutes?: number;
+  format?: LessonFormat;
   songIds?: string[];
 };
 
 type LessonActionResult = { lessonId: string } | { error: string; ambiguous?: boolean };
 
-const ALLOWED_UPDATE_FIELDS = ['title', 'notes', 'scheduled_at', 'status'];
+const ALLOWED_UPDATE_FIELDS = [
+  'title',
+  'notes',
+  'scheduled_at',
+  'status',
+  'duration_minutes',
+  'format',
+];
 
 /** Create a lesson from the editorial form (teacher/admin only; inline shadow create). */
 export async function createLessonAction(values: LessonFormValues): Promise<LessonActionResult> {
@@ -56,6 +65,8 @@ export async function createLessonAction(values: LessonFormValues): Promise<Less
     notes: values.notes || undefined,
     scheduled_at: values.scheduledAt,
     status: values.status,
+    duration_minutes: values.durationMinutes,
+    format: values.format,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues.map((i) => i.message).join(', ') };
@@ -94,6 +105,8 @@ export async function updateLessonAction(
     notes: values.notes,
     scheduled_at: values.scheduledAt,
     status: values.status,
+    duration_minutes: values.durationMinutes,
+    format: values.format,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues.map((i) => i.message).join(', ') };

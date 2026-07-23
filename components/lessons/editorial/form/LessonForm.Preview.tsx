@@ -7,6 +7,7 @@ type Props = {
   student?: StudentOption;
   studentEmail: string;
   scheduledLocal: string;
+  durationMinutes: number;
   songs: SongOption[];
   songIds: string[];
 };
@@ -29,6 +30,7 @@ export const LessonFormPreview = ({
   student,
   studentEmail,
   scheduledLocal,
+  durationMinutes,
   songs,
   songIds,
 }: Props) => {
@@ -44,7 +46,7 @@ export const LessonFormPreview = ({
         <div>
           <div style={{ fontFamily: 'var(--serif)', fontSize: 16, fontWeight: 500 }}>{name}</div>
           <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>
-            {formatScheduled(scheduledLocal)}
+            {formatScheduled(scheduledLocal)} · {durationMinutes} min
           </div>
         </div>
       </div>

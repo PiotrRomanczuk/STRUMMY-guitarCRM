@@ -20,6 +20,7 @@ const makeLesson = (overrides: Partial<LessonRow> = {}): LessonRow => ({
   scheduledAt: NOW.toISOString(),
   status: 'scheduled',
   title: 'Fingerstyle basics',
+  durationMinutes: 45,
   teacherId: 'teacher-1',
   studentId: 'student-1',
   studentName: 'Emma Stone',
@@ -153,6 +154,8 @@ describe('LessonsListEditorial — lesson rendering', () => {
     const todayRow = screen.getByRole('link', { name: /Fingerstyle basics/ });
     expect(within(todayRow).getByText('Scheduled')).toBeInTheDocument();
     expect(within(todayRow).getByText('Emma Stone')).toBeInTheDocument();
+    // The time column carries the lesson duration alongside the weekday/clock.
+    expect(within(todayRow).getByText(/45 min/)).toBeInTheDocument();
 
     const thisWeekRow = screen.getByRole('link', { name: /Barre chords/ });
     expect(within(thisWeekRow).getByText('In progress')).toBeInTheDocument();

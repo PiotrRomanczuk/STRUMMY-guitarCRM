@@ -228,6 +228,16 @@ describe('lesson-edit actions', () => {
       expect(sync.syncLessonCreation).toHaveBeenCalled();
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/lessons');
     });
+
+    it('passes duration and format through to the insert payload', async () => {
+      mockRoles(asTeacher);
+
+      await createLessonAction({ scheduledAt: AT, durationMinutes: 45, format: 'in_person' });
+
+      const [, payload] = (utils.insertLessonRecord as jest.Mock).mock.calls[0];
+      expect(payload.duration_minutes).toBe(45);
+      expect(payload.format).toBe('in_person');
+    });
   });
 
   describe('updateLessonAction', () => {
@@ -270,6 +280,20 @@ describe('lesson-edit actions', () => {
       await updateLessonAction('L1', { scheduledAt: AT, title: 'New Title' });
 
       expect(mockUpdate).toHaveBeenCalledWith({ scheduled_at: AT, title: 'New Title' });
+    });
+
+    it('writes duration and format when provided', async () => {
+      mockRoles(asTeacher);
+
+      await updateLessonAction('L1', {
+        scheduledAt: AT,
+        durationMinutes: 60,
+        format: 'video',
+      });
+
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ duration_minutes: 60, format: 'video' })
+      );
     });
 
     it('returns error if lesson not found', async () => {
