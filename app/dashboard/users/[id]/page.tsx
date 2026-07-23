@@ -11,6 +11,12 @@ import {
   getStudentRecentLessons,
   getStudentRepertoire,
 } from '@/lib/services/student-detail-queries';
+import {
+  getStudentLatestNote,
+  getStudentNextLesson,
+  getStudentPracticeHistory,
+  getStudentPracticeSessions,
+} from '@/lib/services/student-health-queries';
 
 const geist = Geist({
   subsets: ['latin'],
@@ -47,10 +53,22 @@ export default async function StudentDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const [repertoire, lessons, preferences] = await Promise.all([
+  const [
+    repertoire,
+    lessons,
+    preferences,
+    practiceHistory,
+    practiceSessions,
+    nextLesson,
+    latestNote,
+  ] = await Promise.all([
     getStudentRepertoire(id),
     getStudentRecentLessons(id),
     getStudentPreferences(id),
+    getStudentPracticeHistory(id, 14),
+    getStudentPracticeSessions(id, 30),
+    getStudentNextLesson(id),
+    getStudentLatestNote(id),
   ]);
 
   return (
@@ -60,6 +78,10 @@ export default async function StudentDetailPage({ params }: PageProps) {
         repertoire={repertoire}
         lessons={lessons}
         preferences={preferences}
+        practiceHistory={practiceHistory}
+        practiceSessions={practiceSessions}
+        nextLesson={nextLesson}
+        latestNote={latestNote}
         canEdit={isAdmin || isTeacher}
       />
     </div>

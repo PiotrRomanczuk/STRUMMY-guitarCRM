@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manual Test · Student Detail — At Risk (health-aware redesign)</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+        line-height: 1.55;
+        color: #1a1613;
+        background: #f6f2ea;
+      }
+      h1 {
+        font-size: 1.7rem;
+        margin-bottom: 4px;
+      }
+      h2 {
+        margin-top: 34px;
+        border-bottom: 2px solid #d8cdb8;
+        padding-bottom: 6px;
+      }
+      .meta {
+        color: #6b5f4e;
+        font-size: 0.9rem;
+      }
+      code {
+        background: #ece3d2;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 0.88em;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+      }
+      th,
+      td {
+        border: 1px solid #d8cdb8;
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+        font-size: 0.92rem;
+      }
+      th {
+        background: #ece3d2;
+      }
+      .badge {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border: 1px solid;
+      }
+      .ok {
+        color: #2f7d4f;
+        border-color: #2f7d4f;
+      }
+      .warn {
+        color: #b3801f;
+        border-color: #b3801f;
+      }
+      .risk {
+        color: #b3402f;
+        border-color: #b3402f;
+      }
+      ol li,
+      ul li {
+        margin: 6px 0;
+      }
+      .pill {
+        background: #1a1613;
+        color: #f6f2ea;
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: 0.8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Student Detail — At-Risk (health-aware redesign)</h1>
+    <p class="meta">
+      <strong>Date:</strong> 2026-07-23 · <strong>Branch:</strong>
+      <code>feature/student-detail-at-risk</code> · <strong>Route:</strong>
+      <code>/dashboard/users/[id]</code>
+    </p>
+
+    <h2>1. What was built</h2>
+    <p>
+      The existing <code>StudentDetailEditorial</code> was upgraded from a static profile into a
+      <strong>health-aware</strong> student view, implementing the batch-02 “Student Detail — At
+      Risk / Healthy” mockup. Both the at-risk and healthy states are the <em>same component</em>;
+      the header just renders by status.
+    </p>
+    <ul>
+      <li>
+        <strong>Health status header</strong> — a pill reading
+        <span class="badge ok">On track</span> (&lt;7 days since practice),
+        <span class="badge warn">Needs attention</span> (7–13 days), or
+        <span class="badge risk">At risk</span> (14+ days / never practiced). Reuses the
+        teacher-dashboard at-risk threshold. Below the name: <code>“N days since practice”</code>.
+      </li>
+      <li>
+        <strong>Reach-out CTA</strong> — a prominent <code>mailto:</code> button that reads
+        <strong>Reach out</strong> (amber) when the student needs attention, or
+        <strong>Message</strong> when on track.
+      </li>
+      <li>
+        <strong>14-day practice chart</strong> — daily bars with a dashed goal line at 30 min/day;
+        bars that hit the goal read gold. Shows the trailing-7-day total (“this week”).
+      </li>
+      <li>
+        <strong>Next lesson card</strong> — next upcoming lesson with a
+        <strong>Reschedule now</strong> link, or a “Schedule lesson” nudge when there is none.
+      </li>
+      <li>
+        <strong>Teacher notes card</strong> — the most recent lesson’s note (read-only; sourced from
+        lesson <code>notes</code> — there is no dedicated per-student notes store yet).
+      </li>
+      <li><strong>Tabs</strong> — Overview (default) / Lessons / Repertoire / Practice Log.</li>
+    </ul>
+
+    <h2>2. How to manually test</h2>
+    <ol>
+      <li>
+        Start the app: <code>npm run dev</code>. Sign in as admin (<code
+          >p.romanczuk@gmail.com</code
+        >
+        / <code>test123_admin</code>) or a teacher.
+      </li>
+      <li>
+        Go to <code>/dashboard/users</code> and open any student → lands on
+        <code>/dashboard/users/&lt;id&gt;</code>.
+      </li>
+      <li>
+        <strong>Header health:</strong> a student with <em>no recent practice</em> shows
+        <span class="badge risk">At risk</span> + a <span class="pill">Reach out</span> button. A
+        student who practiced in the last few days shows <span class="badge ok">On track</span> + a
+        <span class="pill">Message</span> button.
+      </li>
+      <li>
+        <strong>Overview tab:</strong> confirm the 14-bar practice chart, the goal line, and the
+        “this week” total; the Next-lesson card (or “No upcoming lesson.” + Schedule link); the
+        Teacher-notes card (or “No teacher notes yet.”).
+      </li>
+      <li>
+        <strong>Reschedule:</strong> click <em>Reschedule now →</em> → should open
+        <code>/dashboard/lessons/&lt;lessonId&gt;/edit</code>.
+      </li>
+      <li>
+        <strong>Tabs:</strong> click <em>Lessons</em> (full lesson list),
+        <em>Repertoire</em> (songs; staff see a status dropdown per song),
+        <em>Practice Log</em> (raw sessions: date · song · minutes · note).
+      </li>
+      <li>
+        <strong>Reach out:</strong> click <em>Reach out</em> / <em>Message</em> → opens a mail draft
+        to the student’s email.
+      </li>
+    </ol>
+
+    <h2>3. Edge cases worth checking</h2>
+    <table>
+      <tr>
+        <th>Case</th>
+        <th>Expected</th>
+      </tr>
+      <tr>
+        <td>Student with no repertoire / no practice</td>
+        <td>
+          At-risk badge, “No practice logged yet”, empty chart (flat rule ticks), zeroed stats,
+          empty tabs.
+        </td>
+      </tr>
+      <tr>
+        <td>Shadow (unclaimed) profile</td>
+        <td>“Unclaimed” badge + Invite / Delete actions still present.</td>
+      </tr>
+      <tr>
+        <td>Student who never onboarded</td>
+        <td>Preferences chips line is omitted (no skill/goals row).</td>
+      </tr>
+      <tr>
+        <td>Mobile width (&lt; 860px)</td>
+        <td>Overview grid + header stats stack into one column; tabs scroll horizontally.</td>
+      </tr>
+      <tr>
+        <td>Dark mode</td>
+        <td>
+          Editorial dark tokens apply (badge/chart colors inherit
+          <code>--success/--warn/--danger</code>).
+        </td>
+      </tr>
+    </table>
+
+    <h2>4. Automated coverage &amp; gates</h2>
+    <ul>
+      <li>
+        <strong>Unit:</strong> <code>lib/services/__tests__/student-health.helpers.test.ts</code> —
+        11 tests (health thresholds, latest-practice, day bucketing, week total).
+      </li>
+      <li>
+        <strong>Component:</strong> <code>StudentDetailEditorial.test.tsx</code> — 22 tests (health
+        badge states, reach-out CTA, chart total, next-lesson/reschedule, teacher note, tab
+        switching).
+      </li>
+      <li><span class="badge ok">PASS</span> 33/33 new tests · users-domain suites 50/50.</li>
+      <li>
+        <span class="badge ok">PASS</span> <code>tsc --noEmit</code> (0 errors) ·
+        <code>eslint</code> (0 errors) · <code>npm run build</code> compiles the route
+        (client/server boundary verified).
+      </li>
+    </ul>
+
+    <h2>5. Deliberately deferred (out of scope this pass)</h2>
+    <ul>
+      <li>
+        <strong>Dedicated pinned-notes store</strong> — notes are read from the latest lesson; a
+        per-student notes table + editing is a separate feature.
+      </li>
+      <li>
+        <strong>Per-student daily goal</strong> — goal line is a shared 30 min/day default (no
+        column exists yet).
+      </li>
+      <li>
+        <strong>Phone contact</strong> — <code>profiles</code> has no phone column; only
+        email/message is wired.
+      </li>
+    </ul>
+  </body>
+</html>

@@ -114,12 +114,73 @@
   gap: 20px;
   align-items: flex-start;
 }
+/* Student-detail overview: main column + side rail. Stacks on small screens. */
+.theme-editorial .ed-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
 @media (max-width: 860px) {
   .theme-editorial .ed-grid-hero,
   .theme-editorial .ed-grid-2,
-  .theme-editorial .ed-grid-form {
+  .theme-editorial .ed-grid-form,
+  .theme-editorial .ed-detail-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* Header stat cluster drops below the identity block on mobile. */
+  .theme-editorial .ed-detail-stats {
+    margin-left: 0 !important;
+    gap: 20px !important;
+  }
+}
+
+/* Back link above the student header. */
+.theme-editorial .ed-back-link {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-4);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  transition: color 0.15s ease;
+}
+.theme-editorial .ed-back-link:hover {
+  color: var(--ink);
+}
+
+/* Section tabs (Overview / Lessons / Repertoire / Practice Log). */
+.theme-editorial .ed-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+.theme-editorial .ed-tab {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-4);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+.theme-editorial .ed-tab:hover {
+  color: var(--ink-2);
+}
+.theme-editorial .ed-tab.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--gold);
 }
 
 /* Page header row (title + actions): wraps instead of clipping on mobile. */
