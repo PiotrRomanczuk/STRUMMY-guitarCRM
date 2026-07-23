@@ -65,14 +65,7 @@ export const LessonDetailEditorial = ({
 
         <LessonHero lesson={lesson} studentDisplay={studentDisplay} />
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
-            gap: 20,
-            alignItems: 'start',
-          }}
-        >
+        <div className="ed-grid-hero">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <LessonSongsCard lesson={lesson} canEdit={canEdit} />
             <LessonNotesCard notes={lesson.notes} />
