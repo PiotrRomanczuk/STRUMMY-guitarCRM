@@ -18,7 +18,10 @@ type Props = {
   studentId?: string;
 };
 
-const colsClass = 'grid grid-cols-1 md:grid-cols-[150px_1fr_140px]';
+// Teacher/admin get an extra "Progress" column between title and status;
+// the student list stays three columns (progress lives in their detail view).
+const TEACHER_COLS = 'grid grid-cols-1 md:grid-cols-[150px_1fr_120px_140px]';
+const STUDENT_COLS = 'grid grid-cols-1 md:grid-cols-[150px_1fr_140px]';
 
 // eslint-disable-next-line max-lines-per-function -- editorial list shell (inline styles)
 export const AssignmentsListEditorial = ({
@@ -34,6 +37,7 @@ export const AssignmentsListEditorial = ({
   studentId,
 }: Props) => {
   const showStudentColumn = !asStudent;
+  const colsClass = showStudentColumn ? TEACHER_COLS : STUDENT_COLS;
   const filtered = Boolean(activeStatus || search || studentId);
 
   return (
@@ -171,6 +175,7 @@ export const AssignmentsListEditorial = ({
             >
               <span>Due</span>
               <span>{showStudentColumn ? 'Student / Title' : 'Title'}</span>
+              {showStudentColumn && <span>Progress</span>}
               <span style={{ textAlign: 'right' }}>Status</span>
             </div>
             {rows.map((row, i) => (
