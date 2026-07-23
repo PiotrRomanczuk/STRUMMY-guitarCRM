@@ -38,6 +38,36 @@ const inputStyle = {
 } as const;
 const monoStyle = { ...inputStyle, fontFamily: 'var(--mono)', fontSize: 13 } as const;
 
+const stepperBtnStyle: React.CSSProperties = {
+  width: 32,
+  height: 38,
+  border: '1px solid var(--rule)',
+  background: 'var(--card)',
+  color: 'var(--ink)',
+  fontSize: 16,
+  cursor: 'pointer',
+  flexShrink: 0,
+};
+
+const levelBtnStyle = (active: boolean): React.CSSProperties => ({
+  flex: 1,
+  padding: '9px 8px',
+  border: '1px solid var(--rule)',
+  borderRadius: 6,
+  background: active ? 'var(--ink)' : 'var(--card)',
+  color: active ? 'var(--paper)' : 'var(--ink-3)',
+  fontSize: 13,
+  fontWeight: active ? 500 : 400,
+  cursor: 'pointer',
+  textTransform: 'capitalize',
+});
+
+const toNumberOrNull = (value: string): number | null => {
+  if (value.trim() === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
 const Label = ({ children, optional }: { children: React.ReactNode; optional?: boolean }) => (
   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
     <span
@@ -72,38 +102,49 @@ type Props = {
   keyName: string;
   capoFret: number | null;
   tempo: number | null;
-  chords: string | null;
+  timeSignature: number | null;
+  releaseYear: number | null;
   onLevel: (v: string) => void;
   onKey: (v: string) => void;
+  onCapoFret: (v: number | null) => void;
+  onTempo: (v: number | null) => void;
+  onTimeSignature: (v: number | null) => void;
+  onReleaseYear: (v: number | null) => void;
 };
 
-/** Section II — level, key (controlled, for the preview) + capo/tempo/chords (uncontrolled). */
+/** Difficulty (button group), key, capo (stepper), tempo, meter, year — all controlled. */
 export const SongEditFormEditorialFieldsDetails = ({
   level,
   keyName,
   capoFret,
   tempo,
-  chords,
+  timeSignature,
+  releaseYear,
   onLevel,
   onKey,
+  onCapoFret,
+  onTempo,
+  onTimeSignature,
+  onReleaseYear,
 }: Props) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
       <div>
-        <Label>Level</Label>
-        <select
-          name="level"
-          required
-          value={level}
-          onChange={(e) => onLevel(e.target.value)}
-          style={inputStyle}
-        >
+        <Label>Difficulty</Label>
+        <input type="hidden" name="level" value={level} />
+        <div style={{ display: 'flex', gap: 6 }}>
           {LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {l[0].toUpperCase() + l.slice(1)}
-            </option>
+            <button
+              type="button"
+              key={l}
+              onClick={() => onLevel(l)}
+              aria-pressed={level === l}
+              style={levelBtnStyle(level === l)}
+            >
+              {l}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
       <div>
         <Label>Key</Label>
@@ -122,17 +163,36 @@ export const SongEditFormEditorialFieldsDetails = ({
         </select>
       </div>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
       <div>
         <Label optional>Capo (fret)</Label>
-        <input
-          name="capo_fret"
-          type="number"
-          min={0}
-          max={20}
-          defaultValue={capoFret ?? ''}
-          style={monoStyle}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button
+            type="button"
+            onClick={() => onCapoFret(Math.max(0, (capoFret ?? 0) - 1))}
+            style={stepperBtnStyle}
+            aria-label="Decrease capo fret"
+          >
+            −
+          </button>
+          <input
+            name="capo_fret"
+            type="number"
+            min={0}
+            max={20}
+            style={{ ...monoStyle, textAlign: 'center' }}
+            value={capoFret ?? ''}
+            onChange={(e) => onCapoFret(toNumberOrNull(e.target.value))}
+          />
+          <button
+            type="button"
+            onClick={() => onCapoFret(Math.min(20, (capoFret ?? 0) + 1))}
+            style={stepperBtnStyle}
+            aria-label="Increase capo fret"
+          >
+            +
+          </button>
+        </div>
       </div>
       <div>
         <Label optional>Tempo (BPM)</Label>
@@ -141,19 +201,34 @@ export const SongEditFormEditorialFieldsDetails = ({
           type="number"
           min={0}
           max={300}
-          defaultValue={tempo ?? ''}
           style={monoStyle}
+          value={tempo ?? ''}
+          onChange={(e) => onTempo(toNumberOrNull(e.target.value))}
+        />
+      </div>
+      <div>
+        <Label optional>Time sig.</Label>
+        <input
+          name="time_signature"
+          type="number"
+          min={1}
+          max={16}
+          style={monoStyle}
+          value={timeSignature ?? ''}
+          onChange={(e) => onTimeSignature(toNumberOrNull(e.target.value))}
         />
       </div>
     </div>
     <div>
-      <Label optional>Chords</Label>
+      <Label optional>Release year</Label>
       <input
-        name="chords"
-        maxLength={500}
-        defaultValue={chords ?? ''}
-        placeholder="C, G, Am, F"
-        style={monoStyle}
+        name="release_year"
+        type="number"
+        min={1500}
+        max={2100}
+        style={{ ...monoStyle, maxWidth: 160 }}
+        value={releaseYear ?? ''}
+        onChange={(e) => onReleaseYear(toNumberOrNull(e.target.value))}
       />
     </div>
   </div>

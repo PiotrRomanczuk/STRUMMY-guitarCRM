@@ -65,7 +65,7 @@ test.describe('Teacher Songs CRUD', { tag: ['@teacher', '@songs'] }, () => {
     await page.locator('input[name="title"]').fill(TEST_SONG_TITLE);
     await page.locator('input[name="author"]').fill('E2E Test Artist');
     // level/key selects default to beginner/C (both required) — leave as-is.
-    await page.getByRole('button', { name: 'Add song' }).click();
+    await page.getByRole('button', { name: 'Create song' }).click();
 
     // Server action redirects to the new song's detail page.
     await page.waitForURL(/\/dashboard\/songs\/[0-9a-f-]{36}$/, { timeout: 20_000 });
@@ -120,7 +120,7 @@ test.describe('Teacher Songs CRUD', { tag: ['@teacher', '@songs'] }, () => {
     await expect(page.locator('input[name="title"]')).toBeVisible({ timeout: 15_000 });
     await page.locator('input[name="title"]').fill(fullTitle);
     await page.locator('input[name="author"]').fill('E2E Full Artist');
-    await page.getByRole('button', { name: 'Add song' }).click();
+    await page.getByRole('button', { name: 'Create song' }).click();
 
     await page.waitForURL(/\/dashboard\/songs\/[0-9a-f-]{36}$/, { timeout: 20_000 });
     await expect(page.getByRole('heading', { name: fullTitle }).first()).toBeVisible({

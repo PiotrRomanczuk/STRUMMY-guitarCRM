@@ -80,6 +80,7 @@ describe('updateSongAction', () => {
       capo_fret: '2',
       tempo: '87',
       chords: 'Em G D A',
+      strumming_pattern: 'D D U - U D',
       lyrics_with_chords: '[Verse]\nEm       G\nToday is gonna be the day',
     });
 
@@ -93,7 +94,16 @@ describe('updateSongAction', () => {
       key: 'Am',
       capo_fret: 2,
       tempo: 87,
+      time_signature: null,
+      release_year: null,
       chords: 'Em G D A',
+      strumming_pattern: 'D D U - U D',
+      cover_image_url: null,
+      category: null,
+      youtube_url: null,
+      spotify_link_url: null,
+      ultimate_guitar_link: null,
+      tiktok_short_url: null,
       lyrics_with_chords: '[Verse]\nEm       G\nToday is gonna be the day',
     });
     expect(mockEq).toHaveBeenCalledWith('id', SONG_ID);
@@ -123,7 +133,16 @@ describe('updateSongAction', () => {
       key: 'C',
       capo_fret: null,
       tempo: null,
+      time_signature: null,
+      release_year: null,
       chords: null,
+      strumming_pattern: null,
+      cover_image_url: null,
+      category: null,
+      youtube_url: null,
+      spotify_link_url: null,
+      ultimate_guitar_link: null,
+      tiktok_short_url: null,
       lyrics_with_chords: null,
     });
   });
