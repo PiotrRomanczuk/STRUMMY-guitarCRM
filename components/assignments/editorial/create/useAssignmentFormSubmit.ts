@@ -7,7 +7,11 @@ import {
   updateAssignmentAction,
   type AssignmentFormValues,
 } from '@/app/actions/assignment-edit';
-import { sanitizeChecklist, type ChecklistItem } from '@/schemas/AssignmentSchema';
+import {
+  sanitizeChecklist,
+  type ChecklistItem,
+  type SubmissionType,
+} from '@/schemas/AssignmentSchema';
 
 type SubmitArgs = {
   mode: 'create' | 'edit';
@@ -19,6 +23,8 @@ type SubmitArgs = {
   songId: string;
   checklist: ChecklistItem[];
   chordIds: string[];
+  dailyTargetMinutes: number | null;
+  submissionType: SubmissionType;
 };
 
 export function useAssignmentFormSubmit({
@@ -31,6 +37,8 @@ export function useAssignmentFormSubmit({
   songId,
   checklist,
   chordIds,
+  dailyTargetMinutes,
+  submissionType,
 }: SubmitArgs) {
   const router = useRouter();
   const [error, setError] = useState('');
@@ -67,6 +75,8 @@ export function useAssignmentFormSubmit({
         songId: songId || null,
         checklist: sanitizeChecklist(checklist),
         chordDrillChordIds: chordIds,
+        dailyTargetMinutes,
+        submissionType,
       };
 
       setIsSaving(true);
@@ -93,6 +103,8 @@ export function useAssignmentFormSubmit({
       songId,
       checklist,
       chordIds,
+      dailyTargetMinutes,
+      submissionType,
       initialAssignmentId,
       router,
     ]

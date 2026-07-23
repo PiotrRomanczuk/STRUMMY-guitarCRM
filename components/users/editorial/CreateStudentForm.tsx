@@ -1,57 +1,39 @@
 'use client';
 
-import { useCallback, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import { FormPreviewPanel } from '@/components/_editorial/FormPreviewPanel';
 import { CreateStudentFormFields } from './CreateStudentForm.Fields';
 import { CreateStudentFormPreview } from './CreateStudentForm.Preview';
+import { useCreateStudentForm } from './useCreateStudentForm';
+
+const backLinkStyle: React.CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontSize: 11,
+  color: 'var(--ink-4)',
+  textDecoration: 'none',
+  textTransform: 'uppercase',
+  letterSpacing: '.14em',
+};
+
+const cancelStyle: React.CSSProperties = {
+  padding: '10px 20px',
+  borderRadius: 8,
+  border: '1px solid var(--rule)',
+  background: 'transparent',
+  color: 'var(--ink)',
+  fontSize: 13,
+  fontWeight: 500,
+  cursor: 'pointer',
+  fontFamily: 'var(--sans)',
+  textDecoration: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+};
 
 export const CreateStudentForm = () => {
-  const router = useRouter();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [error, setError] = useState('');
-  const [isPending, startTransition] = useTransition();
-
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!firstName.trim() || !lastName.trim() || !inviteEmail.trim()) {
-        setError('First name, last name, and invite email are required.');
-        return;
-      }
-      setError('');
-      startTransition(async () => {
-        try {
-          const res = await fetch('/api/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              firstName: firstName.trim(),
-              lastName: lastName.trim(),
-              email: '',
-              inviteEmail: inviteEmail.trim(),
-              phone: phone.trim() || undefined,
-              isStudent: true,
-              isShadow: true,
-            }),
-          });
-          const body = (await res.json()) as { id?: string; error?: string };
-          if (!res.ok) throw new Error(body.error ?? 'Failed to create student');
-          router.push(`/dashboard/users/${body.id}`);
-        } catch (err) {
-          setError(err instanceof Error ? err.message : 'Failed to create student');
-        }
-      });
-    },
-    [firstName, lastName, inviteEmail, phone, router]
-  );
-
-  const previewName = [firstName, lastName].filter(Boolean).join(' ');
+  const { values, errors, error, isPending, setField, handleSubmit, previewName } =
+    useCreateStudentForm();
 
   return (
     <div
@@ -63,22 +45,12 @@ export const CreateStudentForm = () => {
       }}
     >
       <div style={{ maxWidth: 1040, margin: '0 auto' }}>
-        <Link
-          href="/dashboard/users"
-          style={{
-            fontFamily: 'var(--mono)',
-            fontSize: 11,
-            color: 'var(--ink-4)',
-            textDecoration: 'none',
-            textTransform: 'uppercase',
-            letterSpacing: '.14em',
-          }}
-        >
+        <Link href="/dashboard/users" style={backLinkStyle}>
           ← Students
         </Link>
         <h1
           style={{
-            margin: '12px 0 24px',
+            margin: '12px 0 6px',
             fontFamily: 'var(--serif)',
             fontWeight: 400,
             fontSize: 40,
@@ -86,47 +58,33 @@ export const CreateStudentForm = () => {
             fontStyle: 'italic',
           }}
         >
-          Add student
+          Add a student
         </h1>
+        <p style={{ margin: '0 0 24px', fontSize: 13, color: 'var(--ink-3)', maxWidth: 520 }}>
+          Contact info, billing, and lesson schedule. Only name and level are required to get
+          started.
+        </p>
 
         <form onSubmit={handleSubmit}>
           <div className="ed-grid-form">
             <div>
-              <CreateStudentFormFields
-                firstName={firstName}
-                lastName={lastName}
-                inviteEmail={inviteEmail}
-                phone={phone}
-                onFirstName={setFirstName}
-                onLastName={setLastName}
-                onInviteEmail={setInviteEmail}
-                onPhone={setPhone}
-              />
+              <CreateStudentFormFields values={values} onChange={setField} errors={errors} />
 
               {error && (
-                <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--danger)' }}>
+                <div
+                  style={{
+                    fontFamily: 'var(--mono)',
+                    fontSize: 12,
+                    color: 'var(--danger)',
+                    marginBottom: 12,
+                  }}
+                >
                   {error}
                 </div>
               )}
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 4 }}>
-                <Link
-                  href="/dashboard/users"
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: 8,
-                    border: '1px solid var(--rule)',
-                    background: 'transparent',
-                    color: 'var(--ink)',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    fontFamily: 'var(--sans)',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                  }}
-                >
+                <Link href="/dashboard/users" style={cancelStyle}>
                   Cancel
                 </Link>
                 <button
@@ -144,13 +102,21 @@ export const CreateStudentForm = () => {
                     fontFamily: 'var(--sans)',
                   }}
                 >
-                  {isPending ? 'Creating…' : 'Create student'}
+                  {isPending ? 'Adding…' : 'Add student'}
                 </button>
               </div>
             </div>
 
             <FormPreviewPanel>
-              <CreateStudentFormPreview name={previewName} inviteEmail={inviteEmail} />
+              <CreateStudentFormPreview
+                name={previewName}
+                skillLevel={values.skillLevel}
+                avatarColor={values.avatarColor}
+                lessonDay={values.lessonDay}
+                lessonTime={values.lessonTime}
+                lessonRate={values.lessonRate}
+                billingCycle={values.billingCycle}
+              />
             </FormPreviewPanel>
           </div>
         </form>

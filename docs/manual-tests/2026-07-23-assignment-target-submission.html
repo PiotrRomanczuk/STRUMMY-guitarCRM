@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual test — Assignment daily target + submission-type selector (2026-07-23)</title>
+    <style>
+      :root {
+        --ink: #1a1a1a;
+        --muted: #666;
+        --rule: #e3e3e3;
+        --gold: #8a6d1f;
+        --card: #faf8f3;
+      }
+      body {
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        color: var(--ink);
+        max-width: 840px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+      h1 {
+        font-size: 26px;
+        margin-bottom: 4px;
+      }
+      .date {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 28px;
+      }
+      h2 {
+        font-size: 19px;
+        margin-top: 34px;
+        border-bottom: 2px solid var(--rule);
+        padding-bottom: 6px;
+      }
+      h3 {
+        font-size: 16px;
+        margin-top: 22px;
+      }
+      code {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 13px;
+      }
+      pre {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        padding: 12px 14px;
+        overflow-x: auto;
+        font-size: 13px;
+      }
+      ul {
+        padding-left: 22px;
+      }
+      li {
+        margin: 5px 0;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid var(--rule);
+        padding: 7px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--card);
+      }
+      .pill {
+        display: inline-block;
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 999px;
+        padding: 1px 10px;
+        font-size: 12px;
+        color: var(--gold);
+      }
+      .note {
+        background: #fff8e6;
+        border: 1px solid #e8d48a;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin: 14px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Assignment: daily practice target + submission-type selector</h1>
+    <div class="date">2026-07-23 · branch <code>feature/assignment-target-submission</code></div>
+
+    <h2>What was built</h2>
+    <p>
+      Two Assignment-Form gaps from the design mockup are now wired end to end (migration → types →
+      Zod schema → form → detail display):
+    </p>
+    <ul>
+      <li>
+        <strong>Daily practice target</strong> — an optional select on the assignment form offering
+        <span class="pill">5</span> <span class="pill">10</span> <span class="pill">15</span>
+        <span class="pill">20</span> min/day (plus <em>No target</em>). Stored in
+        <code>assignments.daily_target_minutes</code> (nullable integer, <code>&gt; 0</code>).
+      </li>
+      <li>
+        <strong>Submission type selector</strong> — a segmented toggle declaring the expected proof:
+        <em>Self-report / Audio recording / Video / Note</em>. Stored in
+        <code>assignments.submission_type</code> (<code>text</code>, default
+        <code>self_report</code>, CHECK-constrained to the four values).
+      </li>
+    </ul>
+    <div class="note">
+      <strong>Scope note:</strong> this is the submission-type <em>selector</em> only — it declares
+      what proof is expected. Actual audio/video upload is intentionally deferred to a later wave.
+    </div>
+
+    <h2>Where it shows up</h2>
+    <ul>
+      <li>
+        <strong>Create form</strong> (<code>/dashboard/assignments/new</code>): "Daily target"
+        select next to the due date; a "How should they submit?" segmented toggle in the PROOF
+        section (defaults to Self-report).
+      </li>
+      <li>
+        <strong>Edit form</strong> (<code>/dashboard/assignments/&lt;id&gt;/edit</code>): both
+        fields are seeded from the saved assignment.
+      </li>
+      <li>
+        <strong>Detail page</strong> (<code>/dashboard/assignments/&lt;id&gt;</code>): the Brief
+        card shows <code>Target · 10 min/day</code> (omitted when there is no target) and always
+        <code>Submit as · &lt;label&gt;</code>.
+      </li>
+    </ul>
+
+    <h2>How to manually test</h2>
+    <h3>Prerequisites</h3>
+    <ol>
+      <li>
+        Apply the migration to the dev DB (uwh <code>StudentDevelopment</code> stack):
+        <pre>
+docker exec -i supabase_db_StudentDevelopment psql -U postgres -d postgres \
+  &lt; supabase/migrations/20260723120100_assignments_target_submission.sql</pre>
+      </li>
+      <li>
+        Run the app: <code>npm run dev</code>. Sign in as a teacher/admin (see CLAUDE.md dev creds).
+      </li>
+    </ol>
+
+    <h3>Create flow</h3>
+    <ol>
+      <li>Go to <code>/dashboard/assignments/new</code>. Pick a student, enter a title.</li>
+      <li>
+        Set <strong>Daily target</strong> to <code>15 min/day</code>. Click the
+        <strong>Video</strong> submission pill (it turns dark/selected).
+      </li>
+      <li>
+        Click <strong>Create assignment</strong>. Expected: redirect to the new assignment detail.
+      </li>
+      <li>
+        On the detail page, the Brief card shows <code>Target · 15 min/day</code> and
+        <code>Submit as · Video</code>.
+      </li>
+      <li>
+        Edge case: leave Daily target on <em>No target</em> and don't touch the toggle → detail
+        shows <em>no</em> Target line and <code>Submit as · Self-report</code>.
+      </li>
+    </ol>
+
+    <h3>Edit flow</h3>
+    <ol>
+      <li>Open <code>/dashboard/assignments/&lt;id&gt;/edit</code> for the assignment above.</li>
+      <li>
+        Confirm the Daily target select reads <code>15 min/day</code> and the
+        <strong>Video</strong> pill is pre-selected.
+      </li>
+      <li>
+        Change target to <code>5 min/day</code>, pick <strong>Audio recording</strong>, save. Detail
+        reflects the new values.
+      </li>
+    </ol>
+
+    <h3>DB / constraint checks (optional)</h3>
+    <ul>
+      <li>
+        A row with <code>submission_type = 'podcast'</code> is rejected by
+        <code>assignments_submission_type_check</code>.
+      </li>
+      <li>
+        A row with <code>daily_target_minutes = 0</code> is rejected by
+        <code>assignments_daily_target_minutes_positive</code>; <code>NULL</code> is allowed.
+      </li>
+    </ul>
+
+    <h2>Automated gate results</h2>
+    <table>
+      <tr>
+        <th>Gate</th>
+        <th>Command</th>
+        <th>Result</th>
+      </tr>
+      <tr>
+        <td>Typecheck</td>
+        <td><code>tsc --noEmit</code></td>
+        <td>0 errors</td>
+      </tr>
+      <tr>
+        <td>Unit tests</td>
+        <td><code>jest components/assignments lib/services schemas app/actions</code></td>
+        <td>100 suites, 1535 passed (1 skipped)</td>
+      </tr>
+      <tr>
+        <td>Lint</td>
+        <td><code>eslint &lt;changed files&gt;</code></td>
+        <td>0 errors, 4 pre-existing max-lines warnings</td>
+      </tr>
+    </table>
+
+    <h2>Follow-ups</h2>
+    <ul>
+      <li>
+        <code>types/database.types.ts</code> was hand-patched to pair with the migration —
+        regenerate with <code>supabase gen types</code> after the migration lands in dev/prod.
+      </li>
+      <li>Deferred: real audio/video capture + storage (later wave).</li>
+    </ul>
+  </body>
+</html>

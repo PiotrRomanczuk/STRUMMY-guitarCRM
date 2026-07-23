@@ -70,9 +70,39 @@ describe('getAssignmentDetail', () => {
       checklist: [{ id: '1', text: 'Play C', done: true }],
       chordDrill: null,
       chordDrillResult: null,
+      dailyTargetMinutes: null,
+      submissionType: 'self_report',
       createdAt: '2026-07-10T00:00:00Z',
       updatedAt: '2026-07-15T00:00:00Z',
     });
+  });
+
+  it('maps the daily practice target and submission type when present', async () => {
+    mockSingle.mockResolvedValue({
+      data: {
+        id: 'a5',
+        title: 'Timed drill',
+        description: null,
+        status: 'not_started',
+        due_date: null,
+        teacher_id: 't1',
+        student_id: 's1',
+        checklist: null,
+        daily_target_minutes: 15,
+        submission_type: 'audio',
+        created_at: '2026-07-10T00:00:00Z',
+        updated_at: '2026-07-10T00:00:00Z',
+        student: null,
+        teacher: null,
+        song: null,
+        lesson: null,
+      },
+      error: null,
+    });
+
+    const result = await getAssignmentDetail('a5');
+    expect(result?.dailyTargetMinutes).toBe(15);
+    expect(result?.submissionType).toBe('audio');
   });
 
   it('maps a chord drill and its result (ASG-4)', async () => {

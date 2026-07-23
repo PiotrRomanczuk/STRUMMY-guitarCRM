@@ -4,23 +4,32 @@
  *
  * The embedded PostLessonSummaryAI generator already has dedicated coverage
  * (components/lessons/PostLessonSummaryAI.test.tsx), so here it is mocked to
- * a lightweight stub — these tests only verify the *gating* logic: the
- * summary section only mounts when SHOW_AI_FEATURES is on, canEdit is true,
- * and the lesson status is "completed".
+ * a lightweight stub. The per-song stepper's server action is likewise mocked
+ * so these tests stay in jsdom and only assert the wiring: which stage the
+ * click maps to, and that students never see interactive controls.
  *
  * @see components/lessons/editorial/LessonDetailEditorial.tsx
  */
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import type { LessonDetail } from '@/lib/services/lesson-detail-queries';
+import type {
+  ContinuityLesson,
+  LessonAssignment,
+  LessonDetail,
+} from '@/lib/services/lesson-detail-queries';
 
 jest.mock('@/lib/config/features', () => ({ SHOW_AI_FEATURES: true }));
 jest.mock('@/components/lessons/PostLessonSummaryAI', () => ({
   PostLessonSummaryAI: ({ studentName }: { studentName: string }) => (
     <div data-testid="post-lesson-summary-ai">AI summary for {studentName}</div>
   ),
+}));
+
+const updateLessonSongStatusMock = jest.fn();
+jest.mock('@/app/dashboard/lessons/actions', () => ({
+  updateLessonSongStatus: (...args: unknown[]) => updateLessonSongStatusMock(...args),
 }));
 
 import { LessonDetailEditorial } from './LessonDetailEditorial';
@@ -37,6 +46,7 @@ const featuresMock = jest.requireMock('@/lib/config/features') as { SHOW_AI_FEAT
 
 afterEach(() => {
   featuresMock.SHOW_AI_FEATURES = true;
+  updateLessonSongStatusMock.mockClear();
 });
 
 const makeLesson = (overrides: Partial<LessonDetail> = {}): LessonDetail => ({
@@ -45,15 +55,34 @@ const makeLesson = (overrides: Partial<LessonDetail> = {}): LessonDetail => ({
   status: 'completed',
   title: 'Fingerstyle basics',
   notes: 'Great progress on the intro riff.',
+  lessonTeacherNumber: 12,
   teacherId: 'teacher-1',
   teacherName: 'Sarah Chen',
   studentId: 'student-1',
   studentName: 'Emma Stone',
   studentEmail: 'emma@strummy.app',
   songs: [
-    { songId: 'song-1', title: 'Wonderwall', author: 'Oasis', key: 'G', status: 'in_progress' },
+    { songId: 'song-1', title: 'Wonderwall', author: 'Oasis', key: 'G', status: 'started' },
     { songId: 'song-2', title: 'Blackbird', author: 'The Beatles', key: null, status: null },
   ],
+  ...overrides,
+});
+
+const makeAssignment = (overrides: Partial<LessonAssignment> = {}): LessonAssignment => ({
+  id: 'assignment-1',
+  title: 'Practice the intro riff',
+  dueDate: '2026-08-01T00:00:00.000Z',
+  status: 'not_started',
+  ...overrides,
+});
+
+const makeContinuity = (overrides: Partial<ContinuityLesson> = {}): ContinuityLesson => ({
+  id: 'lesson-0',
+  lessonTeacherNumber: 11,
+  scheduledAt: '2026-07-13T15:00:00.000Z',
+  title: 'Chord transitions',
+  notes: null,
+  status: 'COMPLETED',
   ...overrides,
 });
 
@@ -83,7 +112,11 @@ describe('LessonDetailEditorial — content rendering', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Untitled lesson' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'emma@strummy.app' })).toBeInTheDocument();
+    const emailLinks = screen.getAllByRole('link', { name: 'emma@strummy.app' });
+    expect(emailLinks.length).toBeGreaterThan(0);
+    emailLinks.forEach((link) =>
+      expect(link).toHaveAttribute('href', '/dashboard/users/student-1')
+    );
   });
 
   it('shows the empty-repertoire message when no songs are attached', () => {
@@ -110,6 +143,107 @@ describe('LessonDetailEditorial — content rendering', () => {
       'href',
       '/dashboard/lessons/lesson-1/edit'
     );
+  });
+});
+
+describe('LessonDetailEditorial — lesson info card', () => {
+  it('renders the lesson-number badge and sequence line', () => {
+    render(<LessonDetailEditorial lesson={makeLesson()} canEdit={false} />);
+
+    expect(screen.getByText('Lesson #12')).toBeInTheDocument();
+    expect(screen.getByText('Lesson #12 with Emma')).toBeInTheDocument();
+    expect(screen.getByText('Sarah Chen')).toBeInTheDocument();
+  });
+
+  it('degrades gracefully when there is no lesson number', () => {
+    render(
+      <LessonDetailEditorial lesson={makeLesson({ lessonTeacherNumber: null })} canEdit={false} />
+    );
+
+    expect(screen.queryByText(/Lesson #/)).not.toBeInTheDocument();
+    // "With Emma" now appears twice: the sequence fallback (this row degrading)
+    // and the always-present Continuity card header.
+    expect(screen.getAllByText('With Emma')).toHaveLength(2);
+  });
+});
+
+describe('LessonDetailEditorial — assignments card', () => {
+  it('lists homework attached to the lesson', () => {
+    render(
+      <LessonDetailEditorial
+        lesson={makeLesson()}
+        canEdit={false}
+        assignments={[makeAssignment(), makeAssignment({ id: 'a2', title: 'Metronome drill' })]}
+      />
+    );
+
+    expect(screen.getByText('Assignments · 2')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Practice the intro riff' })).toHaveAttribute(
+      'href',
+      '/dashboard/assignments/assignment-1'
+    );
+    expect(screen.getByText('Metronome drill')).toBeInTheDocument();
+    expect(screen.getAllByText(/^Due /).length).toBe(2);
+  });
+
+  it('shows an empty state and hides Add when the viewer cannot edit', () => {
+    render(<LessonDetailEditorial lesson={makeLesson()} canEdit={false} assignments={[]} />);
+
+    expect(screen.getByText('No homework attached to this lesson.')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Add/i })).not.toBeInTheDocument();
+  });
+
+  it('exposes the Add affordance to editors', () => {
+    render(<LessonDetailEditorial lesson={makeLesson()} canEdit={true} assignments={[]} />);
+
+    expect(screen.getByRole('link', { name: /Add/i })).toHaveAttribute(
+      'href',
+      '/dashboard/assignments/new'
+    );
+  });
+});
+
+describe('LessonDetailEditorial — continuity card', () => {
+  it('lists previous lessons with the same student', () => {
+    render(
+      <LessonDetailEditorial
+        lesson={makeLesson()}
+        canEdit={false}
+        continuity={[makeContinuity(), makeContinuity({ id: 'lesson-x', title: 'Barre chords' })]}
+      />
+    );
+
+    expect(screen.getByText('With Emma')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Chord transitions/ })).toHaveAttribute(
+      'href',
+      '/dashboard/lessons/lesson-0'
+    );
+    expect(screen.getByText('Barre chords')).toBeInTheDocument();
+  });
+
+  it('shows an empty state when there is no history', () => {
+    render(<LessonDetailEditorial lesson={makeLesson()} canEdit={false} continuity={[]} />);
+
+    expect(screen.getByText('No previous lessons with Emma.')).toBeInTheDocument();
+  });
+});
+
+describe('LessonDetailEditorial — per-song progress stepper', () => {
+  it('lets an editor advance a song stage via the server action', async () => {
+    render(<LessonDetailEditorial lesson={makeLesson()} canEdit={true} />);
+
+    const masterButtons = screen.getAllByLabelText('Set status to Mastered');
+    fireEvent.click(masterButtons[0]);
+
+    await waitFor(() =>
+      expect(updateLessonSongStatusMock).toHaveBeenCalledWith('lesson-1', 'song-1', 'mastered')
+    );
+  });
+
+  it('renders the stepper read-only for students (no interactive controls)', () => {
+    render(<LessonDetailEditorial lesson={makeLesson()} canEdit={false} />);
+
+    expect(screen.queryByLabelText('Set status to Mastered')).not.toBeInTheDocument();
   });
 });
 

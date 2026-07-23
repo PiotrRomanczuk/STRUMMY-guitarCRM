@@ -53,6 +53,8 @@ const buildAssignment = (overrides: Partial<AssignmentDetail> = {}): AssignmentD
   checklist: [],
   chordDrill: null,
   chordDrillResult: null,
+  dailyTargetMinutes: 10,
+  submissionType: 'self_report',
   createdAt: '2026-07-01T00:00:00Z',
   updatedAt: '2026-07-01T00:00:00Z',
   ...overrides,
@@ -156,6 +158,39 @@ describe('AssignmentDetailEditorial', () => {
 
     expect(screen.queryByText(/Song ·/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Lesson ·/)).not.toBeInTheDocument();
+  });
+
+  describe('daily target & submission type', () => {
+    it('surfaces the daily practice target and submission label', () => {
+      render(
+        <AssignmentDetailEditorial
+          assignment={buildAssignment({ dailyTargetMinutes: 15, submissionType: 'audio' })}
+          canManage={false}
+          canAct={false}
+          history={[]}
+        />
+      );
+
+      expect(screen.getByText(/Target ·/)).toBeInTheDocument();
+      expect(screen.getByText('15 min/day')).toBeInTheDocument();
+      expect(screen.getByText(/Submit as ·/)).toBeInTheDocument();
+      expect(screen.getByText('Audio recording')).toBeInTheDocument();
+    });
+
+    it('omits the target line when there is no daily target, but always shows submit-as', () => {
+      render(
+        <AssignmentDetailEditorial
+          assignment={buildAssignment({ dailyTargetMinutes: null, submissionType: 'note' })}
+          canManage={false}
+          canAct={false}
+          history={[]}
+        />
+      );
+
+      expect(screen.queryByText(/Target ·/)).not.toBeInTheDocument();
+      expect(screen.getByText(/Submit as ·/)).toBeInTheDocument();
+      expect(screen.getByText('Note')).toBeInTheDocument();
+    });
   });
 
   describe('teacher/admin management (canManage)', () => {
@@ -381,6 +416,41 @@ describe('AssignmentDetailEditorial', () => {
       );
 
       expect(screen.getByText('2/2')).toBeInTheDocument();
+    });
+  });
+
+  describe('submit panel framing', () => {
+    it('frames the status action as a hand-in for an acting student', () => {
+      render(
+        <AssignmentDetailEditorial
+          assignment={buildAssignment({ status: 'not_started' })}
+          canManage={false}
+          canAct={true}
+          history={[]}
+        />
+      );
+
+      expect(screen.getByText('Your practice')).toBeInTheDocument();
+      expect(screen.getByText('Hand it in')).toBeInTheDocument();
+      expect(screen.getByText(/mark it complete to send it to your teacher/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Start working' })).toBeInTheDocument();
+    });
+
+    it('uses neutral status framing (no hand-in copy) for a managing teacher', () => {
+      render(
+        <AssignmentDetailEditorial
+          assignment={buildAssignment({ status: 'not_started' })}
+          canManage={true}
+          canAct={true}
+          history={[]}
+        />
+      );
+
+      expect(screen.getByText('Update status')).toBeInTheDocument();
+      expect(screen.getByText('Progress')).toBeInTheDocument();
+      expect(
+        screen.queryByText(/mark it complete to send it to your teacher/i)
+      ).not.toBeInTheDocument();
     });
   });
 });

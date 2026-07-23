@@ -3,6 +3,17 @@ import * as z from 'zod';
 // Lesson status enum - matches database enum Database["public"]["Enums"]["LessonStatus"]
 export const LessonStatusEnum = z.enum(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']);
 
+// Lesson delivery format - matches the `lessons_format_check` DB constraint
+export const LessonFormatEnum = z.enum(['in_person', 'video']);
+export type LessonFormat = z.infer<typeof LessonFormatEnum>;
+
+// Shared duration bound (mirrors the `lessons_duration_minutes_check` constraint)
+const durationMinutesField = z
+  .number()
+  .int('Duration must be a whole number of minutes')
+  .min(15, 'Duration must be at least 15 minutes')
+  .max(180, 'Duration must be 180 minutes or less');
+
 // Lesson schema for validation
 export const LessonSchema = z.object({
   id: z.string().uuid().optional(), // UUID, auto-generated
@@ -17,26 +28,24 @@ export const LessonSchema = z.object({
   start_time: z.string().nullable().optional(), // time (ISO or HH:mm)
   scheduled_at: z.string().nullable().optional(), // ISO datetime from database
   status: LessonStatusEnum.default('SCHEDULED'),
+  duration_minutes: durationMinutesField.nullable().optional(),
+  format: LessonFormatEnum.nullable().optional(),
   created_at: z.string().nullable().optional(), // ISO date string from database
   updated_at: z.string().nullable().optional(), // ISO date string from database
 });
 
 // Lesson input schema for creating/updating lessons
 export const LessonInputSchema = z.object({
-  student_id: z
-    .string()
-    .min(1, 'Please select a student')
-    .uuid('Student must be a valid user'),
-  teacher_id: z
-    .string()
-    .min(1, 'Please select a teacher')
-    .uuid('Teacher must be a valid user'),
+  student_id: z.string().min(1, 'Please select a student').uuid('Student must be a valid user'),
+  teacher_id: z.string().min(1, 'Please select a teacher').uuid('Teacher must be a valid user'),
   title: z.string().min(1, 'Title is required').optional(),
   notes: z.string().optional(),
   date: z.string().optional(), // Date string (YYYY-MM-DD) - optional if scheduled_at is provided
   start_time: z.string().optional(), // time (HH:mm)
   scheduled_at: z.string().min(1, 'Scheduled date & time is required'), // ISO date string or datetime-local format
   status: LessonStatusEnum.optional(),
+  duration_minutes: durationMinutesField.optional(),
+  format: LessonFormatEnum.optional(),
   song_ids: z.array(z.string().uuid()).optional(),
 });
 

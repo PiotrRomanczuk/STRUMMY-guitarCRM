@@ -3,19 +3,24 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { StudentIntakeFieldsSchema, toProfileColumns } from '@/schemas/StudentIntakeSchema';
 
-const UpdateUserSchema = z.object({
-  full_name: z.string().optional(),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  isAdmin: z.boolean().optional(),
-  isTeacher: z.boolean().optional(),
-  isStudent: z.boolean().optional(),
-  isParent: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-  parentId: z.string().uuid().nullable().optional(),
-  studentStatus: z.enum(['lead', 'trial', 'active', 'inactive', 'churned']).optional(),
-});
+const UpdateUserSchema = z
+  .object({
+    full_name: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    phone: z.string().max(50).optional(),
+    goals: z.string().max(5000).optional(),
+    isAdmin: z.boolean().optional(),
+    isTeacher: z.boolean().optional(),
+    isStudent: z.boolean().optional(),
+    isParent: z.boolean().optional(),
+    isActive: z.boolean().optional(),
+    parentId: z.string().uuid().nullable().optional(),
+    studentStatus: z.enum(['lead', 'trial', 'active', 'inactive', 'churned']).optional(),
+  })
+  .merge(StudentIntakeFieldsSchema);
 
 type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
@@ -36,6 +41,7 @@ function buildUserUpdatePayload(body: UpdateUserInput): Record<string, unknown> 
     payload.full_name = `${body.firstName ?? ''} ${body.lastName ?? ''}`.trim();
   }
 
+  if (body.phone !== undefined) payload.phone = body.phone;
   if (body.isAdmin !== undefined) payload.is_admin = body.isAdmin;
   if (body.isTeacher !== undefined) payload.is_teacher = body.isTeacher;
   if (body.isStudent !== undefined) payload.is_student = body.isStudent;
@@ -47,6 +53,10 @@ function buildUserUpdatePayload(body: UpdateUserInput): Record<string, unknown> 
   }
   if (body.parentId !== undefined) payload.parent_id = body.parentId;
   if (body.studentStatus !== undefined) payload.student_status = body.studentStatus;
+
+  // Student intake fields (Identity / Contact / Schedule / Billing). Only
+  // non-empty values are emitted, so a partial save never clobbers columns.
+  Object.assign(payload, toProfileColumns(body));
 
   return payload;
 }
@@ -65,7 +75,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const { data, error } = await supabase
       .from('profiles')
       .select(
-        'id, email, full_name, first_name, last_name, phone, notes, is_admin, is_teacher, is_student, is_shadow, is_active, is_parent, parent_id, student_status, created_at, updated_at'
+        'id, email, full_name, first_name, last_name, phone, notes, is_admin, is_teacher, is_student, is_shadow, is_active, is_parent, parent_id, student_status, invite_email, skill_level, instrument, start_date, avatar_color, parent_name, parent_email, lesson_day, lesson_time, lesson_duration_minutes, lesson_rate, billing_cycle, created_at, updated_at'
       )
       .eq('id', id)
       .single();

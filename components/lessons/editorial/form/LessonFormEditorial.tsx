@@ -7,6 +7,7 @@ import { formStyles as s } from '@/components/_editorial/form-styles';
 import { FormSection } from '@/components/_editorial/FormSection';
 import { FormPreviewPanel } from '@/components/_editorial/FormPreviewPanel';
 import { WEEK_OPTIONS } from '@/schemas/RecurringLessonSchema';
+import type { LessonFormat } from '@/schemas/LessonSchema';
 import type { SongOption, StudentOption } from '@/lib/services/lesson-form-data';
 import { LessonFormFieldsWhoWhen } from './LessonForm.Fields.WhoWhen';
 import { LessonFormFieldsSongsNotes } from './LessonForm.Fields.SongsNotes';
@@ -17,6 +18,8 @@ import { SHOW_AI_FEATURES } from '@/lib/config/features';
 import { useLessonFormSubmit } from './useLessonFormSubmit';
 
 const NEW_STUDENT = '__new__';
+const DEFAULT_DURATION_MINUTES = 45;
+const DEFAULT_FORMAT: LessonFormat = 'in_person';
 
 type Props = {
   mode: 'create' | 'edit';
@@ -29,9 +32,14 @@ type Props = {
     notes: string | null;
     scheduledAt: string;
     status: string;
+    durationMinutes: number | null;
+    format: string | null;
     songIds: string[];
   };
 };
+
+const toFormat = (value: string | null | undefined): LessonFormat =>
+  value === 'video' ? 'video' : DEFAULT_FORMAT;
 
 const toLocalInput = (iso: string): string => {
   const d = new Date(iso);
@@ -48,6 +56,10 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
     initial ? toLocalInput(initial.scheduledAt) : ''
   );
   const [status, setStatus] = useState(initial?.status ?? 'SCHEDULED');
+  const [durationMinutes, setDurationMinutes] = useState<number>(
+    initial?.durationMinutes ?? DEFAULT_DURATION_MINUTES
+  );
+  const [format, setFormat] = useState<LessonFormat>(toFormat(initial?.format));
   const [songIds, setSongIds] = useState<string[]>(initial?.songIds ?? []);
   const [repeatWeekly, setRepeatWeekly] = useState(false);
   const [repeatWeeks, setRepeatWeeks] = useState<number>(WEEK_OPTIONS[0].value);
@@ -70,6 +82,8 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
     notes,
     scheduledLocal,
     status,
+    durationMinutes,
+    format,
     songIds,
     repeatWeekly,
     repeatWeeks,
@@ -102,11 +116,15 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
                 title={title}
                 scheduledLocal={scheduledLocal}
                 status={status}
+                durationMinutes={durationMinutes}
+                format={format}
                 onStudentId={setStudentId}
                 onStudentEmail={setStudentEmail}
                 onTitle={setTitle}
                 onScheduled={setScheduledLocal}
                 onStatus={setStatus}
+                onDurationMinutes={setDurationMinutes}
+                onFormat={setFormat}
               />
             </FormSection>
 
@@ -156,6 +174,7 @@ export const LessonFormEditorial = ({ mode, students, songs, initial }: Props) =
               student={selectedStudent}
               studentEmail={studentEmail}
               scheduledLocal={scheduledLocal}
+              durationMinutes={durationMinutes}
               songs={songs}
               songIds={songIds}
             />

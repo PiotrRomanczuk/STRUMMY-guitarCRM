@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
- 
+
 import { GET, POST } from './route';
 import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -93,9 +93,7 @@ describe('Users API - GET endpoint', () => {
           return {
             select: jest.fn(() => ({
               eq: jest.fn(() => ({
-                single: jest.fn(() =>
-                  Promise.resolve({ data: null, error: null })
-                ),
+                single: jest.fn(() => Promise.resolve({ data: null, error: null })),
               })),
             })),
           };
@@ -351,6 +349,67 @@ describe('Users API - POST endpoint', () => {
     expect(response.status).toBe(201);
     const data = await response.json();
     expect(data.is_shadow).toBe(true);
+  });
+
+  it('should persist student intake fields on the shadow profile', async () => {
+    const insertMock = jest.fn(() => ({
+      select: jest.fn(() => ({
+        single: jest.fn(() =>
+          Promise.resolve({ data: { id: 'shadow-id', is_shadow: true }, error: null })
+        ),
+      })),
+    }));
+    (createClient as jest.Mock).mockResolvedValue({
+      from: jest.fn(() => ({ insert: insertMock })),
+    });
+
+    const bodyData = JSON.stringify({
+      email: '',
+      full_name: 'Emma Johnson',
+      isStudent: true,
+      isShadow: true,
+      inviteEmail: 'emma@example.com',
+      skillLevel: 'advanced',
+      instrument: 'Guitar',
+      startDate: '2026-04-23',
+      avatarColor: '#c89523',
+      parentName: 'Karen',
+      parentEmail: 'karen@example.com',
+      lessonDay: 'Thu',
+      lessonTime: '4:00 PM',
+      lessonDurationMinutes: 45,
+      lessonRate: 65,
+      billingCycle: 'monthly',
+      goals: 'Wants to play at a wedding',
+    });
+
+    const req = {
+      url: 'http://localhost:3000/api/users',
+      method: 'POST',
+      text: jest.fn().mockResolvedValue(bodyData),
+    } as unknown as Request;
+
+    const response = await POST(req);
+    expect(response.status).toBe(201);
+
+    const insertedRows = insertMock.mock.calls[0][0] as Record<string, unknown>[];
+    expect(insertedRows[0]).toMatchObject({
+      full_name: 'Emma Johnson',
+      invite_email: 'emma@example.com',
+      is_shadow: true,
+      skill_level: 'advanced',
+      instrument: 'Guitar',
+      start_date: '2026-04-23',
+      avatar_color: '#c89523',
+      parent_name: 'Karen',
+      parent_email: 'karen@example.com',
+      lesson_day: 'Thu',
+      lesson_time: '4:00 PM',
+      lesson_duration_minutes: 45,
+      lesson_rate: 65,
+      billing_cycle: 'monthly',
+      notes: 'Wants to play at a wedding',
+    });
   });
 
   it('should return 401 for unauthorized users', async () => {

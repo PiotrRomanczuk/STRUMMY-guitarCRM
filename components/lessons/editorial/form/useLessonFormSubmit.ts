@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createLessonAction, updateLessonAction } from '@/app/actions/lesson-edit';
 import type { LessonFormValues } from '@/app/actions/lesson-edit';
+import type { LessonFormat } from '@/schemas/LessonSchema';
 import { generateRecurringLessons } from '@/app/dashboard/lessons/recurring-actions';
 
 type SubmitArgs = {
@@ -16,6 +17,8 @@ type SubmitArgs = {
   notes: string;
   scheduledLocal: string;
   status: string;
+  durationMinutes: number;
+  format: LessonFormat;
   songIds: string[];
   repeatWeekly: boolean;
   repeatWeeks: number;
@@ -36,6 +39,8 @@ export function useLessonFormSubmit({
   notes,
   scheduledLocal,
   status,
+  durationMinutes,
+  format,
   songIds,
   repeatWeekly,
   repeatWeeks,
@@ -61,6 +66,8 @@ export function useLessonFormSubmit({
         notes: notes.trim() || undefined,
         scheduledAt: new Date(scheduledLocal).toISOString(),
         status: status as LessonFormValues['status'],
+        durationMinutes,
+        format,
         songIds,
       };
 
@@ -119,6 +126,8 @@ export function useLessonFormSubmit({
       title,
       notes,
       status,
+      durationMinutes,
+      format,
       songIds,
       mode,
       initialLessonId,

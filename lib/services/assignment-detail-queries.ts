@@ -25,6 +25,8 @@ export type AssignmentDetail = {
   checklist: ChecklistItem[];
   chordDrill: ChordDrill | null;
   chordDrillResult: ChordDrillResult | null;
+  dailyTargetMinutes: number | null;
+  submissionType: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -42,7 +44,7 @@ export async function getAssignmentDetail(assignmentId: string): Promise<Assignm
   const { data, error } = await supabase
     .from('assignments')
     .select(
-      'id, title, description, status, due_date, teacher_id, student_id, checklist, chord_drill, chord_drill_result, created_at, updated_at, student:profiles!assignments_student_id_fkey(full_name, email), teacher:profiles!assignments_teacher_id_fkey(full_name), song:songs(id, title, author), lesson:lessons(id, scheduled_at)'
+      'id, title, description, status, due_date, teacher_id, student_id, checklist, chord_drill, chord_drill_result, daily_target_minutes, submission_type, created_at, updated_at, student:profiles!assignments_student_id_fkey(full_name, email), teacher:profiles!assignments_teacher_id_fkey(full_name), song:songs(id, title, author), lesson:lessons(id, scheduled_at)'
     )
     .eq('id', assignmentId)
     .is('deleted_at', null)
@@ -76,6 +78,8 @@ export async function getAssignmentDetail(assignmentId: string): Promise<Assignm
     checklist: ChecklistSchema.safeParse(data.checklist).data ?? [],
     chordDrill: ChordDrillSchema.safeParse(data.chord_drill).data ?? null,
     chordDrillResult: ChordDrillResultSchema.safeParse(data.chord_drill_result).data ?? null,
+    dailyTargetMinutes: (data.daily_target_minutes as number | null) ?? null,
+    submissionType: (data.submission_type as string) ?? 'self_report',
     createdAt: data.created_at as string,
     updatedAt: data.updated_at as string,
   };

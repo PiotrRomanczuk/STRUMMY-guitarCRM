@@ -7,6 +7,7 @@ import { editorialFontClass } from '@/components/_editorial/editorial-fonts';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { getAssignmentDetail } from '@/lib/services/assignment-detail-queries';
 import { getSongOptions, getStudentOptions } from '@/lib/services/lesson-form-data';
+import { SubmissionTypeEnum } from '@/schemas/AssignmentSchema';
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -48,6 +49,8 @@ export default async function EditAssignmentPage({ params }: PageProps) {
           songId: assignment.song?.id ?? null,
           checklist: assignment.checklist,
           chordIds: assignment.chordDrill?.chord_ids ?? [],
+          dailyTargetMinutes: assignment.dailyTargetMinutes,
+          submissionType: SubmissionTypeEnum.catch('self_report').parse(assignment.submissionType),
         }}
       />
     </div>

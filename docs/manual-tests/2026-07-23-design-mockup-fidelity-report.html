@@ -1,0 +1,1522 @@
+<meta charset="utf-8" />
+<title>Strummy · Design-Mockup Fidelity Report — 2026-07-23</title>
+<style>
+  :root {
+    --ivory: #faf9f5;
+    --paper: #fffef9;
+    --card: #ffffff;
+    --rule: #e7e2d6;
+    --ink: #1f1b16;
+    --ink-2: #403a30;
+    --ink-3: #6b6355;
+    --ink-4: #9a9081;
+    --gold: #c89523;
+    --gold-2: #a67a1e;
+    --gold-wash: #f5edd8;
+    --ok: #3f7d4e;
+    --ok-bg: #eaf3ec;
+    --partial: #b7791f;
+    --partial-bg: #fbf1dd;
+    --diverged: #9a5b1e;
+    --diverged-bg: #f6e8d8;
+    --missing: #b0413a;
+    --missing-bg: #f7e5e3;
+    --extra: #3a6ea5;
+    --extra-bg: #e6eef7;
+    --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    background: var(--ivory);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 28px 120px;
+  }
+  header.masthead {
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 40px;
+    padding: 56px 0 28px;
+  }
+  .kicker {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-4);
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 46px;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--gold-2);
+  }
+  .lede {
+    color: var(--ink-3);
+    font-size: 17px;
+    max-width: 720px;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    margin-top: 22px;
+    font-size: 12.5px;
+    font-family: var(--mono);
+    color: var(--ink-4);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .meta-row b {
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+    margin: 64px 0 8px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+  }
+  h2 .num {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--gold-2);
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  h3 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 22px;
+    margin: 38px 0 6px;
+  }
+  h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin: 20px 0 8px;
+  }
+  p {
+    margin: 10px 0;
+    color: var(--ink-2);
+  }
+  .section-intro {
+    color: var(--ink-3);
+    font-size: 15.5px;
+    max-width: 760px;
+    margin-bottom: 6px;
+  }
+  a {
+    color: var(--gold-2);
+  }
+  code,
+  .mono {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--gold-wash);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--ink);
+  }
+  ul {
+    margin: 8px 0 8px 4px;
+    list-style: none;
+  }
+  li {
+    position: relative;
+    padding-left: 20px;
+    margin: 5px 0;
+    color: var(--ink-2);
+  }
+  li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 10px;
+    width: 5px;
+    height: 5px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 26px 28px;
+    margin: 20px 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  }
+  .route {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-4);
+    margin: 2px 0 12px;
+  }
+  .route b {
+    color: var(--gold-2);
+    font-weight: 500;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 13.5px;
+  }
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-4);
+    font-weight: 500;
+    padding: 8px 10px;
+    border-bottom: 1.5px solid var(--rule);
+  }
+  td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    color: var(--ink-2);
+  }
+  td:first-child {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .b-match {
+    background: var(--ok-bg);
+    color: var(--ok);
+  }
+  .b-partial {
+    background: var(--partial-bg);
+    color: var(--partial);
+  }
+  .b-diverged {
+    background: var(--diverged-bg);
+    color: var(--diverged);
+  }
+  .b-missing {
+    background: var(--missing-bg);
+    color: var(--missing);
+  }
+  .b-extra {
+    background: var(--extra-bg);
+    color: var(--extra);
+  }
+  .score {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 14px 0 4px;
+  }
+  .score .pct {
+    font-family: var(--serif);
+    font-size: 34px;
+    color: var(--gold-2);
+    font-weight: 500;
+  }
+  .score .lbl {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-4);
+  }
+  .bar {
+    height: 7px;
+    background: var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 6px 0 2px;
+    max-width: 340px;
+  }
+  .bar > i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-2));
+  }
+  .matrix td:first-child {
+    font-weight: 500;
+  }
+  .matrix .impl {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-3);
+  }
+  .note {
+    background: var(--gold-wash);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .note b {
+    color: var(--ink);
+  }
+  .callout {
+    background: #fbfaf6;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 22px 26px;
+    margin: 20px 0;
+  }
+  .callout h4 {
+    margin-top: 0;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 720px) {
+    .two-col {
+      grid-template-columns: 1fr;
+    }
+    h1 {
+      font-size: 34px;
+    }
+    .wrap {
+      padding: 0 18px 80px;
+    }
+    table {
+      font-size: 12.5px;
+    }
+    th,
+    td {
+      padding: 7px 6px;
+    }
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .legend .badge {
+    cursor: default;
+  }
+  .tag-intent {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ok);
+    border: 1px solid var(--ok);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 6px;
+  }
+  .tag-drift {
+    color: var(--missing);
+    border-color: var(--missing);
+  }
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 2px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-4);
+    letter-spacing: 0.06em;
+  }
+  .gapex {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 8px;
+  }
+  @media (max-width: 720px) {
+    .gapex {
+      grid-template-columns: 1fr;
+    }
+  }
+  .toc {
+    columns: 2;
+    column-gap: 32px;
+    margin: 8px 0;
+  }
+  @media (max-width: 600px) {
+    .toc {
+      columns: 1;
+    }
+  }
+  .toc a {
+    display: block;
+    padding: 4px 0;
+    font-size: 14px;
+    text-decoration: none;
+    color: var(--ink-2);
+    border-bottom: 1px dotted var(--rule);
+  }
+  .toc a:hover {
+    color: var(--gold-2);
+  }
+  .toc .n {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gold-2);
+    margin-right: 8px;
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Design Audit · Editorial Redesign</div>
+    <h1>Mockup&nbsp;→&nbsp;Implementation<br /><em>Fidelity Report</em></h1>
+    <p class="lede">
+      A file-by-file reading of the nine <b>“claude design — mockups”</b> against the pages actually
+      shipped in the Strummy codebase — what matches the design, what diverged on purpose, and
+      what's still on the drawing board.
+    </p>
+    <div class="meta-row">
+      <span><b>Date</b> 2026-07-23</span>
+      <span><b>Mockups</b> 9 standalone files</span>
+      <span><b>Direction</b> A · Editorial Light</span>
+      <span><b>Theme</b> theme-editorial</span>
+      <span><b>Branch</b> feature/song-form-rich-metadata</span>
+    </div>
+  </header>
+
+  <!-- ========== CONTENTS ========== -->
+  <nav class="toc">
+    <a href="#how"><span class="n">01</span>How to read this report</a>
+    <a href="#matrix"><span class="n">02</span>At-a-glance fidelity matrix</a>
+    <a href="#song"><span class="n">03</span>Song Forms (A / B)</a>
+    <a href="#assign"><span class="n">04</span>Assignments (Form / Teacher / Student)</a>
+    <a href="#lessons"><span class="n">05</span>Lessons (List / Detail / Form)</a>
+    <a href="#student"><span class="n">06</span>Student Form &amp; shared chrome</a>
+    <a href="#crosscut"><span class="n">07</span>Cross-cutting findings</a>
+  </nav>
+
+  <!-- ========== 01 HOW TO READ ========== -->
+  <h2 id="how"><span class="num">01 — Method</span>How to read this report</h2>
+  <p class="section-intro">
+    The nine mockup files are not static HTML. Each is a self-extracting bundle: a base64+gzip
+    virtual filesystem embedding React, ReactDOM and Babel-standalone plus the mockup's own JSX. The
+    rendered <code>&lt;div id="root"&gt;</code> ships empty and hydrates client-side, so the real
+    design lives in the compressed source, not the markup. Every file was decoded (base64 → gunzip →
+    JSX) and read directly.
+  </p>
+
+  <div class="two-col">
+    <div class="card">
+      <h4>What the mockups turned out to be</h4>
+      <ul>
+        <li>
+          Two <b>design directions</b> were explored: <b>A — “Editorial Light”</b> (clean
+          music-studio SaaS, gold accent, Fraunces serif display) and
+          <b>B — “Music Manuscript”</b> (editorial broadsheet). <b>Direction A shipped.</b>
+        </li>
+        <li>
+          Four of the nine files are the same <b>complete design-system bundle</b> (35 components)
+          rendered at different entry points; the rest are focused subsets.
+        </li>
+        <li>
+          The <code>Song Form A/B</code> and <code>Assignments Teacher/Student</code> pairs are
+          <b>one component each</b>, switched by variant/role — not two separate designs.
+        </li>
+        <li>
+          All dedicated forms are labelled <em>“Editorial style matching SongFormA”</em> — the song
+          form is the reference every other form was cut to fit.
+        </li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>How “fidelity” is judged</h4>
+      <p style="margin-top: 0">
+        Each surface is scored on how closely the shipped page reproduces the mockup's
+        <b>layout, sections, fields and interactions</b> — not pixels. Every row is tagged:
+      </p>
+      <div class="legend">
+        <span class="badge b-match">Match</span>
+        <span class="badge b-partial">Partial</span>
+        <span class="badge b-diverged">Diverged</span>
+        <span class="badge b-missing">Missing</span>
+        <span class="badge b-extra">Extra</span>
+      </div>
+      <p style="font-size: 13.5px">
+        A divergence is further marked <span class="tag-intent">scoped-out</span> when it's a
+        deliberate product decision (documented in <code>93-design-mockup-audit.md</code>) or
+        <span class="tag-drift tag-intent">drift</span> when it looks unintended.
+      </p>
+    </div>
+  </div>
+  <div class="note">
+    <b>Companion doc.</b> This report is the <i>visual/design-fidelity</i> view. The
+    implementation-status &amp; test-coverage inventory for the same mockups lives in
+    <code>docs/app-blueprint/93-design-mockup-audit.md</code> — the two are meant to be read
+    together.
+  </div>
+
+  <!-- ========== 02 MATRIX ========== -->
+  <h2 id="matrix"><span class="num">02 — Overview</span>At-a-glance fidelity matrix</h2>
+  <p class="section-intro">
+    The nine mockup files, the page each maps to, and how faithfully that page reproduces the design
+    today.
+  </p>
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th>Mockup file</th>
+        <th>Shipped page</th>
+        <th>Route</th>
+        <th style="width: 78px">Fidelity</th>
+        <th>Headline</th>
+      </tr>
+    </thead>
+    <tbody id="matrix-body">
+      <tr>
+        <td>Song Form A</td>
+        <td class="impl">SongFormEditorial · SongEditFormEditorial</td>
+        <td class="impl">/songs/new · /[id]/edit</td>
+        <td><span class="badge b-match">85%</span></td>
+        <td>Near-faithful — strum editor, image upload &amp; create-time lyrics are the gaps</td>
+      </tr>
+      <tr>
+        <td>Song Form B</td>
+        <td class="impl">— (not built)</td>
+        <td class="impl">—</td>
+        <td><span class="badge" style="background: var(--rule); color: var(--ink-4)">n/a</span></td>
+        <td>“Music Manuscript” broadsheet — explored, deliberately not shipped (A won)</td>
+      </tr>
+      <tr>
+        <td>Assignment Form</td>
+        <td class="impl">AssignmentCreateEditorial</td>
+        <td class="impl">/assignments/new · /[id]/edit</td>
+        <td><span class="badge b-partial">65%</span></td>
+        <td>Shell matches; multi-student→single, submission-type→checklist + chord-drill</td>
+      </tr>
+      <tr>
+        <td>Assignments Teacher</td>
+        <td class="impl">AssignmentsListEditorial</td>
+        <td class="impl">/assignments</td>
+        <td><span class="badge b-partial">60%</span></td>
+        <td>Tabs→filter controls, inline composer→dedicated page, progress column dropped</td>
+      </tr>
+      <tr>
+        <td>Assignments Student</td>
+        <td class="impl">AssignmentsListEditorial + AssignmentDetailEditorial</td>
+        <td class="impl">/assignments · /[id]</td>
+        <td><span class="badge b-diverged">50%</span></td>
+        <td>
+          List + detail page, not master-detail; checklist/status replaces audio-recording submit
+        </td>
+      </tr>
+      <tr>
+        <td>Lesson List</td>
+        <td class="impl">LessonsListEditorial</td>
+        <td class="impl">/lessons</td>
+        <td><span class="badge b-partial">70%</span></td>
+        <td>
+          Header + status filter match; Songs &amp; Time columns, year/sort dropped; time-grouped
+          instead
+        </td>
+      </tr>
+      <tr>
+        <td>Lesson Detail</td>
+        <td class="impl">LessonDetailEditorial</td>
+        <td class="impl">/lessons/[id]</td>
+        <td><span class="badge b-diverged">48%</span></td>
+        <td>
+          Hero + songs + notes kept; progress stepper, homework &amp; continuity cards dropped
+        </td>
+      </tr>
+      <tr>
+        <td>Lesson Form</td>
+        <td class="impl">LessonFormEditorial</td>
+        <td class="impl">/lessons/new · /[id]/edit</td>
+        <td><span class="badge b-partial">72%</span></td>
+        <td>
+          Date/Time/Duration→one datetime-local, Format dropped; adds Title/Status/new-student
+        </td>
+      </tr>
+      <tr>
+        <td>Student Form</td>
+        <td class="impl">CreateStudentForm · UserEditFormEditorial</td>
+        <td class="impl">/users/new · /[id]/edit</td>
+        <td><span class="badge b-diverged">40%</span></td>
+        <td>Minimal invite form; schedule/billing/parent/level/avatar not built (by design)</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td
+          colspan="5"
+          style="
+            border-top: 1.5px solid var(--rule);
+            padding-top: 12px;
+            color: var(--ink-3);
+            font-size: 13px;
+          "
+        >
+          <b>Design-language conformance is ~100% across the board</b> — every surface uses the same
+          <code>theme-editorial</code> tokens, Fraunces serif display, Geist sans/mono, gold accent,
+          ivory canvas, numbered <code>FormSection</code>s and a sticky preview panel. The scores
+          above measure <em>structure &amp; feature fidelity</em>, which is where the divergences
+          live.
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- ========== 03 SONG ========== -->
+  <h2 id="song"><span class="num">03 — Domain</span>Song Forms &nbsp;·&nbsp; A &amp; B</h2>
+  <div id="song-body">
+    <p class="section-intro">
+      The song form is the <b>reference implementation</b> of the whole editorial redesign — every
+      other dedicated form is described in the mockups as “Editorial style matching SongFormA.” Two
+      directions were drawn; A shipped. The create form was actively being extended on this branch
+      (Spotify accelerator, duplicate warning, completion tracker, chord & external-link field
+      groups are all uncommitted work).
+    </p>
+
+    <h4>Design-language conformance</h4>
+    <ul>
+      <li>
+        Uses the exact mockup shell: <code>--ivory</code> canvas, <code>--serif</code> (Fraunces)
+        italic H1 “Add a song”, gold accent, numbered <code>FormSection</code> cards with a
+        <code>populated/count</code> pill.
+      </li>
+      <li>
+        Right-hand <b>sticky preview + completion tracker</b> reproduced almost verbatim
+        (cover/initials, Level·Key·Capo·Tempo grid, chord chips, per-section completion rows with
+        ✓).
+      </li>
+      <li>
+        Field styling matches (uppercase micro-labels, 8px-radius inputs) — though the song form
+        uses its own <code>Field.tsx</code> rather than the shared <code>form-styles.ts</code> the
+        lesson/assignment forms use (see §07).
+      </li>
+    </ul>
+
+    <h3>
+      Song Form A — “Editorial single-page” →
+      <span class="mono" style="font-size: 0.8em">SongFormEditorial</span> (create) ·
+      <span class="mono" style="font-size: 0.8em">SongEditFormEditorial</span> (edit)
+    </h3>
+    <div class="card">
+      <div class="route"><b>Route</b> /dashboard/songs/new · /dashboard/songs/[id]/edit</div>
+      <div class="gapex">
+        <div>
+          <h4>Mockup specifies</h4>
+          <ul>
+            <li>
+              Breadcrumb, serif hero, and a <b>top-right action row</b>: Cancel · Save draft ·
+              Create song.
+            </li>
+            <li>
+              <b>Spotify accelerator</b> in Spotify-green, with a matched-result card (cover, year,
+              duration, “AUTO-FILLED” chip).
+            </li>
+            <li>Inline <b>duplicate warning</b> (“…already exists · View existing →”).</li>
+            <li>§I Essentials: Title, Artist, Difficulty, Key, Category (count 4).</li>
+            <li>
+              §II Resources: YouTube / Spotify / Ultimate Guitar / TikTok, each with a colored
+              source dot.
+            </li>
+            <li>
+              §III Musical: Capo <b>stepper</b>, Tempo, Time-sig, Year, a visual
+              <b>strumming-pattern editor</b> (D DU UDU), chord chips.
+            </li>
+            <li>
+              §IV Content: <b>lyrics-with-chords</b> monospace textarea, teaching notes
+              (Generate/Enhance AI), <b>image grid</b> with cover.
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h4>Implementation renders</h4>
+          <ul>
+            <li>
+              Back-link + serif hero; actions <b>bottom-right</b>: Save draft · Create song (no
+              Cancel button; back-link substitutes).
+            </li>
+            <li>
+              Spotify accelerator is <b>real</b> — debounced <code>/api/spotify/search</code> +
+              <code>/features</code> autofill of title, artist, key, tempo, year, cover — but styled
+              in <b>gold</b>, not green, with a results dropdown.
+            </li>
+            <li>
+              Duplicate warning is <b>real</b> (advisory, against <code>/api/song/search</code>) —
+              matches intent.
+            </li>
+            <li>§I Essentials = Title + Author only (count 2); Difficulty & Key moved into §II.</li>
+            <li>
+              §II Musical: Difficulty buttons, Key select, Capo stepper, Tempo, Time-sig, Year,
+              chord entry.
+            </li>
+            <li>§III Resources: Category (datalist) + the four links.</li>
+            <li>
+              §IV Content: teaching notes only (AI-assist behind <code>SHOW_AI_FEATURES</code>).
+              Edit form adds §IV Lyrics “Sections &amp; lyrics”.
+            </li>
+          </ul>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Section / feature</th>
+            <th style="width: 96px">Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Editorial shell &amp; typography</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Tokens, serif hero, section cards identical.</td>
+          </tr>
+          <tr>
+            <td>Sticky preview + completion tracker</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Reproduced almost exactly, incl. per-section ✓ rows.</td>
+          </tr>
+          <tr>
+            <td>Spotify accelerator</td>
+            <td><span class="badge b-partial">Partial</span></td>
+            <td>
+              Functionally richer (live API) but gold-toned, no matched-result card mockup shows.
+            </td>
+          </tr>
+          <tr>
+            <td>Duplicate warning</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Advisory, non-blocking, “View existing →” — as designed.</td>
+          </tr>
+          <tr>
+            <td>Section grouping (Essentials/Musical/Resources)</td>
+            <td><span class="badge b-diverged">Diverged</span></td>
+            <td>Difficulty/Key regrouped into Musical; Category into Resources.</td>
+          </tr>
+          <tr>
+            <td>Strumming-pattern editor</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>The visual D DU UDU control isn't built (passed as empty to AI).</td>
+          </tr>
+          <tr>
+            <td>Lyrics-with-chords</td>
+            <td><span class="badge b-partial">Partial</span></td>
+            <td>Absent in create; present in the <b>edit</b> form's §IV Lyrics.</td>
+          </tr>
+          <tr>
+            <td>Image grid / cover upload</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>No upload; cover comes only from a Spotify match (hidden field).</td>
+          </tr>
+          <tr>
+            <td>Action bar</td>
+            <td><span class="badge b-partial">Partial</span></td>
+            <td>Bottom not top; no explicit Cancel; “Save draft” kept.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="score">
+        <span class="pct">85%</span><span class="lbl">structure fidelity · create form</span>
+      </div>
+      <div class="bar"><i style="width: 85%"></i></div>
+      <p style="font-size: 13.5px; color: var(--ink-3)">
+        The most faithful surface in the set. Divergences are a sensible re-grouping plus three
+        unbuilt content affordances (strum editor, lyrics-on-create, image upload). The edit variant
+        drops the Spotify/duplicate accelerators (correct for editing) and adds the Lyrics section.
+      </p>
+    </div>
+
+    <h3>Song Form B — “Music Manuscript” &nbsp;<span class="tag-intent">not shipped</span></h3>
+    <div class="callout">
+      <h4>The road not taken</h4>
+      <p style="margin-top: 0">
+        Direction B was a dramatically different editorial treatment — an
+        <b>engraved-broadsheet</b> look. It has no implementation; A was chosen. Ideas B put on the
+        table that A/impl did <em>not</em> adopt:
+      </p>
+      <ul>
+        <li>
+          A full-bleed <b>masthead</b> with staff-line motif behind a 60px serif hero (“A new
+          <em>song</em>, transcribed.”).
+        </li>
+        <li>
+          <b>Manuscript two-column sections</b> — a 140px numeral/title/lead rail beside the fields
+          — instead of boxed cards.
+        </li>
+        <li>
+          <b>Underline-only fields</b> (no boxes) with serif input text — a much more editorial
+          field treatment.
+        </li>
+        <li>
+          Spotify strip on a <b>dark ink</b> background; a dark song-card preview with chord
+          <b>grids as real fretboard diagrams</b>.
+        </li>
+      </ul>
+      <p style="font-size: 13.5px; color: var(--ink-3); margin-bottom: 0">
+        Worth keeping in mind if the product ever wants a more distinctive, less SaaS-generic
+        identity — B is where that lives.
+      </p>
+    </div>
+  </div>
+
+  <!-- ========== 04 ASSIGNMENTS ========== -->
+  <h2 id="assign">
+    <span class="num">04 — Domain</span>Assignments &nbsp;·&nbsp; Form · Teacher · Student
+  </h2>
+  <div id="assign-body">
+    <p class="section-intro">
+      Three surfaces here: the dedicated Assignment <b>form</b>, and the <b>teacher</b> vs
+      <b>student</b> views of the assignments list (one mockup file, role-switched). The
+      implementation diverges most on <em>product model</em> — the mockup imagines audio/video
+      submissions and daily-minute targets; the app went with a checklist + chord-drill +
+      status-transition model.
+    </p>
+
+    <h4>Design-language conformance</h4>
+    <ul>
+      <li>Editorial shell, serif italic “Assignments” hero, gold accent, card chrome all match.</li>
+      <li>
+        The dedicated form uses the shared <code>form-styles.ts</code> + <code>FormSection</code> +
+        <code>FormPreviewPanel</code> — the canonical dedicated-form pattern.
+      </li>
+      <li>
+        Status pills (Open / Submitted / Reviewed / Overdue) with colored dots carried across
+        faithfully.
+      </li>
+    </ul>
+
+    <h3>
+      Assignment Form → <span class="mono" style="font-size: 0.8em">AssignmentCreateEditorial</span>
+    </h3>
+    <div class="card">
+      <div class="route"><b>Route</b> /dashboard/assignments/new · /[id]/edit</div>
+      <div class="gapex">
+        <div>
+          <h4>Mockup specifies</h4>
+          <ul>
+            <li>§I Who — <b>multi-student</b> chip picker.</li>
+            <li>§II What — song/drill select + task description.</li>
+            <li>§III When — Due date + <b>Daily target</b> (min/day).</li>
+            <li>§IV Proof — <b>Submission type</b> toggle: Self-report / Audio / Video / Note.</li>
+            <li>Preview: song, student chips, “Due Apr 30 · 10 min/day”.</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Implementation renders</h4>
+          <ul>
+            <li>§I Who — <b>single</b>-student select.</li>
+            <li>§II What &amp; When — Title, Due date, Song (optional), Brief.</li>
+            <li>
+              §III Proof — <b>Checklist editor + Chord-drill editor</b> (structured sub-tasks) —
+              richer than the mockup.
+            </li>
+            <li>Plus a <b>Template picker</b> and AI brief-generation.</li>
+            <li>Preview: student, song, due date.</li>
+          </ul>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Section / feature</th>
+            <th style="width: 96px">Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Two-column sectioned layout + preview</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Same shell as Song Form A.</td>
+          </tr>
+          <tr>
+            <td>Student picker</td>
+            <td>
+              <span class="badge b-diverged">Diverged</span>
+              <span class="tag-intent">scoped-out</span>
+            </td>
+            <td>
+              Multi-student → single select; true multi-assign is a behavior change, deferred.
+            </td>
+          </tr>
+          <tr>
+            <td>Daily-target (min/day)</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Not modelled.</td>
+          </tr>
+          <tr>
+            <td>Submission-type selector</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Replaced by the checklist/chord-drill completion model.</td>
+          </tr>
+          <tr>
+            <td>Checklist + chord-drill editors</td>
+            <td><span class="badge b-extra">Extra</span></td>
+            <td>Real structured content types the mockup never drew.</td>
+          </tr>
+          <tr>
+            <td>Template picker + AI</td>
+            <td><span class="badge b-extra">Extra</span></td>
+            <td>Reuse existing assignments as templates; AI-drafted brief.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="score">
+        <span class="pct">65%</span><span class="lbl">structure fidelity</span>
+      </div>
+      <div class="bar"><i style="width: 65%"></i></div>
+    </div>
+
+    <h3>
+      Assignments — Teacher view →
+      <span class="mono" style="font-size: 0.8em">AssignmentsListEditorial</span>
+    </h3>
+    <div class="card">
+      <div class="route"><b>Route</b> /dashboard/assignments (teacher / admin)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Section / feature</th>
+            <th style="width: 96px">Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Header + “Teaching / Assignments” + overdue nudge</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Serif hero + overdue line preserved.</td>
+          </tr>
+          <tr>
+            <td>Open / To-review / Reviewed <b>tabs</b></td>
+            <td><span class="badge b-diverged">Diverged</span></td>
+            <td>Replaced by a filter-control bar (status + sort + search + per-student).</td>
+          </tr>
+          <tr>
+            <td>Persistent inline “Quick assign” composer</td>
+            <td>
+              <span class="badge b-missing">Missing</span>
+              <span class="tag-intent">scoped-out</span>
+            </td>
+            <td>Creation moved to the dedicated /new page.</td>
+          </tr>
+          <tr>
+            <td>Row progress bar + % + last-practice</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Rows show Due / Student·Title / Status only.</td>
+          </tr>
+          <tr>
+            <td>Search + per-student filter + Templates link</td>
+            <td><span class="badge b-extra">Extra</span></td>
+            <td>Beyond the mockup's tab-only filtering.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="score">
+        <span class="pct">60%</span><span class="lbl">structure fidelity</span>
+      </div>
+      <div class="bar"><i style="width: 60%"></i></div>
+    </div>
+
+    <h3>
+      Assignments — Student view →
+      <span class="mono" style="font-size: 0.8em">AssignmentsListEditorial</span> +
+      <span class="mono" style="font-size: 0.8em">AssignmentDetailEditorial</span>
+    </h3>
+    <div class="card">
+      <div class="route"><b>Route</b> /dashboard/assignments (student) · /[id]</div>
+      <p style="margin-top: 0; font-size: 14px">
+        The mockup imagines a rich <b>master-detail “inbox + submit”</b>: a left list, and a right
+        pane with the task, a 7-day practice-log bar chart, an <b>audio-recording dropzone</b>, a
+        chord-chart reference, and a “tip from your teacher.” The implementation is a
+        <b>list page + separate detail page</b> — no split pane — where submission happens by
+        ticking a checklist / running a chord drill and moving status (Open → Submitted → Reviewed).
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Section / feature</th>
+            <th style="width: 96px">Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>“From your teacher” framing + status/due</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Eyebrow + status pills carried over.</td>
+          </tr>
+          <tr>
+            <td>Master-detail split layout</td>
+            <td><span class="badge b-diverged">Diverged</span></td>
+            <td>List + routed detail page instead of a two-pane inbox.</td>
+          </tr>
+          <tr>
+            <td>Task brief + song/lesson links</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Detail's “Brief” card covers this, with cross-links.</td>
+          </tr>
+          <tr>
+            <td>Audio/video recording submission</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>No media upload; submission = checklist/status.</td>
+          </tr>
+          <tr>
+            <td>7-day practice-log chart</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Not built on the assignment surface.</td>
+          </tr>
+          <tr>
+            <td>Checklist / chord-drill progress + history</td>
+            <td><span class="badge b-extra">Extra</span></td>
+            <td>Structured progress + status-history timeline the mockup lacked.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="score">
+        <span class="pct">50%</span><span class="lbl">structure fidelity</span>
+      </div>
+      <div class="bar"><i style="width: 50%"></i></div>
+      <div class="note">
+        <b>Product-model divergence, not sloppiness.</b> The mockup's media-submission +
+        practice-log vision is a bigger feature than a layout; the app deliberately shipped a
+        lighter checklist/status loop first. Worth a product decision on whether recorded
+        submissions are on the roadmap.
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 05 LESSONS ========== -->
+  <h2 id="lessons">
+    <span class="num">05 — Domain</span>Lessons &nbsp;·&nbsp; List · Detail · Form
+  </h2>
+  <div id="lessons-body">
+    <p class="section-intro">
+      Three lesson surfaces: list, detail, and the scheduling form. The list and form keep the
+      editorial skeleton well; the detail page is the most trimmed-down surface in the whole set —
+      it kept the reading frame but dropped the mockup's interactive teaching tools (per-song
+      progress steppers, homework, continuity).
+    </p>
+
+    <h4>Design-language conformance</h4>
+    <ul>
+      <li>
+        All three use editorial tokens, serif italic hero, gold accent, status pills with colored
+        dots.
+      </li>
+      <li>
+        The form uses the shared <code>form-styles.ts</code> + <code>FormSection</code> +
+        <code>FormPreviewPanel</code>; list &amp; detail use the same card chrome.
+      </li>
+      <li>
+        List filtering is <b>server-side via URL params</b> (real <code>&lt;Link&gt;</code>s) rather
+        than the mockup's client-state chips — a legitimate Next.js upgrade.
+      </li>
+    </ul>
+
+    <h3>Lesson List → <span class="mono" style="font-size: 0.8em">LessonsListEditorial</span></h3>
+    <div class="card">
+      <div class="route"><b>Route</b> /dashboard/lessons</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Section / feature</th>
+            <th style="width: 96px">Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Header (eyebrow + serif “Lessons” + count)</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Role-aware eyebrow (Teaching / Your lessons / All lessons).</td>
+          </tr>
+          <tr>
+            <td>Status filter chips + per-status counts</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Same chips; now URL-driven.</td>
+          </tr>
+          <tr>
+            <td>Year filter</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Not implemented.</td>
+          </tr>
+          <tr>
+            <td>Sort toggle (newest/oldest) + “Recurring…” button</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Neither shipped on the list header.</td>
+          </tr>
+          <tr>
+            <td>Table columns</td>
+            <td><span class="badge b-diverged">Diverged</span></td>
+            <td>
+              Mockup: Date · Lesson(#/title/notes) · Student · Teacher · Songs · Time · Status.
+              Impl: Date · Student · Teacher · Title · Status.
+            </td>
+          </tr>
+          <tr>
+            <td>Songs-count + progress dots column</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Dropped from rows.</td>
+          </tr>
+          <tr>
+            <td>Time + duration column</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Dropped; date only.</td>
+          </tr>
+          <tr>
+            <td>Date-grouped sections (This week / Earlier…)</td>
+            <td><span class="badge b-extra">Extra</span></td>
+            <td>Impl groups by time bucket; mockup did that only on mobile.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="score">
+        <span class="pct">70%</span><span class="lbl">structure fidelity</span>
+      </div>
+      <div class="bar"><i style="width: 70%"></i></div>
+    </div>
+
+    <h3>
+      Lesson Detail → <span class="mono" style="font-size: 0.8em">LessonDetailEditorial</span>
+    </h3>
+    <div class="card">
+      <div class="route"><b>Route</b> /dashboard/lessons/[id]</div>
+      <p style="margin-top: 0; font-size: 14px">
+        The mockup is a rich two-column workbench. The implementation keeps the hero + a Songs card
+        + a Notes card, and stops there.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Section / feature</th>
+            <th style="width: 96px">Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Hero (status pill, title, “with &lt;student&gt;”)</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>
+              Serif hero present; student links to profile. No DateBlock / #number /
+              duration·teacher meta.
+            </td>
+          </tr>
+          <tr>
+            <td>Songs list</td>
+            <td><span class="badge b-partial">Partial</span></td>
+            <td>
+              Key badge + title + author + status text, each linking to the song — but
+              <b>no per-song StageStepper</b> progress control.
+            </td>
+          </tr>
+          <tr>
+            <td>Per-song note + history expander</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Not built.</td>
+          </tr>
+          <tr>
+            <td>Lesson notes</td>
+            <td><span class="badge b-partial">Partial</span></td>
+            <td>
+              Read-only display (“add them from the edit view”) vs mockup's inline-editable
+              textarea.
+            </td>
+          </tr>
+          <tr>
+            <td>Start-live / Recap-email / Delete actions</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>
+              Live-lesson route was deleted project-wide (LES-1); recap/delete not on this surface.
+            </td>
+          </tr>
+          <tr>
+            <td>Lesson-info card (scheduled/duration/teacher/sequence)</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Not rendered.</td>
+          </tr>
+          <tr>
+            <td>Assignments / homework card</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>No quick-assign or homework list on the lesson.</td>
+          </tr>
+          <tr>
+            <td>Continuity card (previous lessons, streak, health)</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Not built.</td>
+          </tr>
+          <tr>
+            <td>Post-lesson AI summary (completed lessons)</td>
+            <td><span class="badge b-extra">Extra</span></td>
+            <td>Gated AI feature the mockup didn't have.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="score">
+        <span class="pct">48%</span><span class="lbl">structure fidelity</span>
+      </div>
+      <div class="bar"><i style="width: 48%"></i></div>
+      <div class="note">
+        <b>The biggest visual gap in the set.</b> The reading frame matches, but the mockup's
+        teaching workbench — inline progress steppers, homework, continuity — is largely unbuilt.
+        Some of it (Start-live) was intentionally removed; the progress/continuity cards look like
+        genuine unshipped scope.
+      </div>
+    </div>
+
+    <h3>Lesson Form → <span class="mono" style="font-size: 0.8em">LessonFormEditorial</span></h3>
+    <div class="card">
+      <div class="route"><b>Route</b> /dashboard/lessons/new · /[id]/edit</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Section / feature</th>
+            <th style="width: 96px">Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Sectioned two-column + sticky preview</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>“Schedule a lesson” hero + preview panel present.</td>
+          </tr>
+          <tr>
+            <td>Student picker</td>
+            <td><span class="badge b-diverged">Diverged</span></td>
+            <td>
+              Avatar chips → select dropdown, <b>plus add-new-student-by-email</b> (mockup lacked
+              this).
+            </td>
+          </tr>
+          <tr>
+            <td>Date / Time / Duration (three fields)</td>
+            <td><span class="badge b-diverged">Diverged</span></td>
+            <td>Collapsed into one <code>datetime-local</code>; no duration field.</td>
+          </tr>
+          <tr>
+            <td>Format toggle (In-person / Video)</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Not in the lesson schema.</td>
+          </tr>
+          <tr>
+            <td>Recurrence</td>
+            <td><span class="badge b-partial">Partial</span></td>
+            <td>
+              Mockup: weekly on/off toggle. Impl: dedicated §Repeat with a weeks count (richer,
+              create-only).
+            </td>
+          </tr>
+          <tr>
+            <td>Songs-to-cover picker</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Multi-select; carried into preview.</td>
+          </tr>
+          <tr>
+            <td>Lesson-plan notes (+ AI)</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Notes textarea, AI-assist behind flag.</td>
+          </tr>
+          <tr>
+            <td>Title + Status fields</td>
+            <td><span class="badge b-extra">Extra</span></td>
+            <td>Impl adds a lesson title and status the mockup didn't show.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="score">
+        <span class="pct">72%</span><span class="lbl">structure fidelity</span>
+      </div>
+      <div class="bar"><i style="width: 72%"></i></div>
+    </div>
+  </div>
+
+  <!-- ========== 06 STUDENT ========== -->
+  <h2 id="student"><span class="num">06 — Domain</span>Student Form &amp; Shared Chrome</h2>
+  <div id="student-body">
+    <p class="section-intro">
+      The Student Form is the widest gap in field coverage — and the clearest example of an
+      <b>intentional</b> divergence. The mockup draws a full CRM intake form (identity, contact,
+      recurring schedule, billing); the app ships a deliberately minimal <b>invite-based</b> form.
+      The look matches; the data model doesn't.
+    </p>
+
+    <h4>Design-language conformance</h4>
+    <ul>
+      <li>
+        Same editorial shell — serif italic “Add student”, numbered <code>FormSection</code>s,
+        sticky preview with a live <code>FormAvatar</code> (initials).
+      </li>
+      <li>Uses the shared <code>FormSection</code> + <code>FormPreviewPanel</code> primitives.</li>
+    </ul>
+
+    <h3>
+      Student Form → <span class="mono" style="font-size: 0.8em">CreateStudentForm</span> /
+      <span class="mono" style="font-size: 0.8em">UserEditFormEditorial</span>
+    </h3>
+    <div class="card">
+      <div class="route"><b>Route</b> /dashboard/users/new · /dashboard/users/[id]/edit</div>
+      <div class="gapex">
+        <div>
+          <h4>Mockup specifies (4 sections)</h4>
+          <ul>
+            <li>
+              §I Identity — Full name, Instrument, Level, Start date, <b>avatar-color picker</b>.
+            </li>
+            <li>§II Contact — student email/phone, <b>parent/guardian</b> name + email.</li>
+            <li>§III Schedule — recurring Day / Time / Duration.</li>
+            <li>§IV Billing — rate per lesson ($), billing cycle, goals/notes.</li>
+            <li>Preview: colored avatar, name, level, lesson slot, rate.</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Implementation renders (2 sections)</h4>
+          <ul>
+            <li>§I Identity — First name, Last name.</li>
+            <li>§II Contact — Invite email (“stored now, sent when ready”), Phone.</li>
+            <li>
+              Creates a <b>shadow student</b> via <code>POST /api/users</code>; edit form manages
+              role toggles + student status (lead/trial/active/…).
+            </li>
+            <li>Preview: initials avatar, name, invite email.</li>
+          </ul>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Section / feature</th>
+            <th style="width: 96px">Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Editorial shell + preview + avatar</td>
+            <td><span class="badge b-match">Match</span></td>
+            <td>Look and chrome are faithful.</td>
+          </tr>
+          <tr>
+            <td>Name + contact fields</td>
+            <td><span class="badge b-partial">Partial</span></td>
+            <td>First/last + email/phone present; single email is an <em>invite</em> email.</td>
+          </tr>
+          <tr>
+            <td>Level · Instrument · Start date · Avatar color</td>
+            <td>
+              <span class="badge b-missing">Missing</span>
+              <span class="tag-intent">scoped-out</span>
+            </td>
+            <td>Not in the profile schema; would need new columns.</td>
+          </tr>
+          <tr>
+            <td>Parent/guardian contact</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>No parent model (parent role is schema-only).</td>
+          </tr>
+          <tr>
+            <td>Recurring schedule (Day/Time/Duration)</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>Scheduling lives in the Lesson form, not student intake.</td>
+          </tr>
+          <tr>
+            <td>Billing (rate, cycle) + goals/notes</td>
+            <td><span class="badge b-missing">Missing</span></td>
+            <td>No billing model in the product.</td>
+          </tr>
+          <tr>
+            <td>Invite-later flow + shadow student</td>
+            <td><span class="badge b-extra">Extra</span></td>
+            <td>Real capability the mockup didn't consider.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="score">
+        <span class="pct">40%</span
+        ><span class="lbl">structure fidelity · high design fidelity</span>
+      </div>
+      <div class="bar"><i style="width: 40%"></i></div>
+      <div class="note">
+        <b>Deliberately minimal.</b> The extra fields (level, avatar color, parent contact, billing,
+        recurring schedule) each imply new DB columns + RLS work. The app chose a fast invite-based
+        intake and defers the rest — a reasonable call, but the gap between “designed student” and
+        “shipped student” is the largest in the set.
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 07 CROSS-CUTTING ========== -->
+  <h2 id="crosscut"><span class="num">07 — Synthesis</span>Cross-cutting findings</h2>
+  <div id="crosscut-body">
+    <p class="section-intro">
+      Patterns that cut across all nine surfaces — the shared-chrome story, where consistency is
+      drifting, and how to read the divergences.
+    </p>
+
+    <h3>Shared form chrome — real, but three styling layers coexist</h3>
+    <div class="card">
+      <p style="margin-top: 0">
+        The mockup defines the dedicated-form pattern once (numbered section, uppercase micro-label,
+        boxed field, sticky preview, action bar) and reuses it. The codebase <b>does</b> have a real
+        shared layer — <code>components/_editorial/</code> holds <code>FormSection</code>,
+        <code>FormPreviewPanel</code>, <code>FormAvatar</code>, and <code>form-styles.ts</code>,
+        imported by all four dedicated forms. That's the good news. The drift is at the
+        <b>field &amp; button</b> level:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Concern</th>
+            <th style="width: 96px">Status</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Section container (<code>FormSection</code>)</td>
+            <td><span class="badge b-match">Shared</span></td>
+            <td>
+              One component, used everywhere. (Not collapsible, unlike the mockup's chevron
+              sections.)
+            </td>
+          </tr>
+          <tr>
+            <td>Preview panel + avatar</td>
+            <td><span class="badge b-match">Shared</span></td>
+            <td><code>FormPreviewPanel</code> / <code>FormAvatar</code> shared.</td>
+          </tr>
+          <tr>
+            <td>Field &amp; input styling</td>
+            <td><span class="badge b-diverged">3 ways</span></td>
+            <td>
+              Lesson/Assignment use <code>form-styles.ts</code>; Song uses its own
+              <code>Field.tsx</code>; Student uses local <code>input</code>/<code>fieldLabel</code>
+              consts.
+            </td>
+          </tr>
+          <tr>
+            <td>Primary action button</td>
+            <td><span class="badge b-diverged">Drift</span></td>
+            <td>
+              Lesson/Assignment: mono-uppercase “CREATE LESSON”. Song/Student: sans-serif “Create
+              song”. Same forms, different button.
+            </td>
+          </tr>
+          <tr>
+            <td>Cancel affordance</td>
+            <td><span class="badge b-partial">Mixed</span></td>
+            <td>Some forms have a Cancel link, Song-create relies on the back-link only.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-size: 13.5px; color: var(--ink-3); margin-bottom: 0">
+        <b>Low-effort win:</b> fold Song's <code>Field.tsx</code> and Student's local input styles
+        into <code>form-styles.ts</code>, and pick one primary-button treatment. Purely cosmetic, no
+        behavior risk, and it removes the only visible inconsistency across the four dedicated
+        forms.
+      </p>
+    </div>
+
+    <h3>Reading the divergences — three buckets</h3>
+    <div class="two-col">
+      <div class="card">
+        <h4 style="color: var(--ok)">Intentional / scoped-out</h4>
+        <ul>
+          <li>Song B direction (A was chosen).</li>
+          <li>Multi-student assign → single (behavior change deferred).</li>
+          <li>Assignment submission-type / daily-target → checklist + status model.</li>
+          <li>Student level / avatar / parent / billing / schedule (new schema).</li>
+          <li>Lesson “Format” toggle (not in schema); Start-live (route deleted).</li>
+        </ul>
+        <p style="font-size: 13px; color: var(--ink-3); margin-bottom: 0">
+          Documented in <code>93-design-mockup-audit.md</code>. These are product decisions, not
+          bugs.
+        </p>
+      </div>
+      <div class="card">
+        <h4 style="color: var(--missing)">Looks like genuine unshipped scope</h4>
+        <ul>
+          <li>Lesson Detail: per-song <b>progress steppers</b>, homework card, continuity card.</li>
+          <li>Song create: <b>strumming-pattern editor</b>, image/cover upload.</li>
+          <li>Assignments teacher: row <b>progress bar / %</b>.</li>
+          <li>Lesson list: <b>Songs</b> &amp; <b>Time/duration</b> columns.</li>
+        </ul>
+        <p style="font-size: 13px; color: var(--ink-3); margin-bottom: 0">
+          Candidates for a “close the mockup gap” tranche if you want higher fidelity.
+        </p>
+      </div>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--extra)">Places the implementation went beyond the mockup</h4>
+      <ul>
+        <li><b>Real</b> Spotify autofill + advisory duplicate check (mockups were static).</li>
+        <li>
+          Assignment <b>templates</b>, <b>checklist</b> &amp; <b>chord-drill</b> content types +
+          status-history timeline.
+        </li>
+        <li>Add-new-student-by-email inside the Lesson form.</li>
+        <li>
+          Server-side URL-driven filtering; role-aware eyebrows; AI-assist (behind
+          <code>SHOW_AI_FEATURES</code>).
+        </li>
+        <li>Post-lesson AI summary on completed lessons.</li>
+      </ul>
+    </div>
+
+    <div class="note" style="border-left-color: var(--gold); background: var(--gold-wash)">
+      <b>Bottom line.</b> The editorial redesign is a faithful adoption of Direction A at the
+      <em>visual-system</em> level — tokens, type, layout skeleton, preview panels and section
+      chrome are consistent everywhere. Fidelity drops on <em>feature depth</em>: forms are close
+      (65–85%), read/list surfaces are trimmer (48–70%), and the Student form is intentionally a
+      stub (40%). Most gaps are defensible product calls; the handful worth revisiting are the
+      Lesson-Detail teaching tools, the song strum/image affordances, and the two dropped
+      Lesson-list columns.
+    </div>
+  </div>
+
+  <footer>
+    Strummy · Design-Mockup Fidelity Report · generated 2026-07-23 · source:
+    <span class="mono">claude design - mockups/</span> (9 files) · companion:
+    <span class="mono">docs/app-blueprint/93-design-mockup-audit.md</span>
+  </footer>
+</div>

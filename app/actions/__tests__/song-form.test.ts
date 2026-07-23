@@ -71,7 +71,9 @@ describe('createSongAction', () => {
       capo_fret: '2',
       tempo: '87',
       chords: 'Em G D A',
+      strumming_pattern: 'D D U - U D',
       notes: 'Strumming pattern: DDU UDU',
+      lyrics_with_chords: '[Verse]\nEm       G\nToday is gonna be the day',
     });
 
     const result = await createSongAction(emptyState, formData);
@@ -84,8 +86,19 @@ describe('createSongAction', () => {
       key: 'Am',
       capo_fret: 2,
       tempo: 87,
+      time_signature: null,
+      release_year: null,
       chords: 'Em G D A',
+      strumming_pattern: 'D D U - U D',
       notes: 'Strumming pattern: DDU UDU',
+      lyrics_with_chords: '[Verse]\nEm       G\nToday is gonna be the day',
+      category: null,
+      youtube_url: null,
+      spotify_link_url: null,
+      ultimate_guitar_link: null,
+      tiktok_short_url: null,
+      cover_image_url: null,
+      is_draft: false,
     });
     expect(mockRedirect).toHaveBeenCalledWith('/dashboard/songs/song-1');
   });
@@ -111,8 +124,19 @@ describe('createSongAction', () => {
       key: 'C',
       capo_fret: null,
       tempo: null,
+      time_signature: null,
+      release_year: null,
       chords: null,
+      strumming_pattern: null,
       notes: null,
+      lyrics_with_chords: null,
+      category: null,
+      youtube_url: null,
+      spotify_link_url: null,
+      ultimate_guitar_link: null,
+      tiktok_short_url: null,
+      cover_image_url: null,
+      is_draft: false,
     });
   });
 

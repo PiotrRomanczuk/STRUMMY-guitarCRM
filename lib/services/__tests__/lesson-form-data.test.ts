@@ -181,6 +181,8 @@ describe('lesson-form-data', () => {
           notes: 'Notes',
           scheduled_at: '2026-07-20T10:00:00Z',
           status: 'scheduled',
+          duration_minutes: 45,
+          format: 'video',
           lesson_songs: [{ song_id: 'song1' }, { song_id: 'song2' }],
         },
         error: null,
@@ -196,6 +198,8 @@ describe('lesson-form-data', () => {
         notes: 'Notes',
         scheduledAt: '2026-07-20T10:00:00Z',
         status: 'scheduled',
+        durationMinutes: 45,
+        format: 'video',
         songIds: ['song1', 'song2'],
       });
     });
@@ -218,6 +222,8 @@ describe('lesson-form-data', () => {
       const result = await getLessonForEdit('L2');
       expect(result?.title).toBeNull();
       expect(result?.notes).toBeNull();
+      expect(result?.durationMinutes).toBeNull();
+      expect(result?.format).toBeNull();
       expect(result?.songIds).toEqual([]);
     });
 

@@ -13,8 +13,9 @@ import { ChordDrillEditor } from '@/components/assignments/editorial/chord-drill
 import { TemplatePicker } from '@/components/assignments/editorial/create/TemplatePicker';
 import { AssignmentCreateEditorialFields } from './AssignmentCreateEditorial.Fields';
 import { AssignmentCreateEditorialPreview } from './AssignmentCreateEditorial.Preview';
+import { AssignmentSubmissionTypeToggle } from './AssignmentCreateEditorial.SubmissionType';
 import { useAssignmentFormSubmit } from './useAssignmentFormSubmit';
-import type { ChecklistItem } from '@/schemas/AssignmentSchema';
+import type { ChecklistItem, SubmissionType } from '@/schemas/AssignmentSchema';
 import type { AssignmentTemplateRow } from '@/lib/services/assignment-template-queries';
 import { SHOW_AI_FEATURES } from '@/lib/config/features';
 
@@ -34,6 +35,8 @@ type Props = {
     songId: string | null;
     checklist?: ChecklistItem[];
     chordIds?: string[];
+    dailyTargetMinutes?: number | null;
+    submissionType?: SubmissionType;
   };
 };
 
@@ -45,6 +48,12 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
   const [songId, setSongId] = useState(initial?.songId ?? '');
   const [checklist, setChecklist] = useState<ChecklistItem[]>(initial?.checklist ?? []);
   const [chordIds, setChordIds] = useState<string[]>(initial?.chordIds ?? []);
+  const [dailyTargetMinutes, setDailyTargetMinutes] = useState<number | null>(
+    initial?.dailyTargetMinutes ?? null
+  );
+  const [submissionType, setSubmissionType] = useState<SubmissionType>(
+    initial?.submissionType ?? 'self_report'
+  );
 
   const applyTemplate = (t: AssignmentTemplateRow) => {
     setTitle(t.title);
@@ -62,6 +71,8 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
     songId,
     checklist,
     chordIds,
+    dailyTargetMinutes,
+    submissionType,
   });
 
   const selectedStudent = students.find((stu) => stu.id === studentId);
@@ -90,6 +101,7 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
               dueDate={dueDate}
               songId={songId}
               description={description}
+              dailyTargetMinutes={dailyTargetMinutes}
               fieldErrors={fieldErrors}
               onStudentId={(v) => {
                 setStudentId(v);
@@ -102,15 +114,23 @@ export const AssignmentCreateEditorial = ({ mode, students, songs, templates, in
               onDueDate={setDueDate}
               onSongId={setSongId}
               onDescription={setDescription}
+              onDailyTargetMinutes={setDailyTargetMinutes}
             />
 
             <FormSection
               numeral="III · PROOF"
-              title="Checklist & chord drill"
-              count={2}
-              populated={[checklist.length > 0, chordIds.length > 0].filter(Boolean).length}
+              title="Submission & checklist"
+              count={3}
+              populated={[true, checklist.length > 0, chordIds.length > 0].filter(Boolean).length}
             >
-              <ChecklistEditor items={checklist} onChange={setChecklist} disabled={isSaving} />
+              <AssignmentSubmissionTypeToggle
+                value={submissionType}
+                onChange={setSubmissionType}
+                disabled={isSaving}
+              />
+              <div style={{ marginTop: 16 }}>
+                <ChecklistEditor items={checklist} onChange={setChecklist} disabled={isSaving} />
+              </div>
               <ChordDrillEditor selected={chordIds} onChange={setChordIds} disabled={isSaving} />
             </FormSection>
 

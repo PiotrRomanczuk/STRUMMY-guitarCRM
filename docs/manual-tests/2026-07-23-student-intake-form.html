@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — Full Student Intake Form (2026-07-23)</title>
+    <style>
+      :root {
+        --ink: #1c1a17;
+        --ink3: #6b655c;
+        --gold: #a8791f;
+        --rule: #e6e0d6;
+        --card: #faf7f1;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        color: var(--ink);
+        background: #fffdf8;
+        margin: 0;
+        padding: 40px 20px;
+        line-height: 1.55;
+      }
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 30px;
+        letter-spacing: -0.02em;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        margin: 32px 0 10px;
+        border-bottom: 1px solid var(--rule);
+        padding-bottom: 6px;
+      }
+      h3 {
+        font-size: 15px;
+        margin: 20px 0 6px;
+      }
+      .meta {
+        color: var(--ink3);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      code {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 12.5px;
+      }
+      pre {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        padding: 12px 14px;
+        overflow: auto;
+        font-size: 12.5px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10px 0;
+        font-size: 13px;
+      }
+      th,
+      td {
+        border: 1px solid var(--rule);
+        padding: 7px 9px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--card);
+      }
+      .flag {
+        background: #fff5e6;
+        border: 1px solid var(--gold);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin: 14px 0;
+      }
+      .ok {
+        color: #2f7d32;
+        font-weight: 600;
+      }
+      ol li,
+      ul li {
+        margin: 4px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Full Student Intake Form</h1>
+      <p class="meta">
+        <strong>Date:</strong> 2026-07-23 ·
+        <strong>Branch:</strong> feature/student-form-full-fields · <strong>Scope:</strong> Expand
+        the editorial "Add student" form from invite-only to the full mockup (Identity / Contact /
+        Schedule / Billing), end to end.
+      </p>
+
+      <h2>1. What was built</h2>
+      <p>
+        The <em>Add student</em> form (<code>/dashboard/users/new</code>) was rebuilt from a minimal
+        first/last-name + invite-email form into the four-section design mockup, with a live sticky
+        preview. The same four field sections are now reused on the <em>Edit</em> form
+        (<code>/dashboard/users/[id]/edit</code>). New profile columns back every field.
+      </p>
+      <ul>
+        <li>
+          <strong>I · Identity</strong> — Full name (required), Instrument, Level button-group
+          (required), Start date, Avatar-colour swatches.
+        </li>
+        <li>
+          <strong>II · Contact</strong> — Student email (feeds the existing invite flow), Student
+          phone, Parent/guardian name, Parent email.
+        </li>
+        <li><strong>III · Schedule</strong> — Recurring Day, Time, Duration.</li>
+        <li>
+          <strong>IV · Billing</strong> — Rate per lesson, Billing cycle, Goals/notes (stored in the
+          existing <code>notes</code> column).
+        </li>
+        <li>
+          <strong>Preview</strong> — coloured avatar + initials, name, level, lesson slot, and
+          <code>$rate/cycle</code>.
+        </li>
+      </ul>
+      <p>
+        Only <strong>Full name</strong> and <strong>Level</strong> are required to save (matching
+        the mockup).
+      </p>
+
+      <div class="flag">
+        <strong>⚑ BILLING — product review needed.</strong> Rate-per-lesson
+        (<code>lesson_rate</code>, numeric) and billing cycle (<code>billing_cycle</code> ∈
+        per_lesson / weekly / monthly) are a <em>new</em> product surface for Strummy, stored
+        directly on the student profile and teacher-only. Confirm the billing model (per-student
+        flat rate vs. per-lesson override, currency, invoicing) before this is surfaced to end
+        users.
+      </div>
+
+      <h2>2. Data model</h2>
+      <p>
+        Migration <code>supabase/migrations/20260723120200_profiles_student_fields.sql</code> adds
+        11 columns to <code>public.profiles</code> (idempotent, applied + verified on
+        <code>StudentDevelopment</code>): <code>skill_level</code>, <code>instrument</code>,
+        <code>start_date</code>, <code>avatar_color</code>, <code>parent_name</code>,
+        <code>parent_email</code>, <code>lesson_day</code>, <code>lesson_time</code>,
+        <code>lesson_duration_minutes</code>, <code>lesson_rate</code>, <code>billing_cycle</code>.
+        CHECK constraints guard skill_level, billing_cycle, positive duration, and non-negative
+        rate. Goals/notes reuse the existing <code>notes</code> column; student email reuses
+        <code>invite_email</code>.
+      </p>
+
+      <h2>3. How to test manually</h2>
+      <h3>Setup</h3>
+      <ol>
+        <li>
+          Apply the migration to your dev stack (already done on StudentDevelopment):
+          <pre>
+ssh uwh "docker exec -i supabase_db_StudentDevelopment psql -U postgres -d postgres" \
+  &lt; supabase/migrations/20260723120200_profiles_student_fields.sql</pre>
+        </li>
+        <li>
+          <code>npm run dev</code>, sign in as admin (<code
+            >p.romanczuk@gmail.com / test123_admin</code
+          >).
+        </li>
+      </ol>
+
+      <h3>Create flow</h3>
+      <ol>
+        <li>
+          Go to <code>/dashboard/users/new</code>. Confirm four numbered sections + a sticky Preview
+          showing "New student".
+        </li>
+        <li>
+          Click <strong>Add student</strong> with an empty name → inline "Full name is required." +
+          no request sent.
+        </li>
+        <li>
+          Type a full name → the preview name + avatar initials update live. Pick a different avatar
+          colour → preview circle recolours. Switch the Level button → preview subtitle updates.
+        </li>
+        <li>
+          Fill Student email, a rate (e.g. <code>65</code>), pick a day/time → Preview "Lesson" +
+          "Rate" update (e.g. <code>Thu 4:00 PM</code>, <code>$65/mo</code>).
+        </li>
+        <li>
+          Click <strong>Add student</strong> → redirect to the new profile. Verify in the DB:
+          <pre>
+select full_name, skill_level, instrument, start_date, avatar_color, parent_email,
+       lesson_day, lesson_time, lesson_duration_minutes, lesson_rate, billing_cycle, notes, invite_email
+from profiles order by created_at desc limit 1;</pre>
+        </li>
+      </ol>
+
+      <h3>Edit flow</h3>
+      <ol>
+        <li>
+          Open the new student's <code>…/edit</code>. Confirm the Identity/Contact/Schedule/Billing
+          sections are pre-filled, plus a "V · ACCESS" roles/status/active card. (Student email is
+          intentionally not shown here — it is governed by the invite button on the detail page.)
+        </li>
+        <li>
+          Change instrument, level, rate, goals → <strong>Save changes</strong> → "✓ Saved". Reload
+          → values persist.
+        </li>
+        <li>
+          Toggle <em>Student</em> off → the intake sections collapse to a plain Display-name field;
+          save still works.
+        </li>
+      </ol>
+
+      <h2>4. Automated coverage</h2>
+      <table>
+        <tr>
+          <th>Gate</th>
+          <th>Result</th>
+        </tr>
+        <tr>
+          <td><code>npx tsc --noEmit</code></td>
+          <td class="ok">0 errors</td>
+        </tr>
+        <tr>
+          <td><code>jest components/users lib/services schemas app/api app/actions</code></td>
+          <td class="ok">141 suites / 1893 passing</td>
+        </tr>
+        <tr>
+          <td><code>eslint</code> (changed files)</td>
+          <td class="ok">0 errors (max-lines warnings only)</td>
+        </tr>
+        <tr>
+          <td>Migration idempotency (applied twice on dev)</td>
+          <td class="ok">no errors, 11 columns present</td>
+        </tr>
+      </table>
+      <p>
+        New/updated tests: <code>CreateStudentForm.test.tsx</code> (render, required-field guard,
+        submit payload, email→inviteEmail + rate parsing, level selection, server error),
+        <code>StudentIntakeSchema.test.ts</code> (validation +
+        <code>toProfileColumns</code> mapping), and a POST route test asserting the shadow insert
+        persists every intake column.
+      </p>
+
+      <h2>5. Follow-ups</h2>
+      <ul>
+        <li>
+          Regenerate <code>database.types.ts</code> via <code>supabase gen types</code> (columns
+          were hand-added as a stopgap paired with the migration).
+        </li>
+        <li>
+          Confirm the BILLING model (see flag above) before exposing rates to non-admin roles.
+        </li>
+        <li>
+          Edit-form fields use skip-empty semantics (a partial save never nulls a column); clearing
+          a field to blank is not yet supported from the edit form.
+        </li>
+      </ul>
+    </main>
+  </body>
+</html>

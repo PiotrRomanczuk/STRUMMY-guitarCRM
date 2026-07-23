@@ -52,6 +52,9 @@ describe('getLessonDetail', () => {
     mockSingle.mockResolvedValue({
       data: {
         ...baseLesson,
+        lesson_teacher_number: 7,
+        duration_minutes: 45,
+        format: 'in_person',
         teacher: [{ full_name: 'Sarah' }],
         student: [{ full_name: 'Emma', email: 'emma@x.com' }],
         lesson_songs: [
@@ -78,11 +81,14 @@ describe('getLessonDetail', () => {
       status: 'SCHEDULED',
       title: 'Fingerpicking basics',
       notes: 'Bring the capo',
+      durationMinutes: 45,
+      format: 'in_person',
       teacherId: 't1',
       teacherName: 'Sarah',
       studentId: 's1',
       studentName: 'Emma',
       studentEmail: 'emma@x.com',
+      lessonTeacherNumber: 7,
       songs: [
         { songId: 'sg1', title: 'Song A', author: 'AC/DC', key: 'A', status: 'started' },
         { songId: 'sg2', title: 'Song B', author: null, key: null, status: null },
@@ -111,11 +117,14 @@ describe('getLessonDetail', () => {
       status: 'SCHEDULED',
       title: null,
       notes: null,
+      durationMinutes: null,
+      format: null,
       teacherId: 't1',
       teacherName: null,
       studentId: 's1',
       studentName: null,
       studentEmail: null,
+      lessonTeacherNumber: null,
       songs: [],
     });
   });

@@ -4,6 +4,7 @@ import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
 import { redirect } from 'next/navigation';
 
 import { LessonsListEditorial } from '@/components/lessons/editorial/LessonsListEditorial';
+import { yearOptions } from '@/components/lessons/editorial/LessonsListEditorial.helpers';
 import { getUserWithRolesSSR } from '@/lib/getUserWithRolesSSR';
 import { getRecentLessons, summariseLessons } from '@/lib/services/lessons-queries';
 
@@ -41,6 +42,14 @@ const parseStatuses = (value: string | string[] | undefined): string[] => {
     .filter((s) => STATUS_KEYS.has(s));
 };
 
+const parseYear = (value: string | string[] | undefined): number | undefined => {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return undefined;
+  const year = Number.parseInt(raw, 10);
+  if (!Number.isInteger(year) || year < 2000 || year > 2100) return undefined;
+  return year;
+};
+
 export default async function LessonsPage({ searchParams }: { searchParams: SearchParams }) {
   const { user, isAdmin, isTeacher, isStudent } = await getUserWithRolesSSR();
   if (!user) {
@@ -50,6 +59,10 @@ export default async function LessonsPage({ searchParams }: { searchParams: Sear
   const params = await searchParams;
   const activeStatuses = parseStatuses(params.status);
   const activeSort: 'newest' | 'oldest' = params.sort === 'oldest' ? 'oldest' : 'newest';
+  const activeYear = parseYear(params.year);
+  // A `sort=` param flips the grouped timeline into a flat, fully-sorted table.
+  const flat = params.sort === 'newest' || params.sort === 'oldest';
+  const years = yearOptions(new Date());
 
   const lessons = await getRecentLessons(
     user.id,
@@ -57,6 +70,7 @@ export default async function LessonsPage({ searchParams }: { searchParams: Sear
     {
       statuses: activeStatuses.length > 0 ? activeStatuses : undefined,
       sort: activeSort,
+      year: activeYear,
     }
   );
   const breakdown = summariseLessons(lessons);
@@ -75,6 +89,9 @@ export default async function LessonsPage({ searchParams }: { searchParams: Sear
         showTeacherColumn={showTeacherColumn}
         activeStatuses={activeStatuses}
         activeSort={activeSort}
+        activeYear={activeYear}
+        flat={flat}
+        years={years}
       />
     </div>
   );

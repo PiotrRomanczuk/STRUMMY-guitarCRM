@@ -10,6 +10,23 @@ export const AssignmentStatusEnum = z.enum([
   'cancelled',
 ]);
 
+// How the student is expected to prove the work — the submission-type *selector*
+// (matches the assignments_submission_type_check DB constraint). This declares
+// the expected proof only; actual audio/video upload is a later wave.
+export const SubmissionTypeEnum = z.enum(['self_report', 'audio', 'video', 'note']);
+export type SubmissionType = z.infer<typeof SubmissionTypeEnum>;
+
+// Human-readable labels for each submission type (form toggle + detail display).
+export const SUBMISSION_TYPE_LABELS: Record<SubmissionType, string> = {
+  self_report: 'Self-report',
+  audio: 'Audio recording',
+  video: 'Video',
+  note: 'Note',
+};
+
+// The daily-target options offered in the form (minutes/day). NULL = no target.
+export const DAILY_TARGET_OPTIONS = [5, 10, 15, 20] as const;
+
 // A single homework checklist item. `id` is client-generated (nanoid/uuid);
 // students may only ever flip `done` (enforced in the DB via a SECURITY DEFINER
 // RPC — see supabase/migrations/*_assignment_checklist.sql), never text/order.
@@ -79,6 +96,8 @@ export const AssignmentSchema = z.object({
   checklist: ChecklistSchema,
   chord_drill: ChordDrillSchema.nullable().optional(), // teacher-authored drill config
   chord_drill_result: ChordDrillResultSchema.nullable().optional(), // student-captured score
+  daily_target_minutes: z.number().int().positive().nullable().optional(), // NULL = no target
+  submission_type: SubmissionTypeEnum.default('self_report'), // expected proof mode
   created_at: z.string().datetime().optional(),
   updated_at: z.string().datetime().optional(),
 });
@@ -95,6 +114,8 @@ export const AssignmentInputSchema = z.object({
   status: AssignmentStatusEnum.optional(),
   checklist: ChecklistInputSchema, // only carried when authored (no default injected)
   chord_drill: ChordDrillSchema.nullable().optional(), // only carried when a drill is authored
+  daily_target_minutes: z.number().int().positive().nullable().optional(), // NULL = no target
+  submission_type: SubmissionTypeEnum.optional(), // defaults to self_report in the DB
 });
 
 // Assignment update schema (partial of input)

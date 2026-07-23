@@ -45,6 +45,22 @@ const ellipsis: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
+/** Teacher-only column: checklist completion as a thin bar + done/total.
+ * A dash placeholder keeps the column readable for assignments with no checklist. */
+const ProgressCell = ({ done, total }: { done: number; total: number }) => {
+  if (total === 0) {
+    return (
+      <span
+        style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-4)' }}
+        title="No checklist on this assignment"
+      >
+        —
+      </span>
+    );
+  }
+  return <ChecklistProgress done={done} total={total} compact />;
+};
+
 type Props = {
   row: AssignmentRow;
   showStudentColumn: boolean;
@@ -113,14 +129,13 @@ export const AssignmentListRowEditorial = ({
         </div>
       )}
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          gap: 6,
-        }}
-      >
+      {showStudentColumn && (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <ProgressCell done={row.progress.done} total={row.progress.total} />
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <span
           style={{
             display: 'inline-flex',
@@ -140,7 +155,6 @@ export const AssignmentListRowEditorial = ({
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: colour }} />
           {assignmentStatusLabel(row.effectiveStatus)}
         </span>
-        <ChecklistProgress done={row.progress.done} total={row.progress.total} compact />
       </div>
     </Link>
   );

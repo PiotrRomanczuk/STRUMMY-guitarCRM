@@ -9,6 +9,7 @@ import {
   AssignmentInputSchema,
   ChecklistSchema,
   type ChecklistItem,
+  type SubmissionType,
 } from '@/schemas/AssignmentSchema';
 import { getVoicingById } from '@/lib/music-theory/chord-voicings';
 import { queueNotification } from '@/lib/services/notification-service';
@@ -27,6 +28,10 @@ export type AssignmentFormValues = {
   checklist?: ChecklistItem[];
   /** Chord IDs to drill. undefined = untouched, [] = clear the drill (ASG-4). */
   chordDrillChordIds?: string[];
+  /** Daily practice target in minutes. null = no target; undefined = untouched. */
+  dailyTargetMinutes?: number | null;
+  /** Expected proof mode; undefined = untouched (defaults to self_report in DB). */
+  submissionType?: SubmissionType;
 };
 
 type AssignmentActionResult = { assignmentId: string } | { error: string };
@@ -73,6 +78,8 @@ export async function createAssignmentAction(
     lesson_id: values.lessonId || null,
     checklist: values.checklist,
     chord_drill: toChordDrill(values.chordDrillChordIds),
+    daily_target_minutes: values.dailyTargetMinutes ?? null,
+    submission_type: values.submissionType ?? 'self_report',
   });
   if (!parsed.success) {
     return { error: parsed.error.issues.map((i) => i.message).join(', ') };
@@ -121,6 +128,12 @@ export async function updateAssignmentAction(
   }
   if (values.chordDrillChordIds !== undefined) {
     updatePayload.chord_drill = toChordDrill(values.chordDrillChordIds);
+  }
+  if (values.dailyTargetMinutes !== undefined) {
+    updatePayload.daily_target_minutes = values.dailyTargetMinutes;
+  }
+  if (values.submissionType !== undefined) {
+    updatePayload.submission_type = values.submissionType;
   }
 
   const supabase = await createClient();

@@ -76,6 +76,11 @@ describe('AssignmentCreateEditorial — form fields, validation, submit', () => 
     expect(screen.getByLabelText('Song (optional)')).toBeInTheDocument();
     expect(screen.getByText('Wonderwall — Oasis')).toBeInTheDocument();
     expect(screen.getByLabelText('Brief')).toBeInTheDocument();
+    expect(screen.getByLabelText('Daily target')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Self-report' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Audio recording' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Video' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Note' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create assignment' })).toBeInTheDocument();
   });
 
@@ -105,9 +110,31 @@ describe('AssignmentCreateEditorial — form fields, validation, submit', () => 
 
     await waitFor(() => expect(createAssignmentAction).toHaveBeenCalled());
     expect(createAssignmentAction).toHaveBeenCalledWith(
-      expect.objectContaining({ studentId: 's1', title: 'Practise the C–Am–F–G loop' })
+      expect.objectContaining({
+        studentId: 's1',
+        title: 'Practise the C–Am–F–G loop',
+        // Defaults when the teacher leaves the new fields untouched.
+        dailyTargetMinutes: null,
+        submissionType: 'self_report',
+      })
     );
     expect(mockPush).toHaveBeenCalledWith('/dashboard/assignments/new-assignment-id');
+  });
+
+  it('persists the chosen daily target and submission type in the create payload', async () => {
+    (createAssignmentAction as jest.Mock).mockResolvedValue({ assignmentId: 'x' });
+    render(<AssignmentCreateEditorial mode="create" students={students} songs={songs} />);
+
+    fireEvent.change(screen.getByLabelText('Student'), { target: { value: 's1' } });
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Barre drill' } });
+    fireEvent.change(screen.getByLabelText('Daily target'), { target: { value: '15' } });
+    fireEvent.click(screen.getByRole('radio', { name: 'Video' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create assignment' }));
+
+    await waitFor(() => expect(createAssignmentAction).toHaveBeenCalled());
+    expect(createAssignmentAction).toHaveBeenCalledWith(
+      expect.objectContaining({ dailyTargetMinutes: 15, submissionType: 'video' })
+    );
   });
 
   it('surfaces a server error without navigating', async () => {
@@ -136,16 +163,27 @@ describe('AssignmentCreateEditorial — form fields, validation, submit', () => 
           description: null,
           dueDate: '2026-04-30T00:00:00.000Z',
           songId: 'g1',
+          dailyTargetMinutes: 20,
+          submissionType: 'audio',
         }}
       />
     );
 
     expect(screen.getByRole('heading', { name: 'Edit assignment' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Existing assignment')).toBeInTheDocument();
+    // Seeded from `initial`: the target select and the submission toggle.
+    expect(screen.getByLabelText('Daily target')).toHaveValue('20');
+    expect(screen.getByRole('radio', { name: 'Audio recording' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
 
     await waitFor(() =>
-      expect(updateAssignmentAction).toHaveBeenCalledWith('a1', expect.anything())
+      expect(updateAssignmentAction).toHaveBeenCalledWith(
+        'a1',
+        expect.objectContaining({ dailyTargetMinutes: 20, submissionType: 'audio' })
+      )
     );
     expect(mockPush).toHaveBeenCalledWith('/dashboard/assignments/a1');
   });

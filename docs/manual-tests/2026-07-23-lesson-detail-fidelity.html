@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manual Test — Editorial Lesson Detail Fidelity (2026-07-23)</title>
+    <style>
+      :root {
+        --ink: #23201b;
+        --ink-3: #6b6459;
+        --gold: #9a7b3f;
+        --rule: #e7e1d5;
+        --card: #fffdf8;
+        --ivory: #faf7f0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          15px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        color: var(--ink);
+        background: var(--ivory);
+        padding: 32px;
+      }
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 26px;
+        letter-spacing: -0.02em;
+        margin: 0 0 4px;
+      }
+      h2 {
+        font-size: 18px;
+        margin: 28px 0 8px;
+        border-bottom: 1px solid var(--rule);
+        padding-bottom: 6px;
+      }
+      .meta {
+        color: var(--ink-3);
+        font-size: 13px;
+        margin-bottom: 20px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin: 12px 0;
+      }
+      code {
+        background: #f0ebe0;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      ol,
+      ul {
+        margin: 6px 0 6px 18px;
+      }
+      li {
+        margin: 4px 0;
+      }
+      .pill {
+        display: inline-block;
+        font-size: 12px;
+        padding: 2px 9px;
+        border-radius: 999px;
+        background: #e9f5ea;
+        color: #2f7a3a;
+        font-weight: 600;
+      }
+      .gate {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .gate span {
+        background: #e9f5ea;
+        color: #2f7a3a;
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 13px;
+      }
+      td,
+      th {
+        border: 1px solid var(--rule);
+        padding: 6px 10px;
+        text-align: left;
+      }
+      th {
+        background: #f3eee3;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Editorial Lesson Detail — design-mockup fidelity</h1>
+      <div class="meta">
+        2026-07-23 · branch <code>feature/lesson-detail-fidelity</code> · route
+        <code>/dashboard/lessons/[id]</code>
+      </div>
+
+      <div class="card">
+        <p><span class="pill">What shipped</span></p>
+        <p>
+          The editorial Lesson Detail page previously rendered only a hero, a Songs card, and a
+          Notes card. It now matches the design mockup's two-column layout using data that already
+          exists — <strong>no new DB columns</strong>. New cards and an interactive per-song stepper
+          were added.
+        </p>
+      </div>
+
+      <h2>Cards / features added</h2>
+      <table>
+        <tr>
+          <th>Area</th>
+          <th>Behaviour</th>
+        </tr>
+        <tr>
+          <td>Hero</td>
+          <td>
+            Status pill + <code>#&lt;lesson_teacher_number&gt;</code> badge + "with &lt;student&gt;"
+            link (student link kept). Number badge hidden when the lesson has no number.
+          </td>
+        </tr>
+        <tr>
+          <td>Lesson info (right col)</td>
+          <td>
+            Scheduled (full date + time), Student (links to
+            <code>/dashboard/users/[studentId]</code> with email sub-line), Teacher name, Sequence
+            ("Lesson #N with &lt;first&gt;").
+          </td>
+        </tr>
+        <tr>
+          <td>Assignments / homework</td>
+          <td>
+            Checklist of assignments where <code>assignments.lesson_id</code> = this lesson: tick +
+            strikethrough for completed, due date, link to the assignment. Empty state when none. "+
+            Add" affordance (→ <code>/dashboard/assignments/new</code>) only for editors.
+          </td>
+        </tr>
+        <tr>
+          <td>Continuity</td>
+          <td>
+            Up to 3 previous lessons for the same student (excludes the current one, newest first):
+            #number badge + short date + title/notes summary, each linking to that lesson. Empty
+            state when none.
+          </td>
+        </tr>
+        <tr>
+          <td>Per-song progress stepper</td>
+          <td>
+            Interactive 5-stage stepper per song (to_learn → started → remembered → with_author →
+            mastered). Teachers/admins click a segment to advance; writes
+            <code>lesson_songs.status</code> via the existing
+            <code>updateLessonSongStatus(lessonId, songId, status)</code> server action (RLS-scoped,
+            Zod-validated). Students see it read-only.
+          </td>
+        </tr>
+      </table>
+
+      <h2>How to test manually</h2>
+      <div class="card">
+        <strong>Prerequisites</strong>
+        <ol>
+          <li>
+            <code>cd strummy &amp;&amp; npm run dev</code> (points at the dev Supabase stack).
+          </li>
+          <li>
+            Sign in as the admin/teacher (<code>p.romanczuk@gmail.com</code>) — see CLAUDE.md dev
+            credentials.
+          </li>
+          <li>
+            Open a lesson that has songs, at least one assignment with <code>lesson_id</code> set,
+            and a student with prior lessons.
+          </li>
+        </ol>
+      </div>
+      <div class="card">
+        <strong>Teacher (canEdit) checks — <code>/dashboard/lessons/&lt;id&gt;</code></strong>
+        <ul>
+          <li>
+            Hero shows the status pill, a <code>Lesson #N</code> badge, and the student name as a
+            link.
+          </li>
+          <li>
+            Right column shows Lesson info with a full scheduled date/time, a clickable student,
+            teacher name, and the sequence line.
+          </li>
+          <li>
+            Assignments card lists lesson homework with due dates; completed items show a tick +
+            strikethrough; the "+ Add" link is visible.
+          </li>
+          <li>
+            Continuity card lists up to 3 earlier lessons with that student; each row navigates to
+            that lesson.
+          </li>
+          <li>
+            In the Songs card, click a stage segment on a song — the fill advances and the label
+            under it updates. Reload: the new stage persists (written to
+            <code>lesson_songs.status</code>).
+          </li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Student (read-only) checks</strong>
+        <ul>
+          <li>
+            Sign in as the demo student (<code>emma@strummy.app</code>) and open one of their
+            lessons.
+          </li>
+          <li>
+            The song steppers render as static bars — no clickable segments, no "+ Add" on
+            Assignments, no "Edit lesson" link.
+          </li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Edge cases</strong>
+        <ul>
+          <li>Lesson with no songs → "No songs attached to this lesson yet."</li>
+          <li>Lesson with no homework → "No homework attached to this lesson."</li>
+          <li>Student's first lesson (no prior) → "No previous lessons with &lt;first&gt;."</li>
+          <li>Lesson missing a number → hero badge hidden, sequence reads "With &lt;first&gt;".</li>
+          <li>
+            A song with a null/unknown status → stepper renders unfilled with a "Not started" label.
+          </li>
+        </ul>
+      </div>
+
+      <h2>Automated gate results</h2>
+      <div class="gate">
+        <span>tsc --noEmit: 0 errors</span>
+        <span>jest components/lessons: 46/46 pass</span>
+        <span>eslint (changed files): 0 errors</span>
+      </div>
+    </main>
+  </body>
+</html>
